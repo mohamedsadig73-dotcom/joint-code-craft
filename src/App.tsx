@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { NotificationListener } from "@/components/NotificationListener";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -36,71 +37,74 @@ function AppRoutes() {
   const { isAuthenticated, loading } = useAuth();
 
   return (
-    <Routes>
-      <Route 
-        path="/login" 
-        element={
-          loading ? (
-            <Login />
-          ) : isAuthenticated ? (
-            <Navigate to="/" replace />
-          ) : (
-            <Login />
-          )
-        } 
-      />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route 
-        path="/" 
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/manage" 
-        element={
-          <ProtectedRoute>
-            <Manage />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/reports" 
-        element={
-          <ProtectedRoute>
-            <Reports />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/profile" 
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/declaration/:id" 
-        element={
-          <ProtectedRoute>
-            <DeclarationDetails />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/declaration/:id/timeline" 
-        element={
-          <ProtectedRoute>
-            <DeclarationTimeline />
-          </ProtectedRoute>
-        } 
-      />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <>
+      {isAuthenticated && <NotificationListener />}
+      <Routes>
+        <Route 
+          path="/login" 
+          element={
+            loading ? (
+              <Login />
+            ) : isAuthenticated ? (
+              <Navigate to="/" replace />
+            ) : (
+              <Login />
+            )
+          } 
+        />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/manage" 
+          element={
+            <ProtectedRoute>
+              <Manage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/reports" 
+          element={
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/declaration/:id" 
+          element={
+            <ProtectedRoute>
+              <DeclarationDetails />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/declaration/:id/timeline" 
+          element={
+            <ProtectedRoute>
+              <DeclarationTimeline />
+            </ProtectedRoute>
+          } 
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 }
 
