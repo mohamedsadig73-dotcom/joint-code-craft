@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      declaration_status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          declaration_id: string
+          id: string
+          new_status: Database["public"]["Enums"]["declaration_status"]
+          notes: string | null
+          old_status: Database["public"]["Enums"]["declaration_status"] | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          declaration_id: string
+          id?: string
+          new_status: Database["public"]["Enums"]["declaration_status"]
+          notes?: string | null
+          old_status?: Database["public"]["Enums"]["declaration_status"] | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          declaration_id?: string
+          id?: string
+          new_status?: Database["public"]["Enums"]["declaration_status"]
+          notes?: string | null
+          old_status?: Database["public"]["Enums"]["declaration_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "declaration_status_history_declaration_id_fkey"
+            columns: ["declaration_id"]
+            isOneToOne: false
+            referencedRelation: "declarations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       declarations: {
         Row: {
           created_at: string

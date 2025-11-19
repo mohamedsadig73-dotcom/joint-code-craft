@@ -173,9 +173,19 @@ export default function DeclarationDetails() {
               <h1 className="text-3xl font-bold mb-2">تفاصيل الإقرار</h1>
               <p className="text-muted-foreground">رقم الإقرار: {declaration.id}</p>
             </div>
-            <Badge className={statusColors[declaration.status]}>
-              {statusLabels[declaration.status]}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/declaration/${declaration.id}/timeline`)}
+                className="gap-2"
+              >
+                <Clock className="w-4 h-4" />
+                مسار الإقرار
+              </Button>
+              <Badge className={statusColors[declaration.status]}>
+                {statusLabels[declaration.status]}
+              </Badge>
+            </div>
           </div>
         </div>
 
