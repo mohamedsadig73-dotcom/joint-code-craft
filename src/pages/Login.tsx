@@ -5,30 +5,57 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Globe, Lock, User as UserIcon } from 'lucide-react';
+import { Globe, Lock, Mail } from 'lucide-react';
 
 export default function Login() {
-  const [username, setUsername] = useState('');
+  const [isSignup, setIsSignup] = useState(false);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-  const { login } = useAuth();
+  const [username, setUsername] = useState('');
+  const { login, signup } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await login(username, password);
-    if (result.success) {
-      navigate('/');
+    
+    if (isSignup) {
+      if (!username) {
+        toast({
+          variant: 'destructive',
+          title: t('error'),
+          description: 'الرجاء إدخال اسم المستخدم',
+        });
+        return;
+      }
+      
+      const result = await signup(email, password, username);
+      if (result.success) {
+        toast({
+          title: t('success'),
+          description: 'تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول',
+        });
+        setIsSignup(false);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: t('error'),
+          description: result.error || 'فشل إنشاء الحساب',
+        });
+      }
     } else {
-      toast({
-        variant: 'destructive',
-        title: t('invalidCredentials'),
-        description: result.error || 'Try signing up first',
-      });
+      const result = await login(email, password);
+      if (result.success) {
+        navigate('/');
+      } else {
+        toast({
+          variant: 'destructive',
+          title: t('error'),
+          description: result.error || 'بيانات الدخول غير صحيحة',
+        });
+      }
     }
   };
 
@@ -51,33 +78,52 @@ export default function Login() {
         {language === 'en' ? 'العربية' : 'English'}
       </Button>
 
-      {/* Login Card */}
+      {/* Login/Signup Card */}
       <div className="glass-card rounded-2xl p-8 w-full max-w-md relative z-10 shadow-2xl">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold gradient-text mb-2">DTS</h1>
-          <h2 className="text-2xl font-bold mb-2">{t('welcomeBack')}</h2>
-          <p className="text-muted-foreground">{t('loginSubtitle')}</p>
+          <h2 className="text-2xl font-bold mb-2">
+            {isSignup ? 'إنشاء حساب جديد' : t('welcomeBack')}
+          </h2>
+          <p className="text-muted-foreground">
+            {isSignup ? 'أدخل بياناتك لإنشاء حساب' : t('loginSubtitle')}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="username">{t('username')}</Label>
-            <div className="relative">
-              <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          {isSignup && (
+            <div className="space-y-2">
+              <Label htmlFor="username">اسم المستخدم</Label>
               <Input
                 id="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                className="glass-card border-border/50"
+                placeholder="mohamed sadig"
+                required
+              />
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="email">البريد الإلكتروني</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="pl-10 glass-card border-border/50"
-                placeholder="ali"
+                placeholder="mohamed@example.com"
                 required
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">{t('password')}</Label>
+            <Label htmlFor="password">كلمة المرور</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -86,36 +132,28 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pl-10 glass-card border-border/50"
-                placeholder="demo123"
+                placeholder="••••••••"
                 required
+                minLength={6}
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="remember"
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-              />
-              <Label htmlFor="remember" className="text-sm cursor-pointer">
-                {t('rememberMe')}
-              </Label>
-            </div>
-            <Button variant="link" className="text-sm px-0">
-              {t('forgotPassword')}
-            </Button>
-          </div>
-
-          <Button type="submit" className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold">
-            {t('login')}
+          <Button 
+            type="submit" 
+            className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold"
+          >
+            {isSignup ? 'إنشاء حساب' : t('login')}
           </Button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-muted-foreground">
-          <p>Demo accounts:</p>
-          <p className="font-mono text-xs mt-1">ali/demo123 (admin) • sara/demo123 (manager) • ahmed/demo123 (user)</p>
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => setIsSignup(!isSignup)}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {isSignup ? 'لديك حساب؟ تسجيل الدخول' : 'ليس لديك حساب؟ سجل الآن'}
+          </button>
         </div>
       </div>
     </div>
