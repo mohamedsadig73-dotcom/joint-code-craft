@@ -27,7 +27,7 @@ import { Plus } from 'lucide-react';
 const declarationSchema = z.object({
   number: z.string().trim().min(3, 'رقم الإقرار يجب أن يكون 3 أرقام على الأقل').max(6, 'رقم الإقرار طويل جداً').regex(/^\d+$/, 'يجب أن يحتوي على أرقام فقط'),
   type: z.enum(['دخول', 'خروج'], { required_error: 'يجب اختيار نوع الإقرار' }),
-  status: z.enum(['unsigned', 'pending', 'approved', 'archived']),
+  status: z.enum(['draft', 'pending_warehouse_signature', 'warehouse_signed', 'sent_to_admin_office', 'received_by_admin_office', 'returned_to_warehouse', 'archived', 'rejected']),
 });
 
 interface CreateDeclarationDialogProps {
@@ -42,7 +42,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
   const [loadingNextNumber, setLoadingNextNumber] = useState(false);
   const [declarationNumber, setDeclarationNumber] = useState('');
   const [type, setType] = useState<'دخول' | 'خروج'>('دخول');
-  const [status, setStatus] = useState<'unsigned' | 'pending' | 'approved' | 'archived'>('unsigned');
+  const [status, setStatus] = useState<'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected'>('draft');
   const { user } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -150,7 +150,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
       // Reset form
       setDeclarationNumber('');
       setType('دخول');
-      setStatus('unsigned');
+      setStatus('draft');
       setOpen(false);
       
       if (onSuccess) {
@@ -237,17 +237,21 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
             <Label htmlFor="status">الحالة</Label>
             <Select
               value={status}
-              onValueChange={(value: 'unsigned' | 'pending' | 'approved' | 'archived') => setStatus(value)}
+              onValueChange={(value: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected') => setStatus(value)}
               disabled={loading}
             >
               <SelectTrigger className="glass-card border-border/50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="unsigned">غير موقّع</SelectItem>
-                <SelectItem value="pending">قيد الانتظار</SelectItem>
-                <SelectItem value="approved">موافق عليه</SelectItem>
+                <SelectItem value="draft">مسودة</SelectItem>
+                <SelectItem value="pending_warehouse_signature">بانتظار توقيع المخزن</SelectItem>
+                <SelectItem value="warehouse_signed">موقّع من المخزن</SelectItem>
+                <SelectItem value="sent_to_admin_office">مُرسل إلى المكتب الإداري</SelectItem>
+                <SelectItem value="received_by_admin_office">مستلم من المكتب الإداري</SelectItem>
+                <SelectItem value="returned_to_warehouse">مُعاد إلى المخزن للأرشفة</SelectItem>
                 <SelectItem value="archived">مؤرشف</SelectItem>
+                <SelectItem value="rejected">مرفوض / يحتاج إلى تصحيح</SelectItem>
               </SelectContent>
             </Select>
           </div>

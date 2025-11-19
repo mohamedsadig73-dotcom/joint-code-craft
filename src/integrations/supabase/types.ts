@@ -117,7 +117,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "manager" | "user"
-      declaration_status: "unsigned" | "pending" | "approved" | "archived"
+      declaration_status:
+        | "draft"
+        | "pending_warehouse_signature"
+        | "warehouse_signed"
+        | "sent_to_admin_office"
+        | "received_by_admin_office"
+        | "returned_to_warehouse"
+        | "archived"
+        | "rejected"
       declaration_type: "دخول" | "خروج"
     }
     CompositeTypes: {
@@ -247,7 +255,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "manager", "user"],
-      declaration_status: ["unsigned", "pending", "approved", "archived"],
+      declaration_status: [
+        "draft",
+        "pending_warehouse_signature",
+        "warehouse_signed",
+        "sent_to_admin_office",
+        "received_by_admin_office",
+        "returned_to_warehouse",
+        "archived",
+        "rejected",
+      ],
       declaration_type: ["دخول", "خروج"],
     },
   },

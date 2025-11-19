@@ -35,10 +35,14 @@ import {
 } from 'lucide-react';
 
 const statusColors = {
-  unsigned: 'bg-unsigned/20 text-unsigned border-unsigned/30',
-  pending: 'bg-pending/20 text-pending border-pending/30',
-  approved: 'bg-approved/20 text-approved border-approved/30',
-  archived: 'bg-archived/20 text-archived border-archived/30',
+  draft: 'bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30',
+  pending_warehouse_signature: 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30',
+  warehouse_signed: 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30',
+  sent_to_admin_office: 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30',
+  received_by_admin_office: 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/30',
+  returned_to_warehouse: 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30',
+  archived: 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30',
+  rejected: 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30',
 };
 
 export default function Dashboard() {
@@ -48,9 +52,14 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('all');
   const [stats, setStats] = useState({
     total: 0,
-    unsigned: 0,
-    pending: 0,
-    approved: 0,
+    draft: 0,
+    pending_warehouse_signature: 0,
+    warehouse_signed: 0,
+    sent_to_admin_office: 0,
+    received_by_admin_office: 0,
+    returned_to_warehouse: 0,
+    archived: 0,
+    rejected: 0,
   });
   const [recentDeclarations, setRecentDeclarations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,26 +88,56 @@ export default function Dashboard() {
         .from('declarations')
         .select('*', { count: 'exact', head: true });
 
-      const { count: unsignedCount } = await supabase
+      const { count: draftCount } = await supabase
         .from('declarations')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'unsigned');
+        .eq('status', 'draft');
 
-      const { count: pendingCount } = await supabase
+      const { count: pendingWarehouseCount } = await supabase
         .from('declarations')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
+        .eq('status', 'pending_warehouse_signature');
 
-      const { count: approvedCount } = await supabase
+      const { count: warehouseSignedCount } = await supabase
         .from('declarations')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'approved');
+        .eq('status', 'warehouse_signed');
+
+      const { count: sentToAdminCount } = await supabase
+        .from('declarations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'sent_to_admin_office');
+
+      const { count: receivedByAdminCount } = await supabase
+        .from('declarations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'received_by_admin_office');
+
+      const { count: returnedToWarehouseCount } = await supabase
+        .from('declarations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'returned_to_warehouse');
+
+      const { count: archivedCount } = await supabase
+        .from('declarations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'archived');
+
+      const { count: rejectedCount } = await supabase
+        .from('declarations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'rejected');
 
       setStats({
         total: totalCount || 0,
-        unsigned: unsignedCount || 0,
-        pending: pendingCount || 0,
-        approved: approvedCount || 0,
+        draft: draftCount || 0,
+        pending_warehouse_signature: pendingWarehouseCount || 0,
+        warehouse_signed: warehouseSignedCount || 0,
+        sent_to_admin_office: sentToAdminCount || 0,
+        received_by_admin_office: receivedByAdminCount || 0,
+        returned_to_warehouse: returnedToWarehouseCount || 0,
+        archived: archivedCount || 0,
+        rejected: rejectedCount || 0,
       });
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -130,7 +169,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleStatusUpdate = async (id: string, newStatus: 'unsigned' | 'pending' | 'approved' | 'archived') => {
+  const handleStatusUpdate = async (id: string, newStatus: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected') => {
     try {
       const { error } = await supabase
         .from('declarations')
@@ -212,9 +251,9 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[
             { label: t('totalDeclarations'), value: stats.total, icon: FileText, color: 'text-primary', bgColor: 'bg-primary/10' },
-            { label: t('unsigned'), value: stats.unsigned, icon: Clock, color: 'text-unsigned', bgColor: 'bg-unsigned/10' },
-            { label: t('pending'), value: stats.pending, icon: AlertCircle, color: 'text-pending', bgColor: 'bg-pending/10' },
-            { label: t('approved'), value: stats.approved, icon: CheckCircle, color: 'text-approved', bgColor: 'bg-approved/10' },
+            { label: 'مسودة', value: stats.draft, icon: Clock, color: 'text-gray-700 dark:text-gray-300', bgColor: 'bg-gray-500/10' },
+            { label: 'بانتظار المخزن', value: stats.pending_warehouse_signature, icon: AlertCircle, color: 'text-yellow-700 dark:text-yellow-300', bgColor: 'bg-yellow-500/10' },
+            { label: 'موقّع', value: stats.warehouse_signed, icon: CheckCircle, color: 'text-blue-700 dark:text-blue-300', bgColor: 'bg-blue-500/10' },
           ].map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -326,11 +365,7 @@ export default function Dashboard() {
                             <Button 
                               variant="ghost" 
                               size="icon"
-                              onClick={() => {
-                                const newStatus = declaration.status === 'unsigned' ? 'pending' : 
-                                                declaration.status === 'pending' ? 'approved' : 'archived';
-                                handleStatusUpdate(declaration.id, newStatus);
-                              }}
+                              onClick={() => navigate(`/declaration/${declaration.id}`)}
                               title="تحديث الحالة"
                             >
                               <Edit className="w-4 h-4" />
