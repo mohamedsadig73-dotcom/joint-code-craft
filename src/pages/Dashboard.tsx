@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/hooks/use-toast';
 import { 
   FileText, 
   Clock, 
@@ -25,6 +26,9 @@ import {
   CheckCircle,
   Plus,
   TrendingUp,
+  Eye,
+  Edit,
+  Trash2,
 } from 'lucide-react';
 
 const statusColors = {
@@ -97,6 +101,52 @@ export default function Dashboard() {
       console.error('Error loading dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('declarations')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'تم بنجاح',
+        description: 'تم حذف الإقرار بنجاح',
+      });
+      loadDashboardData();
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleStatusUpdate = async (id: string, newStatus: 'unsigned' | 'pending' | 'approved' | 'archived') => {
+    try {
+      const { error } = await supabase
+        .from('declarations')
+        .update({ status: newStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'تم بنجاح',
+        description: 'تم تحديث حالة الإقرار بنجاح',
+      });
+      loadDashboardData();
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -216,13 +266,43 @@ export default function Dashboard() {
                         </TableCell>
                         <TableCell>{new Date(declaration.created_at).toLocaleDateString('ar-SA')}</TableCell>
                         <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => navigate(`/declaration/${declaration.id}`)}
-                          >
-                            {t('view')}
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => navigate(`/declaration/${declaration.id}`)}
+                              title={t('view')}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => {
+                                const newStatus = declaration.status === 'unsigned' ? 'pending' : 
+                                                declaration.status === 'pending' ? 'approved' : 'archived';
+                                handleStatusUpdate(declaration.id, newStatus);
+                              }}
+                              title="تحديث الحالة"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            {user?.role === 'admin' && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => {
+                                  if (window.confirm('هل أنت متأكد من حذف هذا الإقرار؟')) {
+                                    handleDelete(declaration.id);
+                                  }
+                                }}
+                                title="حذف"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
