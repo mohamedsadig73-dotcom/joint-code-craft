@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -23,16 +26,14 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Search, Filter, Plus, Download, Edit, Trash2, Eye } from 'lucide-react';
 
-const mockDeclarations = [
-  { id: 'DEC-2024-001', type: 'Import', sender: 'Ali Hassan', status: 'approved', date: '2024-01-15' },
-  { id: 'DEC-2024-002', type: 'Export', sender: 'Sara Ahmed', status: 'pending', date: '2024-01-16' },
-  { id: 'DEC-2024-003', type: 'Import', sender: 'Omar Khalil', status: 'unsigned', date: '2024-01-17' },
-  { id: 'DEC-2024-004', type: 'Transit', sender: 'Fatima Ali', status: 'approved', date: '2024-01-18' },
-  { id: 'DEC-2024-005', type: 'Export', sender: 'Ahmed Nour', status: 'archived', date: '2024-01-19' },
-  { id: 'DEC-2024-006', type: 'Import', sender: 'Layla Karim', status: 'pending', date: '2024-01-20' },
-  { id: 'DEC-2024-007', type: 'Transit', sender: 'Youssef Zaki', status: 'approved', date: '2024-01-21' },
-  { id: 'DEC-2024-008', type: 'Export', sender: 'Nadia Fathi', status: 'unsigned', date: '2024-01-22' },
-];
+interface Declaration {
+  id: string;
+  type: 'Import' | 'Export' | 'Transit';
+  sender_id: string;
+  sender?: { username: string };
+  status: 'unsigned' | 'pending' | 'approved' | 'archived';
+  created_at: string;
+}
 
 const statusColors = {
   unsigned: 'bg-unsigned/20 text-unsigned border-unsigned/30',
@@ -43,13 +44,105 @@ const statusColors = {
 
 export default function Manage() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [declarations, setDeclarations] = useState<Declaration[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    unsigned: 0,
+    pending: 0,
+    approved: 0,
+    archived: 0,
+  });
 
-  const filteredDeclarations = mockDeclarations.filter(dec => {
+  useEffect(() => {
+    loadDeclarations();
+  }, []);
+
+  const loadDeclarations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('declarations')
+        .select(`
+          *,
+          sender:profiles(username)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setDeclarations(data || []);
+      
+      // Calculate stats
+      const newStats = {
+        unsigned: data?.filter(d => d.status === 'unsigned').length || 0,
+        pending: data?.filter(d => d.status === 'pending').length || 0,
+        approved: data?.filter(d => d.status === 'approved').length || 0,
+        archived: data?.filter(d => d.status === 'archived').length || 0,
+      };
+      setStats(newStats);
+    } catch (error: any) {
+      toast({
+        title: t('error'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('declarations')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: t('success'),
+        description: 'Declaration deleted successfully',
+      });
+      loadDeclarations();
+    } catch (error: any) {
+      toast({
+        title: t('error'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleStatusUpdate = async (id: string, newStatus: 'unsigned' | 'pending' | 'approved' | 'archived') => {
+    try {
+      const { error } = await supabase
+        .from('declarations')
+        .update({ status: newStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: t('success'),
+        description: 'Status updated successfully',
+      });
+      loadDeclarations();
+    } catch (error: any) {
+      toast({
+        title: t('error'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const filteredDeclarations = declarations.filter(dec => {
     const matchesSearch = dec.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         dec.sender.toLowerCase().includes(searchQuery.toLowerCase());
+                         dec.sender?.username.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || dec.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -77,7 +170,7 @@ export default function Manage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">{t('declarations')}</h1>
           <p className="text-muted-foreground">
-            {t('showing')} {filteredDeclarations.length} {t('of')} {mockDeclarations.length} {t('results')}
+            {t('showing')} {filteredDeclarations.length} {t('of')} {declarations.length} {t('results')}
           </p>
         </div>
 
@@ -137,10 +230,10 @@ export default function Manage() {
         {/* Statistics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
-            { label: t('unsigned'), value: 24, color: 'text-unsigned' },
-            { label: t('pending'), value: 18, color: 'text-pending' },
-            { label: t('approved'), value: 156, color: 'text-approved' },
-            { label: t('archived'), value: 892, color: 'text-archived' },
+            { label: t('unsigned'), value: stats.unsigned, color: 'text-unsigned' },
+            { label: t('pending'), value: stats.pending, color: 'text-pending' },
+            { label: t('approved'), value: stats.approved, color: 'text-approved' },
+            { label: t('archived'), value: stats.archived, color: 'text-archived' },
           ].map((stat) => (
             <Card key={stat.label} className="glass-card border-border/50 p-4 text-center">
               <div className={`text-2xl font-bold mb-1 ${stat.color}`}>{stat.value}</div>
@@ -169,38 +262,67 @@ export default function Manage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredDeclarations.map((declaration) => (
-                <TableRow key={declaration.id} className="hover:bg-muted/5">
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedItems.includes(declaration.id)}
-                      onCheckedChange={() => toggleSelectItem(declaration.id)}
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">{declaration.id}</TableCell>
-                  <TableCell>{declaration.type}</TableCell>
-                  <TableCell>{declaration.sender}</TableCell>
-                  <TableCell>
-                    <Badge className={statusColors[declaration.status as keyof typeof statusColors]}>
-                      {t(declaration.status)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{declaration.date}</TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    {t('loading')}...
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : filteredDeclarations.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    No declarations found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredDeclarations.map((declaration) => (
+                  <TableRow key={declaration.id} className="hover:bg-muted/5">
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedItems.includes(declaration.id)}
+                        onCheckedChange={() => toggleSelectItem(declaration.id)}
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">{declaration.id}</TableCell>
+                    <TableCell>{declaration.type}</TableCell>
+                    <TableCell>{declaration.sender?.username || 'Unknown'}</TableCell>
+                    <TableCell>
+                      <Badge className={statusColors[declaration.status as keyof typeof statusColors]}>
+                        {t(declaration.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{new Date(declaration.created_at).toLocaleDateString('ar-SA')}</TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => {
+                            const newStatus = declaration.status === 'unsigned' ? 'pending' : 
+                                            declaration.status === 'pending' ? 'approved' : 'archived';
+                            handleStatusUpdate(declaration.id, newStatus);
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        {user?.role === 'admin' && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-destructive"
+                            onClick={() => handleDelete(declaration.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </Card>
