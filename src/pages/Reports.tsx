@@ -16,20 +16,23 @@ export default function Reports() {
     archived: 0,
     total: 0,
   });
+  const [weeklyData, setWeeklyData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
+  const [monthlyData, setMonthlyData] = useState<{ month: string; approved: number; pending: number; unsigned: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadStats();
+    loadAllData();
   }, []);
 
-  const loadStats = async () => {
+  const loadAllData = async () => {
     try {
       const { data, error } = await supabase
         .from('declarations')
-        .select('status');
+        .select('status, created_at');
 
       if (error) throw error;
 
+      // Calculate status stats
       const newStats = {
         unsigned: data?.filter(d => d.status === 'unsigned').length || 0,
         pending: data?.filter(d => d.status === 'pending').length || 0,
@@ -37,10 +40,49 @@ export default function Reports() {
         archived: data?.filter(d => d.status === 'archived').length || 0,
         total: data?.length || 0,
       };
-
       setStats(newStats);
+
+      // Calculate weekly data (last 7 days)
+      const now = new Date();
+      const weekly = [0, 0, 0, 0, 0, 0, 0];
+      data?.forEach(d => {
+        const createdDate = new Date(d.created_at);
+        const diffDays = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays >= 0 && diffDays < 7) {
+          weekly[6 - diffDays]++;
+        }
+      });
+      setWeeklyData(weekly);
+
+      // Calculate monthly data (last 6 months)
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthlyMap = new Map<string, { approved: number; pending: number; unsigned: number }>();
+      
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthKey = `${months[date.getMonth()]}`;
+        monthlyMap.set(monthKey, { approved: 0, pending: 0, unsigned: 0 });
+      }
+
+      data?.forEach(d => {
+        const createdDate = new Date(d.created_at);
+        const monthKey = months[createdDate.getMonth()];
+        if (monthlyMap.has(monthKey)) {
+          const current = monthlyMap.get(monthKey)!;
+          if (d.status === 'approved') current.approved++;
+          else if (d.status === 'pending') current.pending++;
+          else if (d.status === 'unsigned') current.unsigned++;
+        }
+      });
+
+      const monthlyArray = Array.from(monthlyMap.entries()).map(([month, data]) => ({
+        month,
+        ...data
+      }));
+      setMonthlyData(monthlyArray);
+
     } catch (error) {
-      console.error('Error loading stats:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -116,7 +158,7 @@ export default function Reports() {
       {
         name: 'Declarations',
         type: 'bar',
-        data: [45, 52, 38, 62, 58, 24, 18],
+        data: weeklyData,
         itemStyle: {
           color: {
             type: 'linear',
