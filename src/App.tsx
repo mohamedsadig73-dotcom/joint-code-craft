@@ -17,7 +17,6 @@ import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
 import DeclarationDetails from "./pages/DeclarationDetails";
 import DeclarationTimeline from "./pages/DeclarationTimeline";
-import UsersManagement from "./pages/UsersManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -96,14 +95,6 @@ function AppRoutes() {
           element={
             <ProtectedRoute requiredRole="admin">
               <AdminDashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/users" 
-          element={
-            <ProtectedRoute requiredRole="admin">
-              <UsersManagement />
             </ProtectedRoute>
           } 
         />

@@ -4,9 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Users, FileText, Activity, TrendingUp, Shield, UserCheck } from 'lucide-react';
+import { Users, FileText, Activity, TrendingUp, Shield, UserCheck, BarChart3 } from 'lucide-react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { UserManagementTab } from '@/components/UserManagementTab';
 
 interface SystemStats {
   totalUsers: number;
@@ -188,8 +190,21 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground">نظرة شاملة على إحصائيات النظام والنشاطات</p>
         </div>
 
-        {/* إحصائيات سريعة */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Tabs defaultValue="stats" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="stats" className="gap-2">
+              <BarChart3 className="w-4 h-4" />
+              الإحصائيات
+            </TabsTrigger>
+            <TabsTrigger value="users" className="gap-2">
+              <Users className="w-4 h-4" />
+              إدارة المستخدمين
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="stats" className="space-y-6">
+            {/* إحصائيات سريعة */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="glass-card border-border/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">إجمالي المستخدمين</CardTitle>
@@ -344,6 +359,12 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="users">
+            <UserManagementTab />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
