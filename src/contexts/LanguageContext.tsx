@@ -89,6 +89,16 @@ const translations = {
     deleteRoleWarning: 'This action will delete the user\'s permissions. To completely delete the user from the system, you must do so from the database control panel.',
     delete: 'Delete',
     deletePermissions: 'Delete Permissions',
+    sendInvitation: 'Send Invitation',
+    invitationSent: 'Invitation sent successfully to',
+    invitationFailed: 'Failed to send invitation',
+    sending: 'Sending...',
+    invitationDescription: 'An invitation will be sent to this email',
+    howItWorks: 'How it works:',
+    invitationStep1: 'An invitation email is sent',
+    invitationStep2: 'User clicks the link in the email',
+    invitationStep3: 'User sets their password',
+    invitationStep4: 'User logs into the system',
     
     // Permissions
     viewAllDeclarations: 'View all declarations',
@@ -351,6 +361,16 @@ const translations = {
     deleteRoleWarning: 'هذا الإجراء سيحذف صلاحيات المستخدم. لحذف المستخدم بالكامل من النظام، يجب القيام بذلك من لوحة تحكم قاعدة البيانات.',
     delete: 'حذف',
     deletePermissions: 'حذف الصلاحيات',
+    sendInvitation: 'إرسال الدعوة',
+    invitationSent: 'تم إرسال الدعوة بنجاح إلى',
+    invitationFailed: 'فشل إرسال الدعوة',
+    sending: 'جاري الإرسال...',
+    invitationDescription: 'سيتم إرسال رسالة دعوة إلى هذا البريد الإلكتروني',
+    howItWorks: 'كيف يعمل النظام:',
+    invitationStep1: 'يتم إرسال رسالة دعوة إلى البريد الإلكتروني',
+    invitationStep2: 'المستخدم يضغط على الرابط في الرسالة',
+    invitationStep3: 'يقوم بتعيين كلمة المرور الخاصة به',
+    invitationStep4: 'يدخل إلى النظام مباشرة',
     
     // Permissions
     viewAllDeclarations: 'View all declarations',
