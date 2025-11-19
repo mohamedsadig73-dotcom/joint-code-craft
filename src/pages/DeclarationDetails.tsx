@@ -23,6 +23,7 @@ interface DeclarationDetails {
   status: 'unsigned' | 'pending' | 'approved' | 'archived';
   created_at: string;
   updated_at: string;
+  sender_id: string;
   sender: {
     username: string;
     email: string;
