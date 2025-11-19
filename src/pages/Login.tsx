@@ -33,11 +33,22 @@ export default function Login() {
       
       const result = await signup(email, password, username);
       if (result.success) {
-        toast({
-          title: t('success'),
-          description: 'تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول',
-        });
-        setIsSignup(false);
+        // بعد إنشاء الحساب، نحاول تسجيل الدخول مباشرة
+        const loginResult = await login(email, password);
+        if (loginResult.success) {
+          toast({
+            title: t('success'),
+            description: 'تم إنشاء الحساب وتسجيل الدخول بنجاح',
+          });
+          navigate('/');
+        } else {
+          toast({
+            variant: 'destructive',
+            title: t('error'),
+            description: loginResult.error || 'تم إنشاء الحساب لكن تعذر تسجيل الدخول، حاول تسجيل الدخول يدويًا',
+          });
+          setIsSignup(false);
+        }
       } else {
         toast({
           variant: 'destructive',
