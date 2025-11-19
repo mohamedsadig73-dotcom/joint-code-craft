@@ -156,13 +156,13 @@ export default function Dashboard() {
       if (error) throw error;
 
       toast({
-        title: 'تم بنجاح',
+        title: t('success'),
         description: 'تم حذف الإقرار بنجاح',
       });
       loadDashboardData();
     } catch (error: any) {
       toast({
-        title: 'خطأ',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       });
@@ -179,13 +179,13 @@ export default function Dashboard() {
       if (error) throw error;
 
       toast({
-        title: 'تم بنجاح',
-        description: 'تم تحديث حالة الإقرار بنجاح',
+        title: t('success'),
+        description: t('statusUpdated'),
       });
       loadDashboardData();
     } catch (error: any) {
       toast({
-        title: 'خطأ',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       });
@@ -215,12 +215,12 @@ export default function Dashboard() {
       exportDeclarationsToExcel(exportData, 'جميع_الإقرارات');
 
       toast({
-        title: 'تم بنجاح',
+        title: t('success'),
         description: 'تم تصدير جميع البيانات إلى Excel',
       });
     } catch (error: any) {
       toast({
-        title: 'خطأ',
+        title: t('error'),
         description: 'فشل تصدير البيانات',
         variant: 'destructive',
       });
@@ -251,9 +251,9 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[
             { label: t('totalDeclarations'), value: stats.total, icon: FileText, color: 'text-primary', bgColor: 'bg-primary/10' },
-            { label: 'مسودة', value: stats.draft, icon: Clock, color: 'text-gray-700 dark:text-gray-300', bgColor: 'bg-gray-500/10' },
-            { label: 'بانتظار المخزن', value: stats.pending_warehouse_signature, icon: AlertCircle, color: 'text-yellow-700 dark:text-yellow-300', bgColor: 'bg-yellow-500/10' },
-            { label: 'موقّع', value: stats.warehouse_signed, icon: CheckCircle, color: 'text-blue-700 dark:text-blue-300', bgColor: 'bg-blue-500/10' },
+            { label: t('draft'), value: stats.draft, icon: Clock, color: 'text-gray-700 dark:text-gray-300', bgColor: 'bg-gray-500/10' },
+            { label: t('pendingWarehouseSignature'), value: stats.pending_warehouse_signature, icon: AlertCircle, color: 'text-yellow-700 dark:text-yellow-300', bgColor: 'bg-yellow-500/10' },
+            { label: t('warehouseSigned'), value: stats.warehouse_signed, icon: CheckCircle, color: 'text-blue-700 dark:text-blue-300', bgColor: 'bg-blue-500/10' },
           ].map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -297,7 +297,7 @@ export default function Dashboard() {
                   className="gap-2"
                 >
                   <FileSpreadsheet className="w-4 h-4" />
-                  تصدير جميع الإقرارات
+                  {t('exportSelected')}
                 </Button>
               </>
             )}
@@ -308,7 +308,7 @@ export default function Dashboard() {
         <Card className="glass-card border-border/50">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
             <TabsList className="grid w-full grid-cols-4 mb-6">
-              <TabsTrigger value="all">{t('all')}</TabsTrigger>
+              <TabsTrigger value="all">الكل</TabsTrigger>
               <TabsTrigger value="unsigned">{t('unsigned')}</TabsTrigger>
               <TabsTrigger value="pending">{t('pending')}</TabsTrigger>
               <TabsTrigger value="approved">{t('approved')}</TabsTrigger>
@@ -331,7 +331,7 @@ export default function Dashboard() {
                   {loading ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8">
-                        {t('loading')}...
+                        {t('loadingData')}
                       </TableCell>
                     </TableRow>
                   ) : recentDeclarations.length === 0 ? (
@@ -366,7 +366,7 @@ export default function Dashboard() {
                               variant="ghost" 
                               size="icon"
                               onClick={() => navigate(`/declaration/${declaration.id}`)}
-                              title="تحديث الحالة"
+                              title={t('updateStatus')}
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -376,11 +376,11 @@ export default function Dashboard() {
                                 size="icon" 
                                 className="text-destructive hover:text-destructive"
                                 onClick={() => {
-                                  if (window.confirm('هل أنت متأكد من حذف هذا الإقرار؟')) {
+                                  if (window.confirm(t('areYouSure'))) {
                                     handleDelete(declaration.id);
                                   }
                                 }}
-                                title="حذف"
+                                title={t('delete')}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
