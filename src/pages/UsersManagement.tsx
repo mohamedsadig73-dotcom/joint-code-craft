@@ -113,17 +113,6 @@ export default function UsersManagement() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    // Only admins can access this page
-    if (user && user.role !== 'admin') {
-      toast({
-        variant: 'destructive',
-        title: 'خطأ',
-        description: 'ليس لديك صلاحية الوصول لهذه الصفحة',
-      });
-      navigate('/');
-      return;
-    }
-
     if (user) {
       loadUsers();
     }
