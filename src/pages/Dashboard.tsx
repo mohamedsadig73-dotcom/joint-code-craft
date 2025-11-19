@@ -12,9 +12,62 @@ import {
   Users,
   Activity
 } from 'lucide-react';
+import { StatusPieChart } from '@/components/charts/StatusPieChart';
+import { TrendLineChart } from '@/components/charts/TrendLineChart';
+import { ActivityAreaChart } from '@/components/charts/ActivityAreaChart';
+import { ComparisonBarChart } from '@/components/charts/ComparisonBarChart';
 
 export default function Dashboard() {
   const { t } = useLanguage();
+
+  // بيانات الرسوم البيانية
+  const pieChartData = [
+    { name: t('unsigned') || 'غير موقعة', value: 24, color: 'hsl(var(--unsigned))' },
+    { name: t('pending') || 'قيد الانتظار', value: 18, color: 'hsl(var(--pending))' },
+    { name: t('approved') || 'موافق عليها', value: 156, color: 'hsl(var(--approved))' },
+    { name: t('archived') || 'مؤرشفة', value: 892, color: 'hsl(var(--archived))' },
+  ];
+
+  const trendData = [
+    { name: 'السبت', created: 65, approved: 45, archived: 10 },
+    { name: 'الأحد', created: 85, approved: 70, archived: 12 },
+    { name: 'الاثنين', created: 95, approved: 80, archived: 15 },
+    { name: 'الثلاثاء', created: 78, approved: 60, archived: 18 },
+    { name: 'الأربعاء', created: 90, approved: 75, archived: 20 },
+    { name: 'الخميس', created: 110, approved: 95, archived: 25 },
+    { name: 'الجمعة', created: 70, approved: 50, archived: 8 },
+  ];
+
+  const trendLines = [
+    { dataKey: 'created', stroke: 'hsl(var(--secondary))', name: 'تم الإنشاء' },
+    { dataKey: 'approved', stroke: 'hsl(var(--approved))', name: 'موافق عليها' },
+    { dataKey: 'archived', stroke: 'hsl(var(--archived))', name: 'مؤرشفة' },
+  ];
+
+  const activityData = [
+    { time: '9:00', activity: 12 },
+    { time: '10:00', activity: 25 },
+    { time: '11:00', activity: 18 },
+    { time: '12:00', activity: 35 },
+    { time: '13:00', activity: 22 },
+    { time: '14:00', activity: 42 },
+    { time: '15:00', activity: 38 },
+    { time: '16:00', activity: 28 },
+  ];
+
+  const comparisonData = [
+    { category: 'يناير', thisMonth: 180, lastMonth: 150 },
+    { category: 'فبراير', thisMonth: 220, lastMonth: 180 },
+    { category: 'مارس', thisMonth: 260, lastMonth: 220 },
+    { category: 'أبريل', thisMonth: 290, lastMonth: 240 },
+    { category: 'مايو', thisMonth: 310, lastMonth: 270 },
+    { category: 'يونيو', thisMonth: 340, lastMonth: 290 },
+  ];
+
+  const comparisonBars = [
+    { dataKey: 'thisMonth', fill: 'hsl(var(--secondary))', name: 'هذا الشهر' },
+    { dataKey: 'lastMonth', fill: 'hsl(var(--muted))', name: 'الشهر الماضي' },
+  ];
 
   const stats = [
     { 
@@ -101,6 +154,24 @@ export default function Dashboard() {
               </Card>
             );
           })}
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <StatusPieChart data={pieChartData} />
+          <ActivityAreaChart data={activityData} />
+        </div>
+
+        <div className="mb-8">
+          <TrendLineChart data={trendData} lines={trendLines} />
+        </div>
+
+        <div className="mb-8">
+          <ComparisonBarChart 
+            data={comparisonData} 
+            bars={comparisonBars} 
+            title="مقارنة الأشهر"
+          />
         </div>
 
         {/* Recent Activity & Quick Stats */}
