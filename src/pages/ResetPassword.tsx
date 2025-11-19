@@ -22,7 +22,7 @@ export default function ResetPassword() {
       if (!session) {
         toast({
           variant: 'destructive',
-          title: 'خطأ',
+          title: t('error'),
           description: 'رابط غير صالح أو منتهي الصلاحية',
         });
         navigate('/login');
@@ -36,8 +36,8 @@ export default function ResetPassword() {
     if (password !== confirmPassword) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: 'كلمتا المرور غير متطابقتين',
+        title: t('error'),
+        description: t('passwordMismatch'),
       });
       return;
     }
@@ -45,8 +45,8 @@ export default function ResetPassword() {
     if (password.length < 6) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
+        title: t('error'),
+        description: t('passwordMinLength'),
       });
       return;
     }
@@ -61,8 +61,8 @@ export default function ResetPassword() {
       if (error) throw error;
 
       toast({
-        title: 'تم بنجاح',
-        description: 'تم تغيير كلمة المرور بنجاح',
+        title: t('success'),
+        description: t('passwordChangeSuccess'),
       });
 
       setTimeout(() => {
@@ -71,8 +71,8 @@ export default function ResetPassword() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: error.message || 'فشل تغيير كلمة المرور',
+        title: t('error'),
+        description: error.message || t('passwordChangeFailed'),
       });
     } finally {
       setLoading(false);
@@ -102,15 +102,15 @@ export default function ResetPassword() {
       <div className="glass-card rounded-2xl p-8 w-full max-w-md relative z-10 shadow-2xl">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold gradient-text mb-2">DTS</h1>
-          <h2 className="text-2xl font-bold mb-2">إعادة تعيين كلمة المرور</h2>
+          <h2 className="text-2xl font-bold mb-2">{t('updatePassword')}</h2>
           <p className="text-muted-foreground">
-            أدخل كلمة المرور الجديدة
+            {t('newPassword')}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="password">كلمة المرور الجديدة</Label>
+            <Label htmlFor="password">{t('newPassword')}</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -128,7 +128,7 @@ export default function ResetPassword() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">تأكيد كلمة المرور</Label>
+            <Label htmlFor="confirmPassword">{t('confirmNewPassword')}</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -150,7 +150,7 @@ export default function ResetPassword() {
             className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold"
             disabled={loading}
           >
-            {loading ? 'جاري التحديث...' : 'تحديث كلمة المرور'}
+            {loading ? t('loading') : t('updatePassword')}
           </Button>
         </form>
       </div>

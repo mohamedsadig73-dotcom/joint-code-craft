@@ -41,7 +41,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Users, RefreshCw, UserPlus, Trash2, Info } from 'lucide-react';
+import { Users, RefreshCw, UserPlus, Trash2, Info, Mail } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
@@ -103,8 +103,6 @@ export function UserManagementTab() {
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   
   const [newUserEmail, setNewUserEmail] = useState('');
-  const [newUserPassword, setNewUserPassword] = useState('');
-  const [newUserUsername, setNewUserUsername] = useState('');
   const [newUserRole, setNewUserRole] = useState<'admin' | 'manager' | 'user'>('user');
   const [creating, setCreating] = useState(false);
 
@@ -192,7 +190,7 @@ export function UserManagementTab() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!newUserEmail || !newUserPassword || !newUserUsername) {
+    if (!newUserEmail) {
       toast({
         variant: 'destructive',
         title: t('error'),
@@ -203,42 +201,25 @@ export function UserManagementTab() {
 
     setCreating(true);
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: newUserEmail,
-        password: newUserPassword,
-        options: {
-          data: {
-            username: newUserUsername,
-          },
-          emailRedirectTo: `${window.location.origin}/`,
+      // Send invitation via edge function
+      const { data, error } = await supabase.functions.invoke('send-user-invitation', {
+        body: {
+          email: newUserEmail,
+          role: newUserRole,
+          invitedBy: user?.username || user?.email || 'Admin',
         },
       });
 
-      if (authError) throw authError;
-
-      if (!authData.user) {
-        throw new Error('فشل إنشاء المستخدم');
+      if (error) {
+        throw new Error(error.message || 'فشل إرسال الدعوة');
       }
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: authData.user.id,
-          role: newUserRole,
-        });
-
-      if (roleError) throw roleError;
 
       toast({
         title: t('success'),
-        description: `${t('userCreatedSuccess')}`,
+        description: 'تم إرسال الدعوة بنجاح إلى ' + newUserEmail,
       });
 
       setNewUserEmail('');
-      setNewUserPassword('');
-      setNewUserUsername('');
       setNewUserRole('user');
       setAddDialogOpen(false);
 
@@ -341,22 +322,11 @@ export function UserManagementTab() {
                   <DialogHeader>
                     <DialogTitle>{t('addNewUser')}</DialogTitle>
                     <DialogDescription>
-                      {t('createUserAccount')}
+                      {t('invitationDescription')}
                     </DialogDescription>
                   </DialogHeader>
                   
                   <form onSubmit={handleCreateUser} className="space-y-4">
-                    <div>
-                      <Label htmlFor="username">{t('username')}</Label>
-                      <Input
-                        id="username"
-                        value={newUserUsername}
-                        onChange={(e) => setNewUserUsername(e.target.value)}
-                        placeholder={t('username')}
-                        required
-                      />
-                    </div>
-                    
                     <div>
                       <Label htmlFor="email">{t('email')}</Label>
                       <Input
@@ -367,19 +337,9 @@ export function UserManagementTab() {
                         placeholder="user@example.com"
                         required
                       />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="password">{t('password')}</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={newUserPassword}
-                        onChange={(e) => setNewUserPassword(e.target.value)}
-                        placeholder={t('password')}
-                        required
-                        minLength={6}
-                      />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t('invitationDescription')}
+                        </p>
                     </div>
                     
                     <div>
@@ -413,6 +373,21 @@ export function UserManagementTab() {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                      <div className="flex items-start gap-2">
+                        <Info className="w-4 h-4 mt-0.5 text-primary" />
+                        <div className="text-sm">
+                          <p className="font-medium">{t('howItWorks')}</p>
+                          <ol className="list-decimal list-inside mt-2 space-y-1 text-muted-foreground">
+                            <li>{t('invitationStep1')}</li>
+                            <li>{t('invitationStep2')}</li>
+                            <li>{t('invitationStep3')}</li>
+                            <li>{t('invitationStep4')}</li>
+                          </ol>
+                        </div>
+                      </div>
+                    </div>
                     
                     <div className="flex justify-end gap-2">
                       <Button
@@ -424,7 +399,7 @@ export function UserManagementTab() {
                         {t('cancel')}
                       </Button>
                       <Button type="submit" disabled={creating}>
-                        {creating ? t('creating') : t('createUser')}
+                        {creating ? t('sending') : t('sendInvitation')}
                       </Button>
                     </div>
                   </form>
