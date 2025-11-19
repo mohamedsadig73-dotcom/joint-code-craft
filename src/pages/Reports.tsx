@@ -199,7 +199,7 @@ export default function Reports() {
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+      data: monthlyData.map(d => d.month),
       axisLine: { lineStyle: { color: '#666' } },
       axisLabel: { color: '#fff' }
     },
@@ -214,7 +214,7 @@ export default function Reports() {
         name: 'Approved',
         type: 'line',
         smooth: true,
-        data: [120, 132, 101, 134, 190, 230],
+        data: monthlyData.map(d => d.approved),
         itemStyle: { color: '#22543d' },
         areaStyle: { opacity: 0.3 }
       },
@@ -222,7 +222,7 @@ export default function Reports() {
         name: 'Pending',
         type: 'line',
         smooth: true,
-        data: [22, 18, 19, 23, 29, 33],
+        data: monthlyData.map(d => d.pending),
         itemStyle: { color: '#dd6b20' },
         areaStyle: { opacity: 0.3 }
       },
@@ -230,7 +230,7 @@ export default function Reports() {
         name: 'Unsigned',
         type: 'line',
         smooth: true,
-        data: [15, 23, 20, 15, 19, 25],
+        data: monthlyData.map(d => d.unsigned),
         itemStyle: { color: '#c53030' },
         areaStyle: { opacity: 0.3 }
       }
