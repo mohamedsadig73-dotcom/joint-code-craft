@@ -2,13 +2,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
+import { NotificationCenter } from '@/components/NotificationCenter';
 import { 
   LayoutDashboard, 
   FolderOpen, 
   BarChart3, 
   LogOut, 
   User,
-  Bell,
   Globe
 } from 'lucide-react';
 import {
@@ -83,10 +83,7 @@ export function Navigation() {
             </Button>
 
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-            </Button>
+            <NotificationCenter />
 
             {/* User Menu */}
             <DropdownMenu>
