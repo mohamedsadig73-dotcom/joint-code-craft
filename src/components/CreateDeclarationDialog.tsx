@@ -124,14 +124,12 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {!controlledOpen && (
-        <DialogTrigger asChild>
-          <Button className="gap-2">
-            <Plus className="w-4 h-4" />
-            إضافة إقرار جديد
-          </Button>
-        </DialogTrigger>
-      )}
+      <DialogTrigger asChild>
+        <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2">
+          <Plus className="w-4 h-4" />
+          إضافة إقرار
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>إنشاء إقرار جديد</DialogTitle>

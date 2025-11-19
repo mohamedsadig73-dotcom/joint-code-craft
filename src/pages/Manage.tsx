@@ -53,7 +53,6 @@ export default function Manage() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
   const [loading, setLoading] = useState(true);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [stats, setStats] = useState({
     unsigned: 0,
     pending: 0,
@@ -210,17 +209,8 @@ export default function Manage() {
             {/* Action Buttons */}
             <div className="flex gap-2">
               <CreateDeclarationDialog 
-                open={createDialogOpen}
-                onOpenChange={setCreateDialogOpen}
                 onSuccess={loadDeclarations}
               />
-              <Button 
-                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2"
-                onClick={() => setCreateDialogOpen(true)}
-              >
-                <Plus className="w-4 h-4" />
-                {t('add')}
-              </Button>
               <Button variant="outline" className="gap-2">
                 <Download className="w-4 h-4" />
                 {t('export')}
