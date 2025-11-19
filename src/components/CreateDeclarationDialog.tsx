@@ -32,10 +32,12 @@ const declarationSchema = z.object({
 
 interface CreateDeclarationDialogProps {
   onSuccess?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function CreateDeclarationDialog({ onSuccess }: CreateDeclarationDialogProps) {
-  const [open, setOpen] = useState(false);
+export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpenChange }: CreateDeclarationDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [declarationId, setDeclarationId] = useState('');
   const [type, setType] = useState<'Import' | 'Export' | 'Transit'>('Import');
@@ -43,6 +45,10 @@ export function CreateDeclarationDialog({ onSuccess }: CreateDeclarationDialogPr
   const { user } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
+
+  // Use controlled or internal state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,12 +124,14 @@ export function CreateDeclarationDialog({ onSuccess }: CreateDeclarationDialogPr
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="w-4 h-4" />
-          إضافة إقرار جديد
-        </Button>
-      </DialogTrigger>
+      {!controlledOpen && (
+        <DialogTrigger asChild>
+          <Button className="gap-2">
+            <Plus className="w-4 h-4" />
+            إضافة إقرار جديد
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>إنشاء إقرار جديد</DialogTitle>
