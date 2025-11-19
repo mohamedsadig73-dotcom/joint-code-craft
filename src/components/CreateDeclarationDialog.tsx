@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -39,6 +39,7 @@ interface CreateDeclarationDialogProps {
 export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpenChange }: CreateDeclarationDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingNextNumber, setLoadingNextNumber] = useState(false);
   const [declarationNumber, setDeclarationNumber] = useState('');
   const [type, setType] = useState<'دخول' | 'خروج'>('دخول');
   const [status, setStatus] = useState<'unsigned' | 'pending' | 'approved' | 'archived'>('unsigned');
@@ -49,6 +50,45 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
   // Use controlled or internal state
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = onOpenChange || setInternalOpen;
+
+  // Load next available number when dialog opens
+  useEffect(() => {
+    if (open) {
+      loadNextNumber();
+    }
+  }, [open]);
+
+  const loadNextNumber = async () => {
+    setLoadingNextNumber(true);
+    try {
+      const currentYear = new Date().getFullYear();
+      
+      // Get all declarations for current year
+      const { data, error } = await supabase
+        .from('declarations')
+        .select('id')
+        .ilike('id', `%-${currentYear}`)
+        .order('id', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      let nextNumber = 1;
+      if (data && data.length > 0) {
+        // Extract number from last declaration (e.g., "005-2025" -> 5)
+        const lastId = data[0].id;
+        const lastNumber = parseInt(lastId.split('-')[0]);
+        nextNumber = lastNumber + 1;
+      }
+
+      setDeclarationNumber(nextNumber.toString());
+    } catch (error) {
+      console.error('Error loading next number:', error);
+      setDeclarationNumber('1');
+    } finally {
+      setLoadingNextNumber(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,19 +184,34 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
 
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="number">رقم الإقرار (مثال: 001)</Label>
-            <Input
-              id="number"
-              type="text"
-              value={declarationNumber}
-              onChange={(e) => setDeclarationNumber(e.target.value)}
-              placeholder="001"
-              required
-              disabled={loading}
-              className="glass-card border-border/50"
-            />
+            <Label htmlFor="number">رقم الإقرار</Label>
+            <div className="flex gap-2">
+              <Input
+                id="number"
+                type="text"
+                value={declarationNumber}
+                onChange={(e) => setDeclarationNumber(e.target.value)}
+                placeholder="001"
+                required
+                disabled={loading || loadingNextNumber}
+                className="glass-card border-border/50 flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={loadNextNumber}
+                disabled={loading || loadingNextNumber}
+                className="shrink-0"
+              >
+                {loadingNextNumber ? 'جاري...' : 'تحديث'}
+              </Button>
+            </div>
             <p className="text-xs text-muted-foreground">
-              سيتم إنشاء الرقم: {declarationNumber.padStart(3, '0')}-{new Date().getFullYear()}
+              {loadingNextNumber ? (
+                'جاري جلب الرقم التالي...'
+              ) : (
+                <>الرقم النهائي: {declarationNumber.padStart(3, '0')}-{new Date().getFullYear()}</>
+              )}
             </p>
           </div>
 
