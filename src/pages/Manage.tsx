@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Filter, Download, Edit, Trash2, Eye } from 'lucide-react';
+import { Search, Filter, Download, Edit, Trash2, Eye, Plus } from 'lucide-react';
 
 interface Declaration {
   id: string;
