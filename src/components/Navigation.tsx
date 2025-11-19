@@ -43,7 +43,7 @@ export function Navigation() {
   const allNavItems = user?.role === 'admin' 
     ? [
         ...navItems, 
-        { path: '/admin', icon: Shield, label: 'لوحة المدير' }
+        { path: '/admin', icon: Shield, label: t('adminDashboard') }
       ]
     : navItems;
 
