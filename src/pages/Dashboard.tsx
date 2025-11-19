@@ -297,7 +297,7 @@ export default function Dashboard() {
                   className="gap-2"
                 >
                   <FileSpreadsheet className="w-4 h-4" />
-                  {t('exportSelected')}
+                  {t('exportAllDeclarations')}
                 </Button>
               </>
             )}
@@ -308,7 +308,7 @@ export default function Dashboard() {
         <Card className="glass-card border-border/50">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
             <TabsList className="grid w-full grid-cols-4 mb-6">
-              <TabsTrigger value="all">الكل</TabsTrigger>
+              <TabsTrigger value="all">{t('all')}</TabsTrigger>
               <TabsTrigger value="unsigned">{t('unsigned')}</TabsTrigger>
               <TabsTrigger value="pending">{t('pending')}</TabsTrigger>
               <TabsTrigger value="approved">{t('approved')}</TabsTrigger>

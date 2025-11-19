@@ -42,6 +42,10 @@ const translations = {
     quickActions: 'Quick Actions',
     addDeclaration: 'Add Declaration',
     viewReports: 'View Reports',
+    welcome: 'Welcome',
+    all: 'All',
+    recentDeclarations: 'Recent Declarations',
+    exportAllDeclarations: 'Export All Declarations',
     
     // Admin Dashboard
     adminDashboardTitle: 'Admin Dashboard',
@@ -182,7 +186,6 @@ const translations = {
     manageUsers: 'Manage Users',
     viewAll: 'View All',
     noDeclarations: 'No declarations found',
-    recentDeclarations: 'Recent Declarations',
     
     // Manage Page
     manageDeclarations: 'Manage Declarations',
@@ -266,6 +269,7 @@ const translations = {
     exportPDF: 'Export PDF',
     exportExcel: 'Export Excel',
     exportCSV: 'Export CSV',
+    monthlyTrends: 'Monthly Trends',
   },
   ar: {
     // Navigation
@@ -300,6 +304,10 @@ const translations = {
     quickActions: 'إجراءات سريعة',
     addDeclaration: 'إضافة إقرار',
     viewReports: 'عرض التقارير',
+    welcome: 'مرحباً',
+    all: 'الكل',
+    recentDeclarations: 'الإقرارات الحديثة',
+    exportAllDeclarations: 'تصدير جميع الإقرارات',
     
     // Admin Dashboard
     adminDashboardTitle: 'لوحة تحكم المدير',
@@ -440,7 +448,6 @@ const translations = {
     manageUsers: 'إدارة المستخدمين',
     viewAll: 'عرض الكل',
     noDeclarations: 'لا توجد إقرارات',
-    recentDeclarations: 'الإقرارات الحديثة',
     
     // Manage Page
     manageDeclarations: 'إدارة الإقرارات',
@@ -524,6 +531,7 @@ const translations = {
     exportPDF: 'تصدير PDF',
     exportExcel: 'تصدير Excel',
     exportCSV: 'تصدير CSV',
+    monthlyTrends: 'الاتجاهات الشهرية',
   },
 };
 
