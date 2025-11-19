@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigation } from '@/components/Navigation';
 import { UserManagement } from '@/components/UserManagement';
+import { CreateDeclarationDialog } from '@/components/CreateDeclarationDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -35,6 +37,7 @@ const statusColors = {
 export default function Dashboard() {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
   const [stats, setStats] = useState({
     total: 0,
@@ -44,6 +47,7 @@ export default function Dashboard() {
   });
   const [recentDeclarations, setRecentDeclarations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -144,12 +148,22 @@ export default function Dashboard() {
         <Card className="glass-card border-border/50 p-6 mb-8">
           <h3 className="text-lg font-semibold mb-4">{t('quickActions')}</h3>
           <div className="flex flex-wrap gap-3">
-            <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2">
-              <Plus className="w-4 h-4" />
-              {t('addDeclaration')}
+            <CreateDeclarationDialog 
+              open={createDialogOpen} 
+              onOpenChange={setCreateDialogOpen}
+              onSuccess={() => {
+                setCreateDialogOpen(false);
+                loadDashboardData();
+              }}
+            />
+            <Button variant="outline" onClick={() => navigate('/reports')}>
+              {t('viewReports')}
             </Button>
-            <Button variant="outline">{t('viewReports')}</Button>
-            <Button variant="outline">{t('manageUsers')}</Button>
+            {user?.role === 'admin' && (
+              <Button variant="outline" onClick={() => navigate('/manage')}>
+                {t('manageUsers')}
+              </Button>
+            )}
           </div>
         </Card>
 
@@ -202,7 +216,11 @@ export default function Dashboard() {
                         </TableCell>
                         <TableCell>{new Date(declaration.created_at).toLocaleDateString('ar-SA')}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => navigate(`/declaration/${declaration.id}`)}
+                          >
                             {t('view')}
                           </Button>
                         </TableCell>
