@@ -1,183 +1,219 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Navigation } from '@/components/Navigation';
+import { UserManagement } from '@/components/UserManagement';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   FileText, 
   Clock, 
-  CheckCircle, 
-  Archive,
+  AlertCircle,
+  CheckCircle,
   Plus,
   TrendingUp,
-  Users,
-  Activity
 } from 'lucide-react';
+
+const statusColors = {
+  unsigned: 'bg-unsigned/20 text-unsigned border-unsigned/30',
+  pending: 'bg-pending/20 text-pending border-pending/30',
+  approved: 'bg-approved/20 text-approved border-approved/30',
+  archived: 'bg-archived/20 text-archived border-archived/30',
+};
 
 export default function Dashboard() {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('all');
+  const [stats, setStats] = useState({
+    total: 0,
+    unsigned: 0,
+    pending: 0,
+    approved: 0,
+  });
+  const [recentDeclarations, setRecentDeclarations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const stats = [
-    { 
-      label: t('unsigned'), 
-      value: 24, 
-      icon: FileText, 
-      color: 'text-unsigned',
-      bgColor: 'bg-unsigned/10'
-    },
-    { 
-      label: t('pending'), 
-      value: 18, 
-      icon: Clock, 
-      color: 'text-pending',
-      bgColor: 'bg-pending/10'
-    },
-    { 
-      label: t('approved'), 
-      value: 156, 
-      icon: CheckCircle, 
-      color: 'text-approved',
-      bgColor: 'bg-approved/10'
-    },
-    { 
-      label: t('archived'), 
-      value: 892, 
-      icon: Archive, 
-      color: 'text-archived',
-      bgColor: 'bg-archived/10'
-    },
-  ];
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
 
-  const recentActivity = [
-    { id: 'DEC-2024-001', action: 'Approved', user: 'Sarah Ahmed', time: '5 min ago' },
-    { id: 'DEC-2024-002', action: 'Pending', user: 'Ali Hassan', time: '12 min ago' },
-    { id: 'DEC-2024-003', action: 'Signed', user: 'Omar Khalil', time: '1 hour ago' },
-    { id: 'DEC-2024-004', action: 'Created', user: 'Fatima Ali', time: '2 hours ago' },
-  ];
+  const loadDashboardData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('declarations')
+        .select(`
+          *,
+          sender:profiles(username)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+
+      setRecentDeclarations(data || []);
+
+      const { count: totalCount } = await supabase
+        .from('declarations')
+        .select('*', { count: 'exact', head: true });
+
+      const { count: unsignedCount } = await supabase
+        .from('declarations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'unsigned');
+
+      const { count: pendingCount } = await supabase
+        .from('declarations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+
+      const { count: approvedCount } = await supabase
+        .from('declarations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'approved');
+
+      setStats({
+        total: totalCount || 0,
+        unsigned: unsignedCount || 0,
+        pending: pendingCount || 0,
+        approved: approvedCount || 0,
+      });
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen">
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero Section */}
-        <section className="text-center py-12 mb-8 glass-card rounded-2xl p-8">
-          <h2 className="text-4xl font-bold mb-4 gradient-text">
-            {t('streamlineWorkflow')}
-          </h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            {t('streamlineDesc')}
-          </p>
-          <div className="flex justify-center gap-4">
-            <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2">
-              <Plus className="w-5 h-5" />
-              {t('addDeclaration')}
-            </Button>
-            <Button size="lg" variant="outline" className="gap-2">
-              <TrendingUp className="w-5 h-5" />
-              {t('viewReports')}
-            </Button>
-          </div>
-        </section>
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">
+            {t('welcome')}, {user?.username}!
+          </h1>
+          <p className="text-muted-foreground">{t('dashboardSubtitle')}</p>
+        </div>
 
-        {/* Statistics Grid */}
+        {/* Admin: User Management Section */}
+        {user?.role === 'admin' && (
+          <div className="mb-8">
+            <UserManagement />
+          </div>
+        )}
+
+        {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat) => {
+          {[
+            { label: t('totalDeclarations'), value: stats.total, icon: FileText, color: 'text-primary', bgColor: 'bg-primary/10' },
+            { label: t('unsigned'), value: stats.unsigned, icon: Clock, color: 'text-unsigned', bgColor: 'bg-unsigned/10' },
+            { label: t('pending'), value: stats.pending, icon: AlertCircle, color: 'text-pending', bgColor: 'bg-pending/10' },
+            { label: t('approved'), value: stats.approved, icon: CheckCircle, color: 'text-approved', bgColor: 'bg-approved/10' },
+          ].map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card 
-                key={stat.label} 
-                className="glass-card border-border/50 hover:scale-105 transition-transform cursor-pointer"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`p-3 rounded-xl ${stat.bgColor}`}>
-                      <Icon className={`w-6 h-6 ${stat.color}`} />
-                    </div>
-                    <TrendingUp className="w-4 h-4 text-success" />
+              <Card key={index} className="glass-card border-border/50 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`p-3 rounded-xl ${stat.bgColor}`}>
+                    <Icon className={`w-6 h-6 ${stat.color}`} />
                   </div>
-                  <div className="text-3xl font-bold mb-1">{stat.value}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
-                </CardContent>
+                  <TrendingUp className="w-4 h-4 text-success" />
+                </div>
+                <div className="text-3xl font-bold mb-1">{stat.value}</div>
+                <div className="text-sm text-muted-foreground">{stat.label}</div>
               </Card>
             );
           })}
         </div>
 
-        {/* Recent Activity & Quick Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Activity */}
-          <Card className="glass-card border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="w-5 h-5" />
-                {t('recentActivity')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div 
-                    key={activity.id}
-                    className="flex items-center justify-between p-3 glass-card rounded-lg hover:bg-muted/5 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-secondary" />
-                      <div>
-                        <p className="font-medium text-sm">{activity.id}</p>
-                        <p className="text-xs text-muted-foreground">{activity.user}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">{activity.action}</p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Quick Actions */}
+        <Card className="glass-card border-border/50 p-6 mb-8">
+          <h3 className="text-lg font-semibold mb-4">{t('quickActions')}</h3>
+          <div className="flex flex-wrap gap-3">
+            <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2">
+              <Plus className="w-4 h-4" />
+              {t('addDeclaration')}
+            </Button>
+            <Button variant="outline">{t('viewReports')}</Button>
+            <Button variant="outline">{t('manageUsers')}</Button>
+          </div>
+        </Card>
 
-          {/* Quick Stats */}
-          <Card className="glass-card border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                System Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Total Declarations</span>
-                  <span className="text-2xl font-bold">1,090</span>
-                </div>
-                <div className="w-full bg-muted/20 rounded-full h-2">
-                  <div className="bg-secondary h-2 rounded-full" style={{ width: '85%' }} />
-                </div>
-              </div>
+        {/* Declarations Tabs */}
+        <Card className="glass-card border-border/50">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
+              <TabsTrigger value="all">{t('all')}</TabsTrigger>
+              <TabsTrigger value="unsigned">{t('unsigned')}</TabsTrigger>
+              <TabsTrigger value="pending">{t('pending')}</TabsTrigger>
+              <TabsTrigger value="approved">{t('approved')}</TabsTrigger>
+            </TabsList>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Completion Rate</span>
-                  <span className="text-2xl font-bold">94%</span>
-                </div>
-                <div className="w-full bg-muted/20 rounded-full h-2">
-                  <div className="bg-approved h-2 rounded-full" style={{ width: '94%' }} />
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Active Users</span>
-                  <span className="text-2xl font-bold">42</span>
-                </div>
-                <div className="w-full bg-muted/20 rounded-full h-2">
-                  <div className="bg-primary h-2 rounded-full" style={{ width: '68%' }} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            <TabsContent value={activeTab}>
+              <h3 className="text-lg font-semibold mb-4">{t('recentDeclarations')}</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('declarationId')}</TableHead>
+                    <TableHead>{t('type')}</TableHead>
+                    <TableHead>{t('sender')}</TableHead>
+                    <TableHead>{t('status')}</TableHead>
+                    <TableHead>{t('createdDate')}</TableHead>
+                    <TableHead className="text-right">{t('actions')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        {t('loading')}...
+                      </TableCell>
+                    </TableRow>
+                  ) : recentDeclarations.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        No recent declarations
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    recentDeclarations.map((declaration) => (
+                      <TableRow key={declaration.id}>
+                        <TableCell className="font-medium">{declaration.id}</TableCell>
+                        <TableCell>{declaration.type}</TableCell>
+                        <TableCell>{declaration.sender?.username || 'Unknown'}</TableCell>
+                        <TableCell>
+                          <Badge className={statusColors[declaration.status as keyof typeof statusColors]}>
+                            {t(declaration.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(declaration.created_at).toLocaleDateString('ar-SA')}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm">
+                            {t('view')}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TabsContent>
+          </Tabs>
+        </Card>
       </main>
     </div>
   );
