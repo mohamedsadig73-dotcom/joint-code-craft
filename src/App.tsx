@@ -13,6 +13,7 @@ import Manage from "./pages/Manage";
 import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
 import DeclarationDetails from "./pages/DeclarationDetails";
+import DeclarationTimeline from "./pages/DeclarationTimeline";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -87,6 +88,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <DeclarationDetails />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/declaration/:id/timeline" 
+        element={
+          <ProtectedRoute>
+            <DeclarationTimeline />
           </ProtectedRoute>
         } 
       />
