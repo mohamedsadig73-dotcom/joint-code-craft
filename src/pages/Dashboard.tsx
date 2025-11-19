@@ -8,6 +8,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { exportDeclarationsToExcel } from '@/utils/excelExport';
+import { exportDeclarationsToPDF } from '@/utils/pdfExport';
 import {
   Table,
   TableBody,
@@ -29,6 +31,7 @@ import {
   Eye,
   Edit,
   Trash2,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 const statusColors = {
@@ -150,6 +153,41 @@ export default function Dashboard() {
     }
   };
 
+  const exportAllToExcel = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('declarations')
+        .select(`
+          *,
+          sender:profiles(username)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const exportData = (data || []).map(dec => ({
+        id: dec.id,
+        type: dec.type,
+        sender: dec.sender?.username || 'غير معروف',
+        status: t(dec.status),
+        created_at: new Date(dec.created_at).toLocaleDateString('ar-SA'),
+      }));
+
+      exportDeclarationsToExcel(exportData, 'جميع_الإقرارات');
+
+      toast({
+        title: 'تم بنجاح',
+        description: 'تم تصدير جميع البيانات إلى Excel',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: 'فشل تصدير البيانات',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -210,9 +248,19 @@ export default function Dashboard() {
               {t('viewReports')}
             </Button>
             {user?.role === 'admin' && (
-              <Button variant="outline" onClick={() => navigate('/manage')}>
-                {t('manageUsers')}
-              </Button>
+              <>
+                <Button variant="outline" onClick={() => navigate('/manage')}>
+                  {t('manageUsers')}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={exportAllToExcel}
+                  className="gap-2"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  تصدير جميع الإقرارات
+                </Button>
+              </>
             )}
           </div>
         </Card>

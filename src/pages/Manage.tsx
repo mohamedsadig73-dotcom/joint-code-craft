@@ -13,6 +13,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { exportDeclarationsToExcel } from '@/utils/excelExport';
+import { exportDeclarationsToPDF } from '@/utils/pdfExport';
 import {
   Select,
   SelectContent,
@@ -30,7 +32,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Filter, Download, Edit, Trash2, Eye, Plus, CalendarIcon, X } from 'lucide-react';
+import { Search, Filter, Download, Edit, Trash2, Eye, Plus, CalendarIcon, X, FileSpreadsheet, FileText } from 'lucide-react';
 
 interface Declaration {
   id: string;
@@ -217,17 +219,94 @@ export default function Manage() {
     );
   };
 
+  const exportToExcel = () => {
+    try {
+      const exportData = filteredDeclarations.map(dec => ({
+        id: dec.id,
+        type: dec.type,
+        sender: dec.sender?.username || 'غير معروف',
+        status: t(dec.status),
+        created_at: new Date(dec.created_at).toLocaleDateString('ar-SA'),
+      }));
+
+      exportDeclarationsToExcel(exportData, 'إقرارات');
+
+      toast({
+        title: 'تم بنجاح',
+        description: 'تم تصدير البيانات إلى Excel',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: 'فشل تصدير البيانات',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const exportToPDF = () => {
+    try {
+      const exportData = filteredDeclarations.map(dec => ({
+        id: dec.id,
+        type: dec.type,
+        sender: dec.sender?.username || 'غير معروف',
+        status: t(dec.status),
+        created_at: new Date(dec.created_at).toLocaleDateString('ar-SA'),
+      }));
+
+      const doc = exportDeclarationsToPDF(exportData, 'تقرير الإقرارات');
+      
+      const fileName = `إقرارات_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+
+      toast({
+        title: 'تم بنجاح',
+        description: 'تم تصدير البيانات إلى PDF',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: 'فشل تصدير البيانات',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">{t('declarations')}</h1>
-          <p className="text-muted-foreground">
-            {t('showing')} {filteredDeclarations.length} {t('of')} {declarations.length} {t('results')}
-          </p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">{t('declarations')}</h1>
+            <p className="text-muted-foreground">
+              {t('showing')} {filteredDeclarations.length} {t('of')} {declarations.length} {t('results')}
+            </p>
+          </div>
+          
+          {/* Export Buttons */}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={exportToExcel}
+              className="gap-2"
+              disabled={filteredDeclarations.length === 0}
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              تصدير Excel
+            </Button>
+            <Button
+              variant="outline"
+              onClick={exportToPDF}
+              className="gap-2"
+              disabled={filteredDeclarations.length === 0}
+            >
+              <FileText className="w-4 h-4" />
+              تصدير PDF
+            </Button>
+          </div>
         </div>
 
         {/* Filters and Actions */}
