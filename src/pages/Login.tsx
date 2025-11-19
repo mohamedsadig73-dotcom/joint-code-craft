@@ -28,7 +28,7 @@ export default function Login() {
         toast({
           variant: 'destructive',
           title: t('error'),
-          description: 'الرجاء إدخال اسم المستخدم',
+          description: t('enterUsername'),
         });
         setLoading(false);
         return;
@@ -41,14 +41,14 @@ export default function Login() {
         if (loginResult.success) {
           toast({
             title: t('success'),
-            description: 'تم إنشاء الحساب وتسجيل الدخول بنجاح',
+            description: t('signupSuccess'),
           });
           navigate('/');
         } else {
           toast({
             variant: 'destructive',
             title: t('error'),
-            description: loginResult.error || 'تم إنشاء الحساب لكن تعذر تسجيل الدخول، حاول تسجيل الدخول يدويًا',
+            description: loginResult.error || t('signupFailed'),
           });
           setIsSignup(false);
           setLoading(false);
@@ -57,7 +57,7 @@ export default function Login() {
         toast({
           variant: 'destructive',
           title: t('error'),
-          description: result.error || 'فشل إنشاء الحساب',
+          description: result.error || t('signupFailed'),
         });
         setLoading(false);
       }
@@ -69,7 +69,7 @@ export default function Login() {
         toast({
           variant: 'destructive',
           title: t('error'),
-          description: result.error || 'بيانات الدخول غير صحيحة',
+          description: result.error || t('invalidCredentials'),
         });
         setLoading(false);
       }
@@ -102,7 +102,7 @@ export default function Login() {
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center z-50 animate-fade-in">
             <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
             <p className="text-lg font-medium">
-              {isSignup ? 'جاري إنشاء الحساب...' : 'جاري تسجيل الدخول...'}
+              {isSignup ? t('creatingAccount') : t('loggingIn')}
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               الرجاء الانتظار
@@ -113,31 +113,31 @@ export default function Login() {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold gradient-text mb-2">DTS</h1>
           <h2 className="text-2xl font-bold mb-2">
-            {isSignup ? 'إنشاء حساب جديد' : t('welcomeBack')}
+            {isSignup ? t('createAccount') : t('welcomeBack')}
           </h2>
           <p className="text-muted-foreground">
-            {isSignup ? 'أدخل بياناتك لإنشاء حساب' : t('loginSubtitle')}
+            {isSignup ? t('enterDeclarationDetails') : t('loginSubtitle')}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {isSignup && (
             <div className="space-y-2">
-              <Label htmlFor="username">اسم المستخدم</Label>
+              <Label htmlFor="username">{t('username')}</Label>
               <Input
                 id="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="glass-card border-border/50"
-                placeholder="mohamed sadig"
+                placeholder={t('username')}
                 required
               />
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email">البريد الإلكتروني</Label>
+            <Label htmlFor="email">{t('email')}</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -146,14 +146,14 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="pl-10 glass-card border-border/50"
-                placeholder="mohamed@example.com"
+                placeholder={t('email')}
                 required
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">كلمة المرور</Label>
+            <Label htmlFor="password">{t('password')}</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -162,7 +162,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pl-10 glass-card border-border/50"
-                placeholder="••••••••"
+                placeholder={t('password')}
                 required
                 minLength={6}
               />
@@ -177,10 +177,10 @@ export default function Login() {
             {loading ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                {isSignup ? 'جاري الإنشاء...' : 'جاري الدخول...'}
+                {isSignup ? t('creatingAccount') : t('loggingIn')}
               </span>
             ) : (
-              isSignup ? 'إنشاء حساب' : t('login')
+              isSignup ? t('createAccount') : t('login')
             )}
           </Button>
         </form>
@@ -194,7 +194,7 @@ export default function Login() {
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             disabled={loading}
           >
-            {isSignup ? 'لديك حساب؟ تسجيل الدخول' : 'ليس لديك حساب؟ سجل الآن'}
+            {isSignup ? t('alreadyHaveAccount') + ' ' + t('login') : t('dontHaveAccount') + ' ' + t('signup')}
           </button>
           
           {!isSignup && (
@@ -203,7 +203,7 @@ export default function Login() {
               className="text-sm text-primary hover:underline"
               disabled={loading}
             >
-              نسيت كلمة المرور؟
+              {t('forgotPassword')}
             </button>
           )}
         </div>

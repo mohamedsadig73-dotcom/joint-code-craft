@@ -40,8 +40,8 @@ export default function Profile() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: error.errors?.[0]?.message || 'البيانات المدخلة غير صحيحة',
+        title: t('error'),
+        description: error.errors?.[0]?.message || t('invalidData'),
       });
       return;
     }
@@ -56,8 +56,8 @@ export default function Profile() {
       if (error) throw error;
 
       toast({
-        title: 'تم بنجاح',
-        description: 'تم تغيير كلمة المرور بنجاح',
+        title: t('success'),
+        description: t('passwordChangeSuccess'),
       });
 
       setNewPassword('');
@@ -65,8 +65,8 @@ export default function Profile() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: error.message || 'فشل تغيير كلمة المرور',
+        title: t('error'),
+        description: error.message || t('passwordChangeFailed'),
       });
     } finally {
       setLoading(false);
@@ -87,11 +87,11 @@ export default function Profile() {
   const getRoleLabel = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'مدير النظام';
+        return t('systemAdmin');
       case 'manager':
-        return 'مدير';
+        return t('subManager');
       default:
-        return 'مستخدم';
+        return t('regularUser');
     }
   };
 
@@ -101,8 +101,8 @@ export default function Profile() {
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">الملف الشخصي</h1>
-          <p className="text-muted-foreground">إدارة معلوماتك الشخصية وإعدادات الحساب</p>
+          <h1 className="text-3xl font-bold mb-2">{t('myProfile')}</h1>
+          <p className="text-muted-foreground">{t('profileSubtitle')}</p>
         </div>
 
         {/* Profile Information */}
@@ -110,7 +110,7 @@ export default function Profile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="w-5 h-5" />
-              المعلومات الشخصية
+              {t('personalInformation')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -118,7 +118,7 @@ export default function Profile() {
               <div>
                 <Label className="flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  اسم المستخدم
+                  {t('username')}
                 </Label>
                 <Input
                   value={user?.username || ''}
@@ -130,7 +130,7 @@ export default function Profile() {
               <div>
                 <Label className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />
-                  البريد الإلكتروني
+                  {t('email')}
                 </Label>
                 <Input
                   value={user?.email || ''}
