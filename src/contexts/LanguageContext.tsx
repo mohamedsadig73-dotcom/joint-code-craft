@@ -40,9 +40,6 @@ const translations = {
     quickActions: 'Quick Actions',
     addDeclaration: 'Add Declaration',
     viewReports: 'View Reports',
-    weeklyTrend: 'Weekly Trend',
-    dailyActivity: 'Daily Activity',
-    comparison: 'Comparison',
     
     // Manage
     declarations: 'Declarations',
@@ -59,7 +56,6 @@ const translations = {
     showing: 'Showing',
     of: 'of',
     results: 'results',
-    selected: 'selected',
     
     // Reports
     reportsAnalytics: 'Reports & Analytics',
@@ -101,9 +97,6 @@ const translations = {
     quickActions: 'إجراءات سريعة',
     addDeclaration: 'إضافة إقرار',
     viewReports: 'عرض التقارير',
-    weeklyTrend: 'الاتجاه الأسبوعي',
-    dailyActivity: 'النشاط اليومي',
-    comparison: 'مقارنة',
     
     // Manage
     declarations: 'الإقرارات',
@@ -120,7 +113,6 @@ const translations = {
     showing: 'عرض',
     of: 'من',
     results: 'نتيجة',
-    selected: 'محدد',
     
     // Reports
     reportsAnalytics: 'التقارير والتحليلات',

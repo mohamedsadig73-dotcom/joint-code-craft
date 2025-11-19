@@ -3,7 +3,7 @@ import { Navigation } from '@/components/Navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -21,9 +21,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Filter, Plus, Download, Edit, Trash2, Eye, TrendingUp, BarChart3 } from 'lucide-react';
-import { ComparisonBarChart } from '@/components/charts/ComparisonBarChart';
-import { StatusPieChart } from '@/components/charts/StatusPieChart';
+import { Search, Filter, Plus, Download, Edit, Trash2, Eye } from 'lucide-react';
 
 const mockDeclarations = [
   { id: 'DEC-2024-001', type: 'Import', sender: 'Ali Hassan', status: 'approved', date: '2024-01-15' },
@@ -48,41 +46,6 @@ export default function Manage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-
-  // بيانات للرسوم البيانية
-  const statusStats = [
-    { name: t('unsigned') || 'غير موقعة', value: mockDeclarations.filter(d => d.status === 'unsigned').length, color: 'hsl(var(--unsigned))' },
-    { name: t('pending') || 'قيد الانتظار', value: mockDeclarations.filter(d => d.status === 'pending').length, color: 'hsl(var(--pending))' },
-    { name: t('approved') || 'موافق عليها', value: mockDeclarations.filter(d => d.status === 'approved').length, color: 'hsl(var(--approved))' },
-    { name: t('archived') || 'مؤرشفة', value: mockDeclarations.filter(d => d.status === 'archived').length, color: 'hsl(var(--archived))' },
-  ];
-
-  const typeComparison = [
-    { 
-      category: 'Import', 
-      approved: mockDeclarations.filter(d => d.type === 'Import' && d.status === 'approved').length,
-      pending: mockDeclarations.filter(d => d.type === 'Import' && d.status === 'pending').length,
-      unsigned: mockDeclarations.filter(d => d.type === 'Import' && d.status === 'unsigned').length,
-    },
-    { 
-      category: 'Export', 
-      approved: mockDeclarations.filter(d => d.type === 'Export' && d.status === 'approved').length,
-      pending: mockDeclarations.filter(d => d.type === 'Export' && d.status === 'pending').length,
-      unsigned: mockDeclarations.filter(d => d.type === 'Export' && d.status === 'unsigned').length,
-    },
-    { 
-      category: 'Transit', 
-      approved: mockDeclarations.filter(d => d.type === 'Transit' && d.status === 'approved').length,
-      pending: mockDeclarations.filter(d => d.type === 'Transit' && d.status === 'pending').length,
-      unsigned: mockDeclarations.filter(d => d.type === 'Transit' && d.status === 'unsigned').length,
-    },
-  ];
-
-  const typeBars = [
-    { dataKey: 'approved', fill: 'hsl(var(--approved))', name: 'موافق عليها' },
-    { dataKey: 'pending', fill: 'hsl(var(--pending))', name: 'قيد الانتظار' },
-    { dataKey: 'unsigned', fill: 'hsl(var(--unsigned))', name: 'غير موقعة' },
-  ];
 
   const filteredDeclarations = mockDeclarations.filter(dec => {
     const matchesSearch = dec.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -174,92 +137,16 @@ export default function Manage() {
         {/* Statistics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
-            { label: t('unsigned'), value: mockDeclarations.filter(d => d.status === 'unsigned').length, color: 'text-unsigned' },
-            { label: t('pending'), value: mockDeclarations.filter(d => d.status === 'pending').length, color: 'text-pending' },
-            { label: t('approved'), value: mockDeclarations.filter(d => d.status === 'approved').length, color: 'text-approved' },
-            { label: t('archived'), value: mockDeclarations.filter(d => d.status === 'archived').length, color: 'text-archived' },
+            { label: t('unsigned'), value: 24, color: 'text-unsigned' },
+            { label: t('pending'), value: 18, color: 'text-pending' },
+            { label: t('approved'), value: 156, color: 'text-approved' },
+            { label: t('archived'), value: 892, color: 'text-archived' },
           ].map((stat) => (
-            <Card key={stat.label} className="glass-card border-border/50 p-4 text-center hover:scale-105 transition-transform cursor-pointer">
-              <div className={`text-3xl font-bold mb-1 ${stat.color}`}>{stat.value}</div>
+            <Card key={stat.label} className="glass-card border-border/50 p-4 text-center">
+              <div className={`text-2xl font-bold mb-1 ${stat.color}`}>{stat.value}</div>
               <div className="text-sm text-muted-foreground">{stat.label}</div>
             </Card>
           ))}
-        </div>
-
-        {/* Charts Analytics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <StatusPieChart data={statusStats} />
-          <ComparisonBarChart 
-            data={typeComparison} 
-            bars={typeBars}
-            title="التصنيف حسب النوع والحالة"
-          />
-        </div>
-
-        {/* Performance Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="glass-card border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <TrendingUp className="w-5 h-5 text-success" />
-                معدل الموافقة
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-success mb-2">
-                {((mockDeclarations.filter(d => d.status === 'approved').length / mockDeclarations.length) * 100).toFixed(1)}%
-              </div>
-              <p className="text-sm text-muted-foreground">من إجمالي التصريحات</p>
-              <div className="mt-4 w-full bg-muted/20 rounded-full h-2">
-                <div 
-                  className="bg-success h-2 rounded-full transition-all" 
-                  style={{ width: `${(mockDeclarations.filter(d => d.status === 'approved').length / mockDeclarations.length) * 100}%` }} 
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <BarChart3 className="w-5 h-5 text-pending" />
-                قيد المعالجة
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-pending mb-2">
-                {mockDeclarations.filter(d => d.status === 'pending' || d.status === 'unsigned').length}
-              </div>
-              <p className="text-sm text-muted-foreground">تحتاج إلى إجراء</p>
-              <div className="mt-4 w-full bg-muted/20 rounded-full h-2">
-                <div 
-                  className="bg-pending h-2 rounded-full transition-all" 
-                  style={{ width: `${((mockDeclarations.filter(d => d.status === 'pending' || d.status === 'unsigned').length / mockDeclarations.length) * 100)}%` }} 
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <BarChart3 className="w-5 h-5 text-archived" />
-                المؤرشفة
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-archived mb-2">
-                {mockDeclarations.filter(d => d.status === 'archived').length}
-              </div>
-              <p className="text-sm text-muted-foreground">تصريحات مكتملة</p>
-              <div className="mt-4 w-full bg-muted/20 rounded-full h-2">
-                <div 
-                  className="bg-archived h-2 rounded-full transition-all" 
-                  style={{ width: `${(mockDeclarations.filter(d => d.status === 'archived').length / mockDeclarations.length) * 100}%` }} 
-                />
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Declarations Table */}

@@ -3,7 +3,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ReactECharts from 'echarts-for-react';
-import { Download, TrendingUp, Users, FileText, Clock, Award, BarChart3 } from 'lucide-react';
+import { Download, TrendingUp, Users, FileText, Clock } from 'lucide-react';
 
 export default function Reports() {
   const { t } = useLanguage();
@@ -192,16 +192,13 @@ export default function Reports() {
           {metrics.map((metric) => {
             const Icon = metric.icon;
             return (
-              <Card key={metric.label} className="glass-card border-border/50 hover:scale-105 transition-transform">
+              <Card key={metric.label} className="glass-card border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 rounded-xl bg-secondary/10">
-                      <Icon className="w-6 h-6 text-secondary" />
+                    <div className="p-2 rounded-lg bg-secondary/10">
+                      <Icon className="w-5 h-5 text-secondary" />
                     </div>
-                    <span className="text-sm font-medium text-success flex items-center gap-1">
-                      <TrendingUp className="w-4 h-4" />
-                      {metric.trend}
-                    </span>
+                    <span className="text-sm font-medium text-success">{metric.trend}</span>
                   </div>
                   <div className="text-3xl font-bold mb-1">{metric.value}</div>
                   <div className="text-sm text-muted-foreground">{metric.label}</div>
@@ -209,96 +206,6 @@ export default function Reports() {
               </Card>
             );
           })}
-        </div>
-
-        {/* Advanced Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="glass-card border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Award className="w-5 h-5 text-approved" />
-                معدل الأداء
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-muted-foreground">معدل الإنجاز</span>
-                    <span className="text-2xl font-bold text-approved">94%</span>
-                  </div>
-                  <div className="w-full bg-muted/20 rounded-full h-3">
-                    <div className="bg-approved h-3 rounded-full transition-all" style={{ width: '94%' }} />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-muted-foreground">سرعة المعالجة</span>
-                    <span className="text-2xl font-bold text-secondary">87%</span>
-                  </div>
-                  <div className="w-full bg-muted/20 rounded-full h-3">
-                    <div className="bg-secondary h-3 rounded-full transition-all" style={{ width: '87%' }} />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <BarChart3 className="w-5 h-5 text-pending" />
-                حالة النظام
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">نشط</span>
-                  <span className="font-bold text-approved">156</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">قيد المعالجة</span>
-                  <span className="font-bold text-pending">42</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">محفوظ</span>
-                  <span className="font-bold text-archived">892</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">إجمالي</span>
-                  <span className="font-bold text-secondary">1,090</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Users className="w-5 h-5 text-primary" />
-                نشاط المستخدمين
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-muted-foreground">مستخدمون نشطون</span>
-                    <span className="text-2xl font-bold">42</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">+12% من الأسبوع الماضي</p>
-                </div>
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-muted-foreground">متوسط الجلسات</span>
-                    <span className="text-2xl font-bold">2.4h</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">+8% من الأسبوع الماضي</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Charts Grid */}
