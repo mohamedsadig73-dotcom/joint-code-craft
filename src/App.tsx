@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import Manage from "./pages/Manage";
 import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
@@ -87,6 +88,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <DeclarationTimeline />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin" 
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminDashboard />
             </ProtectedRoute>
           } 
         />

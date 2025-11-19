@@ -9,7 +9,8 @@ import {
   BarChart3, 
   LogOut, 
   User,
-  Globe
+  Globe,
+  Shield
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -38,9 +39,13 @@ export function Navigation() {
     { path: '/reports', icon: BarChart3, label: t('reports') },
   ];
 
-  // Add users management link for admins only
+  // Add admin links for admins only
   const allNavItems = user?.role === 'admin' 
-    ? [...navItems, { path: '/users', icon: User, label: 'المستخدمون' }]
+    ? [
+        ...navItems, 
+        { path: '/admin', icon: Shield, label: 'لوحة المدير' },
+        { path: '/users', icon: User, label: 'المستخدمون' }
+      ]
     : navItems;
 
   return (
