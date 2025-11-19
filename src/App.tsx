@@ -11,6 +11,8 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Manage from "./pages/Manage";
 import Reports from "./pages/Reports";
+import Profile from "./pages/Profile";
+import DeclarationDetails from "./pages/DeclarationDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -69,6 +71,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Reports />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/declaration/:id" 
+        element={
+          <ProtectedRoute>
+            <DeclarationDetails />
           </ProtectedRoute>
         } 
       />

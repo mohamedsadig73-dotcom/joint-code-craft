@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Navigation } from '@/components/Navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -7,6 +9,42 @@ import { Download, TrendingUp, Users, FileText, Clock } from 'lucide-react';
 
 export default function Reports() {
   const { t } = useLanguage();
+  const [stats, setStats] = useState({
+    unsigned: 0,
+    pending: 0,
+    approved: 0,
+    archived: 0,
+    total: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('declarations')
+        .select('status');
+
+      if (error) throw error;
+
+      const newStats = {
+        unsigned: data?.filter(d => d.status === 'unsigned').length || 0,
+        pending: data?.filter(d => d.status === 'pending').length || 0,
+        approved: data?.filter(d => d.status === 'approved').length || 0,
+        archived: data?.filter(d => d.status === 'archived').length || 0,
+        total: data?.length || 0,
+      };
+
+      setStats(newStats);
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Status Distribution Pie Chart
   const statusDistributionOption = {
@@ -30,10 +68,10 @@ export default function Reports() {
         type: 'pie',
         radius: '70%',
         data: [
-          { value: 24, name: t('unsigned'), itemStyle: { color: '#c53030' } },
-          { value: 18, name: t('pending'), itemStyle: { color: '#dd6b20' } },
-          { value: 156, name: t('approved'), itemStyle: { color: '#22543d' } },
-          { value: 892, name: t('archived'), itemStyle: { color: '#2b6cb0' } },
+          { value: stats.unsigned, name: t('unsigned'), itemStyle: { color: '#c53030' } },
+          { value: stats.pending, name: t('pending'), itemStyle: { color: '#dd6b20' } },
+          { value: stats.approved, name: t('approved'), itemStyle: { color: '#22543d' } },
+          { value: stats.archived, name: t('archived'), itemStyle: { color: '#2b6cb0' } },
         ],
         emphasis: {
           itemStyle: {
