@@ -158,13 +158,22 @@ export default function Login() {
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 flex flex-col items-center gap-3">
           <button
             onClick={() => setIsSignup(!isSignup)}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             {isSignup ? 'لديك حساب؟ تسجيل الدخول' : 'ليس لديك حساب؟ سجل الآن'}
           </button>
+          
+          {!isSignup && (
+            <button
+              onClick={() => window.location.href = '/forgot-password'}
+              className="text-sm text-primary hover:underline"
+            >
+              نسيت كلمة المرور؟
+            </button>
+          )}
         </div>
       </div>
     </div>
