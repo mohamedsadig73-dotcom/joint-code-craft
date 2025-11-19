@@ -58,24 +58,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('profiles')
         .select('*')
         .eq('id', supabaseUser.id)
-        .single();
+        .maybeSingle();
 
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', supabaseUser.id)
-        .single();
+        .maybeSingle();
 
-      if (profile) {
-        setUser({
-          id: profile.id,
-          username: profile.username,
-          email: profile.email,
-          role: roleData?.role || 'user',
-        });
-      }
+      const username = (profile as any)?.username
+        || (supabaseUser.user_metadata as any)?.username
+        || supabaseUser.email?.split('@')[0]
+        || 'User';
+
+      const email = (profile as any)?.email || supabaseUser.email || '';
+
+      setUser({
+        id: (profile as any)?.id || supabaseUser.id,
+        username,
+        email,
+        role: (roleData as any)?.role || 'user',
+      });
     } catch (error) {
       console.error('Error loading profile:', error);
+      // حتى لو فشل جلب الملف الشخصي، نبقي المستخدم مسجلًا مع دور افتراضي
+      const username = (supabaseUser.user_metadata as any)?.username
+        || supabaseUser.email?.split('@')[0]
+        || 'User';
+
+      setUser({
+        id: supabaseUser.id,
+        username,
+        email: supabaseUser.email || '',
+        role: 'user',
+      });
+    } finally {
       setLoading(false);
     }
   };
