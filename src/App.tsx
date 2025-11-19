@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Login from "./pages/Login";
-import DirectLogin from "./pages/DirectLogin";
 import Dashboard from "./pages/Dashboard";
 import Manage from "./pages/Manage";
 import Reports from "./pages/Reports";
@@ -33,7 +32,6 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/direct-login" element={<DirectLogin />} />
       <Route 
         path="/login" 
         element={
