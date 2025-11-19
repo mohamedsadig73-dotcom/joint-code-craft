@@ -67,8 +67,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', supabaseUser.id)
-        .maybeSingle();
+        .eq('user_id', supabaseUser.id);
+      
+      // Get highest priority role (admin > manager > user)
+      const roles = (roleData || []).map((r: any) => r.role);
+      const role = roles.includes('admin') ? 'admin' : roles.includes('manager') ? 'manager' : 'user';
 
       const username = (profile as any)?.username
         || (supabaseUser.user_metadata as any)?.username
@@ -81,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: (profile as any)?.id || supabaseUser.id,
         username,
         email,
-        role: (roleData as any)?.role || 'user',
+        role,
       });
     } catch (error) {
       console.error('Error loading profile:', error);
