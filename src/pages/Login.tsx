@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Globe, Lock, Mail } from 'lucide-react';
+import { Globe, Lock, Mail, Loader2 } from 'lucide-react';
 
 export default function Login() {
   const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login, signup } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
     if (isSignup) {
       if (!username) {
@@ -28,6 +30,7 @@ export default function Login() {
           title: t('error'),
           description: 'الرجاء إدخال اسم المستخدم',
         });
+        setLoading(false);
         return;
       }
       
@@ -48,6 +51,7 @@ export default function Login() {
             description: loginResult.error || 'تم إنشاء الحساب لكن تعذر تسجيل الدخول، حاول تسجيل الدخول يدويًا',
           });
           setIsSignup(false);
+          setLoading(false);
         }
       } else {
         toast({
@@ -55,6 +59,7 @@ export default function Login() {
           title: t('error'),
           description: result.error || 'فشل إنشاء الحساب',
         });
+        setLoading(false);
       }
     } else {
       const result = await login(email, password);
@@ -66,6 +71,7 @@ export default function Login() {
           title: t('error'),
           description: result.error || 'بيانات الدخول غير صحيحة',
         });
+        setLoading(false);
       }
     }
   };
@@ -91,6 +97,19 @@ export default function Login() {
 
       {/* Login/Signup Card */}
       <div className="glass-card rounded-2xl p-8 w-full max-w-md relative z-10 shadow-2xl">
+        {/* Loading Overlay */}
+        {loading && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center z-50 animate-fade-in">
+            <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+            <p className="text-lg font-medium">
+              {isSignup ? 'جاري إنشاء الحساب...' : 'جاري تسجيل الدخول...'}
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              الرجاء الانتظار
+            </p>
+          </div>
+        )}
+
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold gradient-text mb-2">DTS</h1>
           <h2 className="text-2xl font-bold mb-2">
@@ -153,15 +172,27 @@ export default function Login() {
           <Button 
             type="submit" 
             className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold"
+            disabled={loading}
           >
-            {isSignup ? 'إنشاء حساب' : t('login')}
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {isSignup ? 'جاري الإنشاء...' : 'جاري الدخول...'}
+              </span>
+            ) : (
+              isSignup ? 'إنشاء حساب' : t('login')
+            )}
           </Button>
         </form>
 
         <div className="mt-6 flex flex-col items-center gap-3">
           <button
-            onClick={() => setIsSignup(!isSignup)}
+            onClick={() => {
+              setIsSignup(!isSignup);
+              setLoading(false);
+            }}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            disabled={loading}
           >
             {isSignup ? 'لديك حساب؟ تسجيل الدخول' : 'ليس لديك حساب؟ سجل الآن'}
           </button>
@@ -170,6 +201,7 @@ export default function Login() {
             <button
               onClick={() => window.location.href = '/forgot-password'}
               className="text-sm text-primary hover:underline"
+              disabled={loading}
             >
               نسيت كلمة المرور؟
             </button>
