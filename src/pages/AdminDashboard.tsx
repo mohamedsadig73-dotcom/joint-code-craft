@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -53,6 +54,7 @@ const statusLabels: Record<string, string> = {
 export default function AdminDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<SystemStats>({
     totalUsers: 0,
@@ -185,20 +187,20 @@ export default function AdminDashboard() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Shield className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold">لوحة تحكم المدير</h1>
+            <h1 className="text-3xl font-bold">{t('adminDashboardTitle')}</h1>
           </div>
-          <p className="text-muted-foreground">نظرة شاملة على إحصائيات النظام والنشاطات</p>
+          <p className="text-muted-foreground">{t('adminDashboardSubtitle')}</p>
         </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="stats" className="gap-2">
               <BarChart3 className="w-4 h-4" />
-              الإحصائيات
+              {t('statistics')}
             </TabsTrigger>
             <TabsTrigger value="users" className="gap-2">
               <Users className="w-4 h-4" />
-              إدارة المستخدمين
+              {t('userManagement')}
             </TabsTrigger>
           </TabsList>
 
@@ -207,45 +209,45 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="glass-card border-border/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">إجمالي المستخدمين</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('totalUsers')}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalUsers}</div>
-              <p className="text-xs text-muted-foreground">جميع حسابات النظام</p>
+              <p className="text-xs text-muted-foreground">{t('allSystemAccounts')}</p>
             </CardContent>
           </Card>
 
           <Card className="glass-card border-border/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">مدراء النظام</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('systemAdmins')}</CardTitle>
               <Shield className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-destructive">{stats.adminCount}</div>
-              <p className="text-xs text-muted-foreground">صلاحية كاملة</p>
+              <p className="text-xs text-muted-foreground">{t('fullAccess')}</p>
             </CardContent>
           </Card>
 
           <Card className="glass-card border-border/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">المدراء الفرعيين</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('managers')}</CardTitle>
               <UserCheck className="h-4 w-4 text-chart-2" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold" style={{ color: COLORS.manager }}>{stats.managerCount}</div>
-              <p className="text-xs text-muted-foreground">صلاحيات إدارية</p>
+              <p className="text-xs text-muted-foreground">{t('managerialPermissions')}</p>
             </CardContent>
           </Card>
 
           <Card className="glass-card border-border/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">إجمالي الإقرارات</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('totalDeclarations')}</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalDeclarations}</div>
-              <p className="text-xs text-muted-foreground">جميع الإقرارات</p>
+              <p className="text-xs text-muted-foreground">{t('allDeclarations')}</p>
             </CardContent>
           </Card>
         </div>
@@ -257,9 +259,9 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                توزيع المستخدمين حسب الصلاحيات
+                {t('userDistribution')}
               </CardTitle>
-              <CardDescription>نسبة كل نوع من الصلاحيات</CardDescription>
+              <CardDescription>{t('rolePercentage')}</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -290,9 +292,9 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
-                توزيع الإقرارات حسب الحالة
+                {t('declarationDistribution')}
               </CardTitle>
-              <CardDescription>عدد الإقرارات في كل مرحلة</CardDescription>
+              <CardDescription>{t('countByStage')}</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -327,14 +329,14 @@ export default function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="w-5 h-5" />
-              آخر النشاطات
+              {t('recentActivities')}
             </CardTitle>
-            <CardDescription>أحدث التغييرات في النظام</CardDescription>
+            <CardDescription>{t('latestSystemChanges')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {stats.recentActivities.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">لا توجد نشاطات حديثة</p>
+                <p className="text-center text-muted-foreground py-8">{t('noRecentActivities')}</p>
               ) : (
                 stats.recentActivities.map((activity) => (
                   <div key={activity.id} className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">

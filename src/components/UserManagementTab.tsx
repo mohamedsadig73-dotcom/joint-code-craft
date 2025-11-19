@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -54,39 +55,39 @@ interface UserWithRole {
 
 const rolePermissions = {
   admin: {
-    label: 'مدير النظام',
+    labelKey: 'systemAdmin',
     color: 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30',
-    permissions: [
-      'عرض جميع الإقرارات',
-      'إنشاء وتعديل وحذف الإقرارات',
-      'تغيير حالة أي إقرار',
-      'إدارة جميع المستخدمين',
-      'إضافة وحذف مستخدمين',
-      'تغيير صلاحيات المستخدمين',
-      'عرض التقارير والإحصائيات',
-      'الوصول الكامل للنظام',
+    permissionsKeys: [
+      'viewAllDeclarations',
+      'createEditDeleteDeclarations',
+      'changeAnyDeclarationStatus',
+      'manageAllUsers',
+      'addDeleteUsers',
+      'changeUserPermissions',
+      'viewReportsStatistics',
+      'fullSystemAccess',
     ],
   },
   manager: {
-    label: 'مدير فرعي',
+    labelKey: 'subManager',
     color: 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30',
-    permissions: [
-      'عرض جميع الإقرارات',
-      'إنشاء وتعديل الإقرارات',
-      'تغيير حالة جميع الإقرارات',
-      'عرض معلومات المستخدمين',
-      'عرض التقارير والإحصائيات',
+    permissionsKeys: [
+      'viewAllDeclarations',
+      'createEditDeclarations',
+      'changeAllDeclarationStatus',
+      'viewUserInformation',
+      'viewReportsStatistics',
     ],
   },
   user: {
-    label: 'مستخدم',
+    labelKey: 'regularUser',
     color: 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30',
-    permissions: [
-      'عرض جميع الإقرارات',
-      'إنشاء إقرارات جديدة',
-      'تعديل الإقرارات الخاصة به فقط',
-      'تغيير حالة الإقرارات الخاصة به فقط',
-      'عرض ملفه الشخصي',
+    permissionsKeys: [
+      'viewAllDeclarations',
+      'createNewDeclarations',
+      'editOwnDeclarations',
+      'changeOwnDeclarationStatus',
+      'viewOwnProfile',
     ],
   },
 };
@@ -94,6 +95,7 @@ const rolePermissions = {
 export function UserManagementTab() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -140,7 +142,7 @@ export function UserManagementTab() {
       setUsers(usersWithRoles);
     } catch (error: any) {
       toast({
-        title: 'خطأ',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       });
@@ -173,14 +175,14 @@ export function UserManagementTab() {
       }
 
       toast({
-        title: 'تم بنجاح',
-        description: 'تم تحديث دور المستخدم بنجاح',
+        title: t('success'),
+        description: t('userRoleUpdated'),
       });
 
       loadUsers();
     } catch (error: any) {
       toast({
-        title: 'خطأ',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       });
@@ -193,8 +195,8 @@ export function UserManagementTab() {
     if (!newUserEmail || !newUserPassword || !newUserUsername) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: 'يرجى ملء جميع الحقول',
+        title: t('error'),
+        description: t('fillAllFields'),
       });
       return;
     }
@@ -230,8 +232,8 @@ export function UserManagementTab() {
       if (roleError) throw roleError;
 
       toast({
-        title: 'تم بنجاح',
-        description: `تم إنشاء المستخدم ${newUserUsername} بنجاح`,
+        title: t('success'),
+        description: `${t('userCreatedSuccess')}`,
       });
 
       setNewUserEmail('');
@@ -245,8 +247,8 @@ export function UserManagementTab() {
       console.error('Error creating user:', error);
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: error.message || 'فشل إنشاء المستخدم',
+        title: t('error'),
+        description: error.message || t('userCreationFailed'),
       });
     } finally {
       setCreating(false);
@@ -265,8 +267,8 @@ export function UserManagementTab() {
       if (roleError) throw roleError;
 
       toast({
-        title: 'تم بنجاح',
-        description: 'تم حذف صلاحيات المستخدم. لحذف المستخدم بالكامل، يجب القيام بذلك من لوحة تحكم Supabase.',
+        title: t('success'),
+        description: t('permissionsDeleted'),
       });
 
       setDeleteDialogOpen(false);
@@ -275,14 +277,14 @@ export function UserManagementTab() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
+        title: t('error'),
         description: error.message,
       });
     }
   };
 
   if (loading) {
-    return <div className="text-center py-8">جاري التحميل...</div>;
+    return <div className="text-center py-8">{t('loading')}</div>;
   }
 
   return (
@@ -292,19 +294,19 @@ export function UserManagementTab() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Info className="w-5 h-5" />
-            دليل الصلاحيات
+            {t('permissionsGuide')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {Object.entries(rolePermissions).map(([role, info]) => (
               <div key={role} className="space-y-3">
-                <Badge className={info.color}>{info.label}</Badge>
+                <Badge className={info.color}>{t(info.labelKey)}</Badge>
                 <ul className="space-y-2 text-sm">
-                  {info.permissions.map((permission, index) => (
+                  {info.permissionsKeys.map((permissionKey, index) => (
                     <li key={index} className="flex items-start gap-2">
                       <span className="text-primary mt-1">•</span>
-                      <span className="text-muted-foreground">{permission}</span>
+                      <span className="text-muted-foreground">{t(permissionKey)}</span>
                     </li>
                   ))}
                 </ul>
@@ -320,43 +322,43 @@ export function UserManagementTab() {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
-              المستخدمون ({users.length})
+              {t('usersCount')} ({users.length})
             </CardTitle>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={loadUsers}>
                 <RefreshCw className="w-4 h-4 mr-2" />
-                تحديث
+                {t('refresh')}
               </Button>
               
               <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm">
                     <UserPlus className="w-4 h-4 mr-2" />
-                    إضافة مستخدم
+                    {t('addUser')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>إضافة مستخدم جديد</DialogTitle>
+                    <DialogTitle>{t('addNewUser')}</DialogTitle>
                     <DialogDescription>
-                      قم بإنشاء حساب مستخدم جديد وتحديد صلاحياته
+                      {t('createUserAccount')}
                     </DialogDescription>
                   </DialogHeader>
                   
                   <form onSubmit={handleCreateUser} className="space-y-4">
                     <div>
-                      <Label htmlFor="username">اسم المستخدم</Label>
+                      <Label htmlFor="username">{t('username')}</Label>
                       <Input
                         id="username"
                         value={newUserUsername}
                         onChange={(e) => setNewUserUsername(e.target.value)}
-                        placeholder="أدخل اسم المستخدم"
+                        placeholder={t('username')}
                         required
                       />
                     </div>
                     
                     <div>
-                      <Label htmlFor="email">البريد الإلكتروني</Label>
+                      <Label htmlFor="email">{t('email')}</Label>
                       <Input
                         id="email"
                         type="email"
@@ -368,20 +370,20 @@ export function UserManagementTab() {
                     </div>
                     
                     <div>
-                      <Label htmlFor="password">كلمة المرور</Label>
+                      <Label htmlFor="password">{t('password')}</Label>
                       <Input
                         id="password"
                         type="password"
                         value={newUserPassword}
                         onChange={(e) => setNewUserPassword(e.target.value)}
-                        placeholder="أدخل كلمة مرور قوية"
+                        placeholder={t('password')}
                         required
                         minLength={6}
                       />
                     </div>
                     
                     <div>
-                      <Label htmlFor="role">الصلاحية</Label>
+                      <Label htmlFor="role">{t('role')}</Label>
                       <Select value={newUserRole} onValueChange={(value: any) => setNewUserRole(value)}>
                         <SelectTrigger>
                           <SelectValue />
@@ -390,21 +392,21 @@ export function UserManagementTab() {
                           <SelectItem value="user">
                             <div className="flex items-center gap-2">
                               <Badge className={rolePermissions.user.color}>
-                                {rolePermissions.user.label}
+                                {t(rolePermissions.user.labelKey)}
                               </Badge>
                             </div>
                           </SelectItem>
                           <SelectItem value="manager">
                             <div className="flex items-center gap-2">
                               <Badge className={rolePermissions.manager.color}>
-                                {rolePermissions.manager.label}
+                                {t(rolePermissions.manager.labelKey)}
                               </Badge>
                             </div>
                           </SelectItem>
                           <SelectItem value="admin">
                             <div className="flex items-center gap-2">
                               <Badge className={rolePermissions.admin.color}>
-                                {rolePermissions.admin.label}
+                                {t(rolePermissions.admin.labelKey)}
                               </Badge>
                             </div>
                           </SelectItem>
@@ -419,10 +421,10 @@ export function UserManagementTab() {
                         onClick={() => setAddDialogOpen(false)}
                         disabled={creating}
                       >
-                        إلغاء
+                        {t('cancel')}
                       </Button>
                       <Button type="submit" disabled={creating}>
-                        {creating ? 'جاري الإنشاء...' : 'إنشاء المستخدم'}
+                        {creating ? t('creating') : t('createUser')}
                       </Button>
                     </div>
                   </form>
@@ -435,11 +437,11 @@ export function UserManagementTab() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>اسم المستخدم</TableHead>
-                <TableHead>البريد الإلكتروني</TableHead>
-                <TableHead>الصلاحية</TableHead>
-                <TableHead>تاريخ الإنشاء</TableHead>
-                <TableHead>الإجراءات</TableHead>
+                <TableHead>{t('username')}</TableHead>
+                <TableHead>{t('email')}</TableHead>
+                <TableHead>{t('role')}</TableHead>
+                <TableHead>{t('creationDate')}</TableHead>
+                <TableHead>{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -456,24 +458,24 @@ export function UserManagementTab() {
                       <SelectTrigger className="w-[180px]">
                         <SelectValue>
                           <Badge className={rolePermissions[userData.role].color}>
-                            {rolePermissions[userData.role].label}
+                            {t(rolePermissions[userData.role].labelKey)}
                           </Badge>
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="user">
                           <Badge className={rolePermissions.user.color}>
-                            {rolePermissions.user.label}
+                            {t(rolePermissions.user.labelKey)}
                           </Badge>
                         </SelectItem>
                         <SelectItem value="manager">
                           <Badge className={rolePermissions.manager.color}>
-                            {rolePermissions.manager.label}
+                            {t(rolePermissions.manager.labelKey)}
                           </Badge>
                         </SelectItem>
                         <SelectItem value="admin">
                           <Badge className={rolePermissions.admin.color}>
-                            {rolePermissions.admin.label}
+                            {t(rolePermissions.admin.labelKey)}
                           </Badge>
                         </SelectItem>
                       </SelectContent>
@@ -507,15 +509,15 @@ export function UserManagementTab() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+            <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
             <AlertDialogDescription>
-              هذا الإجراء سيحذف صلاحيات المستخدم. لحذف المستخدم بالكامل من النظام، يجب القيام بذلك من لوحة تحكم قاعدة البيانات.
+              {t('deleteRoleWarning')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteUser} className="bg-destructive">
-              حذف الصلاحيات
+              {t('deletePermissions')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
