@@ -9,6 +9,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import {
   Select,
   SelectContent,
@@ -26,7 +30,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Filter, Download, Edit, Trash2, Eye, Plus } from 'lucide-react';
+import { Search, Filter, Download, Edit, Trash2, Eye, Plus, CalendarIcon, X } from 'lucide-react';
 
 interface Declaration {
   id: string;
@@ -35,6 +39,11 @@ interface Declaration {
   sender?: { username: string };
   status: 'unsigned' | 'pending' | 'approved' | 'archived';
   created_at: string;
+}
+
+interface Profile {
+  id: string;
+  username: string;
 }
 
 const statusColors = {
@@ -50,8 +59,12 @@ export default function Manage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [senderFilter, setSenderFilter] = useState('all');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     unsigned: 0,
@@ -62,7 +75,22 @@ export default function Manage() {
 
   useEffect(() => {
     loadDeclarations();
+    loadProfiles();
   }, []);
+
+  const loadProfiles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .order('username');
+
+      if (error) throw error;
+      setProfiles(data || []);
+    } catch (error: any) {
+      console.error('Error loading profiles:', error);
+    }
+  };
 
   const loadDeclarations = async () => {
     try {
@@ -147,8 +175,33 @@ export default function Manage() {
     const matchesSearch = dec.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          dec.sender?.username.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || dec.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesSender = senderFilter === 'all' || dec.sender_id === senderFilter;
+    
+    // Date filtering
+    let matchesDate = true;
+    if (dateFrom || dateTo) {
+      const decDate = new Date(dec.created_at);
+      if (dateFrom && dateTo) {
+        matchesDate = decDate >= dateFrom && decDate <= dateTo;
+      } else if (dateFrom) {
+        matchesDate = decDate >= dateFrom;
+      } else if (dateTo) {
+        matchesDate = decDate <= dateTo;
+      }
+    }
+    
+    return matchesSearch && matchesStatus && matchesSender && matchesDate;
   });
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setSenderFilter('all');
+    setDateFrom(undefined);
+    setDateTo(undefined);
+  };
+
+  const hasActiveFilters = searchQuery || statusFilter !== 'all' || senderFilter !== 'all' || dateFrom || dateTo;
 
   const toggleSelectAll = () => {
     if (selectedItems.length === filteredDeclarations.length) {
@@ -179,42 +232,125 @@ export default function Manage() {
 
         {/* Filters and Actions */}
         <Card className="glass-card border-border/50 p-6 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder={`${t('search')}...`}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 glass-card border-border/50"
-              />
+          <div className="space-y-4">
+            {/* First Row - Search and Quick Filters */}
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Search */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder={`${t('search')}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 glass-card border-border/50"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-48 glass-card border-border/50">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder={t('status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('allStatuses')}</SelectItem>
+                  <SelectItem value="unsigned">{t('unsigned')}</SelectItem>
+                  <SelectItem value="pending">{t('pending')}</SelectItem>
+                  <SelectItem value="approved">{t('approved')}</SelectItem>
+                  <SelectItem value="archived">{t('archived')}</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <CreateDeclarationDialog 
+                  onSuccess={loadDeclarations}
+                />
+                <Button variant="outline" className="gap-2">
+                  <Download className="w-4 h-4" />
+                  {t('export')}
+                </Button>
+              </div>
             </div>
 
-            {/* Status Filter */}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48 glass-card border-border/50">
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder={t('status')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('allStatuses')}</SelectItem>
-                <SelectItem value="unsigned">{t('unsigned')}</SelectItem>
-                <SelectItem value="pending">{t('pending')}</SelectItem>
-                <SelectItem value="approved">{t('approved')}</SelectItem>
-                <SelectItem value="archived">{t('archived')}</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Second Row - Advanced Filters */}
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Sender Filter */}
+              <Select value={senderFilter} onValueChange={setSenderFilter}>
+                <SelectTrigger className="w-full md:w-48 glass-card border-border/50">
+                  <SelectValue placeholder="جميع المرسلين" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع المرسلين</SelectItem>
+                  {profiles.map((profile) => (
+                    <SelectItem key={profile.id} value={profile.id}>
+                      {profile.username}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            {/* Action Buttons */}
-            <div className="flex gap-2">
-              <CreateDeclarationDialog 
-                onSuccess={loadDeclarations}
-              />
-              <Button variant="outline" className="gap-2">
-                <Download className="w-4 h-4" />
-                {t('export')}
-              </Button>
+              {/* Date From */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full md:w-[200px] justify-start text-left font-normal glass-card border-border/50",
+                      !dateFrom && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateFrom ? format(dateFrom, "PPP") : "من تاريخ"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateFrom}
+                    onSelect={setDateFrom}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {/* Date To */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full md:w-[200px] justify-start text-left font-normal glass-card border-border/50",
+                      !dateTo && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateTo ? format(dateTo, "PPP") : "إلى تاريخ"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateTo}
+                    onSelect={setDateTo}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {/* Clear Filters */}
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  onClick={clearFilters}
+                  className="gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  مسح الفلاتر
+                </Button>
+              )}
             </div>
           </div>
 
