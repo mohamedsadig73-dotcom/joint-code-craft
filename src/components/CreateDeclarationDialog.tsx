@@ -63,11 +63,11 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
     try {
       const currentYear = new Date().getFullYear();
       
-      // Get all declarations for current year
+      // Get all declarations for current year with DCL prefix
       const { data, error } = await supabase
         .from('declarations')
         .select('id')
-        .ilike('id', `%-${currentYear}`)
+        .ilike('id', `DCL-${currentYear}-%`)
         .order('id', { ascending: false })
         .limit(1);
 
@@ -75,9 +75,10 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
 
       let nextNumber = 1;
       if (data && data.length > 0) {
-        // Extract number from last declaration (e.g., "005-2025" -> 5)
+        // Extract number from last declaration (e.g., "DCL-2025-005" -> 5)
         const lastId = data[0].id;
-        const lastNumber = parseInt(lastId.split('-')[0]);
+        const parts = lastId.split('-');
+        const lastNumber = parseInt(parts[2]);
         nextNumber = lastNumber + 1;
       }
 
@@ -118,9 +119,9 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
       return;
     }
 
-    // Generate full ID with current year
+    // Generate full ID with DCL prefix and current year
     const currentYear = new Date().getFullYear();
-    const fullId = `${declarationNumber.padStart(3, '0')}-${currentYear}`;
+    const fullId = `DCL-${currentYear}-${declarationNumber.padStart(3, '0')}`;
 
     setLoading(true);
 
@@ -178,7 +179,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
         <DialogHeader>
           <DialogTitle>إنشاء إقرار جديد</DialogTitle>
           <DialogDescription>
-            أدخل بيانات الإقرار الجديد (رقم الإقرار + السنة الحالية)
+            أدخل رقم الإقرار (صيغة: DCL-2025-XXX)
           </DialogDescription>
         </DialogHeader>
 
@@ -191,7 +192,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
                 type="text"
                 value={declarationNumber}
                 onChange={(e) => setDeclarationNumber(e.target.value)}
-                placeholder="001"
+                placeholder="006"
                 required
                 disabled={loading || loadingNextNumber}
                 className="glass-card border-border/50 flex-1"
@@ -210,7 +211,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
               {loadingNextNumber ? (
                 'جاري جلب الرقم التالي...'
               ) : (
-                <>الرقم النهائي: {declarationNumber.padStart(3, '0')}-{new Date().getFullYear()}</>
+                <>الرقم النهائي: DCL-{new Date().getFullYear()}-{declarationNumber.padStart(3, '0')}</>
               )}
             </p>
           </div>
