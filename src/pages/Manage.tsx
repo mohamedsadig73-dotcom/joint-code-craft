@@ -39,7 +39,7 @@ interface Declaration {
   type: 'دخول' | 'خروج';
   sender_id: string;
   sender?: { username: string };
-  status: 'unsigned' | 'pending' | 'approved' | 'archived';
+  status: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected';
   created_at: string;
 }
 
@@ -49,10 +49,14 @@ interface Profile {
 }
 
 const statusColors = {
-  unsigned: 'bg-unsigned/20 text-unsigned border-unsigned/30',
-  pending: 'bg-pending/20 text-pending border-pending/30',
-  approved: 'bg-approved/20 text-approved border-approved/30',
-  archived: 'bg-archived/20 text-archived border-archived/30',
+  draft: 'bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30',
+  pending_warehouse_signature: 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30',
+  warehouse_signed: 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30',
+  sent_to_admin_office: 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30',
+  received_by_admin_office: 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/30',
+  returned_to_warehouse: 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30',
+  archived: 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30',
+  rejected: 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30',
 };
 
 export default function Manage() {
@@ -69,10 +73,14 @@ export default function Manage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    unsigned: 0,
-    pending: 0,
-    approved: 0,
+    draft: 0,
+    pending_warehouse_signature: 0,
+    warehouse_signed: 0,
+    sent_to_admin_office: 0,
+    received_by_admin_office: 0,
+    returned_to_warehouse: 0,
     archived: 0,
+    rejected: 0,
   });
 
   useEffect(() => {
@@ -110,10 +118,14 @@ export default function Manage() {
       
       // Calculate stats
       const newStats = {
-        unsigned: data?.filter(d => d.status === 'unsigned').length || 0,
-        pending: data?.filter(d => d.status === 'pending').length || 0,
-        approved: data?.filter(d => d.status === 'approved').length || 0,
+        draft: data?.filter(d => d.status === 'draft').length || 0,
+        pending_warehouse_signature: data?.filter(d => d.status === 'pending_warehouse_signature').length || 0,
+        warehouse_signed: data?.filter(d => d.status === 'warehouse_signed').length || 0,
+        sent_to_admin_office: data?.filter(d => d.status === 'sent_to_admin_office').length || 0,
+        received_by_admin_office: data?.filter(d => d.status === 'received_by_admin_office').length || 0,
+        returned_to_warehouse: data?.filter(d => d.status === 'returned_to_warehouse').length || 0,
         archived: data?.filter(d => d.status === 'archived').length || 0,
+        rejected: data?.filter(d => d.status === 'rejected').length || 0,
       };
       setStats(newStats);
     } catch (error: any) {
@@ -150,7 +162,7 @@ export default function Manage() {
     }
   };
 
-  const handleStatusUpdate = async (id: string, newStatus: 'unsigned' | 'pending' | 'approved' | 'archived') => {
+  const handleStatusUpdate = async (id: string, newStatus: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected') => {
     try {
       const { error } = await supabase
         .from('declarations')
@@ -333,10 +345,14 @@ export default function Manage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('allStatuses')}</SelectItem>
-                  <SelectItem value="unsigned">{t('unsigned')}</SelectItem>
-                  <SelectItem value="pending">{t('pending')}</SelectItem>
-                  <SelectItem value="approved">{t('approved')}</SelectItem>
+                  <SelectItem value="draft">مسودة</SelectItem>
+                  <SelectItem value="pending_warehouse_signature">بانتظار توقيع المخزن</SelectItem>
+                  <SelectItem value="warehouse_signed">موقّع من المخزن</SelectItem>
+                  <SelectItem value="sent_to_admin_office">مُرسل إلى المكتب الإداري</SelectItem>
+                  <SelectItem value="received_by_admin_office">مستلم من المكتب الإداري</SelectItem>
+                  <SelectItem value="returned_to_warehouse">مُعاد إلى المخزن للأرشفة</SelectItem>
                   <SelectItem value="archived">{t('archived')}</SelectItem>
+                  <SelectItem value="rejected">مرفوض / يحتاج إلى تصحيح</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -447,10 +463,10 @@ export default function Manage() {
         {/* Statistics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
-            { label: t('unsigned'), value: stats.unsigned, color: 'text-unsigned' },
-            { label: t('pending'), value: stats.pending, color: 'text-pending' },
-            { label: t('approved'), value: stats.approved, color: 'text-approved' },
-            { label: t('archived'), value: stats.archived, color: 'text-archived' },
+            { label: 'مسودة', value: stats.draft, color: 'text-gray-700 dark:text-gray-300' },
+            { label: 'بانتظار المخزن', value: stats.pending_warehouse_signature, color: 'text-yellow-700 dark:text-yellow-300' },
+            { label: 'موقّع', value: stats.warehouse_signed, color: 'text-blue-700 dark:text-blue-300' },
+            { label: t('archived'), value: stats.archived, color: 'text-green-700 dark:text-green-300' },
           ].map((stat) => (
             <Card key={stat.label} className="glass-card border-border/50 p-4 text-center">
               <div className={`text-2xl font-bold mb-1 ${stat.color}`}>{stat.value}</div>
@@ -522,11 +538,7 @@ export default function Manage() {
                         <Button 
                           variant="ghost" 
                           size="icon"
-                          onClick={() => {
-                            const newStatus = declaration.status === 'unsigned' ? 'pending' : 
-                                            declaration.status === 'pending' ? 'approved' : 'archived';
-                            handleStatusUpdate(declaration.id, newStatus);
-                          }}
+                          onClick={() => navigate(`/declaration/${declaration.id}`)}
                           title="تحديث الحالة"
                         >
                           <Edit className="w-4 h-4" />

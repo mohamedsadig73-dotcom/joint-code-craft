@@ -10,14 +10,18 @@ import { Download, TrendingUp, Users, FileText, Clock } from 'lucide-react';
 export default function Reports() {
   const { t } = useLanguage();
   const [stats, setStats] = useState({
-    unsigned: 0,
-    pending: 0,
-    approved: 0,
+    draft: 0,
+    pending_warehouse_signature: 0,
+    warehouse_signed: 0,
+    sent_to_admin_office: 0,
+    received_by_admin_office: 0,
+    returned_to_warehouse: 0,
     archived: 0,
+    rejected: 0,
     total: 0,
   });
   const [weeklyData, setWeeklyData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
-  const [monthlyData, setMonthlyData] = useState<{ month: string; approved: number; pending: number; unsigned: number }[]>([]);
+  const [monthlyData, setMonthlyData] = useState<{ month: string; warehouse_signed: number; pending_warehouse_signature: number; draft: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,10 +38,14 @@ export default function Reports() {
 
       // Calculate status stats
       const newStats = {
-        unsigned: data?.filter(d => d.status === 'unsigned').length || 0,
-        pending: data?.filter(d => d.status === 'pending').length || 0,
-        approved: data?.filter(d => d.status === 'approved').length || 0,
+        draft: data?.filter(d => d.status === 'draft').length || 0,
+        pending_warehouse_signature: data?.filter(d => d.status === 'pending_warehouse_signature').length || 0,
+        warehouse_signed: data?.filter(d => d.status === 'warehouse_signed').length || 0,
+        sent_to_admin_office: data?.filter(d => d.status === 'sent_to_admin_office').length || 0,
+        received_by_admin_office: data?.filter(d => d.status === 'received_by_admin_office').length || 0,
+        returned_to_warehouse: data?.filter(d => d.status === 'returned_to_warehouse').length || 0,
         archived: data?.filter(d => d.status === 'archived').length || 0,
+        rejected: data?.filter(d => d.status === 'rejected').length || 0,
         total: data?.length || 0,
       };
       setStats(newStats);
@@ -56,12 +64,12 @@ export default function Reports() {
 
       // Calculate monthly data (last 6 months)
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const monthlyMap = new Map<string, { approved: number; pending: number; unsigned: number }>();
+      const monthlyMap = new Map<string, { warehouse_signed: number; pending_warehouse_signature: number; draft: number }>();
       
       for (let i = 5; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const monthKey = `${months[date.getMonth()]}`;
-        monthlyMap.set(monthKey, { approved: 0, pending: 0, unsigned: 0 });
+        monthlyMap.set(monthKey, { warehouse_signed: 0, pending_warehouse_signature: 0, draft: 0 });
       }
 
       data?.forEach(d => {
@@ -69,9 +77,9 @@ export default function Reports() {
         const monthKey = months[createdDate.getMonth()];
         if (monthlyMap.has(monthKey)) {
           const current = monthlyMap.get(monthKey)!;
-          if (d.status === 'approved') current.approved++;
-          else if (d.status === 'pending') current.pending++;
-          else if (d.status === 'unsigned') current.unsigned++;
+          if (d.status === 'warehouse_signed') current.warehouse_signed++;
+          else if (d.status === 'pending_warehouse_signature') current.pending_warehouse_signature++;
+          else if (d.status === 'draft') current.draft++;
         }
       });
 
@@ -110,10 +118,10 @@ export default function Reports() {
         type: 'pie',
         radius: '70%',
         data: [
-          { value: stats.unsigned, name: t('unsigned'), itemStyle: { color: '#c53030' } },
-          { value: stats.pending, name: t('pending'), itemStyle: { color: '#dd6b20' } },
-          { value: stats.approved, name: t('approved'), itemStyle: { color: '#22543d' } },
-          { value: stats.archived, name: t('archived'), itemStyle: { color: '#2b6cb0' } },
+          { value: stats.draft, name: 'مسودة', itemStyle: { color: '#6b7280' } },
+          { value: stats.pending_warehouse_signature, name: 'بانتظار المخزن', itemStyle: { color: '#eab308' } },
+          { value: stats.warehouse_signed, name: 'موقّع', itemStyle: { color: '#3b82f6' } },
+          { value: stats.archived, name: t('archived'), itemStyle: { color: '#22c55e' } },
         ],
         emphasis: {
           itemStyle: {
@@ -211,27 +219,27 @@ export default function Reports() {
     },
     series: [
       {
-        name: 'Approved',
+        name: 'موقّع',
         type: 'line',
         smooth: true,
-        data: monthlyData.map(d => d.approved),
-        itemStyle: { color: '#22543d' },
+        data: monthlyData.map(d => d.warehouse_signed),
+        itemStyle: { color: '#3b82f6' },
         areaStyle: { opacity: 0.3 }
       },
       {
-        name: 'Pending',
+        name: 'بانتظار المخزن',
         type: 'line',
         smooth: true,
-        data: monthlyData.map(d => d.pending),
-        itemStyle: { color: '#dd6b20' },
+        data: monthlyData.map(d => d.pending_warehouse_signature),
+        itemStyle: { color: '#eab308' },
         areaStyle: { opacity: 0.3 }
       },
       {
-        name: 'Unsigned',
+        name: 'مسودة',
         type: 'line',
         smooth: true,
-        data: monthlyData.map(d => d.unsigned),
-        itemStyle: { color: '#c53030' },
+        data: monthlyData.map(d => d.draft),
+        itemStyle: { color: '#6b7280' },
         areaStyle: { opacity: 0.3 }
       }
     ]

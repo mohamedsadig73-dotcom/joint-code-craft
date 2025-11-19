@@ -20,7 +20,7 @@ import { ArrowLeft, Calendar, User, FileText, Clock } from 'lucide-react';
 interface DeclarationDetails {
   id: string;
   type: 'دخول' | 'خروج';
-  status: 'unsigned' | 'pending' | 'approved' | 'archived';
+  status: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected';
   created_at: string;
   updated_at: string;
   sender_id: string;
@@ -31,17 +31,25 @@ interface DeclarationDetails {
 }
 
 const statusColors = {
-  unsigned: 'bg-unsigned/20 text-unsigned border-unsigned/30',
-  pending: 'bg-pending/20 text-pending border-pending/30',
-  approved: 'bg-approved/20 text-approved border-approved/30',
-  archived: 'bg-archived/20 text-archived border-archived/30',
+  draft: 'bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30',
+  pending_warehouse_signature: 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30',
+  warehouse_signed: 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30',
+  sent_to_admin_office: 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30',
+  received_by_admin_office: 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/30',
+  returned_to_warehouse: 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30',
+  archived: 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30',
+  rejected: 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30',
 };
 
 const statusLabels = {
-  unsigned: 'غير موقّع',
-  pending: 'قيد الانتظار',
-  approved: 'موافق عليه',
+  draft: 'مسودة',
+  pending_warehouse_signature: 'بانتظار توقيع المخزن',
+  warehouse_signed: 'موقّع من المخزن',
+  sent_to_admin_office: 'مُرسل إلى المكتب الإداري',
+  received_by_admin_office: 'مستلم من المكتب الإداري',
+  returned_to_warehouse: 'مُعاد إلى المخزن للأرشفة',
   archived: 'مؤرشف',
+  rejected: 'مرفوض / يحتاج إلى تصحيح',
 };
 
 const typeLabels = {
@@ -98,7 +106,7 @@ export default function DeclarationDetails() {
     }
   };
 
-  const handleStatusUpdate = async (newStatus: 'unsigned' | 'pending' | 'approved' | 'archived') => {
+  const handleStatusUpdate = async (newStatus: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected') => {
     if (!declaration) return;
 
     setUpdating(true);
@@ -198,10 +206,14 @@ export default function DeclarationDetails() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="unsigned">غير موقّع</SelectItem>
-                      <SelectItem value="pending">قيد الانتظار</SelectItem>
-                      <SelectItem value="approved">موافق عليه</SelectItem>
+                      <SelectItem value="draft">مسودة</SelectItem>
+                      <SelectItem value="pending_warehouse_signature">بانتظار توقيع المخزن</SelectItem>
+                      <SelectItem value="warehouse_signed">موقّع من المخزن</SelectItem>
+                      <SelectItem value="sent_to_admin_office">مُرسل إلى المكتب الإداري</SelectItem>
+                      <SelectItem value="received_by_admin_office">مستلم من المكتب الإداري</SelectItem>
+                      <SelectItem value="returned_to_warehouse">مُعاد إلى المخزن للأرشفة</SelectItem>
                       <SelectItem value="archived">مؤرشف</SelectItem>
+                      <SelectItem value="rejected">مرفوض / يحتاج إلى تصحيح</SelectItem>
                     </SelectContent>
                   </Select>
                 ) : (
