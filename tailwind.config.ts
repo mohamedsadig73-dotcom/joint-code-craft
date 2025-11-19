@@ -47,6 +47,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        success: "hsl(var(--success))",
+        warning: "hsl(var(--warning))",
+        unsigned: "hsl(var(--unsigned))",
+        pending: "hsl(var(--pending))",
+        approved: "hsl(var(--approved))",
+        archived: "hsl(var(--archived))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
