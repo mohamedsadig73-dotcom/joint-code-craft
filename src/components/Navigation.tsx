@@ -38,6 +38,11 @@ export function Navigation() {
     { path: '/reports', icon: BarChart3, label: t('reports') },
   ];
 
+  // Add users management link for admins only
+  const allNavItems = user?.role === 'admin' 
+    ? [...navItems, { path: '/users', icon: User, label: 'المستخدمون' }]
+    : navItems;
+
   return (
     <nav className="glass-card border-b border-border/50 sticky top-0 z-50 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -52,7 +57,7 @@ export function Navigation() {
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center gap-2">
-            {navItems.map((item) => {
+            {allNavItems.map((item) => {
               const Icon = item.icon;
               return (
                 <Link key={item.path} to={item.path}>
