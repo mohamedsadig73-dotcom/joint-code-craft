@@ -244,12 +244,12 @@ export default function Manage() {
       exportDeclarationsToExcel(exportData, 'إقرارات');
 
       toast({
-        title: 'تم بنجاح',
+        title: t('success'),
         description: 'تم تصدير البيانات إلى Excel',
       });
     } catch (error: any) {
       toast({
-        title: 'خطأ',
+        title: t('error'),
         description: 'فشل تصدير البيانات',
         variant: 'destructive',
       });
@@ -272,12 +272,12 @@ export default function Manage() {
       doc.save(fileName);
 
       toast({
-        title: 'تم بنجاح',
+        title: t('success'),
         description: 'تم تصدير البيانات إلى PDF',
       });
     } catch (error: any) {
       toast({
-        title: 'خطأ',
+        title: t('error'),
         description: 'فشل تصدير البيانات',
         variant: 'destructive',
       });

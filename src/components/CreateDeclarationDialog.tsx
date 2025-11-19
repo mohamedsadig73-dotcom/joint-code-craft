@@ -97,8 +97,8 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
     if (!user) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: 'يجب تسجيل الدخول أولاً',
+        title: t('error'),
+        description: t('mustLogin'),
       });
       return;
     }
@@ -113,8 +113,8 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'خطأ في البيانات',
-        description: error.errors?.[0]?.message || 'البيانات المدخلة غير صحيحة',
+        title: t('error'),
+        description: error.errors?.[0]?.message || t('invalidData'),
       });
       return;
     }
@@ -143,8 +143,8 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
       }
 
       toast({
-        title: 'تم بنجاح',
-        description: `تم إنشاء الإقرار رقم ${fullId} بنجاح`,
+        title: t('success'),
+        description: `${t('declarationCreated')} ${fullId}`,
       });
 
       // Reset form
@@ -159,8 +159,8 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: error.message || 'فشل إنشاء الإقرار',
+        title: t('error'),
+        description: error.message || t('declarationCreationFailed'),
       });
     } finally {
       setLoading(false);
@@ -172,20 +172,20 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
       <DialogTrigger asChild>
         <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2">
           <Plus className="w-4 h-4" />
-          إضافة إقرار
+          {t('addDeclaration')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>إنشاء إقرار جديد</DialogTitle>
+          <DialogTitle>{t('createNewDeclaration')}</DialogTitle>
           <DialogDescription>
-            أدخل رقم الإقرار (صيغة: DCL-2025-XXX)
+            {t('enterDeclarationDetails')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="number">رقم الإقرار</Label>
+            <Label htmlFor="number">{t('declarationNumberLabel')}</Label>
             <div className="flex gap-2">
               <Input
                 id="number"
@@ -204,7 +204,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
                 disabled={loading || loadingNextNumber}
                 className="shrink-0"
               >
-                {loadingNextNumber ? 'جاري...' : 'تحديث'}
+                {loadingNextNumber ? t('loading') : t('refresh')}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -217,7 +217,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="type">نوع الإقرار</Label>
+            <Label htmlFor="type">{t('declarationType')}</Label>
             <Select
               value={type}
               onValueChange={(value: 'دخول' | 'خروج') => setType(value)}
@@ -227,14 +227,14 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="دخول">دخول</SelectItem>
-                <SelectItem value="خروج">خروج</SelectItem>
+                <SelectItem value="دخول">{t('entrance')}</SelectItem>
+                <SelectItem value="خروج">{t('exit')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="status">الحالة</Label>
+            <Label htmlFor="status">{t('initialStatus')}</Label>
             <Select
               value={status}
               onValueChange={(value: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected') => setStatus(value)}
@@ -244,14 +244,14 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="draft">مسودة</SelectItem>
-                <SelectItem value="pending_warehouse_signature">بانتظار توقيع المخزن</SelectItem>
-                <SelectItem value="warehouse_signed">موقّع من المخزن</SelectItem>
-                <SelectItem value="sent_to_admin_office">مُرسل إلى المكتب الإداري</SelectItem>
-                <SelectItem value="received_by_admin_office">مستلم من المكتب الإداري</SelectItem>
-                <SelectItem value="returned_to_warehouse">مُعاد إلى المخزن للأرشفة</SelectItem>
-                <SelectItem value="archived">مؤرشف</SelectItem>
-                <SelectItem value="rejected">مرفوض / يحتاج إلى تصحيح</SelectItem>
+                <SelectItem value="draft">{t('draft')}</SelectItem>
+                <SelectItem value="pending_warehouse_signature">{t('pendingWarehouseSignature')}</SelectItem>
+                <SelectItem value="warehouse_signed">{t('warehouseSigned')}</SelectItem>
+                <SelectItem value="sent_to_admin_office">{t('sentToAdminOffice')}</SelectItem>
+                <SelectItem value="received_by_admin_office">{t('receivedByAdminOffice')}</SelectItem>
+                <SelectItem value="returned_to_warehouse">{t('returnedToWarehouse')}</SelectItem>
+                <SelectItem value="archived">{t('archived')}</SelectItem>
+                <SelectItem value="rejected">{t('rejected')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -263,10 +263,10 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
               onClick={() => setOpen(false)}
               disabled={loading}
             >
-              إلغاء
+              {t('cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'جاري الإنشاء...' : 'إنشاء الإقرار'}
+              {loading ? t('creating') : t('createDeclaration')}
             </Button>
           </div>
         </form>

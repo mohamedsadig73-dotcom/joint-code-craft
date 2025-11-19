@@ -110,7 +110,8 @@ export default function Reports() {
     legend: {
       orient: 'vertical',
       left: 'left',
-      textStyle: { color: '#fff' }
+      textStyle: { color: '#fff' },
+      data: [t('draft'), t('pendingWarehouseSignature'), t('warehouseSigned'), t('archived')]
     },
     series: [
       {
@@ -118,9 +119,9 @@ export default function Reports() {
         type: 'pie',
         radius: '70%',
         data: [
-          { value: stats.draft, name: 'مسودة', itemStyle: { color: '#6b7280' } },
-          { value: stats.pending_warehouse_signature, name: 'بانتظار المخزن', itemStyle: { color: '#eab308' } },
-          { value: stats.warehouse_signed, name: 'موقّع', itemStyle: { color: '#3b82f6' } },
+          { value: stats.draft, name: t('draft'), itemStyle: { color: '#6b7280' } },
+          { value: stats.pending_warehouse_signature, name: t('pendingWarehouseSignature'), itemStyle: { color: '#eab308' } },
+          { value: stats.warehouse_signed, name: t('warehouseSigned'), itemStyle: { color: '#3b82f6' } },
           { value: stats.archived, name: t('archived'), itemStyle: { color: '#22c55e' } },
         ],
         emphasis: {
@@ -188,14 +189,14 @@ export default function Reports() {
   // Trend Line Chart
   const trendOption = {
     title: {
-      text: 'Monthly Trends',
+      text: t('monthlyTrends'),
       textStyle: { color: '#fff', fontSize: 16 }
     },
     tooltip: {
       trigger: 'axis'
     },
     legend: {
-      data: ['Approved', 'Pending', 'Unsigned'],
+      data: [t('warehouseSigned'), t('pendingWarehouseSignature'), t('unsigned')],
       textStyle: { color: '#fff' }
     },
     grid: {
@@ -219,7 +220,7 @@ export default function Reports() {
     },
     series: [
       {
-        name: 'موقّع',
+        name: t('warehouseSigned'),
         type: 'line',
         smooth: true,
         data: monthlyData.map(d => d.warehouse_signed),
@@ -227,7 +228,7 @@ export default function Reports() {
         areaStyle: { opacity: 0.3 }
       },
       {
-        name: 'بانتظار المخزن',
+        name: t('pendingWarehouseSignature'),
         type: 'line',
         smooth: true,
         data: monthlyData.map(d => d.pending_warehouse_signature),
@@ -235,7 +236,7 @@ export default function Reports() {
         areaStyle: { opacity: 0.3 }
       },
       {
-        name: 'مسودة',
+        name: t('unsigned'),
         type: 'line',
         smooth: true,
         data: monthlyData.map(d => d.draft),
@@ -261,7 +262,7 @@ export default function Reports() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">{t('reportsAnalytics')}</h1>
-            <p className="text-muted-foreground">Comprehensive insights and data analysis</p>
+            <p className="text-muted-foreground">{t('reportsSubtitle')}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" className="gap-2">
@@ -322,7 +323,7 @@ export default function Reports() {
         {/* Trend Chart - Full Width */}
         <Card className="glass-card border-border/50">
           <CardHeader>
-            <CardTitle>Monthly Trends</CardTitle>
+            <CardTitle>{t('monthlyTrends')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ReactECharts option={trendOption} style={{ height: '400px' }} />
