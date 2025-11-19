@@ -39,12 +39,11 @@ export function Navigation() {
     { path: '/reports', icon: BarChart3, label: t('reports') },
   ];
 
-  // Add admin links for admins only
+  // Add admin dashboard link for admins only
   const allNavItems = user?.role === 'admin' 
     ? [
         ...navItems, 
-        { path: '/admin', icon: Shield, label: 'لوحة المدير' },
-        { path: '/users', icon: User, label: 'المستخدمون' }
+        { path: '/admin', icon: Shield, label: 'لوحة المدير' }
       ]
     : navItems;
 
