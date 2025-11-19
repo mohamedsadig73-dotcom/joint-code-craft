@@ -25,8 +25,8 @@ import {
 import { Plus } from 'lucide-react';
 
 const declarationSchema = z.object({
-  id: z.string().trim().min(5, 'رقم الإقرار يجب أن يكون 5 أحرف على الأقل').max(50, 'رقم الإقرار طويل جداً'),
-  type: z.enum(['Import', 'Export', 'Transit'], { required_error: 'يجب اختيار نوع الإقرار' }),
+  number: z.string().trim().min(3, 'رقم الإقرار يجب أن يكون 3 أرقام على الأقل').max(6, 'رقم الإقرار طويل جداً').regex(/^\d+$/, 'يجب أن يحتوي على أرقام فقط'),
+  type: z.enum(['دخول', 'خروج'], { required_error: 'يجب اختيار نوع الإقرار' }),
   status: z.enum(['unsigned', 'pending', 'approved', 'archived']),
 });
 
@@ -39,8 +39,8 @@ interface CreateDeclarationDialogProps {
 export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpenChange }: CreateDeclarationDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [declarationId, setDeclarationId] = useState('');
-  const [type, setType] = useState<'Import' | 'Export' | 'Transit'>('Import');
+  const [declarationNumber, setDeclarationNumber] = useState('');
+  const [type, setType] = useState<'دخول' | 'خروج'>('دخول');
   const [status, setStatus] = useState<'unsigned' | 'pending' | 'approved' | 'archived'>('unsigned');
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -65,7 +65,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
     // Validate input
     try {
       declarationSchema.parse({
-        id: declarationId,
+        number: declarationNumber,
         type,
         status,
       });
@@ -78,13 +78,17 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
       return;
     }
 
+    // Generate full ID with current year
+    const currentYear = new Date().getFullYear();
+    const fullId = `${declarationNumber.padStart(3, '0')}-${currentYear}`;
+
     setLoading(true);
 
     try {
       const { error } = await supabase
         .from('declarations')
         .insert({
-          id: declarationId,
+          id: fullId,
           type,
           status,
           sender_id: user.id,
@@ -99,12 +103,12 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
 
       toast({
         title: 'تم بنجاح',
-        description: 'تم إنشاء الإقرار بنجاح',
+        description: `تم إنشاء الإقرار رقم ${fullId} بنجاح`,
       });
 
       // Reset form
-      setDeclarationId('');
-      setType('Import');
+      setDeclarationNumber('');
+      setType('دخول');
       setStatus('unsigned');
       setOpen(false);
       
@@ -134,41 +138,53 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
         <DialogHeader>
           <DialogTitle>إنشاء إقرار جديد</DialogTitle>
           <DialogDescription>
-            أدخل بيانات الإقرار الجديد
+            أدخل بيانات الإقرار الجديد (رقم الإقرار + السنة الحالية)
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="declarationId">رقم الإقرار *</Label>
+            <Label htmlFor="number">رقم الإقرار (مثال: 001)</Label>
             <Input
-              id="declarationId"
-              value={declarationId}
-              onChange={(e) => setDeclarationId(e.target.value)}
-              placeholder="مثال: DEC-2024-001"
+              id="number"
+              type="text"
+              value={declarationNumber}
+              onChange={(e) => setDeclarationNumber(e.target.value)}
+              placeholder="001"
               required
               disabled={loading}
-              maxLength={50}
+              className="glass-card border-border/50"
             />
+            <p className="text-xs text-muted-foreground">
+              سيتم إنشاء الرقم: {declarationNumber.padStart(3, '0')}-{new Date().getFullYear()}
+            </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="type">نوع الإقرار *</Label>
-            <Select value={type} onValueChange={(value: any) => setType(value)} disabled={loading}>
-              <SelectTrigger>
+            <Label htmlFor="type">نوع الإقرار</Label>
+            <Select
+              value={type}
+              onValueChange={(value: 'دخول' | 'خروج') => setType(value)}
+              disabled={loading}
+            >
+              <SelectTrigger className="glass-card border-border/50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Import">استيراد</SelectItem>
-                <SelectItem value="Export">تصدير</SelectItem>
-                <SelectItem value="Transit">ترانزيت</SelectItem>
+                <SelectItem value="دخول">دخول</SelectItem>
+                <SelectItem value="خروج">خروج</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="status">الحالة *</Label>
-            <Select value={status} onValueChange={(value: any) => setStatus(value)} disabled={loading}>
-              <SelectTrigger>
+            <Label htmlFor="status">الحالة</Label>
+            <Select
+              value={status}
+              onValueChange={(value: 'unsigned' | 'pending' | 'approved' | 'archived') => setStatus(value)}
+              disabled={loading}
+            >
+              <SelectTrigger className="glass-card border-border/50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -180,8 +196,13 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
             </Select>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={loading}>
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={loading}
+            >
               إلغاء
             </Button>
             <Button type="submit" disabled={loading}>
