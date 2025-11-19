@@ -436,6 +436,7 @@ export default function Manage() {
                           variant="ghost" 
                           size="icon"
                           onClick={() => navigate(`/declaration/${declaration.id}`)}
+                          title={t('view')}
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -447,19 +448,25 @@ export default function Manage() {
                                             declaration.status === 'pending' ? 'approved' : 'archived';
                             handleStatusUpdate(declaration.id, newStatus);
                           }}
+                          title="تحديث الحالة"
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
-                        {user?.role === 'admin' && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-destructive"
-                            onClick={() => handleDelete(declaration.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => {
+                            if (window.confirm('هل أنت متأكد من حذف هذا الإقرار؟')) {
+                              handleDelete(declaration.id);
+                            }
+                          }}
+                          title="حذف"
+                          disabled={user?.role !== 'admin'}
+                          style={{ display: user?.role === 'admin' ? 'flex' : 'none' }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
