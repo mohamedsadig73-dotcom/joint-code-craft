@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Login from "./pages/Login";
+import DirectLogin from "./pages/DirectLogin";
 import Dashboard from "./pages/Dashboard";
 import Manage from "./pages/Manage";
 import Reports from "./pages/Reports";
@@ -14,18 +15,36 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <span>Loading...</span>
+      </div>
+    );
+  }
+
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 function AppRoutes() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
   return (
     <Routes>
+      <Route path="/direct-login" element={<DirectLogin />} />
       <Route 
         path="/login" 
-        element={isAuthenticated ? <Navigate to="/" /> : <Login />} 
+        element={
+          loading ? (
+            <Login />
+          ) : isAuthenticated ? (
+            <Navigate to="/" replace />
+          ) : (
+            <Login />
+          )
+        } 
       />
       <Route 
         path="/" 
