@@ -34,7 +34,7 @@ import { Search, Filter, Download, Edit, Trash2, Eye, Plus, CalendarIcon, X } fr
 
 interface Declaration {
   id: string;
-  type: 'Import' | 'Export' | 'Transit';
+  type: 'دخول' | 'خروج';
   sender_id: string;
   sender?: { username: string };
   status: 'unsigned' | 'pending' | 'approved' | 'archived';

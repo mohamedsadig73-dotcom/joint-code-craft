@@ -19,7 +19,7 @@ import { ArrowLeft, Calendar, User, FileText, Clock } from 'lucide-react';
 
 interface DeclarationDetails {
   id: string;
-  type: 'Import' | 'Export' | 'Transit';
+  type: 'دخول' | 'خروج';
   status: 'unsigned' | 'pending' | 'approved' | 'archived';
   created_at: string;
   updated_at: string;
@@ -45,9 +45,8 @@ const statusLabels = {
 };
 
 const typeLabels = {
-  Import: 'استيراد',
-  Export: 'تصدير',
-  Transit: 'ترانزيت',
+  دخول: 'دخول',
+  خروج: 'خروج',
 };
 
 export default function DeclarationDetails() {
