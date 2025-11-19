@@ -28,14 +28,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
+        
+        // Defer Supabase calls with setTimeout to prevent deadlock
         if (session?.user) {
-          await loadUserProfile(session.user);
+          setTimeout(() => {
+            loadUserProfile(session.user);
+          }, 0);
         } else {
           setUser(null);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
