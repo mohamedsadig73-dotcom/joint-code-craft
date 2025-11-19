@@ -18,16 +18,16 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(username, password);
-    if (success) {
+    const result = await login(username, password);
+    if (result.success) {
       navigate('/');
     } else {
       toast({
         variant: 'destructive',
         title: t('invalidCredentials'),
-        description: 'Try: ali / demo123',
+        description: result.error || 'Try signing up first',
       });
     }
   };
