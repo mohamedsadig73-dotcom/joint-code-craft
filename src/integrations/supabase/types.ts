@@ -44,6 +44,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "declaration_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "declaration_status_history_declaration_id_fkey"
             columns: ["declaration_id"]
             isOneToOne: false
