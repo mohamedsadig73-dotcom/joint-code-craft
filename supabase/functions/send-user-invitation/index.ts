@@ -1,8 +1,15 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+const invitationSchema = z.object({
+  email: z.string().email().max(255),
+  role: z.enum(['admin', 'manager', 'user']),
+  invitedBy: z.string().trim().min(1).max(100)
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -51,7 +58,24 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Only admins can send invitations");
     }
 
-    const { email, role, invitedBy }: InvitationRequest = await req.json();
+    const requestBody = await req.json();
+    
+    // Validate input
+    const validationResult = invitationSchema.safeParse(requestBody);
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({
+          error: "Invalid input",
+          details: validationResult.error.errors,
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    const { email, role, invitedBy } = validationResult.data;
 
     console.log(`Sending invitation to ${email} with role ${role}`);
 
