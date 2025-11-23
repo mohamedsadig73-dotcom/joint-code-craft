@@ -116,7 +116,7 @@ export default function AdminDashboard() {
           new_status,
           changed_at,
           changed_by,
-          profiles:changed_by (username)
+          profiles!declaration_status_history_changed_by_fkey(username)
         `)
         .order('changed_at', { ascending: false })
         .limit(10);
