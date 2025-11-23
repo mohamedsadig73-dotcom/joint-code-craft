@@ -25,7 +25,7 @@ import {
 import { Plus } from 'lucide-react';
 
 const declarationSchema = z.object({
-  number: z.string().trim().min(3, 'رقم الإقرار يجب أن يكون 3 أرقام على الأقل').max(6, 'رقم الإقرار طويل جداً').regex(/^\d+$/, 'يجب أن يحتوي على أرقام فقط'),
+  number: z.string().trim().min(4, 'رقم الإقرار يجب أن يكون 4 أرقام').max(4, 'رقم الإقرار يجب أن يكون 4 أرقام').regex(/^\d+$/, 'يجب أن يحتوي على أرقام فقط'),
   type: z.enum(['دخول', 'خروج'], { required_error: 'يجب اختيار نوع الإقرار' }),
   status: z.enum(['draft', 'pending_warehouse_signature', 'warehouse_signed', 'sent_to_admin_office', 'received_by_admin_office', 'returned_to_warehouse', 'archived', 'rejected']),
 });
@@ -51,23 +51,25 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = onOpenChange || setInternalOpen;
 
-  // Load next available number when dialog opens
+  // Load next available number when dialog opens or type changes
   useEffect(() => {
     if (open) {
       loadNextNumber();
     }
-  }, [open]);
+  }, [open, type]);
 
   const loadNextNumber = async () => {
     setLoadingNextNumber(true);
     try {
       const currentYear = new Date().getFullYear();
+      // Use different prefixes for entry and exit declarations
+      const prefix = type === 'دخول' ? 'IN' : 'OUT';
       
-      // Get all declarations for current year with DCL prefix
+      // Get all declarations for current year and type
       const { data, error } = await supabase
         .from('declarations')
         .select('id')
-        .ilike('id', `DCL-${currentYear}-%`)
+        .ilike('id', `${prefix}-${currentYear}-%`)
         .order('id', { ascending: false })
         .limit(1);
 
@@ -75,17 +77,17 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
 
       let nextNumber = 1;
       if (data && data.length > 0) {
-        // Extract number from last declaration (e.g., "DCL-2025-005" -> 5)
+        // Extract number from last declaration (e.g., "IN-2025-0005" -> 5)
         const lastId = data[0].id;
         const parts = lastId.split('-');
         const lastNumber = parseInt(parts[2]);
         nextNumber = lastNumber + 1;
       }
 
-      setDeclarationNumber(nextNumber.toString());
+      setDeclarationNumber(nextNumber.toString().padStart(4, '0'));
     } catch (error) {
       console.error('Error loading next number:', error);
-      setDeclarationNumber('1');
+      setDeclarationNumber('0001');
     } finally {
       setLoadingNextNumber(false);
     }
@@ -119,9 +121,10 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
       return;
     }
 
-    // Generate full ID with DCL prefix and current year
+    // Generate full ID with IN/OUT prefix based on type and current year
     const currentYear = new Date().getFullYear();
-    const fullId = `DCL-${currentYear}-${declarationNumber.padStart(3, '0')}`;
+    const prefix = type === 'دخول' ? 'IN' : 'OUT';
+    const fullId = `${prefix}-${currentYear}-${declarationNumber.padStart(4, '0')}`;
 
     setLoading(true);
 
@@ -148,7 +151,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
       });
 
       // Reset form
-      setDeclarationNumber('');
+      setDeclarationNumber('0001');
       setType('دخول');
       setStatus('draft');
       setOpen(false);
@@ -192,8 +195,9 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
                 type="text"
                 value={declarationNumber}
                 onChange={(e) => setDeclarationNumber(e.target.value)}
-                placeholder="006"
+                placeholder="0001"
                 required
+                maxLength={4}
                 disabled={loading || loadingNextNumber}
                 className="glass-card border-border/50 flex-1"
               />
@@ -211,7 +215,13 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
               {loadingNextNumber ? (
                 'جاري جلب الرقم التالي...'
               ) : (
-                <>الرقم النهائي: DCL-{new Date().getFullYear()}-{declarationNumber.padStart(3, '0')}</>
+                <>
+                  الرقم النهائي: {type === 'دخول' ? 'IN' : 'OUT'}-{new Date().getFullYear()}-{declarationNumber.padStart(4, '0')}
+                  <br />
+                  <span className="text-xs">
+                    {type === 'دخول' ? '(إقرار دخول)' : '(إقرار خروج)'} - يبدأ الترقيم من 0001 كل سنة
+                  </span>
+                </>
               )}
             </p>
           </div>
