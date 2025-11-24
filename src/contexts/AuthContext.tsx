@@ -112,29 +112,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      console.log('📋 Profile loaded:', profile);
+      const { data: isAdmin, error: adminError } = await supabase
+        .rpc('has_role', { _user_id: supabaseUser.id, _role: 'admin' });
 
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', supabaseUser.id);
+      const { data: isManager, error: managerError } = await supabase
+        .rpc('has_role', { _user_id: supabaseUser.id, _role: 'manager' });
 
-      console.log('🎭 Role data:', { roleData, roleError });
-
-      if (roleError) {
-        console.error('❌ Role error:', roleError);
-        if (retryCount < 2) {
-          console.log(`🔄 Retrying role fetch... Attempt ${retryCount + 1}`);
-          setTimeout(() => loadUserProfile(supabaseUser, retryCount + 1), 1000);
-          return;
-        }
+      if ((adminError || managerError) && retryCount < 2) {
+        console.error('❌ Role RPC error:', { adminError, managerError });
+        console.log(`🔄 Retrying role fetch via RPC... Attempt ${retryCount + 1}`);
+        setTimeout(() => loadUserProfile(supabaseUser, retryCount + 1), 1000);
+        return;
       }
       
       // Get highest priority role (admin > manager > user)
-      const roles = (roleData || []).map((r: any) => r.role);
-      console.log('👑 Extracted roles:', roles);
-      const role = roles.includes('admin') ? 'admin' : roles.includes('manager') ? 'manager' : 'user';
-      console.log('✅ Final role assigned:', role);
+      let role: 'admin' | 'manager' | 'user' = 'user';
+      if (isAdmin) {
+        role = 'admin';
+      } else if (isManager) {
+        role = 'manager';
+      }
+
+      console.log('👑 Role resolution via RPC:', { isAdmin, isManager, finalRole: role });
 
       const username = (profile as any)?.username
         || (supabaseUser.user_metadata as any)?.username
