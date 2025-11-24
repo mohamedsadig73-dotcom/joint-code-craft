@@ -90,7 +90,7 @@ export default function DeclarationDetails() {
         .from('declarations')
         .select(`
           *,
-          sender:profiles(username, email)
+          sender:profiles!sender_id(username, email)
         `)
         .eq('id', id)
         .maybeSingle();
