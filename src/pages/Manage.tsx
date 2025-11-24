@@ -40,6 +40,7 @@ interface Declaration {
   sender_id: string;
   sender?: { username: string };
   status: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected';
+  archive_number: string | null;
   created_at: string;
 }
 
@@ -238,6 +239,7 @@ export default function Manage() {
         type: dec.type,
         sender: dec.sender?.username || 'غير معروف',
         status: t(dec.status),
+        archive_number: dec.archive_number || '-',
         created_at: new Date(dec.created_at).toLocaleDateString('ar-SA'),
       }));
 
@@ -263,6 +265,7 @@ export default function Manage() {
         type: dec.type,
         sender: dec.sender?.username || 'غير معروف',
         status: t(dec.status),
+        archive_number: dec.archive_number || '-',
         created_at: new Date(dec.created_at).toLocaleDateString('ar-SA'),
       }));
 
@@ -489,6 +492,7 @@ export default function Manage() {
                 <TableHead>{t('declarationId')}</TableHead>
                 <TableHead>{t('type')}</TableHead>
                 <TableHead>{t('sender')}</TableHead>
+                <TableHead>رقم الأرشفة</TableHead>
                 <TableHead>{t('status')}</TableHead>
                 <TableHead>{t('createdDate')}</TableHead>
                 <TableHead className="text-right">{t('actions')}</TableHead>
@@ -497,13 +501,13 @@ export default function Manage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     {t('loading')}...
                   </TableCell>
                 </TableRow>
               ) : filteredDeclarations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     No declarations found
                   </TableCell>
                 </TableRow>
@@ -519,6 +523,9 @@ export default function Manage() {
                     <TableCell className="font-medium">{declaration.id}</TableCell>
                     <TableCell>{declaration.type}</TableCell>
                     <TableCell>{declaration.sender?.username || 'Unknown'}</TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {declaration.archive_number || <span className="text-muted-foreground">-</span>}
+                    </TableCell>
                     <TableCell>
                       <Badge className={statusColors[declaration.status as keyof typeof statusColors]}>
                         {t(declaration.status)}
