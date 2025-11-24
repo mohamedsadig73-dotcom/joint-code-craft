@@ -209,7 +209,7 @@ export default function Dashboard() {
         type: dec.type,
         sender: dec.sender?.username || 'غير معروف',
         status: t(dec.status),
-        created_at: new Date(dec.created_at).toLocaleDateString('ar-SA'),
+        created_at: new Date(dec.created_at).toLocaleDateString('en-US'),
       }));
 
       exportDeclarationsToExcel(exportData, 'جميع_الإقرارات');
@@ -351,7 +351,7 @@ export default function Dashboard() {
                             {t(declaration.status)}
                           </Badge>
                         </TableCell>
-                        <TableCell>{new Date(declaration.created_at).toLocaleDateString('ar-SA')}</TableCell>
+                        <TableCell>{new Date(declaration.created_at).toLocaleDateString('en-US')}</TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-2">
                             <Button 

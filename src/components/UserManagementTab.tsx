@@ -43,7 +43,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Users, RefreshCw, UserPlus, Trash2, Info, Mail } from 'lucide-react';
 import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
 
 interface UserWithRole {
   id: string;
@@ -457,7 +456,7 @@ export function UserManagementTab() {
                     </Select>
                   </TableCell>
                   <TableCell>
-                    {format(new Date(userData.created_at), 'PPp', { locale: ar })}
+                    {format(new Date(userData.created_at), 'MMMM dd, yyyy, h:mm a')}
                   </TableCell>
                   <TableCell>
                     <Button
