@@ -259,14 +259,14 @@ export default function Dashboard() {
           ].map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={index} className="glass-card border-border/50 p-6">
+              <Card key={index} className="glass-card border-border/50 p-6 animate-fade-in hover:shadow-xl hover:-translate-y-1 cursor-pointer group" style={{ animationDelay: `${index * 100}ms` }}>
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 rounded-xl ${stat.bgColor}`}>
-                    <Icon className={`w-6 h-6 ${stat.color}`} />
+                  <div className={`p-3 rounded-xl ${stat.bgColor} transition-all duration-300 group-hover:scale-110`}>
+                    <Icon className={`w-6 h-6 ${stat.color} transition-transform duration-300 group-hover:rotate-12`} />
                   </div>
-                  <TrendingUp className="w-4 h-4 text-success" />
+                  <TrendingUp className="w-4 h-4 text-success transition-all duration-300 group-hover:scale-125 group-hover:text-primary" />
                 </div>
-                <div className="text-3xl font-bold mb-1">{stat.value}</div>
+                <div className="text-3xl font-bold mb-1 transition-all duration-300 group-hover:text-primary">{stat.value}</div>
                 <div className="text-sm text-muted-foreground">{stat.label}</div>
               </Card>
             );
@@ -274,8 +274,11 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <Card className="glass-card border-border/50 p-6 mb-8">
-          <h3 className="text-lg font-semibold mb-4">{t('quickActions')}</h3>
+        <Card className="glass-card border-border/50 p-6 mb-8 animate-fade-in hover:shadow-xl transition-all duration-300" style={{ animationDelay: '400ms' }}>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <span className="w-1 h-6 bg-primary rounded-full"></span>
+            {t('quickActions')}
+          </h3>
           <div className="flex flex-wrap gap-3">
             <CreateDeclarationDialog 
               open={createDialogOpen} 
@@ -307,7 +310,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Declarations Tabs */}
-        <Card className="glass-card border-border/50">
+        <Card className="glass-card border-border/50 animate-fade-in hover:shadow-xl transition-all duration-300" style={{ animationDelay: '500ms' }}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
             <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="all">{t('all')}</TabsTrigger>
@@ -343,18 +346,18 @@ export default function Dashboard() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    recentDeclarations.map((declaration) => (
-                      <TableRow key={declaration.id}>
-                        <TableCell className="font-medium">{declaration.id}</TableCell>
-                        <TableCell>{declaration.type}</TableCell>
-                        <TableCell>{declaration.sender?.username || 'Unknown'}</TableCell>
-                        <TableCell>
-                          <Badge className={statusColors[declaration.status as keyof typeof statusColors]}>
-                            {t(declaration.status)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{new Date(declaration.created_at).toLocaleDateString('ar-SA')}</TableCell>
-                        <TableCell>
+                     recentDeclarations.map((declaration) => (
+                       <TableRow key={declaration.id} className="animate-fade-in hover:bg-accent/50 transition-colors duration-200">
+                         <TableCell className="font-medium">{declaration.id}</TableCell>
+                         <TableCell>{declaration.type}</TableCell>
+                         <TableCell>{declaration.sender?.username || 'Unknown'}</TableCell>
+                         <TableCell>
+                           <Badge className={`${statusColors[declaration.status as keyof typeof statusColors]} transition-all duration-300 hover:scale-110`}>
+                             {t(declaration.status)}
+                           </Badge>
+                         </TableCell>
+                         <TableCell>{new Date(declaration.created_at).toLocaleDateString('ar-SA')}</TableCell>
+                         <TableCell>
                           <div className="flex justify-end gap-2">
                             <Button 
                               variant="ghost" 
