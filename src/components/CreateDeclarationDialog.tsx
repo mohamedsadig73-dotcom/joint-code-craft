@@ -15,8 +15,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -27,12 +25,9 @@ import {
 import { Plus } from 'lucide-react';
 
 const declarationSchema = z.object({
-  number: z.string().trim().min(4, 'رقم الإقرار يجب أن يكون 4 أرقام').max(4, 'رقم الإقرار يجب أن يكون 4 أرقام').regex(/^\d+$/, 'يجب أن يحتوي على أرقام فقط'),
+  number: z.string().trim().min(3, 'رقم الإقرار يجب أن يكون 3 أرقام على الأقل').max(6, 'رقم الإقرار طويل جداً').regex(/^\d+$/, 'يجب أن يحتوي على أرقام فقط'),
   type: z.enum(['دخول', 'خروج'], { required_error: 'يجب اختيار نوع الإقرار' }),
   status: z.enum(['draft', 'pending_warehouse_signature', 'warehouse_signed', 'sent_to_admin_office', 'received_by_admin_office', 'returned_to_warehouse', 'archived', 'rejected']),
-  archive_number: z.string().optional(),
-  phone: z.string().optional(),
-  notes: z.string().optional(),
 });
 
 interface CreateDeclarationDialogProps {
@@ -48,33 +43,31 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
   const [declarationNumber, setDeclarationNumber] = useState('');
   const [type, setType] = useState<'دخول' | 'خروج'>('دخول');
   const [status, setStatus] = useState<'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected'>('draft');
-  const [archiveNumber, setArchiveNumber] = useState('');
-  const [autoGenerateArchive, setAutoGenerateArchive] = useState(true);
-  const [phone, setPhone] = useState('');
-  const [notes, setNotes] = useState('');
   const { user } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
 
+  // Use controlled or internal state
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = onOpenChange || setInternalOpen;
 
+  // Load next available number when dialog opens
   useEffect(() => {
     if (open) {
       loadNextNumber();
     }
-  }, [open, type]);
+  }, [open]);
 
   const loadNextNumber = async () => {
     setLoadingNextNumber(true);
     try {
       const currentYear = new Date().getFullYear();
-      const prefix = type === 'دخول' ? 'IN' : 'OUT';
       
+      // Get all declarations for current year with DCL prefix
       const { data, error } = await supabase
         .from('declarations')
         .select('id')
-        .ilike('id', `${prefix}-${currentYear}-%`)
+        .ilike('id', `DCL-${currentYear}-%`)
         .order('id', { ascending: false })
         .limit(1);
 
@@ -82,16 +75,17 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
 
       let nextNumber = 1;
       if (data && data.length > 0) {
+        // Extract number from last declaration (e.g., "DCL-2025-005" -> 5)
         const lastId = data[0].id;
         const parts = lastId.split('-');
         const lastNumber = parseInt(parts[2]);
         nextNumber = lastNumber + 1;
       }
 
-      setDeclarationNumber(nextNumber.toString().padStart(4, '0'));
+      setDeclarationNumber(nextNumber.toString());
     } catch (error) {
       console.error('Error loading next number:', error);
-      setDeclarationNumber('0001');
+      setDeclarationNumber('1');
     } finally {
       setLoadingNextNumber(false);
     }
@@ -109,14 +103,12 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
       return;
     }
 
+    // Validate input
     try {
       declarationSchema.parse({
         number: declarationNumber,
         type,
         status,
-        archive_number: archiveNumber,
-        phone,
-        notes,
       });
     } catch (error: any) {
       toast({
@@ -127,22 +119,13 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
       return;
     }
 
+    // Generate full ID with DCL prefix and current year
     const currentYear = new Date().getFullYear();
-    const prefix = type === 'دخول' ? 'IN' : 'OUT';
-    const fullId = `${prefix}-${currentYear}-${declarationNumber.padStart(4, '0')}`;
+    const fullId = `DCL-${currentYear}-${declarationNumber.padStart(3, '0')}`;
 
     setLoading(true);
 
     try {
-      // توليد رقم أرشيف تلقائي إذا كان مفعّلاً
-      let finalArchiveNumber = archiveNumber;
-      if (autoGenerateArchive && !archiveNumber) {
-        const { data: archiveData, error: archiveError } = await supabase.rpc('generate_archive_number');
-        if (!archiveError && archiveData) {
-          finalArchiveNumber = archiveData;
-        }
-      }
-
       const { error } = await supabase
         .from('declarations')
         .insert({
@@ -150,16 +133,10 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
           type,
           status,
           sender_id: user.id,
-          archive_number: finalArchiveNumber || null,
-          phone: phone || null,
-          notes: notes || null,
         });
 
       if (error) {
         if (error.code === '23505') {
-          if (error.message?.includes('archive_number')) {
-            throw new Error('رقم الأرشيف مستخدم بالفعل');
-          }
           throw new Error('رقم الإقرار موجود مسبقاً');
         }
         throw error;
@@ -171,13 +148,9 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
       });
 
       // Reset form
-      setDeclarationNumber('0001');
+      setDeclarationNumber('');
       setType('دخول');
       setStatus('draft');
-      setArchiveNumber('');
-      setPhone('');
-      setNotes('');
-      setAutoGenerateArchive(true);
       setOpen(false);
       
       if (onSuccess) {
@@ -202,7 +175,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
           {t('addDeclaration')}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{t('createNewDeclaration')}</DialogTitle>
           <DialogDescription>
@@ -219,9 +192,8 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
                 type="text"
                 value={declarationNumber}
                 onChange={(e) => setDeclarationNumber(e.target.value)}
-                placeholder="0001"
+                placeholder="006"
                 required
-                maxLength={4}
                 disabled={loading || loadingNextNumber}
                 className="glass-card border-border/50 flex-1"
               />
@@ -239,13 +211,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
               {loadingNextNumber ? (
                 'جاري جلب الرقم التالي...'
               ) : (
-                <>
-                  الرقم النهائي: {type === 'دخول' ? 'IN' : 'OUT'}-{new Date().getFullYear()}-{declarationNumber.padStart(4, '0')}
-                  <br />
-                  <span className="text-xs">
-                    {type === 'دخول' ? '(إقرار دخول)' : '(إقرار خروج)'} - يبدأ الترقيم من 0001 كل سنة
-                  </span>
-                </>
+                <>الرقم النهائي: DCL-{new Date().getFullYear()}-{declarationNumber.padStart(3, '0')}</>
               )}
             </p>
           </div>
@@ -288,65 +254,6 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
                 <SelectItem value="rejected">{t('rejected')}</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="archive_number">رقم ملف الأرشيف</Label>
-            <div className="flex items-center gap-2 mb-2">
-              <Checkbox
-                id="auto_archive"
-                checked={autoGenerateArchive}
-                onCheckedChange={(checked) => setAutoGenerateArchive(checked === true)}
-              />
-              <label htmlFor="auto_archive" className="text-sm text-muted-foreground cursor-pointer">
-                توليد تلقائي
-              </label>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-12 h-10 flex items-center justify-center bg-muted rounded-md font-semibold text-lg border border-border">
-                S
-              </div>
-              <Input
-                id="archive_number"
-                type="text"
-                value={archiveNumber.replace(/^S/, '')}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '');
-                  setArchiveNumber(value ? `S${value}` : '');
-                }}
-                placeholder="1"
-                disabled={loading || autoGenerateArchive}
-                className="glass-card border-border/50 flex-1"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              التنسيق: S1, S2, S3... حتى S16 وما بعدها. سيتم التوليد التلقائي إذا تركته فارغاً
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone">رقم الهاتف (اختياري)</Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="0500000000"
-              disabled={loading}
-              className="glass-card border-border/50"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notes">ملاحظات (اختياري)</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="أضف ملاحظات إضافية..."
-              disabled={loading}
-              className="glass-card border-border/50 min-h-[100px] resize-none"
-            />
           </div>
 
           <div className="flex justify-end gap-2">

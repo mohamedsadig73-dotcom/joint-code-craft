@@ -15,9 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Calendar, User, FileText, Clock, Printer, Download, FileSpreadsheet } from 'lucide-react';
-import { exportDeclarationsToPDF } from '@/utils/pdfExport';
-import { exportDeclarationsToExcel } from '@/utils/excelExport';
+import { ArrowLeft, Calendar, User, FileText, Clock } from 'lucide-react';
 
 interface DeclarationDetails {
   id: string;
@@ -26,9 +24,6 @@ interface DeclarationDetails {
   created_at: string;
   updated_at: string;
   sender_id: string;
-  archive_number?: string;
-  phone?: string;
-  notes?: string;
   sender: {
     username: string;
     email: string;
@@ -140,65 +135,6 @@ export default function DeclarationDetails() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleExportPDF = () => {
-    if (!declaration) return;
-
-    try {
-      const exportData = [{
-        id: declaration.id,
-        type: declaration.type,
-        sender: declaration.sender.username,
-        status: statusLabels[declaration.status],
-        created_at: new Date(declaration.created_at).toLocaleDateString('ar-SA'),
-      }];
-
-      const doc = exportDeclarationsToPDF(exportData, `تفاصيل الإقرار ${declaration.id}`);
-      doc.save(`إقرار_${declaration.id}.pdf`);
-
-      toast({
-        title: 'تم بنجاح',
-        description: 'تم تصدير الإقرار إلى PDF',
-      });
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'خطأ',
-        description: 'فشل تصدير الإقرار',
-      });
-    }
-  };
-
-  const handleExportExcel = () => {
-    if (!declaration) return;
-
-    try {
-      const exportData = [{
-        id: declaration.id,
-        type: declaration.type,
-        sender: declaration.sender.username,
-        status: statusLabels[declaration.status],
-        created_at: new Date(declaration.created_at).toLocaleDateString('ar-SA'),
-      }];
-
-      exportDeclarationsToExcel(exportData, `إقرار_${declaration.id}`);
-
-      toast({
-        title: 'تم بنجاح',
-        description: 'تم تصدير الإقرار إلى Excel',
-      });
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'خطأ',
-        description: 'فشل تصدير الإقرار',
-      });
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen">
@@ -222,7 +158,7 @@ export default function DeclarationDetails() {
       
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-6 no-print">
+        <div className="mb-6">
           <Button
             variant="ghost"
             onClick={() => navigate('/manage')}
@@ -232,41 +168,14 @@ export default function DeclarationDetails() {
             العودة للإدارة
           </Button>
           
-          <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold mb-2">تفاصيل الإقرار</h1>
               <p className="text-muted-foreground">رقم الإقرار: {declaration.id}</p>
-              {declaration.archive_number && (
-                <p className="text-sm text-muted-foreground">رقم الأرشيف: {declaration.archive_number}</p>
-              )}
             </div>
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
               <Button
                 variant="outline"
-                onClick={handlePrint}
-                className="gap-2 hover:bg-primary hover:text-primary-foreground hover:border-primary"
-              >
-                <Printer className="w-4 h-4" />
-                طباعة
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleExportPDF}
-                className="gap-2 hover:bg-primary hover:text-primary-foreground hover:border-primary"
-              >
-                <Download className="w-4 h-4" />
-                PDF
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleExportExcel}
-                className="gap-2 hover:bg-primary hover:text-primary-foreground hover:border-primary"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                Excel
-              </Button>
-              <Button
-                variant="shimmer"
                 onClick={() => navigate(`/declaration/${declaration.id}/timeline`)}
                 className="gap-2"
               >
@@ -281,10 +190,10 @@ export default function DeclarationDetails() {
         </div>
 
         {/* Main Details Card */}
-        <Card className="glass-card mb-6 animate-fade-in hover:shadow-xl transition-all duration-300">
+        <Card className="glass-card mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-primary" />
+              <FileText className="w-5 h-5" />
               المعلومات الأساسية
             </CardTitle>
           </CardHeader>
@@ -322,20 +231,6 @@ export default function DeclarationDetails() {
                 )}
               </div>
 
-              {declaration.archive_number && (
-                <div>
-                  <label className="text-sm text-muted-foreground">رقم ملف الأرشيف</label>
-                  <p className="text-lg font-medium">{declaration.archive_number}</p>
-                </div>
-              )}
-
-              {declaration.phone && (
-                <div>
-                  <label className="text-sm text-muted-foreground">رقم الهاتف</label>
-                  <p className="text-lg font-medium">{declaration.phone}</p>
-                </div>
-              )}
-
               <div>
                 <label className="text-sm text-muted-foreground flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
@@ -364,21 +259,14 @@ export default function DeclarationDetails() {
                 </p>
               </div>
             </div>
-
-            {declaration.notes && (
-              <div className="mt-6 pt-6 border-t border-border">
-                <label className="text-sm text-muted-foreground">ملاحظات</label>
-                <p className="text-base mt-2 whitespace-pre-wrap">{declaration.notes}</p>
-              </div>
-            )}
           </CardContent>
         </Card>
 
         {/* Sender Details Card */}
-        <Card className="glass-card animate-fade-in [animation-delay:150ms] hover:shadow-xl transition-all duration-300">
+        <Card className="glass-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <User className="w-5 h-5 text-primary" />
+              <User className="w-5 h-5" />
               معلومات المرسل
             </CardTitle>
           </CardHeader>
@@ -397,22 +285,6 @@ export default function DeclarationDetails() {
           </CardContent>
         </Card>
       </main>
-
-      <style>{`
-        @media print {
-          .no-print {
-            display: none !important;
-          }
-          body {
-            background: white !important;
-          }
-          .glass-card {
-            background: white !important;
-            border: 1px solid #ddd !important;
-            box-shadow: none !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

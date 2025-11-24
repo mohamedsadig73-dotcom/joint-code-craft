@@ -3,7 +3,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { NotificationCenter } from '@/components/NotificationCenter';
-import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
   FolderOpen, 
@@ -49,12 +48,12 @@ export function Navigation() {
     : navItems;
 
   return (
-    <nav className="bg-[hsl(210_50%_20%)] border-b border-border/30 sticky top-0 z-50 backdrop-blur-md shadow-lg">
+    <nav className="glass-card border-b border-border/50 sticky top-0 z-50 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-primary">DTS</h1>
+            <h1 className="text-2xl font-bold gradient-text">DTS</h1>
             <span className="hidden md:block text-sm text-muted-foreground">
               {t('systemTitle')}
             </span>
@@ -67,14 +66,9 @@ export function Navigation() {
               return (
                 <Link key={item.path} to={item.path}>
                   <Button
-                    variant={isActive(item.path) ? 'default' : 'ghost'}
+                    variant={isActive(item.path) ? 'secondary' : 'ghost'}
                     size="sm"
-                    className={cn(
-                      "gap-2 transition-all duration-300",
-                      isActive(item.path) 
-                        ? "bg-primary text-primary-foreground shadow-md" 
-                        : "hover:bg-primary/10 hover:text-primary"
-                    )}
+                    className="gap-2"
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}

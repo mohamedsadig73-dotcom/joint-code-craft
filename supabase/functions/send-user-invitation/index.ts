@@ -77,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { email, role, invitedBy } = validationResult.data;
 
-    console.log(`Sending invitation with role ${role}`);
+    console.log(`Sending invitation to ${email} with role ${role}`);
 
     // Create user with temporary password
     const tempPassword = crypto.randomUUID();
@@ -92,11 +92,11 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (signUpError) {
-      console.error("Error creating user");
+      console.error("Error creating user:", signUpError);
       throw signUpError;
     }
 
-    console.log("User created successfully");
+    console.log("User created successfully:", newUser.user?.id);
 
     // Assign role
     const { error: roleError } = await supabaseClient
@@ -107,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
     if (roleError) {
-      console.error("Error assigning role");
+      console.error("Error assigning role:", roleError);
     }
 
     // Generate password reset link
@@ -117,7 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (resetError) {
-      console.error("Error generating reset link");
+      console.error("Error generating reset link:", resetError);
       throw resetError;
     }
 
@@ -189,7 +189,7 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Email sent successfully");
+    console.log("Email sent successfully:", emailResponse);
 
     return new Response(
       JSON.stringify({
@@ -206,10 +206,11 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in send-user-invitation function");
+    console.error("Error in send-user-invitation function:", error);
     return new Response(
       JSON.stringify({
-        error: error.message || "فشل في إرسال الدعوة",
+        error: error.message,
+        details: error.toString(),
       }),
       {
         status: 500,

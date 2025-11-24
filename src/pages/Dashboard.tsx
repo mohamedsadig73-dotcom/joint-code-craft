@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigation } from '@/components/Navigation';
@@ -6,13 +6,10 @@ import { UserManagement } from '@/components/UserManagement';
 import { CreateDeclarationDialog } from '@/components/CreateDeclarationDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePageSwipeNavigation } from '@/hooks/useSwipeNavigation';
-import { SwipeIndicator } from '@/components/SwipeIndicator';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { exportDeclarationsToExcel } from '@/utils/excelExport';
 import { exportDeclarationsToPDF } from '@/utils/pdfExport';
-import { StatsSkeleton, TableSkeleton } from '@/components/LoadingSkeleton';
 import {
   Table,
   TableBody,
@@ -24,7 +21,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 import { 
   FileText, 
   Clock, 
@@ -54,11 +50,6 @@ export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
-  
-  const { isSwipingLeft, isSwipingRight } = usePageSwipeNavigation({
-    left: '/manage',
-    right: '/reports',
-  });
   const [stats, setStats] = useState({
     total: 0,
     draft: 0,
@@ -239,10 +230,6 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen">
       <Navigation />
-      <SwipeIndicator 
-        direction={isSwipingLeft ? 'left' : isSwipingRight ? 'right' : null}
-        label={isSwipingLeft ? 'إدارة' : isSwipingRight ? 'تقارير' : undefined}
-      />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
@@ -270,14 +257,14 @@ export default function Dashboard() {
           ].map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={index} className="glass-card border-border/50 p-6 animate-fade-in hover:shadow-xl hover:-translate-y-1 cursor-pointer group" style={{ animationDelay: `${index * 100}ms` }}>
+              <Card key={index} className="glass-card border-border/50 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 rounded-xl ${stat.bgColor} transition-all duration-300 group-hover:scale-110`}>
-                    <Icon className={`w-6 h-6 ${stat.color} transition-transform duration-300 group-hover:rotate-12`} />
+                  <div className={`p-3 rounded-xl ${stat.bgColor}`}>
+                    <Icon className={`w-6 h-6 ${stat.color}`} />
                   </div>
-                  <TrendingUp className="w-4 h-4 text-success transition-all duration-300 group-hover:scale-125 group-hover:text-primary" />
+                  <TrendingUp className="w-4 h-4 text-success" />
                 </div>
-                <div className="text-3xl font-bold mb-1 transition-all duration-300 group-hover:text-primary">{stat.value}</div>
+                <div className="text-3xl font-bold mb-1">{stat.value}</div>
                 <div className="text-sm text-muted-foreground">{stat.label}</div>
               </Card>
             );
@@ -285,11 +272,8 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <Card className="glass-card border-border/50 p-6 mb-8 animate-fade-in hover:shadow-xl transition-all duration-300" style={{ animationDelay: '400ms' }}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <span className="w-1 h-6 bg-primary rounded-full"></span>
-            {t('quickActions')}
-          </h3>
+        <Card className="glass-card border-border/50 p-6 mb-8">
+          <h3 className="text-lg font-semibold mb-4">{t('quickActions')}</h3>
           <div className="flex flex-wrap gap-3">
             <CreateDeclarationDialog 
               open={createDialogOpen} 
@@ -321,7 +305,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Declarations Tabs */}
-        <Card className="glass-card border-border/50 animate-fade-in hover:shadow-xl transition-all duration-300" style={{ animationDelay: '500ms' }}>
+        <Card className="glass-card border-border/50">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
             <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="all">{t('all')}</TabsTrigger>
@@ -357,18 +341,18 @@ export default function Dashboard() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                     recentDeclarations.map((declaration) => (
-                       <TableRow key={declaration.id} className="animate-fade-in hover:bg-accent/50 transition-colors duration-200">
-                         <TableCell className="font-medium">{declaration.id}</TableCell>
-                         <TableCell>{declaration.type}</TableCell>
-                         <TableCell>{declaration.sender?.username || 'Unknown'}</TableCell>
-                         <TableCell>
-                           <Badge className={`${statusColors[declaration.status as keyof typeof statusColors]} transition-all duration-300 hover:scale-110`}>
-                             {t(declaration.status)}
-                           </Badge>
-                         </TableCell>
-                         <TableCell>{new Date(declaration.created_at).toLocaleDateString('ar-SA')}</TableCell>
-                         <TableCell>
+                    recentDeclarations.map((declaration) => (
+                      <TableRow key={declaration.id}>
+                        <TableCell className="font-medium">{declaration.id}</TableCell>
+                        <TableCell>{declaration.type}</TableCell>
+                        <TableCell>{declaration.sender?.username || 'Unknown'}</TableCell>
+                        <TableCell>
+                          <Badge className={statusColors[declaration.status as keyof typeof statusColors]}>
+                            {t(declaration.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(declaration.created_at).toLocaleDateString('ar-SA')}</TableCell>
+                        <TableCell>
                           <div className="flex justify-end gap-2">
                             <Button 
                               variant="ghost" 

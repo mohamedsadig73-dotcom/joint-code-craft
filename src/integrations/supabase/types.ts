@@ -61,33 +61,24 @@ export type Database = {
       }
       declarations: {
         Row: {
-          archive_number: string | null
           created_at: string
           id: string
-          notes: string | null
-          phone: string | null
           sender_id: string
           status: Database["public"]["Enums"]["declaration_status"]
           type: Database["public"]["Enums"]["declaration_type"]
           updated_at: string
         }
         Insert: {
-          archive_number?: string | null
           created_at?: string
           id: string
-          notes?: string | null
-          phone?: string | null
           sender_id: string
           status?: Database["public"]["Enums"]["declaration_status"]
           type: Database["public"]["Enums"]["declaration_type"]
           updated_at?: string
         }
         Update: {
-          archive_number?: string | null
           created_at?: string
           id?: string
-          notes?: string | null
-          phone?: string | null
           sender_id?: string
           status?: Database["public"]["Enums"]["declaration_status"]
           type?: Database["public"]["Enums"]["declaration_type"]
@@ -146,32 +137,23 @@ export type Database = {
       }
       profiles: {
         Row: {
-          avatar_url: string | null
-          bio: string | null
           created_at: string
           email: string
           id: string
-          phone: string | null
           updated_at: string
           username: string
         }
         Insert: {
-          avatar_url?: string | null
-          bio?: string | null
           created_at?: string
           email: string
           id: string
-          phone?: string | null
           updated_at?: string
           username: string
         }
         Update: {
-          avatar_url?: string | null
-          bio?: string | null
           created_at?: string
           email?: string
           id?: string
-          phone?: string | null
           updated_at?: string
           username?: string
         }
@@ -211,8 +193,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_admin_office_notifications: { Args: never; Returns: undefined }
-      generate_archive_number: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
