@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { toHijriDateLong } from '@/utils/dateUtils';
 import {
   Select,
   SelectContent,
@@ -305,11 +306,7 @@ export default function DeclarationDetails() {
                   تاريخ الإنشاء
                 </label>
                 <p className="text-lg">
-                  {new Date(declaration.created_at).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  {toHijriDateLong(declaration.created_at)}
                 </p>
               </div>
 
@@ -319,11 +316,7 @@ export default function DeclarationDetails() {
                   آخر تحديث
                 </label>
                 <p className="text-lg">
-                  {new Date(declaration.updated_at).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  {toHijriDateLong(declaration.updated_at)}
                 </p>
               </div>
 

@@ -18,6 +18,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { RefreshCw, Trash2, Eye, AlertCircle } from 'lucide-react';
 import { differenceInDays } from 'date-fns';
+import { toHijriDate } from '@/utils/dateUtils';
 
 interface DeletedDeclaration {
   id: string;
@@ -215,7 +216,7 @@ export default function Trash() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {new Date(declaration.deleted_at).toLocaleDateString('ar-SA')}
+                        {toHijriDate(declaration.deleted_at)}
                       </TableCell>
                       <TableCell>
                         <Badge 

@@ -21,6 +21,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Users, RefreshCw } from 'lucide-react';
+import { toHijriDate } from '@/utils/dateUtils';
 
 interface UserWithRole {
   id: string;
@@ -210,7 +211,7 @@ export function UserManagement() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {new Date(user.created_at).toLocaleDateString('en-US')}
+                    {toHijriDate(user.created_at)}
                   </TableCell>
                   <TableCell className="text-right">
                     <Select

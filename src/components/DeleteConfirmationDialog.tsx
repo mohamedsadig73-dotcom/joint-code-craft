@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { toHijriDate } from '@/utils/dateUtils';
 
 interface Declaration {
   id: string;
@@ -95,7 +96,7 @@ export function DeleteConfirmationDialog({
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-foreground">تاريخ الإنشاء:</span>
                 <span className="text-sm">
-                  {new Date(declaration.created_at).toLocaleDateString('ar-SA')}
+                  {toHijriDate(declaration.created_at)}
                 </span>
               </div>
             </div>
