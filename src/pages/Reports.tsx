@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigation } from '@/components/Navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { usePageSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import { SwipeIndicator } from '@/components/SwipeIndicator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ReactECharts from 'echarts-for-react';
@@ -9,6 +11,12 @@ import { Download, TrendingUp, Users, FileText, Clock } from 'lucide-react';
 
 export default function Reports() {
   const { t } = useLanguage();
+  
+  const { isSwipingLeft, isSwipingRight } = usePageSwipeNavigation({
+    left: undefined,
+    right: '/',
+  });
+  
   const [stats, setStats] = useState({
     draft: 0,
     pending_warehouse_signature: 0,
@@ -256,6 +264,10 @@ export default function Reports() {
   return (
     <div className="min-h-screen">
       <Navigation />
+      <SwipeIndicator 
+        direction={isSwipingLeft ? 'left' : isSwipingRight ? 'right' : null}
+        label={isSwipingRight ? 'الرئيسية' : undefined}
+      />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}

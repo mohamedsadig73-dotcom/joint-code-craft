@@ -6,6 +6,8 @@ import { toast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
 import { CreateDeclarationDialog } from '@/components/CreateDeclarationDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { usePageSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import { SwipeIndicator } from '@/components/SwipeIndicator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -67,6 +69,12 @@ export default function Manage() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  const { isSwipingLeft, isSwipingRight } = usePageSwipeNavigation({
+    left: '/profile',
+    right: '/',
+  });
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [senderFilter, setSenderFilter] = useState('all');
@@ -302,6 +310,10 @@ export default function Manage() {
   return (
     <div className="min-h-screen">
       <Navigation />
+      <SwipeIndicator 
+        direction={isSwipingLeft ? 'left' : isSwipingRight ? 'right' : null}
+        label={isSwipingLeft ? 'ملفي الشخصي' : isSwipingRight ? 'الرئيسية' : undefined}
+      />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}

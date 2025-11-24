@@ -87,6 +87,8 @@ All colors MUST be HSL.
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
 body {
@@ -96,6 +98,8 @@ body {
     min-height: 100vh;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-feature-settings: 'ss01', 'ss02', 'cv01', 'cv03';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   .glass-card {
