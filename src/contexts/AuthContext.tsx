@@ -27,16 +27,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let rolesChannel: any = null;
+    let mounted = true;
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (!mounted) return;
+        
+        console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         
         // Defer Supabase calls with setTimeout to prevent deadlock
         if (session?.user) {
           setTimeout(() => {
-            loadUserProfile(session.user);
+            if (mounted) {
+              loadUserProfile(session.user);
+            }
           }, 0);
         } else {
           setUser(null);
@@ -47,6 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
       setSession(session);
       if (session?.user) {
         loadUserProfile(session.user);
@@ -64,7 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             },
             () => {
               // Reload user profile when roles change
-              loadUserProfile(session.user);
+              if (mounted && session?.user) {
+                loadUserProfile(session.user);
+              }
             }
           )
           .subscribe();
@@ -74,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
       if (rolesChannel) {
         rolesChannel.unsubscribe();
@@ -138,12 +149,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
 
-      if (data.user) {
+      if (data.user && data.session) {
+        setSession(data.session);
         await loadUserProfile(data.user);
       }
 
       return { success: true };
     } catch (error: any) {
+      console.error('Login error:', error);
       return { success: false, error: error.message };
     }
   };
