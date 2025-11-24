@@ -2,13 +2,17 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigation } from '@/components/Navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ReactECharts from 'echarts-for-react';
-import { Download, TrendingUp, Users, FileText, Clock } from 'lucide-react';
+import { Download, TrendingUp, Users, FileText, Clock, Activity, Shield } from 'lucide-react';
+import { exportDeclarationsToExcel } from '@/utils/excelExport';
+import { exportDeclarationsToPDF } from '@/utils/pdfExport';
 
 export default function Reports() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     draft: 0,
     pending_warehouse_signature: 0,
@@ -22,6 +26,9 @@ export default function Reports() {
   });
   const [weeklyData, setWeeklyData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
   const [monthlyData, setMonthlyData] = useState<{ month: string; warehouse_signed: number; pending_warehouse_signature: number; draft: number }[]>([]);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [avgProcessingTime, setAvgProcessingTime] = useState('0h');
+  const [completionRate, setCompletionRate] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,9 +37,10 @@ export default function Reports() {
 
   const loadAllData = async () => {
     try {
+      // Load declarations data
       const { data, error } = await supabase
         .from('declarations')
-        .select('status, created_at');
+        .select('status, created_at, updated_at');
 
       if (error) throw error;
 
@@ -49,6 +57,33 @@ export default function Reports() {
         total: data?.length || 0,
       };
       setStats(newStats);
+
+      // Calculate completion rate (archived / total)
+      const completionPercentage = newStats.total > 0 
+        ? Math.round((newStats.archived / newStats.total) * 100)
+        : 0;
+      setCompletionRate(completionPercentage);
+
+      // Calculate average processing time
+      const completedDeclarations = data?.filter(d => d.status === 'archived');
+      if (completedDeclarations && completedDeclarations.length > 0) {
+        const totalHours = completedDeclarations.reduce((sum, dec) => {
+          const created = new Date(dec.created_at).getTime();
+          const updated = new Date(dec.updated_at).getTime();
+          const hours = (updated - created) / (1000 * 60 * 60);
+          return sum + hours;
+        }, 0);
+        const avgHours = Math.round(totalHours / completedDeclarations.length);
+        const days = Math.floor(avgHours / 24);
+        const hours = avgHours % 24;
+        setAvgProcessingTime(days > 0 ? `${days}d ${hours}h` : `${hours}h`);
+      }
+
+      // Load total users count
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id');
+      setTotalUsers(profiles?.length || 0);
 
       // Calculate weekly data (last 7 days)
       const now = new Date();
@@ -247,11 +282,65 @@ export default function Reports() {
   };
 
   const metrics = [
-    { label: 'Total Declarations', value: '1,090', icon: FileText, trend: '+12%' },
-    { label: 'Avg. Processing Time', value: '2.4h', icon: Clock, trend: '-18%' },
-    { label: 'Active Users', value: '42', icon: Users, trend: '+8%' },
-    { label: 'Completion Rate', value: '94%', icon: TrendingUp, trend: '+5%' },
+    { label: t('totalDeclarations'), value: stats.total.toString(), icon: FileText },
+    { label: t('avgProcessingTime'), value: avgProcessingTime, icon: Clock },
+    { label: t('activeUsers'), value: totalUsers.toString(), icon: Users },
+    { label: t('completionRate'), value: `${completionRate}%`, icon: TrendingUp },
   ];
+
+  const handleExportExcel = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('declarations')
+        .select(`
+          *,
+          sender:profiles(username)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const exportData = (data || []).map(dec => ({
+        id: dec.id,
+        type: dec.type,
+        sender: dec.sender?.username || 'غير معروف',
+        status: t(dec.status),
+        archive_number: dec.archive_number || '-',
+        created_at: new Date(dec.created_at).toLocaleDateString('en-US'),
+      }));
+
+      exportDeclarationsToExcel(exportData, 'تقرير_كامل_الإقرارات');
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('declarations')
+        .select(`
+          *,
+          sender:profiles(username)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const exportData = (data || []).map(dec => ({
+        id: dec.id,
+        type: dec.type,
+        sender: dec.sender?.username || 'غير معروف',
+        status: t(dec.status),
+        archive_number: dec.archive_number || '-',
+        created_at: new Date(dec.created_at).toLocaleDateString('en-US'),
+      }));
+
+      exportDeclarationsToPDF(exportData, 'تقرير_كامل_الإقرارات');
+    } catch (error) {
+      console.error('Error exporting to PDF:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -265,11 +354,11 @@ export default function Reports() {
             <p className="text-muted-foreground">{t('reportsSubtitle')}</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" onClick={handleExportPDF}>
               <Download className="w-4 h-4" />
               {t('exportPDF')}
             </Button>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" onClick={handleExportExcel}>
               <Download className="w-4 h-4" />
               {t('exportExcel')}
             </Button>
@@ -284,10 +373,9 @@ export default function Reports() {
               <Card key={metric.label} className="glass-card border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-2 rounded-lg bg-secondary/10">
-                      <Icon className="w-5 h-5 text-secondary" />
+                    <div className="p-3 rounded-lg bg-primary/10">
+                      <Icon className="w-6 h-6 text-primary" />
                     </div>
-                    <span className="text-sm font-medium text-success">{metric.trend}</span>
                   </div>
                   <div className="text-3xl font-bold mb-1">{metric.value}</div>
                   <div className="text-sm text-muted-foreground">{metric.label}</div>

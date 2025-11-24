@@ -179,17 +179,19 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen">
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Shield className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold">{t('adminDashboardTitle')}</h1>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <Shield className="w-8 h-8 text-primary" />
+              <h1 className="text-3xl font-bold">{t('adminDashboardTitle')}</h1>
+            </div>
+            <p className="text-muted-foreground">{t('adminDashboardSubtitle')}</p>
           </div>
-          <p className="text-muted-foreground">{t('adminDashboardSubtitle')}</p>
         </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
@@ -208,46 +210,50 @@ export default function AdminDashboard() {
             {/* إحصائيات سريعة */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="glass-card border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('totalUsers')}</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalUsers}</div>
-              <p className="text-xs text-muted-foreground">{t('allSystemAccounts')}</p>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-primary/10">
+                  <Users className="w-6 h-6 text-primary" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold mb-1">{stats.totalUsers}</div>
+              <div className="text-sm text-muted-foreground">{t('totalUsers')}</div>
             </CardContent>
           </Card>
 
           <Card className="glass-card border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('systemAdmins')}</CardTitle>
-              <Shield className="h-4 w-4 text-destructive" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-destructive">{stats.adminCount}</div>
-              <p className="text-xs text-muted-foreground">{t('fullAccess')}</p>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-destructive/10">
+                  <Shield className="w-6 h-6 text-destructive" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold mb-1">{stats.adminCount}</div>
+              <div className="text-sm text-muted-foreground">{t('systemAdmins')}</div>
             </CardContent>
           </Card>
 
           <Card className="glass-card border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('managers')}</CardTitle>
-              <UserCheck className="h-4 w-4 text-chart-2" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold" style={{ color: COLORS.manager }}>{stats.managerCount}</div>
-              <p className="text-xs text-muted-foreground">{t('managerialPermissions')}</p>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-chart-2/10">
+                  <UserCheck className="w-6 h-6" style={{ color: COLORS.manager }} />
+                </div>
+              </div>
+              <div className="text-3xl font-bold mb-1">{stats.managerCount}</div>
+              <div className="text-sm text-muted-foreground">{t('managers')}</div>
             </CardContent>
           </Card>
 
           <Card className="glass-card border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('totalDeclarations')}</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalDeclarations}</div>
-              <p className="text-xs text-muted-foreground">{t('allDeclarations')}</p>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-primary/10">
+                  <FileText className="w-6 h-6 text-primary" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold mb-1">{stats.totalDeclarations}</div>
+              <div className="text-sm text-muted-foreground">{t('totalDeclarations')}</div>
             </CardContent>
           </Card>
         </div>
