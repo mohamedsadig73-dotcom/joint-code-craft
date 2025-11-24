@@ -92,18 +92,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const loadUserProfile = async (supabaseUser: SupabaseUser) => {
+  const loadUserProfile = async (supabaseUser: SupabaseUser, retryCount = 0) => {
     try {
-      const { data: profile } = await supabase
+      // Try to fetch profile with retry logic
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', supabaseUser.id)
         .maybeSingle();
 
-      const { data: roleData } = await supabase
+      if (profileError && retryCount < 2) {
+        console.log(`Retrying profile fetch... Attempt ${retryCount + 1}`);
+        setTimeout(() => loadUserProfile(supabaseUser, retryCount + 1), 1000);
+        return;
+      }
+
+      const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', supabaseUser.id);
+
+      if (roleError && retryCount < 2) {
+        console.log(`Retrying role fetch... Attempt ${retryCount + 1}`);
+        setTimeout(() => loadUserProfile(supabaseUser, retryCount + 1), 1000);
+        return;
+      }
       
       // Get highest priority role (admin > manager > user)
       const roles = (roleData || []).map((r: any) => r.role);
@@ -116,6 +129,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const email = (profile as any)?.email || supabaseUser.email || '';
 
+      console.log('✅ User profile loaded:', { username, email, role });
+
       setUser({
         id: (profile as any)?.id || supabaseUser.id,
         username,
@@ -123,8 +138,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role,
       });
     } catch (error) {
-      console.error('Error loading profile:', error);
-      // حتى لو فشل جلب الملف الشخصي، نبقي المستخدم مسجلًا مع دور افتراضي
+      console.error('❌ Error loading profile:', error);
+      
+      // Don't set user if we failed to load - keep trying
+      if (retryCount < 2) {
+        console.log(`Retrying after error... Attempt ${retryCount + 1}`);
+        setTimeout(() => loadUserProfile(supabaseUser, retryCount + 1), 1500);
+        return;
+      }
+      
+      // After all retries failed, set a basic user with 'user' role
       const username = (supabaseUser.user_metadata as any)?.username
         || supabaseUser.email?.split('@')[0]
         || 'User';
