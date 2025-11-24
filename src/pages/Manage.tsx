@@ -550,21 +550,21 @@ export default function Manage() {
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => {
-                            if (window.confirm('هل أنت متأكد من حذف هذا الإقرار؟')) {
-                              handleDelete(declaration.id);
-                            }
-                          }}
-                          title="حذف"
-                          disabled={user?.role !== 'admin'}
-                          style={{ display: user?.role === 'admin' ? 'flex' : 'none' }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {(user?.role === 'admin' || (user?.role === 'manager' && declaration.sender_id === user.id)) && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => {
+                              if (window.confirm('هل أنت متأكد من حذف هذا الإقرار؟')) {
+                                handleDelete(declaration.id);
+                              }
+                            }}
+                            title="حذف"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
