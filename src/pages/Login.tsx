@@ -23,87 +23,56 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     
-    try {
-      if (isSignup) {
-        if (!username.trim()) {
-          toast({
-            variant: 'destructive',
-            title: t('error'),
-            description: t('enterUsername'),
-          });
-          return;
-        }
-
-        if (password.length < 6) {
-          toast({
-            variant: 'destructive',
-            title: t('error'),
-            description: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
-          });
-          return;
-        }
-        
-        const result = await signup(email.trim(), password, username.trim());
-        if (result.success) {
+    if (isSignup) {
+      if (!username) {
+        toast({
+          variant: 'destructive',
+          title: t('error'),
+          description: t('enterUsername'),
+        });
+        setLoading(false);
+        return;
+      }
+      
+      const result = await signup(email, password, username);
+      if (result.success) {
+        // بعد إنشاء الحساب، نحاول تسجيل الدخول مباشرة
+        const loginResult = await login(email, password);
+        if (loginResult.success) {
           toast({
             title: t('success'),
             description: t('signupSuccess'),
           });
-          // الانتظار قليلاً قبل محاولة تسجيل الدخول
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          const loginResult = await login(email.trim(), password);
-          if (loginResult.success) {
-            navigate('/');
-          } else {
-            toast({
-              title: 'تم إنشاء الحساب بنجاح',
-              description: 'الرجاء تسجيل الدخول',
-            });
-            setIsSignup(false);
-          }
-        } else {
-          toast({
-            variant: 'destructive',
-            title: t('error'),
-            description: result.error || t('signupFailed'),
-          });
-        }
-      } else {
-        const result = await login(email.trim(), password);
-        if (result.success) {
-          toast({
-            title: t('success'),
-            description: 'تم تسجيل الدخول بنجاح',
-          });
-          // الانتظار قليلاً لتحميل بيانات المستخدم
-          await new Promise(resolve => setTimeout(resolve, 500));
           navigate('/');
         } else {
-          let errorMessage = t('invalidCredentials');
-          if (result.error?.includes('Email not confirmed')) {
-            errorMessage = 'الرجاء تأكيد البريد الإلكتروني أولاً';
-          } else if (result.error?.includes('Invalid login credentials')) {
-            errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
-          } else if (result.error) {
-            errorMessage = result.error;
-          }
-          
           toast({
             variant: 'destructive',
             title: t('error'),
-            description: errorMessage,
+            description: loginResult.error || t('signupFailed'),
           });
+          setIsSignup(false);
+          setLoading(false);
         }
+      } else {
+        toast({
+          variant: 'destructive',
+          title: t('error'),
+          description: result.error || t('signupFailed'),
+        });
+        setLoading(false);
       }
-    } catch (error: any) {
-      console.error('Login error:', error);
-      toast({
-        variant: 'destructive',
-        title: t('error'),
-        description: 'حدث خطأ غير متوقع، الرجاء المحاولة مرة أخرى',
-      });
-    } finally {
-      setLoading(false);
+    } else {
+      const result = await login(email, password);
+      if (result.success) {
+        navigate('/');
+      } else {
+        toast({
+          variant: 'destructive',
+          title: t('error'),
+          description: result.error || t('invalidCredentials'),
+        });
+        setLoading(false);
+      }
     }
   };
 

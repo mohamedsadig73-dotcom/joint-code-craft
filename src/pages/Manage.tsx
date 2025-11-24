@@ -85,11 +85,9 @@ export default function Manage() {
   });
 
   useEffect(() => {
-    if (user) {
-      loadDeclarations();
-      loadProfiles();
-    }
-  }, [user]);
+    loadDeclarations();
+    loadProfiles();
+  }, []);
 
   const loadProfiles = async () => {
     try {
@@ -107,10 +105,7 @@ export default function Manage() {
 
   const loadDeclarations = async () => {
     try {
-      console.log('📊 Loading declarations...');
-      
-      // Build query based on user role
-      let query = supabase
+      const { data, error } = await supabase
         .from('declarations')
         .select(`
           *,
@@ -118,22 +113,8 @@ export default function Manage() {
         `)
         .order('created_at', { ascending: false });
 
-      // If user is not admin/manager, only show their declarations
-      if (user && user.role !== 'admin' && user.role !== 'manager') {
-        query = query.eq('sender_id', user.id);
-        console.log('👤 Loading declarations for user:', user.id);
-      } else {
-        console.log('👑 Loading all declarations (admin/manager)');
-      }
+      if (error) throw error;
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('❌ Error loading declarations:', error);
-        throw error;
-      }
-
-      console.log('✅ Loaded declarations:', data?.length || 0);
       setDeclarations(data || []);
       
       // Calculate stats

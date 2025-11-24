@@ -27,22 +27,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let rolesChannel: any = null;
-    let mounted = true;
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (!mounted) return;
-        
-        console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         
         // Defer Supabase calls with setTimeout to prevent deadlock
         if (session?.user) {
           setTimeout(() => {
-            if (mounted) {
-              loadUserProfile(session.user);
-            }
+            loadUserProfile(session.user);
           }, 0);
         } else {
           setUser(null);
@@ -53,8 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      
       setSession(session);
       if (session?.user) {
         loadUserProfile(session.user);
@@ -72,9 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             },
             () => {
               // Reload user profile when roles change
-              if (mounted && session?.user) {
-                loadUserProfile(session.user);
-              }
+              loadUserProfile(session.user);
             }
           )
           .subscribe();
@@ -84,7 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
       if (rolesChannel) {
         rolesChannel.unsubscribe();
@@ -92,48 +81,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const loadUserProfile = async (supabaseUser: SupabaseUser, retryCount = 0) => {
+  const loadUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
-      console.log('🔄 Loading user profile for:', supabaseUser.id);
-      
-      // Try to fetch profile with retry logic
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', supabaseUser.id)
         .maybeSingle();
 
-      if (profileError) {
-        console.error('❌ Profile error:', profileError);
-        if (retryCount < 2) {
-          console.log(`🔄 Retrying profile fetch... Attempt ${retryCount + 1}`);
-          setTimeout(() => loadUserProfile(supabaseUser, retryCount + 1), 1000);
-          return;
-        }
-      }
-
-      const { data: isAdmin, error: adminError } = await supabase
-        .rpc('has_role', { _user_id: supabaseUser.id, _role: 'admin' });
-
-      const { data: isManager, error: managerError } = await supabase
-        .rpc('has_role', { _user_id: supabaseUser.id, _role: 'manager' });
-
-      if ((adminError || managerError) && retryCount < 2) {
-        console.error('❌ Role RPC error:', { adminError, managerError });
-        console.log(`🔄 Retrying role fetch via RPC... Attempt ${retryCount + 1}`);
-        setTimeout(() => loadUserProfile(supabaseUser, retryCount + 1), 1000);
-        return;
-      }
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', supabaseUser.id);
       
       // Get highest priority role (admin > manager > user)
-      let role: 'admin' | 'manager' | 'user' = 'user';
-      if (isAdmin) {
-        role = 'admin';
-      } else if (isManager) {
-        role = 'manager';
-      }
-
-      console.log('👑 Role resolution via RPC:', { isAdmin, isManager, finalRole: role });
+      const roles = (roleData || []).map((r: any) => r.role);
+      const role = roles.includes('admin') ? 'admin' : roles.includes('manager') ? 'manager' : 'user';
 
       const username = (profile as any)?.username
         || (supabaseUser.user_metadata as any)?.username
@@ -142,8 +105,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const email = (profile as any)?.email || supabaseUser.email || '';
 
-      console.log('✅ User profile loaded:', { username, email, role });
-
       setUser({
         id: (profile as any)?.id || supabaseUser.id,
         username,
@@ -151,16 +112,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role,
       });
     } catch (error) {
-      console.error('❌ Error loading profile:', error);
-      
-      // Don't set user if we failed to load - keep trying
-      if (retryCount < 2) {
-        console.log(`Retrying after error... Attempt ${retryCount + 1}`);
-        setTimeout(() => loadUserProfile(supabaseUser, retryCount + 1), 1500);
-        return;
-      }
-      
-      // After all retries failed, set a basic user with 'user' role
+      console.error('Error loading profile:', error);
+      // حتى لو فشل جلب الملف الشخصي، نبقي المستخدم مسجلًا مع دور افتراضي
       const username = (supabaseUser.user_metadata as any)?.username
         || supabaseUser.email?.split('@')[0]
         || 'User';
@@ -185,14 +138,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
 
-      if (data.user && data.session) {
-        setSession(data.session);
+      if (data.user) {
         await loadUserProfile(data.user);
       }
 
       return { success: true };
     } catch (error: any) {
-      console.error('Login error:', error);
       return { success: false, error: error.message };
     }
   };

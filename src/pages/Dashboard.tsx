@@ -66,17 +66,12 @@ export default function Dashboard() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      loadDashboardData();
-    }
-  }, [user]);
+    loadDashboardData();
+  }, []);
 
   const loadDashboardData = async () => {
     try {
-      console.log('📊 Loading dashboard data...');
-      
-      // Build query based on user role
-      let query = supabase
+      const { data, error } = await supabase
         .from('declarations')
         .select(`
           *,
@@ -85,34 +80,13 @@ export default function Dashboard() {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      // If user is not admin/manager, only show their declarations
-      if (user && user.role !== 'admin' && user.role !== 'manager') {
-        query = query.eq('sender_id', user.id);
-        console.log('👤 Loading declarations for user:', user.id);
-      } else {
-        console.log('👑 Loading all declarations (admin/manager)');
-      }
+      if (error) throw error;
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('❌ Error loading declarations:', error);
-        throw error;
-      }
-
-      console.log('✅ Loaded declarations:', data?.length || 0);
       setRecentDeclarations(data || []);
 
-      // Count query with same role-based filtering
-      let countQuery = supabase
+      const { count: totalCount } = await supabase
         .from('declarations')
         .select('*', { count: 'exact', head: true });
-      
-      if (user && user.role !== 'admin' && user.role !== 'manager') {
-        countQuery = countQuery.eq('sender_id', user.id);
-      }
-
-      const { count: totalCount } = await countQuery;
 
       const { count: draftCount } = await supabase
         .from('declarations')
