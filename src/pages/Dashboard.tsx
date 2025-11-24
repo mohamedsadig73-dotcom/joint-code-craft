@@ -71,73 +71,43 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('declarations')
-        .select(`
-          *,
-          sender:profiles(username)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      // جلب آخر 5 إقرارات مع جلب جميع البيانات في استعلام واحد
+      const [declarationsResult, allDeclarationsResult] = await Promise.all([
+        supabase
+          .from('declarations')
+          .select(`
+            *,
+            sender:profiles(username)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('declarations')
+          .select('status')
+      ]);
 
-      if (error) throw error;
+      if (declarationsResult.error) throw declarationsResult.error;
+      if (allDeclarationsResult.error) throw allDeclarationsResult.error;
 
-      setRecentDeclarations(data || []);
+      setRecentDeclarations(declarationsResult.data || []);
 
-      const { count: totalCount } = await supabase
-        .from('declarations')
-        .select('*', { count: 'exact', head: true });
-
-      const { count: draftCount } = await supabase
-        .from('declarations')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'draft');
-
-      const { count: pendingWarehouseCount } = await supabase
-        .from('declarations')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending_warehouse_signature');
-
-      const { count: warehouseSignedCount } = await supabase
-        .from('declarations')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'warehouse_signed');
-
-      const { count: sentToAdminCount } = await supabase
-        .from('declarations')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'sent_to_admin_office');
-
-      const { count: receivedByAdminCount } = await supabase
-        .from('declarations')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'received_by_admin_office');
-
-      const { count: returnedToWarehouseCount } = await supabase
-        .from('declarations')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'returned_to_warehouse');
-
-      const { count: archivedCount } = await supabase
-        .from('declarations')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'archived');
-
-      const { count: rejectedCount } = await supabase
-        .from('declarations')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'rejected');
+      // حساب الإحصائيات من البيانات المجلوبة
+      const allDeclarations = allDeclarationsResult.data || [];
+      const statusCounts = allDeclarations.reduce((acc, dec) => {
+        acc[dec.status] = (acc[dec.status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
 
       setStats({
-        total: totalCount || 0,
-        draft: draftCount || 0,
-        pending_warehouse_signature: pendingWarehouseCount || 0,
-        warehouse_signed: warehouseSignedCount || 0,
-        sent_to_admin_office: sentToAdminCount || 0,
-        received_by_admin_office: receivedByAdminCount || 0,
-        returned_to_warehouse: returnedToWarehouseCount || 0,
-        archived: archivedCount || 0,
-        rejected: rejectedCount || 0,
+        total: allDeclarations.length,
+        draft: statusCounts['draft'] || 0,
+        pending_warehouse_signature: statusCounts['pending_warehouse_signature'] || 0,
+        warehouse_signed: statusCounts['warehouse_signed'] || 0,
+        sent_to_admin_office: statusCounts['sent_to_admin_office'] || 0,
+        received_by_admin_office: statusCounts['received_by_admin_office'] || 0,
+        returned_to_warehouse: statusCounts['returned_to_warehouse'] || 0,
+        archived: statusCounts['archived'] || 0,
+        rejected: statusCounts['rejected'] || 0,
       });
     } catch (error) {
       console.error('Error loading dashboard data:', error);

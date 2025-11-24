@@ -76,27 +76,41 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
 
-      // جلب عدد المستخدمين حسب الصلاحيات
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('role');
+      // جلب جميع البيانات في نفس الوقت
+      const [rolesResult, declarationsResult, activitiesResult] = await Promise.all([
+        supabase.from('user_roles').select('role'),
+        supabase.from('declarations').select('status'),
+        supabase
+          .from('declaration_status_history')
+          .select(`
+            id,
+            declaration_id,
+            old_status,
+            new_status,
+            changed_at,
+            changed_by,
+            profiles!declaration_status_history_changed_by_fkey(username)
+          `)
+          .order('changed_at', { ascending: false })
+          .limit(10)
+      ]);
 
-      if (rolesError) throw rolesError;
+      if (rolesResult.error) throw rolesResult.error;
+      if (declarationsResult.error) throw declarationsResult.error;
+      if (activitiesResult.error) throw activitiesResult.error;
 
-      const adminCount = roles?.filter(r => r.role === 'admin').length || 0;
-      const managerCount = roles?.filter(r => r.role === 'manager').length || 0;
-      const userCount = roles?.filter(r => r.role === 'user').length || 0;
+      const roles = rolesResult.data || [];
+      const declarations = declarationsResult.data || [];
+      const activities = activitiesResult.data || [];
 
-      // جلب إحصائيات الإقرارات
-      const { data: declarations, error: declarationsError } = await supabase
-        .from('declarations')
-        .select('status');
-
-      if (declarationsError) throw declarationsError;
+      // حساب عدد المستخدمين حسب الصلاحيات
+      const adminCount = roles.filter(r => r.role === 'admin').length;
+      const managerCount = roles.filter(r => r.role === 'manager').length;
+      const userCount = roles.filter(r => r.role === 'user').length;
 
       // تجميع الإقرارات حسب الحالة
       const statusCounts: Record<string, number> = {};
-      declarations?.forEach(d => {
+      declarations.forEach(d => {
         statusCounts[d.status] = (statusCounts[d.status] || 0) + 1;
       });
 
@@ -106,36 +120,19 @@ export default function AdminDashboard() {
         label: statusLabels[status] || status,
       }));
 
-      // جلب آخر النشاطات من سجل تغيير الحالات
-      const { data: activities, error: activitiesError } = await supabase
-        .from('declaration_status_history')
-        .select(`
-          id,
-          declaration_id,
-          old_status,
-          new_status,
-          changed_at,
-          changed_by,
-          profiles!declaration_status_history_changed_by_fkey(username)
-        `)
-        .order('changed_at', { ascending: false })
-        .limit(10);
-
-      if (activitiesError) throw activitiesError;
-
-      const recentActivities = activities?.map(a => ({
+      const recentActivities = activities.map(a => ({
         id: a.id,
         type: 'status_change',
         message: `${(a.profiles as any)?.username || 'مستخدم'} قام بتغيير حالة الإقرار ${a.declaration_id} من "${statusLabels[a.old_status || ''] || 'جديد'}" إلى "${statusLabels[a.new_status] || a.new_status}"`,
         timestamp: a.changed_at,
-      })) || [];
+      }));
 
       setStats({
-        totalUsers: roles?.length || 0,
+        totalUsers: roles.length,
         adminCount,
         managerCount,
         userCount,
-        totalDeclarations: declarations?.length || 0,
+        totalDeclarations: declarations.length,
         declarationsByStatus,
         recentActivities,
       });
