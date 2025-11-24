@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, FileText, Activity, TrendingUp, Shield, UserCheck, BarChart3 } from 'lucide-react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { UserManagementTab } from '@/components/UserManagementTab';
+import { BulkNotificationDialog } from '@/components/BulkNotificationDialog';
 
 interface SystemStats {
   totalUsers: number;
@@ -189,6 +190,7 @@ export default function AdminDashboard() {
             </div>
             <p className="text-muted-foreground">{t('adminDashboardSubtitle')}</p>
           </div>
+          <BulkNotificationDialog />
         </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
