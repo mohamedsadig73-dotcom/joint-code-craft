@@ -6,9 +6,10 @@ import { UserManagement } from '@/components/UserManagement';
 import { CreateDeclarationDialog } from '@/components/CreateDeclarationDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCalendar } from '@/contexts/CalendarContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { toGregorianDate } from '@/utils/dateUtils';
+import { formatDate } from '@/utils/dateUtils';
 import { exportDeclarationsToExcel } from '@/utils/excelExport';
 import { exportDeclarationsToPDF } from '@/utils/pdfExport';
 import {
@@ -49,6 +50,7 @@ const statusColors = {
 export default function Dashboard() {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { calendarType } = useCalendar();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
   const [stats, setStats] = useState({
@@ -180,7 +182,7 @@ export default function Dashboard() {
         type: dec.type,
         sender: dec.sender?.username || 'غير معروف',
         status: t(dec.status),
-        created_at: toGregorianDate(dec.created_at),
+        created_at: formatDate(dec.created_at, calendarType),
       }));
 
       exportDeclarationsToExcel(exportData, 'جميع_الإقرارات');
@@ -322,7 +324,7 @@ export default function Dashboard() {
                             {t(declaration.status)}
                           </Badge>
                         </TableCell>
-                        <TableCell>{toGregorianDate(declaration.created_at)}</TableCell>
+                        <TableCell>{formatDate(declaration.created_at, calendarType)}</TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-2">
                             <Button 

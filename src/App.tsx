@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { CalendarProvider } from "@/contexts/CalendarContext";
 import { NotificationListener } from "@/components/NotificationListener";
 import { RegisterSW } from "@/components/RegisterSW";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
@@ -147,8 +148,10 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <LanguageProvider>
-            <AppRoutes />
-            <PWAInstallPrompt />
+            <CalendarProvider>
+              <AppRoutes />
+              <PWAInstallPrompt />
+            </CalendarProvider>
           </LanguageProvider>
         </AuthProvider>
       </BrowserRouter>
