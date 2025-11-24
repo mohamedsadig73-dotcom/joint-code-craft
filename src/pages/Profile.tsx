@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { usePageSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import { SwipeIndicator } from '@/components/SwipeIndicator';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +37,11 @@ export default function Profile() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  const { isSwipingLeft, isSwipingRight } = usePageSwipeNavigation({
+    left: undefined,
+    right: '/manage',
+  });
   
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -221,6 +228,10 @@ export default function Profile() {
   return (
     <div className="min-h-screen">
       <Navigation />
+      <SwipeIndicator 
+        direction={isSwipingLeft ? 'left' : isSwipingRight ? 'right' : null}
+        label={isSwipingRight ? 'إدارة' : undefined}
+      />
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">

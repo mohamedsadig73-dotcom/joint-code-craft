@@ -6,6 +6,8 @@ import { UserManagement } from '@/components/UserManagement';
 import { CreateDeclarationDialog } from '@/components/CreateDeclarationDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import { SwipeIndicator } from '@/components/SwipeIndicator';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { exportDeclarationsToExcel } from '@/utils/excelExport';
@@ -52,6 +54,11 @@ export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
+  
+  const { isSwipingLeft, isSwipingRight } = usePageSwipeNavigation({
+    left: '/manage',
+    right: '/reports',
+  });
   const [stats, setStats] = useState({
     total: 0,
     draft: 0,
@@ -232,6 +239,10 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen">
       <Navigation />
+      <SwipeIndicator 
+        direction={isSwipingLeft ? 'left' : isSwipingRight ? 'right' : null}
+        label={isSwipingLeft ? 'إدارة' : isSwipingRight ? 'تقارير' : undefined}
+      />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
