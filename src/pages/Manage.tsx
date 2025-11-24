@@ -12,9 +12,9 @@ import { Card } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 import { exportDeclarationsToExcel } from '@/utils/excelExport';
 import { exportDeclarationsToPDF } from '@/utils/pdfExport';
+import { toHijriDate, toHijriDateLong } from '@/utils/dateUtils';
 import {
   Select,
   SelectContent,
@@ -279,7 +279,7 @@ export default function Manage() {
         sender: dec.sender?.username || 'غير معروف',
         status: t(dec.status),
         archive_number: dec.archive_number || '-',
-        created_at: new Date(dec.created_at).toLocaleDateString('en-US'),
+        created_at: toHijriDate(dec.created_at),
       }));
 
       exportDeclarationsToExcel(exportData, 'إقرارات');
@@ -305,7 +305,7 @@ export default function Manage() {
         sender: dec.sender?.username || 'غير معروف',
         status: t(dec.status),
         archive_number: dec.archive_number || '-',
-        created_at: new Date(dec.created_at).toLocaleDateString('en-US'),
+        created_at: toHijriDate(dec.created_at),
       }));
 
       const doc = exportDeclarationsToPDF(exportData, 'تقرير الإقرارات');
@@ -442,7 +442,7 @@ export default function Manage() {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateFrom ? format(dateFrom, "PPP") : "من تاريخ"}
+                    {dateFrom ? toHijriDateLong(dateFrom) : "من تاريخ"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -467,7 +467,7 @@ export default function Manage() {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateTo ? format(dateTo, "PPP") : "إلى تاريخ"}
+                    {dateTo ? toHijriDateLong(dateTo) : "إلى تاريخ"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -574,7 +574,7 @@ export default function Manage() {
                         {t(declaration.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell>{new Date(declaration.created_at).toLocaleDateString('en-US')}</TableCell>
+                    <TableCell>{toHijriDate(declaration.created_at)}</TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
                         <Button 

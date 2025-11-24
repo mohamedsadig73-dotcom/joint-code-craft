@@ -9,6 +9,7 @@ import ReactECharts from 'echarts-for-react';
 import { Download, TrendingUp, Users, FileText, Clock, Activity, Shield } from 'lucide-react';
 import { exportDeclarationsToExcel } from '@/utils/excelExport';
 import { exportDeclarationsToPDF } from '@/utils/pdfExport';
+import { toHijriDate } from '@/utils/dateUtils';
 
 export default function Reports() {
   const { t } = useLanguage();
@@ -306,7 +307,7 @@ export default function Reports() {
         sender: dec.sender?.username || 'غير معروف',
         status: t(dec.status),
         archive_number: dec.archive_number || '-',
-        created_at: new Date(dec.created_at).toLocaleDateString('en-US'),
+        created_at: toHijriDate(dec.created_at),
       }));
 
       exportDeclarationsToExcel(exportData, 'تقرير_كامل_الإقرارات');
@@ -333,7 +334,7 @@ export default function Reports() {
         sender: dec.sender?.username || 'غير معروف',
         status: t(dec.status),
         archive_number: dec.archive_number || '-',
-        created_at: new Date(dec.created_at).toLocaleDateString('en-US'),
+        created_at: toHijriDate(dec.created_at),
       }));
 
       exportDeclarationsToPDF(exportData, 'تقرير_كامل_الإقرارات');
