@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { toGregorianDate } from '@/utils/dateUtils';
 import {
   Table,
   TableBody,
@@ -21,7 +22,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Users, RefreshCw } from 'lucide-react';
-import { toHijriDate } from '@/utils/dateUtils';
 
 interface UserWithRole {
   id: string;
@@ -211,7 +211,7 @@ export function UserManagement() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {toHijriDate(user.created_at)}
+                    {toGregorianDate(user.created_at)}
                   </TableCell>
                   <TableCell className="text-right">
                     <Select

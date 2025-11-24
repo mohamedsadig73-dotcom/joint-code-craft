@@ -42,7 +42,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Users, RefreshCw, UserPlus, Trash2, Info, Mail } from 'lucide-react';
-import { toHijriDateTime } from '@/utils/dateUtils';
+import { toGregorianDate } from '@/utils/dateUtils';
 
 interface UserWithRole {
   id: string;
@@ -456,7 +456,7 @@ export function UserManagementTab() {
                     </Select>
                   </TableCell>
                   <TableCell>
-                    {toHijriDateTime(userData.created_at)}
+                    {toGregorianDate(userData.created_at)}
                   </TableCell>
                   <TableCell>
                     <Button

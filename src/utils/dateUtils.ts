@@ -1,36 +1,34 @@
 /**
- * تحويل التاريخ الميلادي إلى هجري
+ * تنسيق التاريخ الميلادي بشكل مختصر
  */
-export const toHijriDate = (date: Date | string): string => {
+export const toGregorianDate = (date: Date | string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   
   try {
-    // استخدام Intl.DateTimeFormat لتحويل التاريخ للهجري
-    const formatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+    const formatter = new Intl.DateTimeFormat('ar-SA', {
       year: 'numeric',
-      month: 'numeric',
-      day: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
     });
     
-    const hijriDate = formatter.format(dateObj);
-    return `${hijriDate} هـ`;
+    return formatter.format(dateObj);
   } catch (error) {
-    console.error('Error converting to Hijri date:', error);
+    console.error('Error formatting date:', error);
     return dateObj.toLocaleDateString('ar-SA');
   }
 };
 
 /**
- * تحويل التاريخ الميلادي إلى هجري مع الوقت
+ * تنسيق التاريخ الميلادي مع الوقت
  */
-export const toHijriDateTime = (date: Date | string): string => {
+export const toGregorianDateTime = (date: Date | string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   
   try {
-    const dateFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+    const dateFormatter = new Intl.DateTimeFormat('ar-SA', {
       year: 'numeric',
-      month: 'numeric',
-      day: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
     });
     
     const timeFormatter = new Intl.DateTimeFormat('ar-SA', {
@@ -38,24 +36,24 @@ export const toHijriDateTime = (date: Date | string): string => {
       minute: '2-digit',
     });
     
-    const hijriDate = dateFormatter.format(dateObj);
+    const gregorianDate = dateFormatter.format(dateObj);
     const time = timeFormatter.format(dateObj);
     
-    return `${hijriDate} - ${time}`;
+    return `${gregorianDate} - ${time}`;
   } catch (error) {
-    console.error('Error converting to Hijri datetime:', error);
+    console.error('Error formatting datetime:', error);
     return dateObj.toLocaleString('ar-SA');
   }
 };
 
 /**
- * تنسيق التاريخ الهجري بشكل مفصل
+ * تنسيق التاريخ الميلادي بشكل مفصل
  */
-export const toHijriDateLong = (date: Date | string): string => {
+export const toGregorianDateLong = (date: Date | string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   
   try {
-    const formatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+    const formatter = new Intl.DateTimeFormat('ar-SA', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -63,7 +61,7 @@ export const toHijriDateLong = (date: Date | string): string => {
     
     return formatter.format(dateObj);
   } catch (error) {
-    console.error('Error converting to Hijri date:', error);
+    console.error('Error formatting date:', error);
     return dateObj.toLocaleDateString('ar-SA');
   }
 };

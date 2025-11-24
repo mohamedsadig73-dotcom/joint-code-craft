@@ -11,7 +11,7 @@ import { Users, FileText, Activity, TrendingUp, Shield, UserCheck, BarChart3 } f
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { UserManagementTab } from '@/components/UserManagementTab';
 import { BulkNotificationDialog } from '@/components/BulkNotificationDialog';
-import { toHijriDateTime } from '@/utils/dateUtils';
+import { toGregorianDateTime } from '@/utils/dateUtils';
 
 interface SystemStats {
   totalUsers: number;
@@ -352,7 +352,7 @@ export default function AdminDashboard() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm">{activity.message}</p>
                        <p className="text-xs text-muted-foreground mt-1">
-                        {toHijriDateTime(activity.timestamp)}
+                        {toGregorianDateTime(activity.timestamp)}
                       </p>
                     </div>
                   </div>
