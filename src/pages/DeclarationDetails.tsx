@@ -5,12 +5,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
+import { toGregorianDateLong } from '@/utils/dateUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { toHijriDateLong } from '@/utils/dateUtils';
 import {
   Select,
   SelectContent,
@@ -306,7 +306,7 @@ export default function DeclarationDetails() {
                   تاريخ الإنشاء
                 </label>
                 <p className="text-lg">
-                  {toHijriDateLong(declaration.created_at)}
+                  {toGregorianDateLong(declaration.created_at)}
                 </p>
               </div>
 
@@ -316,7 +316,7 @@ export default function DeclarationDetails() {
                   آخر تحديث
                 </label>
                 <p className="text-lg">
-                  {toHijriDateLong(declaration.updated_at)}
+                  {toGregorianDateLong(declaration.updated_at)}
                 </p>
               </div>
 

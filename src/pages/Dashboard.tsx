@@ -8,7 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { toHijriDate } from '@/utils/dateUtils';
+import { toGregorianDate } from '@/utils/dateUtils';
 import { exportDeclarationsToExcel } from '@/utils/excelExport';
 import { exportDeclarationsToPDF } from '@/utils/pdfExport';
 import {
@@ -180,7 +180,7 @@ export default function Dashboard() {
         type: dec.type,
         sender: dec.sender?.username || 'غير معروف',
         status: t(dec.status),
-        created_at: toHijriDate(dec.created_at),
+        created_at: toGregorianDate(dec.created_at),
       }));
 
       exportDeclarationsToExcel(exportData, 'جميع_الإقرارات');
@@ -322,7 +322,7 @@ export default function Dashboard() {
                             {t(declaration.status)}
                           </Badge>
                         </TableCell>
-                        <TableCell>{toHijriDate(declaration.created_at)}</TableCell>
+                        <TableCell>{toGregorianDate(declaration.created_at)}</TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-2">
                             <Button 

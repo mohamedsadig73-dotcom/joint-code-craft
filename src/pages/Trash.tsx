@@ -18,7 +18,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { RefreshCw, Trash2, Eye, AlertCircle } from 'lucide-react';
 import { differenceInDays } from 'date-fns';
-import { toHijriDate } from '@/utils/dateUtils';
+import { toGregorianDate } from '@/utils/dateUtils';
 
 interface DeletedDeclaration {
   id: string;
@@ -216,7 +216,7 @@ export default function Trash() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {toHijriDate(declaration.deleted_at)}
+                        {toGregorianDate(declaration.deleted_at)}
                       </TableCell>
                       <TableCell>
                         <Badge 

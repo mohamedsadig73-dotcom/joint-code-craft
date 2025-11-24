@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Clock, User, FileText, CheckCircle2, Circle } from 'lucide-react';
-import { toHijriDateLong, toHijriDateTime } from '@/utils/dateUtils';
+import { toGregorianDateLong, toGregorianDateTime } from '@/utils/dateUtils';
 
 interface StatusHistoryEntry {
   id: string;
@@ -178,7 +178,7 @@ export default function DeclarationTimeline() {
               <div>
                 <label className="text-sm text-muted-foreground">تاريخ الإنشاء</label>
                 <p className="text-lg">
-                  {toHijriDateLong(declaration.created_at)}
+                  {toGregorianDateLong(declaration.created_at)}
                 </p>
               </div>
               <div>
@@ -261,7 +261,7 @@ export default function DeclarationTimeline() {
 
                               <div className="text-left ml-4">
                                 <div className="text-sm font-medium">
-                                  {toHijriDateTime(entry.changed_at)}
+                                  {toGregorianDateTime(entry.changed_at)}
                                 </div>
                               </div>
                             </div>
