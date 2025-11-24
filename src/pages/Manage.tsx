@@ -141,16 +141,6 @@ export default function Manage() {
   };
 
   const handleDelete = async (id: string) => {
-    // Verify admin role before deletion
-    if (user?.role !== 'admin') {
-      toast({
-        title: t('error'),
-        description: 'ليس لديك صلاحية حذف الإقرارات',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     try {
       const { error } = await supabase
         .from('declarations')

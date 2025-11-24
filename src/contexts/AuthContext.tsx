@@ -29,84 +29,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let rolesChannel: any = null;
     let mounted = true;
 
-    const initAuth = async () => {
-      try {
-        console.log('Initializing auth...');
-        
-        // Set up auth state listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, session) => {
-            if (!mounted) return;
-            
-            console.log('Auth state changed:', event, session?.user?.email);
-            setSession(session);
-            
-            // Defer Supabase calls with setTimeout to prevent deadlock
-            if (session?.user) {
-              setTimeout(() => {
-                if (mounted) {
-                  loadUserProfile(session.user);
-                }
-              }, 0);
-            } else {
-              setUser(null);
-              setLoading(false);
-            }
-          }
-        );
-
-        // Check for existing session
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Session error:', error);
-          setLoading(false);
-          return;
-        }
-        
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
         if (!mounted) return;
         
-        console.log('Existing session:', session?.user?.email);
+        console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         
+        // Defer Supabase calls with setTimeout to prevent deadlock
         if (session?.user) {
-          await loadUserProfile(session.user);
-          
-          // Set up realtime subscription for role changes after we have the user
-          rolesChannel = supabase
-            .channel('user_roles_changes')
-            .on(
-              'postgres_changes',
-              {
-                event: '*',
-                schema: 'public',
-                table: 'user_roles',
-                filter: `user_id=eq.${session.user.id}`,
-              },
-              () => {
-                // Reload user profile when roles change
-                if (mounted && session?.user) {
-                  loadUserProfile(session.user);
-                }
-              }
-            )
-            .subscribe();
+          setTimeout(() => {
+            if (mounted) {
+              loadUserProfile(session.user);
+            }
+          }, 0);
         } else {
+          setUser(null);
           setLoading(false);
         }
+      }
+    );
 
-        return subscription;
-      } catch (error) {
-        console.error('Auth initialization error:', error);
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
+      setSession(session);
+      if (session?.user) {
+        loadUserProfile(session.user);
+        
+        // Set up realtime subscription for role changes after we have the user
+        rolesChannel = supabase
+          .channel('user_roles_changes')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'user_roles',
+              filter: `user_id=eq.${session.user.id}`,
+            },
+            () => {
+              // Reload user profile when roles change
+              if (mounted && session?.user) {
+                loadUserProfile(session.user);
+              }
+            }
+          )
+          .subscribe();
+      } else {
         setLoading(false);
       }
-    };
-
-    const subscription = initAuth();
+    });
 
     return () => {
       mounted = false;
-      subscription.then(sub => sub?.unsubscribe());
+      subscription.unsubscribe();
       if (rolesChannel) {
         rolesChannel.unsubscribe();
       }
@@ -114,40 +93,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadUserProfile = async (supabaseUser: SupabaseUser) => {
-    const timeoutId = setTimeout(() => {
-      console.error('Profile loading timeout');
-      setUser({
-        id: supabaseUser.id,
-        username: supabaseUser.email?.split('@')[0] || 'User',
-        email: supabaseUser.email || '',
-        role: 'user',
-      });
-      setLoading(false);
-    }, 10000); // 10 seconds timeout
-
     try {
-      console.log('Loading profile for user:', supabaseUser.id);
-      
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', supabaseUser.id)
         .maybeSingle();
 
-      if (profileError) {
-        console.error('Profile fetch error:', profileError);
-      }
-
-      const { data: roleData, error: roleError } = await supabase
+      const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', supabaseUser.id);
-      
-      if (roleError) {
-        console.error('Role fetch error:', roleError);
-      }
-      
-      clearTimeout(timeoutId);
       
       // Get highest priority role (admin > manager > user)
       const roles = (roleData || []).map((r: any) => r.role);
@@ -160,18 +116,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const email = (profile as any)?.email || supabaseUser.email || '';
 
-      console.log('Setting user with role:', role);
-
       setUser({
         id: (profile as any)?.id || supabaseUser.id,
         username,
         email,
         role,
       });
-      
-      setLoading(false);
     } catch (error) {
-      clearTimeout(timeoutId);
       console.error('Error loading profile:', error);
       // حتى لو فشل جلب الملف الشخصي، نبقي المستخدم مسجلًا مع دور افتراضي
       const username = (supabaseUser.user_metadata as any)?.username
@@ -184,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: supabaseUser.email || '',
         role: 'user',
       });
-      
+    } finally {
       setLoading(false);
     }
   };

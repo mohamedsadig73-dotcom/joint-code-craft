@@ -86,8 +86,6 @@ export default function DeclarationDetails() {
 
   const loadDeclaration = async () => {
     try {
-      console.log('Loading declaration with ID:', id);
-      
       const { data, error } = await supabase
         .from('declarations')
         .select(`
@@ -97,34 +95,25 @@ export default function DeclarationDetails() {
         .eq('id', id)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error loading declaration:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       if (!data) {
-        console.warn('Declaration not found or access denied:', id);
         toast({
           variant: 'destructive',
           title: 'خطأ',
-          description: 'الإقرار غير موجود أو ليس لديك صلاحية للوصول إليه',
+          description: 'الإقرار غير موجود',
         });
-        // Don't navigate, let the UI show the error state
-        setDeclaration(null);
-        setLoading(false);
+        navigate('/manage');
         return;
       }
 
-      console.log('Declaration loaded successfully:', data.id);
       setDeclaration(data as any);
     } catch (error: any) {
-      console.error('Failed to load declaration:', error);
       toast({
         variant: 'destructive',
         title: 'خطأ',
         description: error.message || 'فشل تحميل بيانات الإقرار',
       });
-      setDeclaration(null);
     } finally {
       setLoading(false);
     }
@@ -186,33 +175,16 @@ export default function DeclarationDetails() {
   };
 
   const handleStatusUpdate = async (newStatus: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected') => {
-    if (!declaration || !user) return;
+    if (!declaration) return;
 
     setUpdating(true);
     try {
-      // Update declaration status
-      const { error: updateError } = await supabase
+      const { error } = await supabase
         .from('declarations')
         .update({ status: newStatus })
         .eq('id', declaration.id);
 
-      if (updateError) throw updateError;
-
-      // Insert status history record
-      const { error: historyError } = await supabase
-        .from('declaration_status_history')
-        .insert({
-          declaration_id: declaration.id,
-          old_status: declaration.status,
-          new_status: newStatus,
-          changed_by: user.id,
-          notes: null
-        });
-
-      if (historyError) {
-        console.error('Failed to insert history:', historyError);
-        // Don't throw - status was updated successfully
-      }
+      if (error) throw error;
 
       toast({
         title: 'تم بنجاح',
@@ -220,11 +192,7 @@ export default function DeclarationDetails() {
       });
 
       setDeclaration({ ...declaration, status: newStatus });
-      
-      // Reload to get fresh data
-      await loadDeclaration();
     } catch (error: any) {
-      console.error('Status update error:', error);
       toast({
         variant: 'destructive',
         title: 'خطأ',
@@ -247,28 +215,7 @@ export default function DeclarationDetails() {
   }
 
   if (!declaration) {
-    return (
-      <div className="min-h-screen">
-        <Navigation />
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card className="glass-card border-border/50 p-8">
-            <div className="text-center space-y-4">
-              <div className="text-destructive text-xl font-semibold">⚠️ خطأ في تحميل الإقرار</div>
-              <p className="text-muted-foreground">
-                لم يتم العثور على الإقرار أو ليس لديك صلاحية للوصول إليه
-              </p>
-              <Button
-                onClick={() => navigate('/manage')}
-                className="gap-2 mt-4"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                العودة إلى الإدارة
-              </Button>
-            </div>
-          </Card>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const canUpdateStatus = user?.role === 'admin' || user?.role === 'manager' || user?.id === declaration.sender_id;
