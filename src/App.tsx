@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { NotificationListener } from "@/components/NotificationListener";
+import { RegisterSW } from "@/components/RegisterSW";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -17,6 +18,7 @@ import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
 import DeclarationDetails from "./pages/DeclarationDetails";
 import DeclarationTimeline from "./pages/DeclarationTimeline";
+import InstallApp from "./pages/InstallApp";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +44,7 @@ function AppRoutes() {
         />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/install" element={<InstallApp />} />
         <Route 
           path="/" 
           element={
@@ -109,6 +112,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <RegisterSW />
       <BrowserRouter>
         <AuthProvider>
           <LanguageProvider>

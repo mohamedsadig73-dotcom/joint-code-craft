@@ -10,7 +10,8 @@ import {
   LogOut, 
   User,
   Globe,
-  Shield
+  Shield,
+  Download
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -111,6 +112,10 @@ export function Navigation() {
                 <DropdownMenuItem onClick={() => navigate('/profile')}>
                   <User className="w-4 h-4 mr-2" />
                   {t('profile')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/install')}>
+                  <Download className="w-4 h-4 mr-2" />
+                  تثبيت التطبيق
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive">
