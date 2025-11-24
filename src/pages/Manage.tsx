@@ -200,12 +200,7 @@ export default function Manage() {
       if (user?.role === 'manager') {
         const declaration = declarations.find(d => d.id === id);
         if (declaration && declaration.sender_id !== user.id) {
-          toast({
-            title: t('error'),
-            description: 'يمكنك تعديل حالة إقراراتك فقط',
-            variant: 'destructive',
-          });
-          return;
+          return; // Silent block for managers trying to update others' declarations
         }
       }
 
@@ -604,7 +599,7 @@ export default function Manage() {
                             size="icon" 
                             className="text-destructive hover:text-destructive"
                             onClick={() => handleDelete(declaration)}
-                            title={user?.role === 'manager' ? 'حذف (إقراراتك فقط)' : 'حذف'}
+                            title="حذف"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
