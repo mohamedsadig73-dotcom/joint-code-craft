@@ -75,7 +75,7 @@ export default function DeclarationTimeline() {
         .from('declarations')
         .select(`
           *,
-          sender:profiles(username)
+          sender:profiles!sender_id(username)
         `)
         .eq('id', id)
         .maybeSingle();
