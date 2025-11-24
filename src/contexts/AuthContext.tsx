@@ -94,6 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadUserProfile = async (supabaseUser: SupabaseUser, retryCount = 0) => {
     try {
+      console.log('🔄 Loading user profile for:', supabaseUser.id);
+      
       // Try to fetch profile with retry logic
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -101,26 +103,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', supabaseUser.id)
         .maybeSingle();
 
-      if (profileError && retryCount < 2) {
-        console.log(`Retrying profile fetch... Attempt ${retryCount + 1}`);
-        setTimeout(() => loadUserProfile(supabaseUser, retryCount + 1), 1000);
-        return;
+      if (profileError) {
+        console.error('❌ Profile error:', profileError);
+        if (retryCount < 2) {
+          console.log(`🔄 Retrying profile fetch... Attempt ${retryCount + 1}`);
+          setTimeout(() => loadUserProfile(supabaseUser, retryCount + 1), 1000);
+          return;
+        }
       }
+
+      console.log('📋 Profile loaded:', profile);
 
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', supabaseUser.id);
 
-      if (roleError && retryCount < 2) {
-        console.log(`Retrying role fetch... Attempt ${retryCount + 1}`);
-        setTimeout(() => loadUserProfile(supabaseUser, retryCount + 1), 1000);
-        return;
+      console.log('🎭 Role data:', { roleData, roleError });
+
+      if (roleError) {
+        console.error('❌ Role error:', roleError);
+        if (retryCount < 2) {
+          console.log(`🔄 Retrying role fetch... Attempt ${retryCount + 1}`);
+          setTimeout(() => loadUserProfile(supabaseUser, retryCount + 1), 1000);
+          return;
+        }
       }
       
       // Get highest priority role (admin > manager > user)
       const roles = (roleData || []).map((r: any) => r.role);
+      console.log('👑 Extracted roles:', roles);
       const role = roles.includes('admin') ? 'admin' : roles.includes('manager') ? 'manager' : 'user';
+      console.log('✅ Final role assigned:', role);
 
       const username = (profile as any)?.username
         || (supabaseUser.user_metadata as any)?.username
