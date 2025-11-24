@@ -302,17 +302,25 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
                 توليد تلقائي
               </label>
             </div>
-            <Input
-              id="archive_number"
-              type="text"
-              value={archiveNumber}
-              onChange={(e) => setArchiveNumber(e.target.value)}
-              placeholder="AR-2025-0001"
-              disabled={loading || autoGenerateArchive}
-              className="glass-card border-border/50"
-            />
+            <div className="flex items-center gap-2">
+              <div className="w-12 h-10 flex items-center justify-center bg-muted rounded-md font-semibold text-lg border border-border">
+                S
+              </div>
+              <Input
+                id="archive_number"
+                type="text"
+                value={archiveNumber.replace(/^S/, '')}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  setArchiveNumber(value ? `S${value}` : '');
+                }}
+                placeholder="1"
+                disabled={loading || autoGenerateArchive}
+                className="glass-card border-border/50 flex-1"
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
-              سيتم التوليد التلقائي إذا تركته فارغاً
+              التنسيق: S1, S2, S3... حتى S16 وما بعدها. سيتم التوليد التلقائي إذا تركته فارغاً
             </p>
           </div>
 
