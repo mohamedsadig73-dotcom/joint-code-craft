@@ -26,6 +26,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let rolesChannel: any = null;
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -48,12 +50,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       if (session?.user) {
         loadUserProfile(session.user);
+        
+        // Set up realtime subscription for role changes after we have the user
+        rolesChannel = supabase
+          .channel('user_roles_changes')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'user_roles',
+              filter: `user_id=eq.${session.user.id}`,
+            },
+            () => {
+              // Reload user profile when roles change
+              loadUserProfile(session.user);
+            }
+          )
+          .subscribe();
       } else {
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (rolesChannel) {
+        rolesChannel.unsubscribe();
+      }
+    };
   }, []);
 
   const loadUserProfile = async (supabaseUser: SupabaseUser) => {
