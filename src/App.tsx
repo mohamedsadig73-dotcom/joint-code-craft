@@ -18,6 +18,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Manage = lazy(() => import("./pages/Manage"));
+const Trash = lazy(() => import("./pages/Trash"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Profile = lazy(() => import("./pages/Profile"));
 const DeclarationDetails = lazy(() => import("./pages/DeclarationDetails"));
@@ -83,7 +84,15 @@ function AppRoutes() {
             } 
           />
           <Route 
-            path="/reports" 
+            path="/trash" 
+            element={
+              <ProtectedRoute>
+                <Trash />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/reports"
             element={
               <ProtectedRoute>
                 <Reports />

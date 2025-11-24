@@ -32,7 +32,8 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Filter, Download, Edit, Trash2, Eye, Plus, CalendarIcon, X, FileSpreadsheet, FileText } from 'lucide-react';
+import { Search, Filter, Download, Edit, Trash2, Eye, Plus, CalendarIcon, X, FileSpreadsheet, FileText, Archive } from 'lucide-react';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 
 interface Declaration {
   id: string;
@@ -83,6 +84,8 @@ export default function Manage() {
     archived: 0,
     rejected: 0,
   });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [declarationToDelete, setDeclarationToDelete] = useState<Declaration | null>(null);
 
   useEffect(() => {
     loadDeclarations();
@@ -109,7 +112,7 @@ export default function Manage() {
         .from('declarations')
         .select(`
           *,
-          sender:profiles(username)
+          sender:profiles!sender_id(username)
         `)
         .order('created_at', { ascending: false });
 
@@ -140,19 +143,47 @@ export default function Manage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (declaration: Declaration) => {
+    setDeclarationToDelete(declaration);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!declarationToDelete) return;
+
     try {
+      // Log deletion for audit
+      const { error: logError } = await supabase
+        .from('declaration_deletion_log')
+        .insert({
+          declaration_id: declarationToDelete.id,
+          deleted_by: user?.id,
+          declaration_type: declarationToDelete.type,
+          declaration_status: declarationToDelete.status,
+          sender_username: declarationToDelete.sender?.username,
+          archive_number: declarationToDelete.archive_number,
+        });
+
+      if (logError) console.error('Error logging deletion:', logError);
+
+      // Soft delete
       const { error } = await supabase
         .from('declarations')
-        .delete()
-        .eq('id', id);
+        .update({ 
+          deleted_at: new Date().toISOString(),
+          deleted_by: user?.id 
+        })
+        .eq('id', declarationToDelete.id);
 
       if (error) throw error;
 
       toast({
         title: t('success'),
-        description: 'Declaration deleted successfully',
+        description: 'تم نقل الإقرار إلى سلة المحذوفات',
       });
+      
+      setDeleteDialogOpen(false);
+      setDeclarationToDelete(null);
       loadDeclarations();
     } catch (error: any) {
       toast({
@@ -165,6 +196,19 @@ export default function Manage() {
 
   const handleStatusUpdate = async (id: string, newStatus: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected') => {
     try {
+      // Check if manager is trying to update someone else's declaration
+      if (user?.role === 'manager') {
+        const declaration = declarations.find(d => d.id === id);
+        if (declaration && declaration.sender_id !== user.id) {
+          toast({
+            title: t('error'),
+            description: 'يمكنك تعديل حالة إقراراتك فقط',
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('declarations')
         .update({ status: newStatus })
@@ -364,9 +408,13 @@ export default function Manage() {
                 <CreateDeclarationDialog 
                   onSuccess={loadDeclarations}
                 />
-                <Button variant="outline" className="gap-2">
-                  <Download className="w-4 h-4" />
-                  {t('export')}
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => navigate('/trash')}
+                >
+                  <Archive className="w-4 h-4" />
+                  سلة المحذوفات
                 </Button>
               </div>
             </div>
@@ -555,12 +603,8 @@ export default function Manage() {
                             variant="ghost" 
                             size="icon" 
                             className="text-destructive hover:text-destructive"
-                            onClick={() => {
-                              if (window.confirm('هل أنت متأكد من حذف هذا الإقرار؟')) {
-                                handleDelete(declaration.id);
-                              }
-                            }}
-                            title="حذف"
+                            onClick={() => handleDelete(declaration)}
+                            title={user?.role === 'manager' ? 'حذف (إقراراتك فقط)' : 'حذف'}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -573,6 +617,15 @@ export default function Manage() {
             </TableBody>
           </Table>
         </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <DeleteConfirmationDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          declaration={declarationToDelete}
+          onConfirm={confirmDelete}
+          userRole={user?.role}
+        />
       </main>
     </div>
   );

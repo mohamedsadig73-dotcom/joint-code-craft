@@ -294,7 +294,7 @@ export default function Reports() {
         .from('declarations')
         .select(`
           *,
-          sender:profiles(username)
+          sender:profiles!sender_id(username)
         `)
         .order('created_at', { ascending: false });
 
@@ -321,7 +321,7 @@ export default function Reports() {
         .from('declarations')
         .select(`
           *,
-          sender:profiles(username)
+          sender:profiles!sender_id(username)
         `)
         .order('created_at', { ascending: false });
 

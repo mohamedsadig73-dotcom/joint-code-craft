@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      declaration_deletion_log: {
+        Row: {
+          archive_number: string | null
+          declaration_id: string
+          declaration_status:
+            | Database["public"]["Enums"]["declaration_status"]
+            | null
+          declaration_type:
+            | Database["public"]["Enums"]["declaration_type"]
+            | null
+          deleted_at: string
+          deleted_by: string
+          id: string
+          notes: string | null
+          sender_username: string | null
+        }
+        Insert: {
+          archive_number?: string | null
+          declaration_id: string
+          declaration_status?:
+            | Database["public"]["Enums"]["declaration_status"]
+            | null
+          declaration_type?:
+            | Database["public"]["Enums"]["declaration_type"]
+            | null
+          deleted_at?: string
+          deleted_by: string
+          id?: string
+          notes?: string | null
+          sender_username?: string | null
+        }
+        Update: {
+          archive_number?: string | null
+          declaration_id?: string
+          declaration_status?:
+            | Database["public"]["Enums"]["declaration_status"]
+            | null
+          declaration_type?:
+            | Database["public"]["Enums"]["declaration_type"]
+            | null
+          deleted_at?: string
+          deleted_by?: string
+          id?: string
+          notes?: string | null
+          sender_username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "declaration_deletion_log_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       declaration_status_history: {
         Row: {
           changed_at: string
@@ -63,6 +119,8 @@ export type Database = {
         Row: {
           archive_number: string | null
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
           notes: string | null
           phone: string | null
@@ -74,6 +132,8 @@ export type Database = {
         Insert: {
           archive_number?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id: string
           notes?: string | null
           phone?: string | null
@@ -85,6 +145,8 @@ export type Database = {
         Update: {
           archive_number?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           notes?: string | null
           phone?: string | null
@@ -94,6 +156,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "declarations_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "declarations_sender_id_fkey"
             columns: ["sender_id"]
@@ -212,6 +281,7 @@ export type Database = {
     }
     Functions: {
       check_admin_office_notifications: { Args: never; Returns: undefined }
+      cleanup_old_deleted_declarations: { Args: never; Returns: undefined }
       generate_archive_number: { Args: never; Returns: string }
       has_role: {
         Args: {

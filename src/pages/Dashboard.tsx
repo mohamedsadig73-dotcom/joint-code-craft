@@ -168,7 +168,7 @@ export default function Dashboard() {
         .from('declarations')
         .select(`
           *,
-          sender:profiles(username)
+          sender:profiles!sender_id(username)
         `)
         .order('created_at', { ascending: false });
 
