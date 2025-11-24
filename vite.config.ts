@@ -44,6 +44,7 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
@@ -85,4 +86,19 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          'chart-vendor': ['recharts', 'echarts', 'echarts-for-react'],
+          'supabase': ['@supabase/supabase-js'],
+          'pdf-export': ['jspdf', 'jspdf-autotable'],
+          'excel-export': ['xlsx'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000,
+  }
 }));
