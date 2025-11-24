@@ -22,56 +22,81 @@ export function NotificationListener() {
   useEffect(() => {
     if (!user) return;
 
-    console.log('🔔 Setting up notification listener for user:', user.id);
+    let mounted = true;
+    let channel: any = null;
+    let retryTimeout: NodeJS.Timeout;
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
 
-    // Subscribe to realtime notifications
-    const channel = supabase
-      .channel('notifications-channel')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log('🔔 New notification received:', payload);
-          const notification = payload.new as Notification;
+    const setupChannel = () => {
+      // التحقق من أن المكون لا يزال mounted
+      if (!mounted || !user) return;
+
+      channel = supabase
+        .channel(`notifications-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            if (!mounted) return;
+            
+            const notification = payload.new as Notification;
+            
+            const icon = notification.type === 'success' 
+              ? CheckCircle 
+              : notification.type === 'error' 
+              ? AlertCircle 
+              : Info;
+
+            toast({
+              title: (
+                <div className="flex items-center gap-2">
+                  {icon === CheckCircle && <CheckCircle className="w-4 h-4 text-green-500" />}
+                  {icon === AlertCircle && <AlertCircle className="w-4 h-4 text-red-500" />}
+                  {icon === Info && <Info className="w-4 h-4 text-blue-500" />}
+                  <span>{notification.title}</span>
+                </div>
+              ) as any,
+              description: notification.message,
+              variant: notification.type === 'error' ? 'destructive' : 'default',
+            });
+
+            playNotificationSound();
+          }
+        )
+        .subscribe((status) => {
+          if (!mounted) return;
           
-          // Show toast notification
-          const icon = notification.type === 'success' 
-            ? CheckCircle 
-            : notification.type === 'error' 
-            ? AlertCircle 
-            : Info;
+          if (status === 'CHANNEL_ERROR' && retryCount < MAX_RETRIES) {
+            retryCount++;
+            console.log(`🔔 Retrying connection (${retryCount}/${MAX_RETRIES})...`);
+            retryTimeout = setTimeout(() => {
+              if (channel) {
+                supabase.removeChannel(channel);
+              }
+              setupChannel();
+            }, 3000 * retryCount); // تأخير متزايد
+          } else if (status === 'SUBSCRIBED') {
+            retryCount = 0; // إعادة تعيين العداد عند النجاح
+          }
+        });
+    };
 
-          toast({
-            title: (
-              <div className="flex items-center gap-2">
-                {icon === CheckCircle && <CheckCircle className="w-4 h-4 text-green-500" />}
-                {icon === AlertCircle && <AlertCircle className="w-4 h-4 text-red-500" />}
-                {icon === Info && <Info className="w-4 h-4 text-blue-500" />}
-                <span>{notification.title}</span>
-              </div>
-            ) as any,
-            description: notification.message,
-            variant: notification.type === 'error' ? 'destructive' : 'default',
-          });
-
-          // Play notification sound
-          playNotificationSound();
-        }
-      )
-      .subscribe((status) => {
-        console.log('🔔 Notification channel status:', status);
-      });
+    setupChannel();
 
     return () => {
-      console.log('🔔 Cleaning up notification listener');
-      supabase.removeChannel(channel);
+      mounted = false;
+      if (retryTimeout) clearTimeout(retryTimeout);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
-  }, [user, toast]);
+  }, [user?.id, toast]);
 
   return null;
 }
