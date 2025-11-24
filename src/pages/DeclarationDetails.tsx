@@ -175,16 +175,33 @@ export default function DeclarationDetails() {
   };
 
   const handleStatusUpdate = async (newStatus: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected') => {
-    if (!declaration) return;
+    if (!declaration || !user) return;
 
     setUpdating(true);
     try {
-      const { error } = await supabase
+      // Update declaration status
+      const { error: updateError } = await supabase
         .from('declarations')
         .update({ status: newStatus })
         .eq('id', declaration.id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // Insert status history record
+      const { error: historyError } = await supabase
+        .from('declaration_status_history')
+        .insert({
+          declaration_id: declaration.id,
+          old_status: declaration.status,
+          new_status: newStatus,
+          changed_by: user.id,
+          notes: null
+        });
+
+      if (historyError) {
+        console.error('Failed to insert history:', historyError);
+        // Don't throw - status was updated successfully
+      }
 
       toast({
         title: 'تم بنجاح',
@@ -192,7 +209,11 @@ export default function DeclarationDetails() {
       });
 
       setDeclaration({ ...declaration, status: newStatus });
+      
+      // Reload to get fresh data
+      await loadDeclaration();
     } catch (error: any) {
+      console.error('Status update error:', error);
       toast({
         variant: 'destructive',
         title: 'خطأ',
