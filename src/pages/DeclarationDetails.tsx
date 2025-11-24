@@ -244,7 +244,7 @@ export default function DeclarationDetails() {
               <Button
                 variant="outline"
                 onClick={handlePrint}
-                className="gap-2"
+                className="gap-2 hover:bg-primary hover:text-primary-foreground hover:border-primary"
               >
                 <Printer className="w-4 h-4" />
                 طباعة
@@ -252,7 +252,7 @@ export default function DeclarationDetails() {
               <Button
                 variant="outline"
                 onClick={handleExportPDF}
-                className="gap-2"
+                className="gap-2 hover:bg-primary hover:text-primary-foreground hover:border-primary"
               >
                 <Download className="w-4 h-4" />
                 PDF
@@ -260,13 +260,13 @@ export default function DeclarationDetails() {
               <Button
                 variant="outline"
                 onClick={handleExportExcel}
-                className="gap-2"
+                className="gap-2 hover:bg-primary hover:text-primary-foreground hover:border-primary"
               >
                 <FileSpreadsheet className="w-4 h-4" />
                 Excel
               </Button>
               <Button
-                variant="outline"
+                variant="shimmer"
                 onClick={() => navigate(`/declaration/${declaration.id}/timeline`)}
                 className="gap-2"
               >
@@ -281,10 +281,10 @@ export default function DeclarationDetails() {
         </div>
 
         {/* Main Details Card */}
-        <Card className="glass-card mb-6">
+        <Card className="glass-card mb-6 animate-fade-in hover:shadow-xl transition-all duration-300">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
+              <FileText className="w-5 h-5 text-primary" />
               المعلومات الأساسية
             </CardTitle>
           </CardHeader>
@@ -375,10 +375,10 @@ export default function DeclarationDetails() {
         </Card>
 
         {/* Sender Details Card */}
-        <Card className="glass-card">
+        <Card className="glass-card animate-fade-in [animation-delay:150ms] hover:shadow-xl transition-all duration-300">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <User className="w-5 h-5" />
+              <User className="w-5 h-5 text-primary" />
               معلومات المرسل
             </CardTitle>
           </CardHeader>
