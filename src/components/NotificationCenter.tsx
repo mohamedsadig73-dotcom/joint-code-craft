@@ -43,12 +43,18 @@ export function NotificationCenter() {
 
   const loadNotifications = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('notifications')
-        .select('*')
-        .eq('user_id', user?.id)
+        .select('*');
+
+      // If user is not admin or manager, filter by user_id
+      if (user?.role !== 'admin' && user?.role !== 'manager') {
+        query = query.eq('user_id', user?.id);
+      }
+
+      const { data, error } = await query
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
 
       if (error) throw error;
 
@@ -81,11 +87,15 @@ export function NotificationCenter() {
 
   const markAllAsRead = async () => {
     try {
+      // Get IDs of current notifications to mark as read
+      const notificationIds = notifications.filter(n => !n.read).map(n => n.id);
+      
+      if (notificationIds.length === 0) return;
+
       const { error } = await supabase
         .from('notifications')
         .update({ read: true })
-        .eq('user_id', user?.id)
-        .eq('read', false);
+        .in('id', notificationIds);
 
       if (error) throw error;
 
