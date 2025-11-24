@@ -4,51 +4,11 @@ import { Navigation } from '@/components/Navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Download, TrendingUp, Users, FileText, Clock, Shield } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ReactECharts from 'echarts-for-react';
+import { Download, TrendingUp, Users, FileText, Clock, Activity, Shield } from 'lucide-react';
 import { exportDeclarationsToExcel } from '@/utils/excelExport';
 import { exportDeclarationsToPDF } from '@/utils/pdfExport';
-import { 
-  BarChart, 
-  Bar, 
-  LineChart, 
-  Line, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer,
-  Area,
-  AreaChart 
-} from 'recharts';
-
-const CHART_COLORS = {
-  draft: 'hsl(var(--muted))',
-  pending: 'hsl(var(--chart-3))',
-  signed: 'hsl(var(--chart-1))',
-  sent: 'hsl(var(--chart-2))',
-  received: 'hsl(var(--primary))',
-  returned: 'hsl(var(--chart-4))',
-  archived: 'hsl(var(--chart-5))',
-  rejected: 'hsl(var(--destructive))',
-  primary: 'hsl(var(--primary))',
-  secondary: 'hsl(var(--secondary))',
-};
-
-const statusLabels: Record<string, string> = {
-  draft: 'مسودة',
-  pending_warehouse_signature: 'بانتظار التوقيع',
-  warehouse_signed: 'موقّع',
-  sent_to_admin_office: 'مُرسل',
-  received_by_admin_office: 'مستلم',
-  returned_to_warehouse: 'مُعاد',
-  archived: 'مؤرشف',
-  rejected: 'مرفوض',
-};
 
 export default function Reports() {
   const { t } = useLanguage();
@@ -64,7 +24,7 @@ export default function Reports() {
     rejected: 0,
     total: 0,
   });
-  const [weeklyData, setWeeklyData] = useState<{ day: string; count: number }[]>([]);
+  const [weeklyData, setWeeklyData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
   const [monthlyData, setMonthlyData] = useState<{ month: string; warehouse_signed: number; pending_warehouse_signature: number; draft: number }[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [avgProcessingTime, setAvgProcessingTime] = useState('0h');
@@ -127,20 +87,12 @@ export default function Reports() {
 
       // Calculate weekly data (last 7 days)
       const now = new Date();
-      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      const weekly = days.map((day, index) => ({
-        day,
-        count: 0
-      }));
-      
+      const weekly = [0, 0, 0, 0, 0, 0, 0];
       data?.forEach(d => {
         const createdDate = new Date(d.created_at);
         const diffDays = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
         if (diffDays >= 0 && diffDays < 7) {
-          const dayIndex = 6 - diffDays;
-          if (weekly[dayIndex]) {
-            weekly[dayIndex].count++;
-          }
+          weekly[6 - diffDays]++;
         }
       });
       setWeeklyData(weekly);
@@ -177,6 +129,156 @@ export default function Reports() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Status Distribution Pie Chart
+  const statusDistributionOption = {
+    title: {
+      text: t('statusDistribution'),
+      left: 'center',
+      textStyle: { color: '#fff', fontSize: 16 }
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{b}: {c} ({d}%)'
+    },
+    legend: {
+      orient: 'vertical',
+      left: 'left',
+      textStyle: { color: '#fff' },
+      data: [t('draft'), t('pendingWarehouseSignature'), t('warehouseSigned'), t('archived')]
+    },
+    series: [
+      {
+        name: 'Status',
+        type: 'pie',
+        radius: '70%',
+        data: [
+          { value: stats.draft, name: t('draft'), itemStyle: { color: '#6b7280' } },
+          { value: stats.pending_warehouse_signature, name: t('pendingWarehouseSignature'), itemStyle: { color: '#eab308' } },
+          { value: stats.warehouse_signed, name: t('warehouseSigned'), itemStyle: { color: '#3b82f6' } },
+          { value: stats.archived, name: t('archived'), itemStyle: { color: '#22c55e' } },
+        ],
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }
+    ]
+  };
+
+  // User Activity Bar Chart
+  const userActivityOption = {
+    title: {
+      text: t('userActivity'),
+      textStyle: { color: '#fff', fontSize: 16 }
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' }
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      axisLine: { lineStyle: { color: '#666' } },
+      axisLabel: { color: '#fff' }
+    },
+    yAxis: {
+      type: 'value',
+      axisLine: { lineStyle: { color: '#666' } },
+      axisLabel: { color: '#fff' },
+      splitLine: { lineStyle: { color: '#333' } }
+    },
+    series: [
+      {
+        name: 'Declarations',
+        type: 'bar',
+        data: weeklyData,
+        itemStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: '#d69e2e' },
+              { offset: 1, color: '#744210' }
+            ]
+          },
+          borderRadius: [5, 5, 0, 0]
+        }
+      }
+    ]
+  };
+
+  // Trend Line Chart
+  const trendOption = {
+    title: {
+      text: t('monthlyTrends'),
+      textStyle: { color: '#fff', fontSize: 16 }
+    },
+    tooltip: {
+      trigger: 'axis'
+    },
+    legend: {
+      data: [t('warehouseSigned'), t('pendingWarehouseSignature'), t('unsigned')],
+      textStyle: { color: '#fff' }
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: monthlyData.map(d => d.month),
+      axisLine: { lineStyle: { color: '#666' } },
+      axisLabel: { color: '#fff' }
+    },
+    yAxis: {
+      type: 'value',
+      axisLine: { lineStyle: { color: '#666' } },
+      axisLabel: { color: '#fff' },
+      splitLine: { lineStyle: { color: '#333' } }
+    },
+    series: [
+      {
+        name: t('warehouseSigned'),
+        type: 'line',
+        smooth: true,
+        data: monthlyData.map(d => d.warehouse_signed),
+        itemStyle: { color: '#3b82f6' },
+        areaStyle: { opacity: 0.3 }
+      },
+      {
+        name: t('pendingWarehouseSignature'),
+        type: 'line',
+        smooth: true,
+        data: monthlyData.map(d => d.pending_warehouse_signature),
+        itemStyle: { color: '#eab308' },
+        areaStyle: { opacity: 0.3 }
+      },
+      {
+        name: t('unsigned'),
+        type: 'line',
+        smooth: true,
+        data: monthlyData.map(d => d.draft),
+        itemStyle: { color: '#6b7280' },
+        areaStyle: { opacity: 0.3 }
+      }
+    ]
   };
 
   const metrics = [
@@ -240,26 +342,6 @@ export default function Reports() {
     }
   };
 
-  const pieChartData = [
-    { name: statusLabels.draft, value: stats.draft, color: CHART_COLORS.draft },
-    { name: statusLabels.pending_warehouse_signature, value: stats.pending_warehouse_signature, color: CHART_COLORS.pending },
-    { name: statusLabels.warehouse_signed, value: stats.warehouse_signed, color: CHART_COLORS.signed },
-    { name: statusLabels.archived, value: stats.archived, color: CHART_COLORS.archived },
-    { name: statusLabels.rejected, value: stats.rejected, color: CHART_COLORS.rejected },
-  ].filter(item => item.value > 0);
-
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
-          <p className="text-sm font-medium">{payload[0].name}</p>
-          <p className="text-lg font-bold text-primary">{payload[0].value}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -268,10 +350,7 @@ export default function Reports() {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <Shield className="w-8 h-8 text-primary" />
-              <h1 className="text-3xl font-bold">{t('reportsAnalytics')}</h1>
-            </div>
+            <h1 className="text-3xl font-bold mb-2">{t('reportsAnalytics')}</h1>
             <p className="text-muted-foreground">{t('reportsSubtitle')}</p>
           </div>
           <div className="flex gap-2">
@@ -308,153 +387,34 @@ export default function Reports() {
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Status Distribution Pie Chart */}
+          {/* Status Distribution */}
           <Card className="glass-card border-border/50">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                {t('statusDistribution')}
-              </CardTitle>
-              <CardDescription>{t('declarationsByStatus')}</CardDescription>
+              <CardTitle>{t('statusDistribution')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
-                <PieChart>
-                  <Pie
-                    data={pieChartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                    animationBegin={0}
-                    animationDuration={800}
-                  >
-                    {pieChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend 
-                    wrapperStyle={{ paddingTop: '20px' }}
-                    iconType="circle"
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              <ReactECharts option={statusDistributionOption} style={{ height: '400px' }} />
             </CardContent>
           </Card>
 
-          {/* Weekly Activity Bar Chart */}
+          {/* User Activity */}
           <Card className="glass-card border-border/50">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                {t('userActivity')}
-              </CardTitle>
-              <CardDescription>{t('last7Days')}</CardDescription>
+              <CardTitle>{t('userActivity')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={weeklyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                  <XAxis 
-                    dataKey="day" 
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                  />
-                  <YAxis 
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar 
-                    dataKey="count" 
-                    fill={CHART_COLORS.primary}
-                    radius={[8, 8, 0, 0]}
-                    animationBegin={0}
-                    animationDuration={800}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              <ReactECharts option={userActivityOption} style={{ height: '400px' }} />
             </CardContent>
           </Card>
         </div>
 
-        {/* Monthly Trends Area Chart - Full Width */}
+        {/* Trend Chart - Full Width */}
         <Card className="glass-card border-border/50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              {t('monthlyTrends')}
-            </CardTitle>
-            <CardDescription>{t('last6Months')}</CardDescription>
+            <CardTitle>{t('monthlyTrends')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
-              <AreaChart data={monthlyData}>
-                <defs>
-                  <linearGradient id="colorSigned" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.signed} stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor={CHART_COLORS.signed} stopOpacity={0.1}/>
-                  </linearGradient>
-                  <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.pending} stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor={CHART_COLORS.pending} stopOpacity={0.1}/>
-                  </linearGradient>
-                  <linearGradient id="colorDraft" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.draft} stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor={CHART_COLORS.draft} stopOpacity={0.1}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis 
-                  dataKey="month" 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                />
-                <YAxis 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend 
-                  wrapperStyle={{ paddingTop: '20px' }}
-                  iconType="line"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="warehouse_signed"
-                  name={statusLabels.warehouse_signed}
-                  stroke={CHART_COLORS.signed}
-                  fillOpacity={1}
-                  fill="url(#colorSigned)"
-                  animationBegin={0}
-                  animationDuration={1000}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="pending_warehouse_signature"
-                  name={statusLabels.pending_warehouse_signature}
-                  stroke={CHART_COLORS.pending}
-                  fillOpacity={1}
-                  fill="url(#colorPending)"
-                  animationBegin={200}
-                  animationDuration={1000}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="draft"
-                  name={statusLabels.draft}
-                  stroke={CHART_COLORS.draft}
-                  fillOpacity={1}
-                  fill="url(#colorDraft)"
-                  animationBegin={400}
-                  animationDuration={1000}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <ReactECharts option={trendOption} style={{ height: '400px' }} />
           </CardContent>
         </Card>
       </main>
