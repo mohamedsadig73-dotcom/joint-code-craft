@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { exportDeclarationsToExcel } from '@/utils/excelExport';
 import { exportDeclarationsToPDF } from '@/utils/pdfExport';
+import { TableSkeleton, StatsSkeleton } from '@/components/LoadingSkeleton';
 import {
   Select,
   SelectContent,
@@ -32,7 +33,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Filter, Download, Edit, Trash2, Eye, Plus, CalendarIcon, X, FileSpreadsheet, FileText } from 'lucide-react';
+import { Search, Filter, Download, Edit, Trash2, Eye, Plus, CalendarIcon, X, FileSpreadsheet, FileText, RefreshCw } from 'lucide-react';
 
 interface Declaration {
   id: string;
@@ -91,6 +92,33 @@ export default function Manage() {
     loadProfiles();
   }, []);
 
+  // Optimized filtering with useMemo
+  const filteredDeclarations = useMemo(() => {
+    return declarations.filter(dec => {
+      // بحث شامل يشمل رقم الإقرار، رقم الأرشيف، اسم المرسل
+      const matchesSearch = dec.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           dec.sender?.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           (dec.archive_number && dec.archive_number.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesStatus = statusFilter === 'all' || dec.status === statusFilter;
+      const matchesSender = senderFilter === 'all' || dec.sender_id === senderFilter;
+      
+      // Date filtering
+      let matchesDate = true;
+      if (dateFrom || dateTo) {
+        const decDate = new Date(dec.created_at);
+        if (dateFrom && dateTo) {
+          matchesDate = decDate >= dateFrom && decDate <= dateTo;
+        } else if (dateFrom) {
+          matchesDate = decDate >= dateFrom;
+        } else if (dateTo) {
+          matchesDate = decDate <= dateTo;
+        }
+      }
+      
+      return matchesSearch && matchesStatus && matchesSender && matchesDate;
+    });
+  }, [declarations, searchQuery, statusFilter, senderFilter, dateFrom, dateTo]);
+
   const loadProfiles = async () => {
     try {
       const { data, error } = await supabase
@@ -105,13 +133,19 @@ export default function Manage() {
     }
   };
 
-  const loadDeclarations = async () => {
+  const loadDeclarations = useCallback(async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('declarations')
         .select(`
-          *,
-          sender:profiles(username)
+          id,
+          type,
+          status,
+          created_at,
+          sender_id,
+          archive_number,
+          sender:profiles!declarations_sender_id_fkey(username)
         `)
         .order('created_at', { ascending: false });
 
@@ -140,9 +174,9 @@ export default function Manage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t, toast]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     try {
       const { error } = await supabase
         .from('declarations')
@@ -153,7 +187,7 @@ export default function Manage() {
 
       toast({
         title: t('success'),
-        description: 'Declaration deleted successfully',
+        description: 'تم حذف الإقرار بنجاح',
       });
       loadDeclarations();
     } catch (error: any) {
@@ -163,7 +197,7 @@ export default function Manage() {
         variant: 'destructive',
       });
     }
-  };
+  }, [t, toast, loadDeclarations]);
 
   const handleStatusUpdate = async (id: string, newStatus: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected') => {
     try {
@@ -187,30 +221,6 @@ export default function Manage() {
       });
     }
   };
-
-  const filteredDeclarations = declarations.filter(dec => {
-    // بحث شامل يشمل رقم الإقرار، رقم الأرشيف، اسم المرسل
-    const matchesSearch = dec.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         dec.sender?.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (dec.archive_number && dec.archive_number.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesStatus = statusFilter === 'all' || dec.status === statusFilter;
-    const matchesSender = senderFilter === 'all' || dec.sender_id === senderFilter;
-    
-    // Date filtering
-    let matchesDate = true;
-    if (dateFrom || dateTo) {
-      const decDate = new Date(dec.created_at);
-      if (dateFrom && dateTo) {
-        matchesDate = decDate >= dateFrom && decDate <= dateTo;
-      } else if (dateFrom) {
-        matchesDate = decDate >= dateFrom;
-      } else if (dateTo) {
-        matchesDate = decDate <= dateTo;
-      }
-    }
-    
-    return matchesSearch && matchesStatus && matchesSender && matchesDate;
-  });
 
   const clearFilters = () => {
     setSearchQuery('');
@@ -295,11 +305,11 @@ export default function Manage() {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8 flex justify-between items-start">
+        <div className="mb-8 flex justify-between items-start animate-fade-in">
           <div>
-            <h1 className="text-3xl font-bold mb-2">{t('declarations')}</h1>
+            <h1 className="text-3xl font-bold mb-2 gradient-text">{t('declarations')}</h1>
             <p className="text-muted-foreground">
-              {t('showing')} {filteredDeclarations.length} {t('of')} {declarations.length} {t('results')}
+              {t('showing')} <span className="font-semibold text-foreground">{filteredDeclarations.length}</span> {t('of')} <span className="font-semibold text-foreground">{declarations.length}</span> {t('results')}
             </p>
           </div>
           
@@ -307,21 +317,30 @@ export default function Manage() {
           <div className="flex gap-2">
             <Button
               variant="outline"
+              onClick={loadDeclarations}
+              className="gap-2 btn-shimmer"
+              disabled={loading}
+            >
+              <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+              تحديث
+            </Button>
+            <Button
+              variant="outline"
               onClick={exportToExcel}
-              className="gap-2"
+              className="gap-2 btn-shimmer"
               disabled={filteredDeclarations.length === 0}
             >
               <FileSpreadsheet className="w-4 h-4" />
-              تصدير Excel
+              Excel
             </Button>
             <Button
               variant="outline"
               onClick={exportToPDF}
-              className="gap-2"
+              className="gap-2 btn-shimmer"
               disabled={filteredDeclarations.length === 0}
             >
               <FileText className="w-4 h-4" />
-              تصدير PDF
+              PDF
             </Button>
           </div>
         </div>
@@ -466,115 +485,141 @@ export default function Manage() {
         </Card>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {[
-            { label: 'مسودة', value: stats.draft, color: 'text-gray-700 dark:text-gray-300' },
-            { label: 'بانتظار المخزن', value: stats.pending_warehouse_signature, color: 'text-yellow-700 dark:text-yellow-300' },
-            { label: 'موقّع', value: stats.warehouse_signed, color: 'text-blue-700 dark:text-blue-300' },
-            { label: t('archived'), value: stats.archived, color: 'text-green-700 dark:text-green-300' },
-          ].map((stat) => (
-            <Card key={stat.label} className="glass-card border-border/50 p-4 text-center">
-              <div className={`text-2xl font-bold mb-1 ${stat.color}`}>{stat.value}</div>
-              <div className="text-sm text-muted-foreground">{stat.label}</div>
-            </Card>
-          ))}
-        </div>
+        {loading ? (
+          <StatsSkeleton />
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-fade-in">
+            {[
+              { label: 'مسودة', value: stats.draft, color: 'text-gray-700 dark:text-gray-300', gradient: 'from-gray-500/20 to-gray-600/10' },
+              { label: 'بانتظار المخزن', value: stats.pending_warehouse_signature, color: 'text-yellow-700 dark:text-yellow-300', gradient: 'from-yellow-500/20 to-yellow-600/10' },
+              { label: 'موقّع', value: stats.warehouse_signed, color: 'text-blue-700 dark:text-blue-300', gradient: 'from-blue-500/20 to-blue-600/10' },
+              { label: t('archived'), value: stats.archived, color: 'text-green-700 dark:text-green-300', gradient: 'from-green-500/20 to-green-600/10' },
+            ].map((stat, idx) => (
+              <Card 
+                key={stat.label} 
+                className={cn(
+                  "glass-card border-border/50 p-4 text-center cursor-pointer transition-all duration-300",
+                  `hover:scale-105 bg-gradient-to-br ${stat.gradient}`
+                )}
+                style={{ animationDelay: `${idx * 50}ms` }}
+              >
+                <div className={cn("text-3xl font-bold mb-1", stat.color)}>{stat.value}</div>
+                <div className="text-sm text-muted-foreground">{stat.label}</div>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* Declarations Table */}
-        <Card className="glass-card border-border/50 overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={selectedItems.length === filteredDeclarations.length}
-                    onCheckedChange={toggleSelectAll}
-                  />
-                </TableHead>
-                <TableHead>{t('declarationId')}</TableHead>
-                <TableHead>رقم الأرشيف</TableHead>
-                <TableHead>{t('type')}</TableHead>
-                <TableHead>{t('sender')}</TableHead>
-                <TableHead>{t('status')}</TableHead>
-                <TableHead>{t('createdDate')}</TableHead>
-                <TableHead className="text-right">{t('actions')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
+        {loading ? (
+          <TableSkeleton />
+        ) : (
+          <Card className="glass-card border-border/50 overflow-hidden animate-fade-in">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
-                    {t('loading')}...
-                  </TableCell>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedItems.length === filteredDeclarations.length && filteredDeclarations.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead>{t('declarationId')}</TableHead>
+                  <TableHead>رقم الأرشيف</TableHead>
+                  <TableHead>{t('type')}</TableHead>
+                  <TableHead>{t('sender')}</TableHead>
+                  <TableHead>{t('status')}</TableHead>
+                  <TableHead>{t('createdDate')}</TableHead>
+                  <TableHead className="text-right">{t('actions')}</TableHead>
                 </TableRow>
-              ) : filteredDeclarations.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
-                    لا توجد إقرارات
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredDeclarations.map((declaration) => (
-                  <TableRow key={declaration.id} className="hover:bg-muted/5">
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedItems.includes(declaration.id)}
-                        onCheckedChange={() => toggleSelectItem(declaration.id)}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{declaration.id}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {declaration.archive_number || '-'}
-                    </TableCell>
-                    <TableCell>{declaration.type}</TableCell>
-                    <TableCell>{declaration.sender?.username || 'غير معروف'}</TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[declaration.status as keyof typeof statusColors]}>
-                        {t(declaration.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{new Date(declaration.created_at).toLocaleDateString('ar-SA')}</TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => navigate(`/declaration/${declaration.id}`)}
-                          title={t('view')}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => navigate(`/declaration/${declaration.id}`)}
-                          title="تحديث الحالة"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        {user?.role === 'admin' && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => {
-                              if (window.confirm('هل أنت متأكد من حذف هذا الإقرار؟')) {
-                                handleDelete(declaration.id);
-                              }
-                            }}
-                            title="حذف"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
+              </TableHeader>
+              <TableBody>
+                {filteredDeclarations.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-12">
+                      <div className="flex flex-col items-center gap-2">
+                        <Search className="w-12 h-12 text-muted-foreground/50" />
+                        <p className="text-muted-foreground">لا توجد إقرارات</p>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </Card>
+                ) : (
+                  filteredDeclarations.map((declaration, idx) => (
+                    <TableRow 
+                      key={declaration.id} 
+                      className="hover:bg-muted/10 transition-colors cursor-pointer"
+                      style={{ animationDelay: `${idx * 30}ms` }}
+                    >
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedItems.includes(declaration.id)}
+                          onCheckedChange={() => toggleSelectItem(declaration.id)}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{declaration.id}</TableCell>
+                      <TableCell className="text-sm">
+                        {declaration.archive_number ? (
+                          <Badge variant="outline" className="font-mono">
+                            {declaration.archive_number}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>{declaration.type}</TableCell>
+                      <TableCell>{declaration.sender?.username || 'غير معروف'}</TableCell>
+                      <TableCell>
+                        <Badge className={statusColors[declaration.status as keyof typeof statusColors]}>
+                          {t(declaration.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(declaration.created_at).toLocaleDateString('ar-SA')}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => navigate(`/declaration/${declaration.id}`)}
+                            title={t('view')}
+                            className="h-8 w-8 hover:bg-primary/10"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => navigate(`/declaration/${declaration.id}`)}
+                            title="تحديث الحالة"
+                            className="h-8 w-8 hover:bg-blue-500/10"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          {user?.role === 'admin' && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                              onClick={() => {
+                                if (window.confirm('هل أنت متأكد من حذف هذا الإقرار؟')) {
+                                  handleDelete(declaration.id);
+                                }
+                              }}
+                              title="حذف"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+        )}
       </main>
     </div>
   );
