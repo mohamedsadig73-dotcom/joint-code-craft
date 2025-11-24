@@ -41,6 +41,9 @@ interface Declaration {
   sender?: { username: string };
   status: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected';
   created_at: string;
+  archive_number?: string;
+  phone?: string;
+  notes?: string;
 }
 
 interface Profile {
@@ -186,8 +189,10 @@ export default function Manage() {
   };
 
   const filteredDeclarations = declarations.filter(dec => {
+    // بحث شامل يشمل رقم الإقرار، رقم الأرشيف، اسم المرسل
     const matchesSearch = dec.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         dec.sender?.username.toLowerCase().includes(searchQuery.toLowerCase());
+                         dec.sender?.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (dec.archive_number && dec.archive_number.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || dec.status === statusFilter;
     const matchesSender = senderFilter === 'all' || dec.sender_id === senderFilter;
     
@@ -330,7 +335,7 @@ export default function Manage() {
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder={`${t('search')}...`}
+                  placeholder="ابحث برقم الإقرار، رقم الأرشيف، أو اسم المرسل..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 glass-card border-border/50"
@@ -487,6 +492,7 @@ export default function Manage() {
                   />
                 </TableHead>
                 <TableHead>{t('declarationId')}</TableHead>
+                <TableHead>رقم الأرشيف</TableHead>
                 <TableHead>{t('type')}</TableHead>
                 <TableHead>{t('sender')}</TableHead>
                 <TableHead>{t('status')}</TableHead>
@@ -497,14 +503,14 @@ export default function Manage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     {t('loading')}...
                   </TableCell>
                 </TableRow>
               ) : filteredDeclarations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    No declarations found
+                  <TableCell colSpan={8} className="text-center py-8">
+                    لا توجد إقرارات
                   </TableCell>
                 </TableRow>
               ) : (
@@ -517,8 +523,11 @@ export default function Manage() {
                       />
                     </TableCell>
                     <TableCell className="font-medium">{declaration.id}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {declaration.archive_number || '-'}
+                    </TableCell>
                     <TableCell>{declaration.type}</TableCell>
-                    <TableCell>{declaration.sender?.username || 'Unknown'}</TableCell>
+                    <TableCell>{declaration.sender?.username || 'غير معروف'}</TableCell>
                     <TableCell>
                       <Badge className={statusColors[declaration.status as keyof typeof statusColors]}>
                         {t(declaration.status)}
@@ -543,21 +552,21 @@ export default function Manage() {
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => {
-                            if (window.confirm('هل أنت متأكد من حذف هذا الإقرار؟')) {
-                              handleDelete(declaration.id);
-                            }
-                          }}
-                          title="حذف"
-                          disabled={user?.role !== 'admin'}
-                          style={{ display: user?.role === 'admin' ? 'flex' : 'none' }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {user?.role === 'admin' && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => {
+                              if (window.confirm('هل أنت متأكد من حذف هذا الإقرار؟')) {
+                                handleDelete(declaration.id);
+                              }
+                            }}
+                            title="حذف"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
