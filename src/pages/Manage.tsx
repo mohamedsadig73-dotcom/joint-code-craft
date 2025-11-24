@@ -240,7 +240,7 @@ export default function Manage() {
         sender: dec.sender?.username || 'غير معروف',
         status: t(dec.status),
         archive_number: dec.archive_number || '-',
-        created_at: new Date(dec.created_at).toLocaleDateString('ar-SA'),
+        created_at: new Date(dec.created_at).toLocaleDateString('en-US'),
       }));
 
       exportDeclarationsToExcel(exportData, 'إقرارات');
@@ -266,7 +266,7 @@ export default function Manage() {
         sender: dec.sender?.username || 'غير معروف',
         status: t(dec.status),
         archive_number: dec.archive_number || '-',
-        created_at: new Date(dec.created_at).toLocaleDateString('ar-SA'),
+        created_at: new Date(dec.created_at).toLocaleDateString('en-US'),
       }));
 
       const doc = exportDeclarationsToPDF(exportData, 'تقرير الإقرارات');
@@ -531,7 +531,7 @@ export default function Manage() {
                         {t(declaration.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell>{new Date(declaration.created_at).toLocaleDateString('ar-SA')}</TableCell>
+                    <TableCell>{new Date(declaration.created_at).toLocaleDateString('en-US')}</TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
                         <Button 

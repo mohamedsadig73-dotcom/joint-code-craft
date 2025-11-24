@@ -210,7 +210,7 @@ export function UserManagement() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {new Date(user.created_at).toLocaleDateString('ar-SA')}
+                    {new Date(user.created_at).toLocaleDateString('en-US')}
                   </TableCell>
                   <TableCell className="text-right">
                     <Select

@@ -15,7 +15,6 @@ import { Badge } from '@/components/ui/badge';
 import { Bell, Check, Trash2, ExternalLink } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
 
 interface Notification {
   id: string;
@@ -216,7 +215,7 @@ export function NotificationCenter() {
                         </p>
                         
                         <p className="text-xs text-muted-foreground">
-                          {format(new Date(notification.created_at), 'PPp', { locale: ar })}
+                          {format(new Date(notification.created_at), 'MMMM dd, yyyy, h:mm a')}
                         </p>
                       </div>
 

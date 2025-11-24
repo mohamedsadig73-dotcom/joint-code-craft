@@ -305,7 +305,7 @@ export default function DeclarationDetails() {
                   تاريخ الإنشاء
                 </label>
                 <p className="text-lg">
-                  {new Date(declaration.created_at).toLocaleDateString('ar-EG', {
+                  {new Date(declaration.created_at).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
@@ -319,7 +319,7 @@ export default function DeclarationDetails() {
                   آخر تحديث
                 </label>
                 <p className="text-lg">
-                  {new Date(declaration.updated_at).toLocaleDateString('ar-EG', {
+                  {new Date(declaration.updated_at).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',

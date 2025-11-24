@@ -345,8 +345,8 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(activity.timestamp).toLocaleString('ar-SA', {
+                       <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(activity.timestamp).toLocaleString('en-US', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',

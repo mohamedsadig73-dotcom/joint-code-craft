@@ -37,7 +37,7 @@ export const exportDeclarationsToPDF = (
   // Add date and time
   doc.setFontSize(10);
   doc.setTextColor(107, 114, 128); // gray-500
-  const currentDate = new Date().toLocaleString('ar-SA', {
+  const currentDate = new Date().toLocaleString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
