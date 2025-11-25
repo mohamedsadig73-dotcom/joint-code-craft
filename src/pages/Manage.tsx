@@ -14,7 +14,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { exportDeclarationsToExcel } from '@/utils/excelExport';
 import { exportDeclarationsToPDF } from '@/utils/pdfExport';
-import { toGregorianDate, toGregorianDateLong } from '@/utils/dateUtils';
+import { formatDate, formatDateLong } from '@/utils/dateUtils';
+import { useCalendar } from '@/contexts/CalendarContext';
 import {
   Select,
   SelectContent,
@@ -64,6 +65,7 @@ const statusColors = {
 export default function Manage() {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { calendarType } = useCalendar();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -279,7 +281,7 @@ export default function Manage() {
         sender: dec.sender?.username || 'غير معروف',
         status: t(dec.status),
         archive_number: dec.archive_number || '-',
-        created_at: toGregorianDate(dec.created_at),
+        created_at: formatDate(dec.created_at, calendarType),
       }));
 
       exportDeclarationsToExcel(exportData, 'إقرارات');
@@ -305,7 +307,7 @@ export default function Manage() {
         sender: dec.sender?.username || 'غير معروف',
         status: t(dec.status),
         archive_number: dec.archive_number || '-',
-        created_at: toGregorianDate(dec.created_at),
+        created_at: formatDate(dec.created_at, calendarType),
       }));
 
       const doc = exportDeclarationsToPDF(exportData, 'تقرير الإقرارات');
@@ -442,7 +444,7 @@ export default function Manage() {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateFrom ? toGregorianDateLong(dateFrom) : "من تاريخ"}
+                    {dateFrom ? formatDateLong(dateFrom, calendarType) : "من تاريخ"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -467,7 +469,7 @@ export default function Manage() {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateTo ? toGregorianDateLong(dateTo) : "إلى تاريخ"}
+                    {dateTo ? formatDateLong(dateTo, calendarType) : "إلى تاريخ"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -574,7 +576,7 @@ export default function Manage() {
                         {t(declaration.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell>{toGregorianDate(declaration.created_at)}</TableCell>
+                    <TableCell>{formatDate(declaration.created_at, calendarType)}</TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
                         <Button 
