@@ -81,13 +81,27 @@ export default function Trash() {
 
   const handleRestore = async (id: string) => {
     try {
+      // First verify the declaration exists and is deleted
+      const { data: existing, error: checkError } = await supabase
+        .from('declarations')
+        .select('id, deleted_at')
+        .eq('id', id)
+        .single();
+
+      if (checkError) throw checkError;
+      if (!existing || !existing.deleted_at) {
+        throw new Error('الإقرار غير موجود في سلة المحذوفات');
+      }
+
+      // Restore the declaration
       const { error } = await supabase
         .from('declarations')
         .update({ 
           deleted_at: null,
           deleted_by: null 
         })
-        .eq('id', id);
+        .eq('id', id)
+        .not('deleted_at', 'is', null);
 
       if (error) throw error;
 
@@ -95,7 +109,9 @@ export default function Trash() {
         title: t('success'),
         description: 'تم استرجاع الإقرار بنجاح',
       });
-      loadDeletedDeclarations();
+      
+      // Refresh the deleted declarations list
+      await loadDeletedDeclarations();
     } catch (error: any) {
       toast({
         title: t('error'),

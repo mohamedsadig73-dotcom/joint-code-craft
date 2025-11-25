@@ -114,6 +114,7 @@ export default function Manage() {
           *,
           sender:profiles!sender_id(username)
         `)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -152,6 +153,18 @@ export default function Manage() {
     if (!declarationToDelete) return;
 
     try {
+      // First verify the declaration is not already deleted
+      const { data: existing, error: checkError } = await supabase
+        .from('declarations')
+        .select('id, deleted_at')
+        .eq('id', declarationToDelete.id)
+        .single();
+
+      if (checkError) throw checkError;
+      if (existing?.deleted_at) {
+        throw new Error('الإقرار محذوف بالفعل');
+      }
+
       // Log deletion for audit
       const { error: logError } = await supabase
         .from('declaration_deletion_log')
@@ -166,14 +179,15 @@ export default function Manage() {
 
       if (logError) console.error('Error logging deletion:', logError);
 
-      // Soft delete
+      // Soft delete - only if not already deleted
       const { error } = await supabase
         .from('declarations')
         .update({ 
           deleted_at: new Date().toISOString(),
           deleted_by: user?.id 
         })
-        .eq('id', declarationToDelete.id);
+        .eq('id', declarationToDelete.id)
+        .is('deleted_at', null);
 
       if (error) throw error;
 
@@ -184,7 +198,9 @@ export default function Manage() {
       
       setDeleteDialogOpen(false);
       setDeclarationToDelete(null);
-      loadDeclarations();
+      
+      // Refresh the declarations list
+      await loadDeclarations();
     } catch (error: any) {
       toast({
         title: t('error'),
