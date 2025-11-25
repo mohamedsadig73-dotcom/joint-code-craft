@@ -51,23 +51,25 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = onOpenChange || setInternalOpen;
 
-  // Load next available number when dialog opens
+  // Load next available number when dialog opens or type changes
   useEffect(() => {
     if (open) {
       loadNextNumber();
     }
-  }, [open]);
+  }, [open, type]);
 
   const loadNextNumber = async () => {
     setLoadingNextNumber(true);
     try {
       const currentYear = new Date().getFullYear();
+      const prefix = type === 'دخول' ? 'IN' : 'OUT';
       
-      // Get all declarations for current year with DCL prefix
+      // Get all declarations for current year with the specific type prefix
       const { data, error } = await supabase
         .from('declarations')
         .select('id')
-        .ilike('id', `DCL-${currentYear}-%`)
+        .ilike('id', `${prefix}-${currentYear}-%`)
+        .is('deleted_at', null)
         .order('id', { ascending: false })
         .limit(1);
 
@@ -75,7 +77,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
 
       let nextNumber = 1;
       if (data && data.length > 0) {
-        // Extract number from last declaration (e.g., "DCL-2025-005" -> 5)
+        // Extract number from last declaration (e.g., "IN-2025-165" -> 165)
         const lastId = data[0].id;
         const parts = lastId.split('-');
         const lastNumber = parseInt(parts[2]);
@@ -119,9 +121,10 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
       return;
     }
 
-    // Generate full ID with DCL prefix and current year
+    // Generate full ID with type-based prefix and current year
     const currentYear = new Date().getFullYear();
-    const fullId = `DCL-${currentYear}-${declarationNumber.padStart(3, '0')}`;
+    const prefix = type === 'دخول' ? 'IN' : 'OUT';
+    const fullId = `${prefix}-${currentYear}-${declarationNumber.padStart(4, '0')}`;
 
     setLoading(true);
 
@@ -211,7 +214,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
               {loadingNextNumber ? (
                 'جاري جلب الرقم التالي...'
               ) : (
-                <>الرقم النهائي: DCL-{new Date().getFullYear()}-{declarationNumber.padStart(3, '0')}</>
+                <>الرقم النهائي: {type === 'دخول' ? 'IN' : 'OUT'}-{new Date().getFullYear()}-{declarationNumber.padStart(4, '0')}</>
               )}
             </p>
           </div>

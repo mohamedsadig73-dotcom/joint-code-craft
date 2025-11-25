@@ -80,11 +80,13 @@ export default function Dashboard() {
             *,
             sender:profiles!sender_id(username)
           `)
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
           .limit(5),
         supabase
           .from('declarations')
           .select('status')
+          .is('deleted_at', null)
       ]);
 
       if (declarationsResult.error) throw declarationsResult.error;
