@@ -18,8 +18,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { RefreshCw, Trash2, Eye, AlertCircle } from 'lucide-react';
 import { differenceInDays } from 'date-fns';
-import { formatDate } from '@/utils/dateUtils';
-import { useCalendar } from '@/contexts/CalendarContext';
+import { toGregorianDate } from '@/utils/dateUtils';
 
 interface DeletedDeclaration {
   id: string;
@@ -47,7 +46,6 @@ const statusColors = {
 export default function Trash() {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { calendarType } = useCalendar();
   const navigate = useNavigate();
   const [declarations, setDeclarations] = useState<DeletedDeclaration[]>([]);
   const [loading, setLoading] = useState(true);
@@ -218,7 +216,7 @@ export default function Trash() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {formatDate(declaration.deleted_at, calendarType)}
+                        {toGregorianDate(declaration.deleted_at)}
                       </TableCell>
                       <TableCell>
                         <Badge 

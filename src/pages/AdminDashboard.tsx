@@ -11,8 +11,7 @@ import { Users, FileText, Activity, TrendingUp, Shield, UserCheck, BarChart3 } f
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { UserManagementTab } from '@/components/UserManagementTab';
 import { BulkNotificationDialog } from '@/components/BulkNotificationDialog';
-import { formatDateTime } from '@/utils/dateUtils';
-import { useCalendar } from '@/contexts/CalendarContext';
+import { toGregorianDateTime } from '@/utils/dateUtils';
 
 interface SystemStats {
   totalUsers: number;
@@ -58,7 +57,6 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
-  const { calendarType } = useCalendar();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<SystemStats>({
     totalUsers: 0,
@@ -354,7 +352,7 @@ export default function AdminDashboard() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm">{activity.message}</p>
                        <p className="text-xs text-muted-foreground mt-1">
-                        {formatDateTime(activity.timestamp, calendarType)}
+                        {toGregorianDateTime(activity.timestamp)}
                       </p>
                     </div>
                   </div>

@@ -5,8 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
-import { formatDateLong } from '@/utils/dateUtils';
-import { useCalendar } from '@/contexts/CalendarContext';
+import { toGregorianDateLong } from '@/utils/dateUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -70,7 +69,6 @@ export default function DeclarationDetails() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
-  const { calendarType } = useCalendar();
   const [declaration, setDeclaration] = useState<DeclarationDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -308,7 +306,7 @@ export default function DeclarationDetails() {
                   تاريخ الإنشاء
                 </label>
                 <p className="text-lg">
-                  {formatDateLong(declaration.created_at, calendarType)}
+                  {toGregorianDateLong(declaration.created_at)}
                 </p>
               </div>
 
@@ -318,7 +316,7 @@ export default function DeclarationDetails() {
                   آخر تحديث
                 </label>
                 <p className="text-lg">
-                  {formatDateLong(declaration.updated_at, calendarType)}
+                  {toGregorianDateLong(declaration.updated_at)}
                 </p>
               </div>
 

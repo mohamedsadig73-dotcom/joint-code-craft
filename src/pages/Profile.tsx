@@ -3,16 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useCalendar } from '@/contexts/CalendarContext';
 import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { User, Lock, Mail, Shield, Save, Calendar } from 'lucide-react';
+import { User, Lock, Mail, Shield, Save } from 'lucide-react';
 import { z } from 'zod';
 
 const profileSchema = z.object({
@@ -38,7 +36,6 @@ const passwordSchema = z.object({
 export default function Profile() {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const { calendarType, setCalendarType } = useCalendar();
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -305,54 +302,6 @@ export default function Profile() {
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
-
-        {/* Calendar Settings */}
-        <Card className="glass-card mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              إعدادات التقويم
-            </CardTitle>
-            <CardDescription>
-              اختر نوع التقويم المفضل لعرض التواريخ في التطبيق
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RadioGroup
-              value={calendarType}
-              onValueChange={(value: 'gregorian' | 'hijri') => setCalendarType(value)}
-              className="space-y-3"
-            >
-              <div className="flex items-center space-x-2 space-x-reverse">
-                <RadioGroupItem value="gregorian" id="gregorian" />
-                <Label htmlFor="gregorian" className="cursor-pointer flex-1">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">التقويم الميلادي</div>
-                      <div className="text-sm text-muted-foreground">
-                        عرض التواريخ بالتقويم الميلادي (2024/12/15)
-                      </div>
-                    </div>
-                  </div>
-                </Label>
-              </div>
-              <Separator />
-              <div className="flex items-center space-x-2 space-x-reverse">
-                <RadioGroupItem value="hijri" id="hijri" />
-                <Label htmlFor="hijri" className="cursor-pointer flex-1">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">التقويم الهجري</div>
-                      <div className="text-sm text-muted-foreground">
-                        عرض التواريخ بالتقويم الهجري (1446/6/3 هـ)
-                      </div>
-                    </div>
-                  </div>
-                </Label>
-              </div>
-            </RadioGroup>
           </CardContent>
         </Card>
 
