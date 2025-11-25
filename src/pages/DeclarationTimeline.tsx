@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Clock, User, FileText, CheckCircle2, Circle } from 'lucide-react';
-import { toGregorianDateLong, toGregorianDateTime } from '@/utils/dateUtils';
+import { formatDateLong, formatDateTime } from '@/utils/dateUtils';
+import { useCalendar } from '@/contexts/CalendarContext';
 
 interface StatusHistoryEntry {
   id: string;
@@ -60,6 +61,7 @@ export default function DeclarationTimeline() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { calendarType } = useCalendar();
   const [declaration, setDeclaration] = useState<Declaration | null>(null);
   const [history, setHistory] = useState<StatusHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -178,7 +180,7 @@ export default function DeclarationTimeline() {
               <div>
                 <label className="text-sm text-muted-foreground">تاريخ الإنشاء</label>
                 <p className="text-lg">
-                  {toGregorianDateLong(declaration.created_at)}
+                  {formatDateLong(declaration.created_at, calendarType)}
                 </p>
               </div>
               <div>
@@ -261,7 +263,7 @@ export default function DeclarationTimeline() {
 
                               <div className="text-left ml-4">
                                 <div className="text-sm font-medium">
-                                  {toGregorianDateTime(entry.changed_at)}
+                                  {formatDateTime(entry.changed_at, calendarType)}
                                 </div>
                               </div>
                             </div>
