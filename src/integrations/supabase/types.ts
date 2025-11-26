@@ -172,6 +172,265 @@ export type Database = {
           },
         ]
       }
+      maintenance_assets: {
+        Row: {
+          active: boolean | null
+          code: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          location: string
+          name: string
+          notes: string | null
+          purchase_date: string | null
+          site: string | null
+          type: Database["public"]["Enums"]["maintenance_asset_type"]
+          updated_at: string | null
+          warranty_expiry: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          location: string
+          name: string
+          notes?: string | null
+          purchase_date?: string | null
+          site?: string | null
+          type: Database["public"]["Enums"]["maintenance_asset_type"]
+          updated_at?: string | null
+          warranty_expiry?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          location?: string
+          name?: string
+          notes?: string | null
+          purchase_date?: string | null
+          site?: string | null
+          type?: Database["public"]["Enums"]["maintenance_asset_type"]
+          updated_at?: string | null
+          warranty_expiry?: string | null
+        }
+        Relationships: []
+      }
+      maintenance_attachments: {
+        Row: {
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          schedule_id: string | null
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          schedule_id?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          schedule_id?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_attachments_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_schedule"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_items: {
+        Row: {
+          active: boolean | null
+          asset_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          estimated_cost: number | null
+          frequency: Database["public"]["Enums"]["maintenance_frequency"]
+          id: string
+          last_maintenance_date: string | null
+          name: string
+          next_maintenance_date: string | null
+          notes: string | null
+          reminder_days: number | null
+          start_date: string
+          updated_at: string | null
+          vendor_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          asset_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          estimated_cost?: number | null
+          frequency: Database["public"]["Enums"]["maintenance_frequency"]
+          id?: string
+          last_maintenance_date?: string | null
+          name: string
+          next_maintenance_date?: string | null
+          notes?: string | null
+          reminder_days?: number | null
+          start_date?: string
+          updated_at?: string | null
+          vendor_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          asset_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          estimated_cost?: number | null
+          frequency?: Database["public"]["Enums"]["maintenance_frequency"]
+          id?: string
+          last_maintenance_date?: string | null
+          name?: string
+          next_maintenance_date?: string | null
+          notes?: string | null
+          reminder_days?: number | null
+          start_date?: string
+          updated_at?: string | null
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_items_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_items_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_schedule: {
+        Row: {
+          actual_cost: number | null
+          assigned_to: string | null
+          created_at: string | null
+          executed_date: string | null
+          id: string
+          maintenance_item_id: string
+          month: number
+          notes: string | null
+          scheduled_date: string
+          status: Database["public"]["Enums"]["maintenance_status"] | null
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          actual_cost?: number | null
+          assigned_to?: string | null
+          created_at?: string | null
+          executed_date?: string | null
+          id?: string
+          maintenance_item_id: string
+          month: number
+          notes?: string | null
+          scheduled_date: string
+          status?: Database["public"]["Enums"]["maintenance_status"] | null
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          actual_cost?: number | null
+          assigned_to?: string | null
+          created_at?: string | null
+          executed_date?: string | null
+          id?: string
+          maintenance_item_id?: string
+          month?: number
+          notes?: string | null
+          scheduled_date?: string
+          status?: Database["public"]["Enums"]["maintenance_status"] | null
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_schedule_maintenance_item_id_fkey"
+            columns: ["maintenance_item_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_vendors: {
+        Row: {
+          active: boolean | null
+          address: string | null
+          contact_person: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          specialization: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          specialization?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          specialization?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -285,7 +544,19 @@ export type Database = {
     Functions: {
       check_admin_office_notifications: { Args: never; Returns: undefined }
       cleanup_old_deleted_declarations: { Args: never; Returns: undefined }
+      create_maintenance_notification: {
+        Args: {
+          _message: string
+          _notification_type: string
+          _schedule_id: string
+        }
+        Returns: undefined
+      }
       generate_archive_number: { Args: never; Returns: string }
+      generate_maintenance_schedule: {
+        Args: { _item_id: string; _year: number }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -306,6 +577,21 @@ export type Database = {
         | "archived"
         | "rejected"
       declaration_type: "دخول" | "خروج"
+      maintenance_asset_type:
+        | "electrical"
+        | "plumbing"
+        | "hvac"
+        | "safety"
+        | "equipment"
+        | "building"
+        | "other"
+      maintenance_frequency:
+        | "monthly"
+        | "quarterly"
+        | "semiannual"
+        | "annual"
+        | "ad_hoc"
+      maintenance_status: "pending" | "done" | "not_required" | "overdue"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -445,6 +731,23 @@ export const Constants = {
         "rejected",
       ],
       declaration_type: ["دخول", "خروج"],
+      maintenance_asset_type: [
+        "electrical",
+        "plumbing",
+        "hvac",
+        "safety",
+        "equipment",
+        "building",
+        "other",
+      ],
+      maintenance_frequency: [
+        "monthly",
+        "quarterly",
+        "semiannual",
+        "annual",
+        "ad_hoc",
+      ],
+      maintenance_status: ["pending", "done", "not_required", "overdue"],
     },
   },
 } as const
