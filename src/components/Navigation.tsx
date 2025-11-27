@@ -11,7 +11,8 @@ import {
   User,
   Globe,
   Shield,
-  Download
+  Download,
+  Wrench
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -37,6 +38,7 @@ export function Navigation() {
   const navItems = [
     { path: '/', icon: LayoutDashboard, label: t('dashboard') },
     { path: '/manage', icon: FolderOpen, label: t('manage') },
+    { path: '/maintenance', icon: Wrench, label: 'الصيانة' },
     { path: '/reports', icon: BarChart3, label: t('reports') },
   ];
 

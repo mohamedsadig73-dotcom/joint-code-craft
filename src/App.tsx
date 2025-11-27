@@ -23,6 +23,7 @@ const Reports = lazy(() => import("./pages/Reports"));
 const Profile = lazy(() => import("./pages/Profile"));
 const DeclarationDetails = lazy(() => import("./pages/DeclarationDetails"));
 const DeclarationTimeline = lazy(() => import("./pages/DeclarationTimeline"));
+const Maintenance = lazy(() => import("./pages/Maintenance"));
 const InstallApp = lazy(() => import("./pages/InstallApp"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -128,6 +129,14 @@ function AppRoutes() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/maintenance" 
+            element={
+              <ProtectedRoute>
+                <Maintenance />
               </ProtectedRoute>
             } 
           />
