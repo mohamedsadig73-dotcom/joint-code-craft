@@ -543,6 +543,7 @@ export type Database = {
     }
     Functions: {
       check_admin_office_notifications: { Args: never; Returns: undefined }
+      check_maintenance_notifications: { Args: never; Returns: undefined }
       cleanup_old_deleted_declarations: { Args: never; Returns: undefined }
       create_maintenance_notification: {
         Args: {
