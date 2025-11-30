@@ -258,12 +258,12 @@ export function MaintenanceItems() {
 
                 <div className="space-y-2">
                   <Label htmlFor="asset_id">الأصل المرتبط</Label>
-                  <Select value={formData.asset_id} onValueChange={(value) => setFormData({ ...formData, asset_id: value })}>
+                  <Select value={formData.asset_id || 'none'} onValueChange={(value) => setFormData({ ...formData, asset_id: value === 'none' ? '' : value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="اختر الأصل" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">بدون أصل</SelectItem>
+                      <SelectItem value="none">بدون أصل</SelectItem>
                       {assets.map(asset => (
                         <SelectItem key={asset.id} value={asset.id}>
                           {asset.name}
@@ -275,12 +275,12 @@ export function MaintenanceItems() {
 
                 <div className="space-y-2">
                   <Label htmlFor="vendor_id">الجهة المنفذة</Label>
-                  <Select value={formData.vendor_id} onValueChange={(value) => setFormData({ ...formData, vendor_id: value })}>
+                  <Select value={formData.vendor_id || 'none'} onValueChange={(value) => setFormData({ ...formData, vendor_id: value === 'none' ? '' : value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="اختر المورد" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">بدون مورد</SelectItem>
+                      <SelectItem value="none">بدون مورد</SelectItem>
                       {vendors.map(vendor => (
                         <SelectItem key={vendor.id} value={vendor.id}>
                           {vendor.name}
