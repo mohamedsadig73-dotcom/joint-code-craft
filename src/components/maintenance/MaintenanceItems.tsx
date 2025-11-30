@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Calendar, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, DollarSign, Eye } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
 const FREQUENCIES = [
@@ -47,6 +48,7 @@ interface Vendor {
 }
 
 export function MaintenanceItems() {
+  const navigate = useNavigate();
   const [items, setItems] = useState<MaintenanceItem[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -457,6 +459,14 @@ export function MaintenanceItems() {
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate(`/maintenance/item/${item.id}`)}
+                        title="عرض التفاصيل"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"

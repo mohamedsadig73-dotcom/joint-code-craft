@@ -8,7 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
-import { Calendar, Check, X, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, Check, X, Clock, AlertCircle, Download, FileSpreadsheet } from 'lucide-react';
+import { exportMaintenanceToPDF, exportMaintenanceToExcel, MaintenanceReportData } from '@/utils/maintenanceReports';
+import { AttachmentsManager } from './AttachmentsManager';
 
 const MONTHS = [
   'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
@@ -174,6 +176,92 @@ export function AnnualSchedule() {
     }
   };
 
+  const handleExportPDF = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('maintenance_schedule')
+        .select(`
+          id,
+          year,
+          month,
+          status,
+          scheduled_date,
+          executed_date,
+          actual_cost,
+          notes,
+          maintenance_items!inner(name)
+        `)
+        .eq('year', selectedYear)
+        .order('month');
+
+      if (error) throw error;
+
+      const reportData: MaintenanceReportData[] = (data || []).map((item: any) => ({
+        id: item.id,
+        item_name: item.maintenance_items.name,
+        month: item.month,
+        year: item.year,
+        status: item.status,
+        scheduled_date: item.scheduled_date,
+        executed_date: item.executed_date,
+        actual_cost: item.actual_cost,
+        notes: item.notes,
+      }));
+
+      exportMaintenanceToPDF(reportData, selectedYear, `تقرير الصيانة الدورية - ${selectedYear}`);
+      toast({ title: 'تم تصدير التقرير بنجاح' });
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('maintenance_schedule')
+        .select(`
+          id,
+          year,
+          month,
+          status,
+          scheduled_date,
+          executed_date,
+          actual_cost,
+          notes,
+          maintenance_items!inner(name)
+        `)
+        .eq('year', selectedYear)
+        .order('month');
+
+      if (error) throw error;
+
+      const reportData: MaintenanceReportData[] = (data || []).map((item: any) => ({
+        id: item.id,
+        item_name: item.maintenance_items.name,
+        month: item.month,
+        year: item.year,
+        status: item.status,
+        scheduled_date: item.scheduled_date,
+        executed_date: item.executed_date,
+        actual_cost: item.actual_cost,
+        notes: item.notes,
+      }));
+
+      exportMaintenanceToExcel(reportData, selectedYear);
+      toast({ title: 'تم تصدير التقرير بنجاح' });
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   const getCellStatus = (itemId: string, month: number) => {
     const itemSchedule = schedule[itemId] || [];
     const entry = itemSchedule.find(e => e.month === month);
@@ -205,6 +293,16 @@ export function AnnualSchedule() {
           <Button onClick={generateScheduleForYear} variant="outline">
             <Calendar className="w-4 h-4 ml-2" />
             توليد الجدول
+          </Button>
+          
+          <Button onClick={handleExportPDF} variant="outline">
+            <Download className="w-4 h-4 ml-2" />
+            PDF
+          </Button>
+          
+          <Button onClick={handleExportExcel} variant="outline">
+            <FileSpreadsheet className="w-4 h-4 ml-2" />
+            Excel
           </Button>
         </div>
       </div>
@@ -340,6 +438,12 @@ export function AnnualSchedule() {
                 rows={3}
               />
             </div>
+
+            {selectedCell && (
+              <div className="pt-4 border-t">
+                <AttachmentsManager scheduleId={selectedCell.id} />
+              </div>
+            )}
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
