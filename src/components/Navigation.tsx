@@ -12,7 +12,8 @@ import {
   Globe,
   Shield,
   Download,
-  Wrench
+  Wrench,
+  FileText
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -36,10 +37,11 @@ export function Navigation() {
   };
 
   const navItems = [
-    { path: '/', icon: LayoutDashboard, label: t('dashboard') },
-    { path: '/manage', icon: FolderOpen, label: t('manage') },
+    { path: '/', icon: LayoutDashboard, label: 'الرئيسية' },
+    { path: '/dashboard', icon: FileText, label: 'الإقرارات' },
+    { path: '/manage', icon: FolderOpen, label: 'الإدارة' },
     { path: '/maintenance', icon: Wrench, label: 'الصيانة' },
-    { path: '/reports', icon: BarChart3, label: t('reports') },
+    { path: '/reports', icon: BarChart3, label: 'التقارير' },
   ];
 
   // Add admin dashboard link for admins only
