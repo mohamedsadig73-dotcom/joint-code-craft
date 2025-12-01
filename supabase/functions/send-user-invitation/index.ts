@@ -30,21 +30,42 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("No authorization header");
+      return new Response(
+        JSON.stringify({ error: "غير مصرح", message: "يجب تسجيل الدخول للوصول إلى هذه الوظيفة" }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
     const token = authHeader.replace("Bearer ", "");
+
+    // Create client with anon key and user's JWT for authentication
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      }
+    );
+
+    // Get authenticated user using the JWT token
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
 
     if (authError || !user) {
-      throw new Error("Unauthorized");
+      console.error("Auth error in send-user-invitation:", authError);
+      return new Response(
+        JSON.stringify({ error: "غير مصرح", message: "جلسة غير صالحة. يرجى تسجيل الدخول مرة أخرى" }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
     // Check if user is admin
@@ -55,7 +76,13 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (!userRole || userRole.role !== "admin") {
-      throw new Error("Only admins can send invitations");
+      return new Response(
+        JSON.stringify({ error: "غير مصرح", message: "هذه الوظيفة متاحة للمسؤولين فقط" }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
     const requestBody = await req.json();
@@ -77,11 +104,17 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { email, role, invitedBy } = validationResult.data;
 
-    console.log(`Sending invitation to ${email} with role ${role}`);
+    console.log(`Processing invitation for role: ${role}`);
+
+    // Create service role client for admin operations
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
     // Create user with temporary password
     const tempPassword = crypto.randomUUID();
-    const { data: newUser, error: signUpError } = await supabaseClient.auth.admin.createUser({
+    const { data: newUser, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true,
@@ -99,7 +132,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("User created successfully:", newUser.user?.id);
 
     // Assign role
-    const { error: roleError } = await supabaseClient
+    const { error: roleError } = await supabaseAdmin
       .from("user_roles")
       .insert({
         user_id: newUser.user?.id,
@@ -111,7 +144,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Generate password reset link
-    const { data: resetData, error: resetError } = await supabaseClient.auth.admin.generateLink({
+    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email: email,
     });
@@ -209,8 +242,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.error("Error in send-user-invitation function:", error);
     return new Response(
       JSON.stringify({
-        error: error.message,
-        details: error.toString(),
+        error: "فشل إرسال الدعوة",
+        message: "حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى",
       }),
       {
         status: 500,

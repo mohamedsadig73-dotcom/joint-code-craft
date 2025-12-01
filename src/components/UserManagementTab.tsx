@@ -210,7 +210,13 @@ export function UserManagementTab() {
       });
 
       if (error) {
-        throw new Error(error.message || 'فشل إرسال الدعوة');
+        // Handle different error types
+        const errorMessage = error.message || (data as any)?.message || 'فشل إرسال الدعوة';
+        throw new Error(errorMessage);
+      }
+
+      if (data && (data as any).error) {
+        throw new Error((data as any).message || 'فشل إرسال الدعوة');
       }
 
       toast({

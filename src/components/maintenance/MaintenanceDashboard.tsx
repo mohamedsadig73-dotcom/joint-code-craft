@@ -115,8 +115,9 @@ export function MaintenanceDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Header Section */}
       <div>
-        <h2 className="text-2xl font-bold">لوحة تحكم الصيانة</h2>
+        <h2 className="text-2xl font-bold gradient-text">لوحة تحكم الصيانة</h2>
         <p className="text-muted-foreground">نظرة عامة على حالة الصيانة الدورية</p>
       </div>
 
@@ -196,7 +197,18 @@ export function MaintenanceDashboard() {
                     {new Date(task.scheduled_date).toLocaleDateString('ar-SA')}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">
+                    <Badge 
+                      variant="outline"
+                      className={
+                        task.status === 'pending' 
+                          ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30'
+                          : task.status === 'done'
+                          ? 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30'
+                          : task.status === 'overdue'
+                          ? 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30'
+                          : 'bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30'
+                      }
+                    >
                       {task.status === 'pending' && 'مطلوب'}
                       {task.status === 'done' && 'تم'}
                       {task.status === 'not_required' && 'غير مطلوب'}
