@@ -37,14 +37,26 @@ const handler = async (req: Request): Promise<Response> => {
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("No authorization header");
+      return new Response(
+        JSON.stringify({ error: "غير مصرح", message: "يجب تسجيل الدخول للوصول إلى هذه الوظيفة" }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
 
     if (authError || !user) {
-      throw new Error("Unauthorized");
+      return new Response(
+        JSON.stringify({ error: "غير مصرح", message: "جلسة غير صالحة. يرجى تسجيل الدخول مرة أخرى" }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
     // Check if user is admin
@@ -55,7 +67,13 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (!userRole || userRole.role !== "admin") {
-      throw new Error("Only admins can send invitations");
+      return new Response(
+        JSON.stringify({ error: "غير مصرح", message: "هذه الوظيفة متاحة للمسؤولين فقط" }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
     const requestBody = await req.json();
@@ -77,7 +95,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { email, role, invitedBy } = validationResult.data;
 
-    console.log(`Sending invitation to ${email} with role ${role}`);
+    console.log(`Processing invitation for role: ${role}`);
 
     // Create user with temporary password
     const tempPassword = crypto.randomUUID();
@@ -209,8 +227,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.error("Error in send-user-invitation function:", error);
     return new Response(
       JSON.stringify({
-        error: error.message,
-        details: error.toString(),
+        error: "فشل إرسال الدعوة",
+        message: "حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى",
       }),
       {
         status: 500,
