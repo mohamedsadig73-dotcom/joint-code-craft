@@ -30,11 +30,6 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -46,10 +41,22 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+    // Create client with anon key and user's JWT for authentication
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      }
+    );
+
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
 
     if (authError || !user) {
+      console.error("Auth error:", authError);
       return new Response(
         JSON.stringify({ error: "غير مصرح", message: "جلسة غير صالحة. يرجى تسجيل الدخول مرة أخرى" }),
         {
@@ -97,9 +104,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Processing invitation for role: ${role}`);
 
+    // Create service role client for admin operations
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
     // Create user with temporary password
     const tempPassword = crypto.randomUUID();
-    const { data: newUser, error: signUpError } = await supabaseClient.auth.admin.createUser({
+    const { data: newUser, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true,
@@ -117,7 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("User created successfully:", newUser.user?.id);
 
     // Assign role
-    const { error: roleError } = await supabaseClient
+    const { error: roleError } = await supabaseAdmin
       .from("user_roles")
       .insert({
         user_id: newUser.user?.id,
@@ -129,7 +142,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Generate password reset link
-    const { data: resetData, error: resetError } = await supabaseClient.auth.admin.generateLink({
+    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email: email,
     });
