@@ -41,22 +41,24 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    const token = authHeader.replace("Bearer ", "");
+
     // Create client with anon key and user's JWT for authentication
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
         global: {
-          headers: { Authorization: authHeader },
+          headers: { Authorization: `Bearer ${token}` },
         },
       }
     );
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    // Get authenticated user using the JWT token
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
 
     if (authError || !user) {
-      console.error("Auth error:", authError);
+      console.error("Auth error in send-user-invitation:", authError);
       return new Response(
         JSON.stringify({ error: "غير مصرح", message: "جلسة غير صالحة. يرجى تسجيل الدخول مرة أخرى" }),
         {
