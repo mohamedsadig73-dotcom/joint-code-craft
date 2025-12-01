@@ -13,7 +13,8 @@ import {
   Shield,
   Download,
   Wrench,
-  FileText
+  FileText,
+  History
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -121,6 +122,12 @@ export function Navigation() {
                   <Download className="w-4 h-4 mr-2" />
                   تثبيت التطبيق
                 </DropdownMenuItem>
+                {user?.role === 'admin' && (
+                  <DropdownMenuItem onClick={() => navigate('/audit-logs')}>
+                    <History className="w-4 h-4 mr-2" />
+                    سجل التدقيق
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                   <LogOut className="w-4 h-4 mr-2" />

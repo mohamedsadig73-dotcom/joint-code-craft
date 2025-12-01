@@ -26,6 +26,7 @@ const DeclarationDetails = lazy(() => import("./pages/DeclarationDetails"));
 const DeclarationTimeline = lazy(() => import("./pages/DeclarationTimeline"));
 const Maintenance = lazy(() => import("./pages/Maintenance"));
 const MaintenanceItemDetails = lazy(() => import("./pages/MaintenanceItemDetails"));
+const AuditLogs = lazy(() => import("./pages/AuditLogs"));
 const InstallApp = lazy(() => import("./pages/InstallApp"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -155,6 +156,14 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <MaintenanceItemDetails />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/audit-logs" 
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AuditLogs />
               </ProtectedRoute>
             } 
           />
