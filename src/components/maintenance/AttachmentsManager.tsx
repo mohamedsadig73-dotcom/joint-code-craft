@@ -73,10 +73,12 @@ export function AttachmentsManager({ scheduleId }: AttachmentsManagerProps) {
 
       if (uploadError) throw uploadError;
 
-      // الحصول على URL العام
-      const { data: { publicUrl } } = supabase.storage
+      // الحصول على URL موقّع للوصول الآمن (صالح لمدة ساعة)
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('maintenance-attachments')
-        .getPublicUrl(filePath);
+        .createSignedUrl(filePath, 3600);
+
+      if (signedUrlError) throw signedUrlError;
 
       // حفظ المعلومات في قاعدة البيانات
       const { error: dbError } = await supabase
@@ -84,7 +86,7 @@ export function AttachmentsManager({ scheduleId }: AttachmentsManagerProps) {
         .insert({
           schedule_id: scheduleId,
           file_name: file.name,
-          file_url: publicUrl,
+          file_url: filePath, // نحفظ المسار بدلاً من URL
           file_type: file.type,
           file_size: file.size,
         });
@@ -109,14 +111,10 @@ export function AttachmentsManager({ scheduleId }: AttachmentsManagerProps) {
     if (!window.confirm('هل أنت متأكد من حذف هذا المرفق؟')) return;
 
     try {
-      // استخراج المسار من URL
-      const urlParts = attachment.file_url.split('/');
-      const filePath = `${scheduleId}/${urlParts[urlParts.length - 1]}`;
-
-      // حذف من storage
+      // حذف من storage (استخدام المسار المحفوظ مباشرة)
       const { error: storageError } = await supabase.storage
         .from('maintenance-attachments')
-        .remove([filePath]);
+        .remove([attachment.file_url]);
 
       if (storageError) throw storageError;
 
@@ -139,12 +137,27 @@ export function AttachmentsManager({ scheduleId }: AttachmentsManagerProps) {
     }
   };
 
-  const handlePreview = (attachment: Attachment) => {
-    if (attachment.file_type?.startsWith('image/')) {
-      setPreviewUrl(attachment.file_url);
-      setPreviewOpen(true);
-    } else {
-      window.open(attachment.file_url, '_blank');
+  const handlePreview = async (attachment: Attachment) => {
+    try {
+      // إنشاء URL موقّع للوصول الآمن
+      const { data, error } = await supabase.storage
+        .from('maintenance-attachments')
+        .createSignedUrl(attachment.file_url, 3600);
+
+      if (error) throw error;
+
+      if (attachment.file_type?.startsWith('image/')) {
+        setPreviewUrl(data.signedUrl);
+        setPreviewOpen(true);
+      } else {
+        window.open(data.signedUrl, '_blank');
+      }
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: 'فشل فتح المرفق',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -226,7 +239,12 @@ export function AttachmentsManager({ scheduleId }: AttachmentsManagerProps) {
                 <Button
                   size="icon"
                   variant="ghost"
-                  onClick={() => window.open(attachment.file_url, '_blank')}
+                  onClick={async () => {
+                    const { data } = await supabase.storage
+                      .from('maintenance-attachments')
+                      .createSignedUrl(attachment.file_url, 3600);
+                    if (data) window.open(data.signedUrl, '_blank');
+                  }}
                 >
                   <Download className="w-4 h-4" />
                 </Button>
