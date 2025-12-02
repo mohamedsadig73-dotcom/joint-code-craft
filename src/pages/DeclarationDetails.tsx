@@ -20,11 +20,18 @@ import {
 } from '@/components/ui/select';
 import { ArrowLeft, Calendar, User, FileText, Clock, Archive, Save } from 'lucide-react';
 
+interface ArchiveFile {
+  id: string;
+  archive_number: string;
+  description: string | null;
+}
+
 interface DeclarationDetails {
   id: string;
   type: 'دخول' | 'خروج';
   status: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected';
   archive_number: string | null;
+  archive_file_id: string | null;
   phone: string | null;
   notes: string | null;
   created_at: string;
@@ -34,6 +41,7 @@ interface DeclarationDetails {
     username: string;
     email: string;
   };
+  archive_file?: ArchiveFile;
 }
 
 const statusColors = {
@@ -72,18 +80,34 @@ export default function DeclarationDetails() {
   const [declaration, setDeclaration] = useState<DeclarationDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [archiveNumber, setArchiveNumber] = useState('');
+  const [selectedArchiveFileId, setSelectedArchiveFileId] = useState<string>('');
+  const [archiveFiles, setArchiveFiles] = useState<ArchiveFile[]>([]);
   const [editingArchive, setEditingArchive] = useState(false);
 
   useEffect(() => {
     loadDeclaration();
+    loadArchiveFiles();
   }, [id]);
 
   useEffect(() => {
     if (declaration) {
-      setArchiveNumber(declaration.archive_number || '');
+      setSelectedArchiveFileId(declaration.archive_file_id || '');
     }
   }, [declaration]);
+
+  const loadArchiveFiles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('archive_files')
+        .select('id, archive_number, description')
+        .order('archive_number', { ascending: true });
+
+      if (error) throw error;
+      setArchiveFiles(data || []);
+    } catch (error: any) {
+      console.error('Error loading archive files:', error);
+    }
+  };
 
   const loadDeclaration = async () => {
     try {
@@ -91,7 +115,8 @@ export default function DeclarationDetails() {
         .from('declarations')
         .select(`
           *,
-          sender:profiles!sender_id(username, email)
+          sender:profiles!sender_id(username, email),
+          archive_file:archive_files!archive_file_id(id, archive_number, description)
         `)
         .eq('id', id)
         .maybeSingle();
@@ -120,55 +145,31 @@ export default function DeclarationDetails() {
     }
   };
 
-  const handleArchiveNumberUpdate = async () => {
+  const handleArchiveFileUpdate = async () => {
     if (!declaration) return;
 
     setUpdating(true);
     try {
       const { error } = await supabase
         .from('declarations')
-        .update({ archive_number: archiveNumber || null })
+        .update({ archive_file_id: selectedArchiveFileId || null })
         .eq('id', declaration.id);
 
       if (error) throw error;
 
       toast({
         title: 'تم بنجاح',
-        description: 'تم تحديث رقم الأرشفة',
+        description: 'تم تحديث ملف الأرشفة',
       });
 
-      setDeclaration({ ...declaration, archive_number: archiveNumber || null });
+      // Reload to get updated archive_file data
+      await loadDeclaration();
       setEditingArchive(false);
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'خطأ',
-        description: error.message || 'فشل تحديث رقم الأرشفة',
-      });
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  const generateArchiveNumber = async () => {
-    setUpdating(true);
-    try {
-      const { data, error } = await supabase.rpc('generate_archive_number');
-
-      if (error) throw error;
-
-      if (data) {
-        setArchiveNumber(data);
-        toast({
-          title: 'تم التوليد',
-          description: `رقم الأرشفة التلقائي: ${data}`,
-        });
-      }
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'خطأ',
-        description: error.message || 'فشل توليد رقم الأرشفة',
+        description: error.message || 'فشل تحديث ملف الأرشفة',
       });
     } finally {
       setUpdating(false);
@@ -323,17 +324,27 @@ export default function DeclarationDetails() {
               <div className="md:col-span-2">
                 <Label className="flex items-center gap-2 mb-2">
                   <Archive className="w-4 h-4" />
-                  رقم ملف الأرشفة
+                  ملف الأرشفة
                 </Label>
                 {canUpdateStatus ? (
                   <div className="flex gap-2">
-                    <Input
-                      value={archiveNumber}
-                      onChange={(e) => setArchiveNumber(e.target.value)}
-                      placeholder="أدخل رقم ملف الأرشفة (مثال: S1, S2)"
+                    <Select
+                      value={selectedArchiveFileId}
+                      onValueChange={setSelectedArchiveFileId}
                       disabled={updating || !editingArchive}
-                      className="flex-1"
-                    />
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="اختر ملف الأرشفة" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">بدون ملف أرشفة</SelectItem>
+                        {archiveFiles.map((file) => (
+                          <SelectItem key={file.id} value={file.id}>
+                            {file.archive_number} {file.description ? `- ${file.description}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {!editingArchive ? (
                       <Button
                         onClick={() => setEditingArchive(true)}
@@ -345,14 +356,7 @@ export default function DeclarationDetails() {
                     ) : (
                       <>
                         <Button
-                          onClick={generateArchiveNumber}
-                          variant="outline"
-                          disabled={updating}
-                        >
-                          توليد تلقائي
-                        </Button>
-                        <Button
-                          onClick={handleArchiveNumberUpdate}
+                          onClick={handleArchiveFileUpdate}
                           disabled={updating}
                         >
                           <Save className="w-4 h-4 mr-2" />
@@ -360,7 +364,7 @@ export default function DeclarationDetails() {
                         </Button>
                         <Button
                           onClick={() => {
-                            setArchiveNumber(declaration.archive_number || '');
+                            setSelectedArchiveFileId(declaration.archive_file_id || '');
                             setEditingArchive(false);
                           }}
                           variant="outline"
@@ -373,11 +377,13 @@ export default function DeclarationDetails() {
                   </div>
                 ) : (
                   <p className="text-lg font-medium">
-                    {declaration.archive_number || 'لم يتم تحديد رقم الأرشفة'}
+                    {declaration.archive_file 
+                      ? `${declaration.archive_file.archive_number}${declaration.archive_file.description ? ` - ${declaration.archive_file.description}` : ''}`
+                      : 'لم يتم تحديد ملف أرشفة'}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-1">
-                  رقم الملف الذي سيتم أرشفة الإقرار فيه
+                  اختر ملف الأرشيف الذي يحتوي على هذا الإقرار. يمكن لملف واحد أن يحتوي على عدة إقرارات.
                 </p>
               </div>
             </div>
