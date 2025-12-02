@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      archive_files: {
+        Row: {
+          archive_number: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          archive_number: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          archive_number?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "archive_files_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -156,6 +191,7 @@ export type Database = {
       }
       declarations: {
         Row: {
+          archive_file_id: string | null
           archive_number: string | null
           created_at: string
           deleted_at: string | null
@@ -169,6 +205,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archive_file_id?: string | null
           archive_number?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -182,6 +219,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archive_file_id?: string | null
           archive_number?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -195,6 +233,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "declarations_archive_file_id_fkey"
+            columns: ["archive_file_id"]
+            isOneToOne: false
+            referencedRelation: "archive_files"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "declarations_deleted_by_fkey"
             columns: ["deleted_by"]
@@ -547,6 +592,36 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_tracking: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          identifier: string
+          request_count: number
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          identifier: string
+          request_count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          identifier?: string
+          request_count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -584,6 +659,7 @@ export type Database = {
       check_admin_office_notifications: { Args: never; Returns: undefined }
       check_maintenance_notifications: { Args: never; Returns: undefined }
       cleanup_old_deleted_declarations: { Args: never; Returns: undefined }
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
       create_maintenance_notification: {
         Args: {
           _message: string
@@ -611,6 +687,15 @@ export type Database = {
           _old_values?: Json
           _record_id: string
           _table_name: string
+        }
+        Returns: string
+      }
+      log_failed_login_attempt: {
+        Args: {
+          _email: string
+          _error_message: string
+          _ip_address?: string
+          _user_agent?: string
         }
         Returns: string
       }

@@ -14,8 +14,11 @@ import {
   Download,
   Wrench,
   FileText,
-  History
+  History,
+  RefreshCw
 } from 'lucide-react';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,12 +32,94 @@ export function Navigation() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
+  const { toast } = useToast();
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleForceUpdate = async () => {
+    setIsUpdating(true);
+    
+    try {
+      // التحقق من وجود service worker
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        
+        if (registration) {
+          // إجبار التحديث
+          await registration.update();
+          
+          toast({
+            title: 'جاري التحديث',
+            description: 'يتم فحص التحديثات...',
+          });
+          
+          // انتظار التحديث الجديد
+          const waitForUpdate = new Promise<boolean>((resolve) => {
+            const timeout = setTimeout(() => resolve(false), 5000);
+            
+            registration.addEventListener('updatefound', () => {
+              clearTimeout(timeout);
+              const newWorker = registration.installing;
+              
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    resolve(true);
+                  }
+                });
+              }
+            });
+          });
+          
+          const hasUpdate = await waitForUpdate;
+          
+          if (hasUpdate) {
+            toast({
+              title: 'تحديث متاح',
+              description: 'سيتم إعادة تحميل الصفحة لتطبيق التحديث...',
+            });
+            
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          } else {
+            toast({
+              title: 'لا توجد تحديثات',
+              description: 'أنت تستخدم أحدث إصدار من التطبيق',
+            });
+            setIsUpdating(false);
+          }
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'خطأ',
+            description: 'Service Worker غير مسجل',
+          });
+          setIsUpdating(false);
+        }
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'غير مدعوم',
+          description: 'متصفحك لا يدعم ميزة Service Worker',
+        });
+        setIsUpdating(false);
+      }
+    } catch (error) {
+      console.error('Error forcing update:', error);
+      toast({
+        variant: 'destructive',
+        title: 'خطأ',
+        description: 'فشل التحقق من التحديثات',
+      });
+      setIsUpdating(false);
+    }
   };
 
   const navItems = [
@@ -86,6 +171,19 @@ export function Navigation() {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-3">
+            {/* Force Update Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleForceUpdate}
+              disabled={isUpdating}
+              className="gap-2"
+              title="فحص التحديثات"
+            >
+              <RefreshCw className={`w-4 h-4 ${isUpdating ? 'animate-spin' : ''}`} />
+              <span className="hidden md:inline">تحديث</span>
+            </Button>
+
             {/* Language Toggle */}
             <Button
               variant="ghost"
