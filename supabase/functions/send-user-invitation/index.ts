@@ -23,6 +23,78 @@ interface InvitationRequest {
   invitedBy: string;
 }
 
+// Rate Limiting Function
+async function checkRateLimit(
+  supabase: any,
+  identifier: string,
+  endpoint: string,
+  maxRequests: number = 10,
+  windowMinutes: number = 15
+): Promise<{ allowed: boolean; remaining: number }> {
+  const windowStart = new Date();
+  windowStart.setMinutes(windowStart.getMinutes() - windowMinutes);
+
+  try {
+    // البحث عن السجلات الحالية
+    const { data: existing, error: fetchError } = await supabase
+      .from('rate_limit_tracking')
+      .select('*')
+      .eq('identifier', identifier)
+      .eq('endpoint', endpoint)
+      .gte('window_start', windowStart.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (fetchError) {
+      console.error('Rate limit fetch error:', fetchError);
+      return { allowed: true, remaining: maxRequests };
+    }
+
+    if (!existing || existing.length === 0) {
+      // إنشاء سجل جديد
+      const { error: insertError } = await supabase
+        .from('rate_limit_tracking')
+        .insert({
+          identifier,
+          endpoint,
+          request_count: 1,
+          window_start: new Date().toISOString()
+        });
+
+      if (insertError) {
+        console.error('Rate limit insert error:', insertError);
+      }
+
+      return { allowed: true, remaining: maxRequests - 1 };
+    }
+
+    const record = existing[0];
+    const currentCount = record.request_count || 0;
+
+    if (currentCount >= maxRequests) {
+      return { allowed: false, remaining: 0 };
+    }
+
+    // تحديث العداد
+    const { error: updateError } = await supabase
+      .from('rate_limit_tracking')
+      .update({ 
+        request_count: currentCount + 1,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', record.id);
+
+    if (updateError) {
+      console.error('Rate limit update error:', updateError);
+    }
+
+    return { allowed: true, remaining: maxRequests - currentCount - 1 };
+  } catch (error) {
+    console.error('Rate limiting error:', error);
+    return { allowed: true, remaining: maxRequests };
+  }
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -81,6 +153,34 @@ const handler = async (req: Request): Promise<Response> => {
         {
           status: 403,
           headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Rate Limiting Check
+    const rateLimitResult = await checkRateLimit(
+      supabaseClient,
+      user.id,
+      'send-user-invitation',
+      10, // 10 requests
+      15  // per 15 minutes
+    );
+
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({
+          error: 'تجاوز الحد المسموح',
+          message: 'لقد تجاوزت الحد المسموح من الطلبات. يرجى المحاولة بعد 15 دقيقة',
+          remaining: 0
+        }),
+        {
+          status: 429,
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(Date.now() + 15 * 60 * 1000).toISOString()
+          }
         }
       );
     }
@@ -229,11 +329,15 @@ const handler = async (req: Request): Promise<Response> => {
         success: true,
         userId: newUser.user?.id,
         message: "تم إرسال الدعوة بنجاح",
+        rateLimit: {
+          remaining: rateLimitResult.remaining
+        }
       }),
       {
         status: 200,
         headers: {
           "Content-Type": "application/json",
+          'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
           ...corsHeaders,
         },
       }

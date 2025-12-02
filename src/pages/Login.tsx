@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Globe, Lock, Mail, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Login() {
   const [isSignup, setIsSignup] = useState(false);
@@ -66,6 +67,18 @@ export default function Login() {
       if (result.success) {
         navigate('/');
       } else {
+        // تسجيل محاولة الدخول الفاشلة
+        try {
+          await supabase.rpc('log_failed_login_attempt', {
+            _email: email,
+            _error_message: result.error || 'Invalid credentials',
+            _ip_address: null, // سيتم جمعها من الـ edge function إذا لزم الأمر
+            _user_agent: navigator.userAgent
+          });
+        } catch (logError) {
+          console.error('Failed to log failed login attempt:', logError);
+        }
+        
         toast({
           variant: 'destructive',
           title: t('error'),
