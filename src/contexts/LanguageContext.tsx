@@ -280,6 +280,56 @@ const translations = {
     exportExcel: 'Export Excel',
     exportCSV: 'Export CSV',
     monthlyTrends: 'Monthly Trends',
+    
+    // Navigation
+    home: 'Home',
+    maintenance: 'Maintenance',
+    installApp: 'Install App',
+    auditLog: 'Audit Log',
+    checkingUpdates: 'Checking updates',
+    noUpdates: 'No updates available',
+    updateAvailable: 'Update available',
+    pageWillReload: 'Page will reload to apply update...',
+    youUsingLatest: 'You are using the latest version',
+    serviceWorkerNotRegistered: 'Service Worker not registered',
+    notSupported: 'Not supported',
+    browserNotSupport: 'Your browser does not support Service Worker',
+    updateCheckFailed: 'Failed to check for updates',
+    forceUpdate: 'Update',
+    
+    // Archive Files
+    archiveFiles: 'Archive Files',
+    archiveFilesManagement: 'Archive Files Management',
+    addArchiveFile: 'Add Archive File',
+    archiveNumber: 'Archive Number',
+    archiveDescription: 'Description',
+    declarationsCount: 'Declarations Count',
+    createdAt: 'Created At',
+    noArchiveFiles: 'No archive files',
+    addFirstArchiveFile: 'Add your first archive file',
+    enterArchiveNumber: 'Enter archive number',
+    enterDescription: 'Enter description (optional)',
+    add: 'Add',
+    adding: 'Adding...',
+    archiveFileAdded: 'Archive file added successfully',
+    archiveFileDeleted: 'Archive file deleted successfully',
+    archiveFileExists: 'Archive number already exists',
+    cannotDeleteArchive: 'Cannot delete archive file with linked declarations',
+    confirmDeleteArchive: 'Are you sure you want to delete this archive file?',
+    unknown: 'Unknown',
+    noRecentDeclarations: 'No recent declarations',
+    
+    // Manage Page Extended
+    trashBin: 'Trash Bin',
+    allSendersFilter: 'All Senders',
+    exportExcelBtn: 'Export Excel',
+    exportPDFBtn: 'Export PDF',
+    manageArchiveFiles: 'Manage archive files and declarations',
+    movedToTrash: 'Declaration moved to trash',
+    alreadyDeleted: 'Declaration already deleted',
+    
+    // Maintenance
+    maintenanceSystem: 'Maintenance System',
   },
   ar: {
     // Navigation
@@ -552,6 +602,56 @@ const translations = {
     exportExcel: 'تصدير Excel',
     exportCSV: 'تصدير CSV',
     monthlyTrends: 'الاتجاهات الشهرية',
+    
+    // Navigation
+    home: 'الرئيسية',
+    maintenance: 'الصيانة',
+    installApp: 'تثبيت التطبيق',
+    auditLog: 'سجل التدقيق',
+    checkingUpdates: 'جاري التحديث',
+    noUpdates: 'لا توجد تحديثات',
+    updateAvailable: 'تحديث متاح',
+    pageWillReload: 'سيتم إعادة تحميل الصفحة لتطبيق التحديث...',
+    youUsingLatest: 'أنت تستخدم أحدث إصدار من التطبيق',
+    serviceWorkerNotRegistered: 'Service Worker غير مسجل',
+    notSupported: 'غير مدعوم',
+    browserNotSupport: 'متصفحك لا يدعم ميزة Service Worker',
+    updateCheckFailed: 'فشل التحقق من التحديثات',
+    forceUpdate: 'تحديث',
+    
+    // Archive Files
+    archiveFiles: 'ملفات الأرشيف',
+    archiveFilesManagement: 'إدارة ملفات الأرشيف',
+    addArchiveFile: 'إضافة ملف أرشيف',
+    archiveNumber: 'رقم الأرشيف',
+    archiveDescription: 'الوصف',
+    declarationsCount: 'عدد الإقرارات',
+    createdAt: 'تاريخ الإنشاء',
+    noArchiveFiles: 'لا توجد ملفات أرشيف',
+    addFirstArchiveFile: 'أضف أول ملف أرشيف',
+    enterArchiveNumber: 'أدخل رقم الأرشيف',
+    enterDescription: 'أدخل الوصف (اختياري)',
+    add: 'إضافة',
+    adding: 'جاري الإضافة...',
+    archiveFileAdded: 'تمت إضافة ملف الأرشيف بنجاح',
+    archiveFileDeleted: 'تم حذف ملف الأرشيف بنجاح',
+    archiveFileExists: 'رقم الأرشيف موجود بالفعل',
+    cannotDeleteArchive: 'لا يمكن حذف ملف أرشيف مرتبط بإقرارات',
+    confirmDeleteArchive: 'هل أنت متأكد من حذف ملف الأرشيف هذا؟',
+    unknown: 'غير معروف',
+    noRecentDeclarations: 'لا توجد إقرارات حديثة',
+    
+    // Manage Page Extended
+    trashBin: 'سلة المحذوفات',
+    allSendersFilter: 'جميع المرسلين',
+    exportExcelBtn: 'تصدير Excel',
+    exportPDFBtn: 'تصدير PDF',
+    manageArchiveFiles: 'إدارة ملفات الأرشيف والإقرارات',
+    movedToTrash: 'تم نقل الإقرار إلى سلة المحذوفات',
+    alreadyDeleted: 'الإقرار محذوف بالفعل',
+    
+    // Maintenance
+    maintenanceSystem: 'نظام الصيانة',
   },
 };
 

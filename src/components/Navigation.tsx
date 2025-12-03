@@ -55,8 +55,8 @@ export function Navigation() {
           await registration.update();
           
           toast({
-            title: 'جاري التحديث',
-            description: 'يتم فحص التحديثات...',
+            title: t('checkingUpdates'),
+            description: t('checkingUpdates') + '...',
           });
           
           // انتظار التحديث الجديد
@@ -81,8 +81,8 @@ export function Navigation() {
           
           if (hasUpdate) {
             toast({
-              title: 'تحديث متاح',
-              description: 'سيتم إعادة تحميل الصفحة لتطبيق التحديث...',
+              title: t('updateAvailable'),
+              description: t('pageWillReload'),
             });
             
             setTimeout(() => {
@@ -90,24 +90,24 @@ export function Navigation() {
             }, 1000);
           } else {
             toast({
-              title: 'لا توجد تحديثات',
-              description: 'أنت تستخدم أحدث إصدار من التطبيق',
+              title: t('noUpdates'),
+              description: t('youUsingLatest'),
             });
             setIsUpdating(false);
           }
         } else {
           toast({
             variant: 'destructive',
-            title: 'خطأ',
-            description: 'Service Worker غير مسجل',
+            title: t('error'),
+            description: t('serviceWorkerNotRegistered'),
           });
           setIsUpdating(false);
         }
       } else {
         toast({
           variant: 'destructive',
-          title: 'غير مدعوم',
-          description: 'متصفحك لا يدعم ميزة Service Worker',
+          title: t('notSupported'),
+          description: t('browserNotSupport'),
         });
         setIsUpdating(false);
       }
@@ -115,26 +115,26 @@ export function Navigation() {
       console.error('Error forcing update:', error);
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: 'فشل التحقق من التحديثات',
+        title: t('error'),
+        description: t('updateCheckFailed'),
       });
       setIsUpdating(false);
     }
   };
 
   const navItems = [
-    { path: '/', icon: LayoutDashboard, label: 'الرئيسية' },
-    { path: '/dashboard', icon: FileText, label: 'الإقرارات' },
-    { path: '/manage', icon: FolderOpen, label: 'الإدارة' },
-    { path: '/maintenance', icon: Wrench, label: 'الصيانة' },
-    { path: '/reports', icon: BarChart3, label: 'التقارير' },
+    { path: '/', icon: LayoutDashboard, labelKey: 'home' },
+    { path: '/dashboard', icon: FileText, labelKey: 'declarations' },
+    { path: '/manage', icon: FolderOpen, labelKey: 'manage' },
+    { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
+    { path: '/reports', icon: BarChart3, labelKey: 'reports' },
   ];
 
   // Add admin dashboard link for admins only
   const allNavItems = user?.role === 'admin' 
     ? [
         ...navItems, 
-        { path: '/admin', icon: Shield, label: t('adminDashboard') }
+        { path: '/admin', icon: Shield, labelKey: 'adminDashboard' }
       ]
     : navItems;
 
@@ -162,7 +162,7 @@ export function Navigation() {
                     className="gap-2"
                   >
                     <Icon className="w-4 h-4" />
-                    {item.label}
+                    {t(item.labelKey)}
                   </Button>
                 </Link>
               );
@@ -178,10 +178,10 @@ export function Navigation() {
               onClick={handleForceUpdate}
               disabled={isUpdating}
               className="gap-2"
-              title="فحص التحديثات"
+              title={t('checkingUpdates')}
             >
               <RefreshCw className={`w-4 h-4 ${isUpdating ? 'animate-spin' : ''}`} />
-              <span className="hidden md:inline">تحديث</span>
+              <span className="hidden md:inline">{t('forceUpdate')}</span>
             </Button>
 
             {/* Language Toggle */}
@@ -213,22 +213,22 @@ export function Navigation() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={() => navigate('/profile')}>
-                  <User className="w-4 h-4 mr-2" />
+                  <User className="w-4 h-4 me-2" />
                   {t('profile')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/install')}>
-                  <Download className="w-4 h-4 mr-2" />
-                  تثبيت التطبيق
+                  <Download className="w-4 h-4 me-2" />
+                  {t('installApp')}
                 </DropdownMenuItem>
                 {user?.role === 'admin' && (
                   <DropdownMenuItem onClick={() => navigate('/audit-logs')}>
-                    <History className="w-4 h-4 mr-2" />
-                    سجل التدقيق
+                    <History className="w-4 h-4 me-2" />
+                    {t('auditLog')}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                  <LogOut className="w-4 h-4 mr-2" />
+                  <LogOut className="w-4 h-4 me-2" />
                   {t('logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -248,7 +248,7 @@ export function Navigation() {
                   className="gap-2"
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="text-xs">{item.label}</span>
+                  <span className="text-xs">{t(item.labelKey)}</span>
                 </Button>
               </Link>
             );
