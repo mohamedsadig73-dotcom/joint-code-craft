@@ -24,8 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FolderOpen, Plus, Trash2, FileText } from 'lucide-react';
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
+import { toGregorianDateTime, sortArchiveNumbers } from '@/utils/dateUtils';
 
 interface ArchiveFile {
   id: string;
@@ -58,8 +57,7 @@ export function ArchiveFilesManagement() {
       // جلب ملفات الأرشيف
       const { data: files, error } = await supabase
         .from('archive_files')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
 
       if (error) throw error;
 
@@ -75,7 +73,9 @@ export function ArchiveFilesManagement() {
         })
       );
 
-      setArchiveFiles(filesWithCount);
+      // ترتيب الملفات رقمياً (S1, S2, ... S10)
+      const sortedFiles = sortArchiveNumbers(filesWithCount);
+      setArchiveFiles(sortedFiles);
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -271,7 +271,7 @@ export function ArchiveFilesManagement() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {format(new Date(file.created_at), 'dd/MM/yyyy HH:mm', { locale: ar })}
+                    {toGregorianDateTime(file.created_at)}
                   </TableCell>
                   <TableCell>
                     <Button

@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
-import { toGregorianDateLong } from '@/utils/dateUtils';
+import { toGregorianDateLong, sortArchiveNumbers } from '@/utils/dateUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -99,11 +99,13 @@ export default function DeclarationDetails() {
     try {
       const { data, error } = await supabase
         .from('archive_files')
-        .select('id, archive_number, description')
-        .order('archive_number', { ascending: true });
+        .select('id, archive_number, description');
 
       if (error) throw error;
-      setArchiveFiles(data || []);
+      
+      // Sort archive files numerically (S1, S2, ... S10 instead of S1, S10, S11)
+      const sortedFiles = sortArchiveNumbers(data || []);
+      setArchiveFiles(sortedFiles);
     } catch (error: any) {
       console.error('Error loading archive files:', error);
     }
