@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +38,7 @@ interface ArchiveFile {
 }
 
 export function ArchiveFilesManagement() {
+  const { t } = useLanguage();
   const [archiveFiles, setArchiveFiles] = useState<ArchiveFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -79,8 +81,8 @@ export function ArchiveFilesManagement() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: 'فشل تحميل ملفات الأرشيف',
+        title: t('error'),
+        description: t('loading') + ' ' + t('archiveFiles'),
       });
       console.error('Error loading archive files:', error);
     } finally {
@@ -94,8 +96,8 @@ export function ArchiveFilesManagement() {
     if (!archiveNumber.trim()) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: 'يرجى إدخال رقم الملف',
+        title: t('error'),
+        description: t('enterArchiveNumber'),
       });
       return;
     }
@@ -114,8 +116,8 @@ export function ArchiveFilesManagement() {
       if (error) throw error;
 
       toast({
-        title: 'نجح',
-        description: 'تم إنشاء ملف الأرشيف بنجاح',
+        title: t('success'),
+        description: t('archiveFileAdded'),
       });
 
       setIsDialogOpen(false);
@@ -125,8 +127,8 @@ export function ArchiveFilesManagement() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: error.message || 'فشل إنشاء ملف الأرشيف',
+        title: t('error'),
+        description: error.message || t('archiveFileExists'),
       });
       console.error('Error creating archive file:', error);
     } finally {
@@ -134,8 +136,8 @@ export function ArchiveFilesManagement() {
     }
   };
 
-  const handleDeleteArchiveFile = async (id: string, archiveNumber: string) => {
-    if (!confirm(`هل أنت متأكد من حذف ملف الأرشيف "${archiveNumber}"؟\nسيتم إلغاء ربط جميع الإقرارات المرتبطة به.`)) {
+  const handleDeleteArchiveFile = async (id: string, archiveNum: string) => {
+    if (!confirm(t('confirmDeleteArchive'))) {
       return;
     }
 
@@ -148,16 +150,16 @@ export function ArchiveFilesManagement() {
       if (error) throw error;
 
       toast({
-        title: 'نجح',
-        description: 'تم حذف ملف الأرشيف بنجاح',
+        title: t('success'),
+        description: t('archiveFileDeleted'),
       });
 
       loadArchiveFiles();
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: 'فشل حذف ملف الأرشيف',
+        title: t('error'),
+        description: t('cannotDeleteArchive'),
       });
       console.error('Error deleting archive file:', error);
     }
@@ -170,10 +172,10 @@ export function ArchiveFilesManagement() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <FolderOpen className="w-5 h-5" />
-              ملفات الأرشيف
+              {t('archiveFiles')}
             </CardTitle>
             <CardDescription>
-              إدارة ملفات الأرشيف التي تحتوي على عدة إقرارات
+              {t('archiveFilesManagement')}
             </CardDescription>
           </div>
           
@@ -181,36 +183,36 @@ export function ArchiveFilesManagement() {
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="w-4 h-4" />
-                ملف جديد
+                {t('addArchiveFile')}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>إنشاء ملف أرشيف جديد</DialogTitle>
+                <DialogTitle>{t('addArchiveFile')}</DialogTitle>
                 <DialogDescription>
-                  أدخل رقم الملف ووصفاً اختيارياً
+                  {t('enterArchiveNumber')}
                 </DialogDescription>
               </DialogHeader>
               
               <form onSubmit={handleCreateArchiveFile} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="archive_number">رقم الملف *</Label>
+                  <Label htmlFor="archive_number">{t('archiveNumber')} *</Label>
                   <Input
                     id="archive_number"
                     value={archiveNumber}
                     onChange={(e) => setArchiveNumber(e.target.value)}
-                    placeholder="مثال: A001"
+                    placeholder="S1, S2, ..."
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">الوصف</Label>
+                  <Label htmlFor="description">{t('archiveDescription')}</Label>
                   <Textarea
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="وصف الملف (اختياري)"
+                    placeholder={t('enterDescription')}
                     rows={3}
                   />
                 </div>
@@ -222,10 +224,10 @@ export function ArchiveFilesManagement() {
                     onClick={() => setIsDialogOpen(false)}
                     disabled={submitting}
                   >
-                    إلغاء
+                    {t('cancel')}
                   </Button>
                   <Button type="submit" disabled={submitting}>
-                    {submitting ? 'جاري الإنشاء...' : 'إنشاء'}
+                    {submitting ? t('adding') : t('add')}
                   </Button>
                 </div>
               </form>
@@ -237,22 +239,22 @@ export function ArchiveFilesManagement() {
       <CardContent>
         {loading ? (
           <div className="text-center py-8 text-muted-foreground">
-            جاري التحميل...
+            {t('loading')}
           </div>
         ) : archiveFiles.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>لا توجد ملفات أرشيف</p>
+            <p>{t('noArchiveFiles')}</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>رقم الملف</TableHead>
-                <TableHead>الوصف</TableHead>
-                <TableHead>عدد الإقرارات</TableHead>
-                <TableHead>تاريخ الإنشاء</TableHead>
-                <TableHead>الإجراءات</TableHead>
+                <TableHead>{t('archiveNumber')}</TableHead>
+                <TableHead>{t('archiveDescription')}</TableHead>
+                <TableHead>{t('declarationsCount')}</TableHead>
+                <TableHead>{t('createdAt')}</TableHead>
+                <TableHead>{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

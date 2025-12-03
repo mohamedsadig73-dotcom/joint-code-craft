@@ -2,20 +2,22 @@ import { useNavigate } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Wrench, BarChart3, Users, ArrowLeft } from 'lucide-react';
+import { FileText, Wrench, BarChart3, Users, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const isAdmin = user?.role === 'admin';
   const isManager = user?.role === 'manager';
 
   const systems = [
     {
       id: 'declarations',
-      title: 'نظام إدارة الإقرارات',
-      description: 'إدارة إقرارات الدخول والخروج، متابعة الحالات، والتوقيعات الإلكترونية',
+      titleKey: 'systemTitle',
+      descriptionKey: 'streamlineDesc',
       icon: FileText,
       color: 'from-blue-500 to-blue-600',
       path: '/dashboard',
@@ -23,8 +25,8 @@ export default function Home() {
     },
     {
       id: 'maintenance',
-      title: 'نظام الصيانة الدورية',
-      description: 'إدارة جداول الصيانة، الأصول، الموردين، والتقارير الشاملة',
+      titleKey: 'maintenanceSystem',
+      descriptionKey: 'maintenanceSystem',
       icon: Wrench,
       color: 'from-green-500 to-green-600',
       path: '/maintenance',
@@ -32,8 +34,8 @@ export default function Home() {
     },
     {
       id: 'reports',
-      title: 'التقارير والإحصائيات',
-      description: 'تقارير تفصيلية وتحليلات شاملة عن الإقرارات والصيانة',
+      titleKey: 'reportsTitle',
+      descriptionKey: 'reportsSubtitle',
       icon: BarChart3,
       color: 'from-purple-500 to-purple-600',
       path: '/reports',
@@ -41,8 +43,8 @@ export default function Home() {
     },
     {
       id: 'admin',
-      title: 'لوحة الإدارة',
-      description: 'إدارة المستخدمين، الصلاحيات، والإعدادات العامة للنظام',
+      titleKey: 'adminDashboardTitle',
+      descriptionKey: 'adminDashboardSubtitle',
       icon: Users,
       color: 'from-red-500 to-red-600',
       path: '/admin',
@@ -51,6 +53,7 @@ export default function Home() {
   ];
 
   const availableSystems = systems.filter(system => system.available);
+  const ArrowIcon = language === 'ar' ? ArrowLeft : ArrowRight;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -60,14 +63,14 @@ export default function Home() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">
-            مرحباً بك في نظام إدارة المخزن
+            {t('welcome')}
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            نظام متكامل لإدارة الإقرارات والصيانة الدورية بكفاءة وسهولة
+            {t('streamlineDesc')}
           </p>
           {user && (
             <p className="mt-4 text-lg">
-              <span className="text-muted-foreground">مرحباً، </span>
+              <span className="text-muted-foreground">{t('welcome')}, </span>
               <span className="font-semibold text-primary">{user.email}</span>
             </p>
           )}
@@ -89,11 +92,11 @@ export default function Home() {
                   </div>
                   
                   <h2 className="text-2xl font-bold mb-3 group-hover:text-primary transition-colors">
-                    {system.title}
+                    {t(system.titleKey)}
                   </h2>
                   
                   <p className="text-muted-foreground mb-6 leading-relaxed">
-                    {system.description}
+                    {t(system.descriptionKey)}
                   </p>
                   
                   <Button
@@ -104,8 +107,8 @@ export default function Home() {
                       navigate(system.path);
                     }}
                   >
-                    الدخول إلى النظام
-                    <ArrowLeft className="w-4 h-4" />
+                    {t('view')}
+                    <ArrowIcon className="w-4 h-4" />
                   </Button>
                 </div>
               </Card>
@@ -115,45 +118,24 @@ export default function Home() {
 
         {/* Quick Stats */}
         <Card className="glass-card border-border/50 p-8">
-          <h3 className="text-xl font-semibold mb-6">نظرة سريعة</h3>
+          <h3 className="text-xl font-semibold mb-6">{t('overview')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-2">
                 {isAdmin || isManager ? '2' : '1'}
               </div>
-              <div className="text-sm text-muted-foreground">الأنظمة المتاحة</div>
+              <div className="text-sm text-muted-foreground">{t('dashboard')}</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-green-500 mb-2">✓</div>
-              <div className="text-sm text-muted-foreground">نشط ومتصل</div>
+              <div className="text-sm text-muted-foreground">{t('success')}</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-blue-500 mb-2">24/7</div>
-              <div className="text-sm text-muted-foreground">متاح دائماً</div>
+              <div className="text-sm text-muted-foreground">{t('loading')}</div>
             </div>
           </div>
         </Card>
-
-        {/* Features */}
-        <div className="mt-12 text-center">
-          <h3 className="text-2xl font-semibold mb-6">مميزات النظام</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[
-              { title: 'واجهة سهلة الاستخدام', icon: '🎨' },
-              { title: 'تقارير تفصيلية', icon: '📊' },
-              { title: 'إشعارات فورية', icon: '🔔' },
-              { title: 'آمن ومحمي', icon: '🔒' },
-            ].map((feature, idx) => (
-              <div
-                key={idx}
-                className="p-6 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
-              >
-                <div className="text-4xl mb-3">{feature.icon}</div>
-                <div className="font-medium">{feature.title}</div>
-              </div>
-            ))}
-          </div>
-        </div>
       </main>
     </div>
   );

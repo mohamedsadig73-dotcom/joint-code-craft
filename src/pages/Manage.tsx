@@ -352,7 +352,7 @@ export default function Manage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">{t('declarations')}</h1>
-          <p className="text-muted-foreground">إدارة الإقرارات وملفات الأرشيف</p>
+          <p className="text-muted-foreground">{t('manageArchiveFiles')}</p>
         </div>
 
         {/* Main Tabs */}
@@ -360,11 +360,11 @@ export default function Manage() {
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="declarations" className="gap-2">
               <FileText className="w-4 h-4" />
-              الإقرارات
+              {t('declarations')}
             </TabsTrigger>
             <TabsTrigger value="archive" className="gap-2">
               <FolderOpen className="w-4 h-4" />
-              ملفات الأرشيف
+              {t('archiveFiles')}
             </TabsTrigger>
           </TabsList>
 
@@ -388,7 +388,7 @@ export default function Manage() {
                   disabled={filteredDeclarations.length === 0}
                 >
                   <FileSpreadsheet className="w-4 h-4" />
-                  تصدير Excel
+                  {t('exportExcelBtn')}
                 </Button>
                 <Button
                   variant="outline"
@@ -397,7 +397,7 @@ export default function Manage() {
                   disabled={filteredDeclarations.length === 0}
                 >
                   <FileText className="w-4 h-4" />
-                  تصدير PDF
+                  {t('exportPDFBtn')}
                 </Button>
               </div>
             </div>
@@ -426,14 +426,14 @@ export default function Manage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('allStatuses')}</SelectItem>
-                  <SelectItem value="draft">مسودة</SelectItem>
-                  <SelectItem value="pending_warehouse_signature">بانتظار توقيع المخزن</SelectItem>
-                  <SelectItem value="warehouse_signed">موقّع من المخزن</SelectItem>
-                  <SelectItem value="sent_to_admin_office">مُرسل إلى المكتب الإداري</SelectItem>
-                  <SelectItem value="received_by_admin_office">مستلم من المكتب الإداري</SelectItem>
-                  <SelectItem value="returned_to_warehouse">مُعاد إلى المخزن للأرشفة</SelectItem>
+                  <SelectItem value="draft">{t('draft')}</SelectItem>
+                  <SelectItem value="pending_warehouse_signature">{t('pendingWarehouseSignature')}</SelectItem>
+                  <SelectItem value="warehouse_signed">{t('warehouseSigned')}</SelectItem>
+                  <SelectItem value="sent_to_admin_office">{t('sentToAdminOffice')}</SelectItem>
+                  <SelectItem value="received_by_admin_office">{t('receivedByAdminOffice')}</SelectItem>
+                  <SelectItem value="returned_to_warehouse">{t('returnedToWarehouse')}</SelectItem>
                   <SelectItem value="archived">{t('archived')}</SelectItem>
-                  <SelectItem value="rejected">مرفوض / يحتاج إلى تصحيح</SelectItem>
+                  <SelectItem value="rejected">{t('rejected')}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -448,7 +448,7 @@ export default function Manage() {
                   onClick={() => navigate('/trash')}
                 >
                   <Archive className="w-4 h-4" />
-                  سلة المحذوفات
+                  {t('trashBin')}
                 </Button>
               </div>
             </div>
@@ -458,10 +458,10 @@ export default function Manage() {
               {/* Sender Filter */}
               <Select value={senderFilter} onValueChange={setSenderFilter}>
                 <SelectTrigger className="w-full md:w-48 glass-card border-border/50">
-                  <SelectValue placeholder="جميع المرسلين" />
+                  <SelectValue placeholder={t('allSendersFilter')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">جميع المرسلين</SelectItem>
+                  <SelectItem value="all">{t('allSendersFilter')}</SelectItem>
                   {profiles.map((profile) => (
                     <SelectItem key={profile.id} value={profile.id}>
                       {profile.username}
@@ -476,12 +476,12 @@ export default function Manage() {
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full md:w-[200px] justify-start text-left font-normal glass-card border-border/50",
+                      "w-full md:w-[200px] justify-start font-normal glass-card border-border/50",
                       !dateFrom && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateFrom ? toGregorianDateLong(dateFrom) : "من تاريخ"}
+                    <CalendarIcon className="me-2 h-4 w-4" />
+                    {dateFrom ? toGregorianDateLong(dateFrom) : t('from')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -501,12 +501,12 @@ export default function Manage() {
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full md:w-[200px] justify-start text-left font-normal glass-card border-border/50",
+                      "w-full md:w-[200px] justify-start font-normal glass-card border-border/50",
                       !dateTo && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateTo ? toGregorianDateLong(dateTo) : "إلى تاريخ"}
+                    <CalendarIcon className="me-2 h-4 w-4" />
+                    {dateTo ? toGregorianDateLong(dateTo) : t('to')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -528,7 +528,7 @@ export default function Manage() {
                   className="gap-2"
                 >
                   <X className="w-4 h-4" />
-                  مسح الفلاتر
+                  {t('clearFilters')}
                 </Button>
               )}
             </div>
@@ -548,14 +548,14 @@ export default function Manage() {
         {/* Statistics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
-            { label: 'مسودة', value: stats.draft, color: 'text-gray-700 dark:text-gray-300' },
-            { label: 'بانتظار المخزن', value: stats.pending_warehouse_signature, color: 'text-yellow-700 dark:text-yellow-300' },
-            { label: 'موقّع', value: stats.warehouse_signed, color: 'text-blue-700 dark:text-blue-300' },
-            { label: t('archived'), value: stats.archived, color: 'text-green-700 dark:text-green-300' },
+            { labelKey: 'draft', value: stats.draft, color: 'text-gray-700 dark:text-gray-300' },
+            { labelKey: 'pendingWarehouseSignature', value: stats.pending_warehouse_signature, color: 'text-yellow-700 dark:text-yellow-300' },
+            { labelKey: 'warehouseSigned', value: stats.warehouse_signed, color: 'text-blue-700 dark:text-blue-300' },
+            { labelKey: 'archived', value: stats.archived, color: 'text-green-700 dark:text-green-300' },
           ].map((stat) => (
-            <Card key={stat.label} className="glass-card border-border/50 p-4 text-center">
+            <Card key={stat.labelKey} className="glass-card border-border/50 p-4 text-center">
               <div className={`text-2xl font-bold mb-1 ${stat.color}`}>{stat.value}</div>
-              <div className="text-sm text-muted-foreground">{stat.label}</div>
+              <div className="text-sm text-muted-foreground">{t(stat.labelKey)}</div>
             </Card>
           ))}
         </div>
@@ -574,10 +574,10 @@ export default function Manage() {
                 <TableHead>{t('declarationId')}</TableHead>
                 <TableHead>{t('type')}</TableHead>
                 <TableHead>{t('sender')}</TableHead>
-                <TableHead>رقم الأرشفة</TableHead>
+                <TableHead>{t('archiveNumber')}</TableHead>
                 <TableHead>{t('status')}</TableHead>
                 <TableHead>{t('createdDate')}</TableHead>
-                <TableHead className="text-right">{t('actions')}</TableHead>
+                <TableHead>{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -590,7 +590,7 @@ export default function Manage() {
               ) : filteredDeclarations.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8">
-                    لا توجد إقرارات
+                    {t('noDeclarations')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -604,7 +604,7 @@ export default function Manage() {
                     </TableCell>
                     <TableCell className="font-medium">{declaration.id}</TableCell>
                     <TableCell>{declaration.type}</TableCell>
-                    <TableCell>{declaration.sender?.username || 'غير معروف'}</TableCell>
+                    <TableCell>{declaration.sender?.username || t('unknown')}</TableCell>
                     <TableCell className="font-mono text-sm">
                       {declaration.archive_number || <span className="text-muted-foreground">-</span>}
                     </TableCell>
@@ -628,7 +628,7 @@ export default function Manage() {
                           variant="ghost" 
                           size="icon"
                           onClick={() => navigate(`/declaration/${declaration.id}`)}
-                          title="تحديث الحالة"
+                          title={t('updateStatus')}
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -638,7 +638,7 @@ export default function Manage() {
                             size="icon" 
                             className="text-destructive hover:text-destructive"
                             onClick={() => handleDelete(declaration)}
-                            title="حذف"
+                            title={t('delete')}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>

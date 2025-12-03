@@ -130,7 +130,7 @@ export default function Dashboard() {
 
       toast({
         title: t('success'),
-        description: 'تم حذف الإقرار بنجاح',
+        description: t('movedToTrash'),
       });
       loadDashboardData();
     } catch (error: any) {
@@ -180,21 +180,21 @@ export default function Dashboard() {
       const exportData = (data || []).map(dec => ({
         id: dec.id,
         type: dec.type,
-        sender: dec.sender?.username || 'غير معروف',
+        sender: dec.sender?.username || t('unknown'),
         status: t(dec.status),
         created_at: toGregorianDate(dec.created_at),
       }));
 
-      exportDeclarationsToExcel(exportData, 'جميع_الإقرارات');
+      exportDeclarationsToExcel(exportData, t('declarations'));
 
       toast({
         title: t('success'),
-        description: 'تم تصدير جميع البيانات إلى Excel',
+        description: t('exportExcel'),
       });
     } catch (error: any) {
       toast({
         title: t('error'),
-        description: 'فشل تصدير البيانات',
+        description: t('error'),
         variant: 'destructive',
       });
     }
@@ -208,10 +208,10 @@ export default function Dashboard() {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 gradient-text">
-            نظام إدارة الإقرارات
+            {t('systemTitle')}
           </h1>
           <p className="text-muted-foreground">
-            {t('welcome')}, {user?.username}! - متابعة وإدارة إقرارات الدخول والخروج
+            {t('welcome')}, {user?.username}! - {t('dashboardSubtitle')}
           </p>
         </div>
 
@@ -299,7 +299,7 @@ export default function Dashboard() {
                     <TableHead>{t('sender')}</TableHead>
                     <TableHead>{t('status')}</TableHead>
                     <TableHead>{t('createdDate')}</TableHead>
-                    <TableHead className="text-right">{t('actions')}</TableHead>
+                    <TableHead>{t('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -312,7 +312,7 @@ export default function Dashboard() {
                   ) : recentDeclarations.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8">
-                        لا توجد إقرارات حديثة
+                        {t('noRecentDeclarations')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -320,7 +320,7 @@ export default function Dashboard() {
                       <TableRow key={declaration.id}>
                         <TableCell className="font-medium">{declaration.id}</TableCell>
                         <TableCell>{declaration.type}</TableCell>
-                        <TableCell>{declaration.sender?.username || 'غير معروف'}</TableCell>
+                        <TableCell>{declaration.sender?.username || t('unknown')}</TableCell>
                         <TableCell>
                           <Badge className={statusColors[declaration.status as keyof typeof statusColors]}>
                             {t(declaration.status)}
