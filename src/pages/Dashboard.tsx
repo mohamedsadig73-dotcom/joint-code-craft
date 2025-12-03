@@ -312,7 +312,7 @@ export default function Dashboard() {
                   ) : recentDeclarations.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8">
-                        No recent declarations
+                        لا توجد إقرارات حديثة
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -320,7 +320,7 @@ export default function Dashboard() {
                       <TableRow key={declaration.id}>
                         <TableCell className="font-medium">{declaration.id}</TableCell>
                         <TableCell>{declaration.type}</TableCell>
-                        <TableCell>{declaration.sender?.username || 'Unknown'}</TableCell>
+                        <TableCell>{declaration.sender?.username || 'غير معروف'}</TableCell>
                         <TableCell>
                           <Badge className={statusColors[declaration.status as keyof typeof statusColors]}>
                             {t(declaration.status)}

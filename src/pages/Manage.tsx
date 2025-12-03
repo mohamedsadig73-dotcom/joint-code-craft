@@ -32,8 +32,10 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Filter, Download, Edit, Trash2, Eye, Plus, CalendarIcon, X, FileSpreadsheet, FileText, Archive } from 'lucide-react';
+import { Search, Filter, Download, Edit, Trash2, Eye, Plus, CalendarIcon, X, FileSpreadsheet, FileText, Archive, FolderOpen } from 'lucide-react';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+import { ArchiveFilesManagement } from '@/components/ArchiveFilesManagement';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Declaration {
   id: string;
@@ -348,36 +350,57 @@ export default function Manage() {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8 flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{t('declarations')}</h1>
-            <p className="text-muted-foreground">
-              {t('showing')} {filteredDeclarations.length} {t('of')} {declarations.length} {t('results')}
-            </p>
-          </div>
-          
-          {/* Export Buttons */}
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={exportToExcel}
-              className="gap-2"
-              disabled={filteredDeclarations.length === 0}
-            >
-              <FileSpreadsheet className="w-4 h-4" />
-              تصدير Excel
-            </Button>
-            <Button
-              variant="outline"
-              onClick={exportToPDF}
-              className="gap-2"
-              disabled={filteredDeclarations.length === 0}
-            >
-              <FileText className="w-4 h-4" />
-              تصدير PDF
-            </Button>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">{t('declarations')}</h1>
+          <p className="text-muted-foreground">إدارة الإقرارات وملفات الأرشيف</p>
         </div>
+
+        {/* Main Tabs */}
+        <Tabs defaultValue="declarations" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="declarations" className="gap-2">
+              <FileText className="w-4 h-4" />
+              الإقرارات
+            </TabsTrigger>
+            <TabsTrigger value="archive" className="gap-2">
+              <FolderOpen className="w-4 h-4" />
+              ملفات الأرشيف
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Archive Files Tab */}
+          <TabsContent value="archive">
+            <ArchiveFilesManagement />
+          </TabsContent>
+
+          {/* Declarations Tab */}
+          <TabsContent value="declarations" className="space-y-6">
+            {/* Export Buttons */}
+            <div className="flex justify-between items-center">
+              <p className="text-muted-foreground">
+                {t('showing')} {filteredDeclarations.length} {t('of')} {declarations.length} {t('results')}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={exportToExcel}
+                  className="gap-2"
+                  disabled={filteredDeclarations.length === 0}
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  تصدير Excel
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={exportToPDF}
+                  className="gap-2"
+                  disabled={filteredDeclarations.length === 0}
+                >
+                  <FileText className="w-4 h-4" />
+                  تصدير PDF
+                </Button>
+              </div>
+            </div>
 
         {/* Filters and Actions */}
         <Card className="glass-card border-border/50 p-6 mb-6">
@@ -567,7 +590,7 @@ export default function Manage() {
               ) : filteredDeclarations.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8">
-                    No declarations found
+                    لا توجد إقرارات
                   </TableCell>
                 </TableRow>
               ) : (
@@ -581,7 +604,7 @@ export default function Manage() {
                     </TableCell>
                     <TableCell className="font-medium">{declaration.id}</TableCell>
                     <TableCell>{declaration.type}</TableCell>
-                    <TableCell>{declaration.sender?.username || 'Unknown'}</TableCell>
+                    <TableCell>{declaration.sender?.username || 'غير معروف'}</TableCell>
                     <TableCell className="font-mono text-sm">
                       {declaration.archive_number || <span className="text-muted-foreground">-</span>}
                     </TableCell>
@@ -637,6 +660,8 @@ export default function Manage() {
           onConfirm={confirmDelete}
           userRole={user?.role}
         />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
