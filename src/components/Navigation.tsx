@@ -123,9 +123,7 @@ export function Navigation() {
   };
 
   const navItems = [
-    { path: '/', icon: LayoutDashboard, labelKey: 'home' },
-    { path: '/dashboard', icon: FileText, labelKey: 'declarations' },
-    { path: '/manage', icon: FolderOpen, labelKey: 'manage' },
+    { path: '/', icon: LayoutDashboard, labelKey: 'declarations' },
     { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
     { path: '/reports', icon: BarChart3, labelKey: 'reports' },
   ];

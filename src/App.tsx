@@ -15,10 +15,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 const Login = lazy(() => import("./pages/Login"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const Home = lazy(() => import("./pages/Home"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const Manage = lazy(() => import("./pages/Manage"));
 const Trash = lazy(() => import("./pages/Trash"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -75,7 +73,7 @@ function AppRoutes() {
             path="/" 
             element={
               <ProtectedRoute>
-                <Home />
+                <Dashboard />
               </ProtectedRoute>
             } 
           />
@@ -84,14 +82,6 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/manage" 
-            element={
-              <ProtectedRoute>
-                <Manage />
               </ProtectedRoute>
             } 
           />
