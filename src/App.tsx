@@ -21,7 +21,7 @@ const Trash = lazy(() => import("./pages/Trash"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Profile = lazy(() => import("./pages/Profile"));
 const DeclarationDetails = lazy(() => import("./pages/DeclarationDetails"));
-const DeclarationTimeline = lazy(() => import("./pages/DeclarationTimeline"));
+// DeclarationTimeline is now merged into DeclarationDetails
 const Maintenance = lazy(() => import("./pages/Maintenance"));
 const MaintenanceItemDetails = lazy(() => import("./pages/MaintenanceItemDetails"));
 const AuditLogs = lazy(() => import("./pages/AuditLogs"));
@@ -117,13 +117,10 @@ function AppRoutes() {
               </ProtectedRoute>
             } 
           />
+          {/* Timeline route now redirects to declaration details */}
           <Route 
             path="/declaration/:id/timeline" 
-            element={
-              <ProtectedRoute>
-                <DeclarationTimeline />
-              </ProtectedRoute>
-            } 
+            element={<Navigate to="/declaration/:id" replace />} 
           />
           <Route 
             path="/admin" 
