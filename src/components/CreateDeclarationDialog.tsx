@@ -34,9 +34,10 @@ interface CreateDeclarationDialogProps {
   onSuccess?: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  trigger?: React.ReactNode;
 }
 
-export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpenChange }: CreateDeclarationDialogProps) {
+export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpenChange, trigger }: CreateDeclarationDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingNextNumber, setLoadingNextNumber] = useState(false);
@@ -173,10 +174,12 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2">
-          <Plus className="w-4 h-4" />
-          {t('addDeclaration')}
-        </Button>
+        {trigger || (
+          <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2">
+            <Plus className="w-4 h-4" />
+            {t('addDeclaration')}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>

@@ -5,12 +5,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
-import { toGregorianDateLong, sortArchiveNumbers } from '@/utils/dateUtils';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { toGregorianDateLong, toGregorianDateTime, sortArchiveNumbers } from '@/utils/dateUtils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -18,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Calendar, User, FileText, Clock, Archive, Save } from 'lucide-react';
+import { ArrowLeft, Calendar, User, FileText, Clock, Archive, Save, CheckCircle2, Circle, Info, History } from 'lucide-react';
 
 interface ArchiveFile {
   id: string;
@@ -42,6 +44,20 @@ interface DeclarationDetails {
     email: string;
   };
   archive_file?: ArchiveFile;
+}
+
+interface StatusHistoryEntry {
+  id: string;
+  declaration_id: string;
+  old_status: string | null;
+  new_status: string;
+  changed_at: string;
+  changed_by: string;
+  notes: string | null;
+  changer: {
+    username: string;
+    email: string;
+  };
 }
 
 const statusColors = {
@@ -78,15 +94,16 @@ export default function DeclarationDetails() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [declaration, setDeclaration] = useState<DeclarationDetails | null>(null);
+  const [history, setHistory] = useState<StatusHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [selectedArchiveFileId, setSelectedArchiveFileId] = useState<string>('');
   const [archiveFiles, setArchiveFiles] = useState<ArchiveFile[]>([]);
   const [editingArchive, setEditingArchive] = useState(false);
+  const [activeTab, setActiveTab] = useState('details');
 
   useEffect(() => {
-    loadDeclaration();
-    loadArchiveFiles();
+    loadAllData();
   }, [id]);
 
   useEffect(() => {
@@ -95,47 +112,46 @@ export default function DeclarationDetails() {
     }
   }, [declaration]);
 
-  const loadArchiveFiles = async () => {
+  const loadAllData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('archive_files')
-        .select('id, archive_number, description');
+      const [declarationResult, historyResult, archiveFilesResult] = await Promise.all([
+        supabase
+          .from('declarations')
+          .select(`
+            *,
+            sender:profiles!sender_id(username, email),
+            archive_file:archive_files!archive_file_id(id, archive_number, description)
+          `)
+          .eq('id', id)
+          .maybeSingle(),
+        supabase
+          .from('declaration_status_history')
+          .select(`
+            *,
+            changer:profiles!declaration_status_history_changed_by_fkey(username, email)
+          `)
+          .eq('declaration_id', id)
+          .order('changed_at', { ascending: false }),
+        supabase
+          .from('archive_files')
+          .select('id, archive_number, description'),
+      ]);
 
-      if (error) throw error;
-      
-      // Sort archive files numerically (S1, S2, ... S10 instead of S1, S10, S11)
-      const sortedFiles = sortArchiveNumbers(data || []);
-      setArchiveFiles(sortedFiles);
-    } catch (error: any) {
-      console.error('Error loading archive files:', error);
-    }
-  };
+      if (declarationResult.error) throw declarationResult.error;
 
-  const loadDeclaration = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('declarations')
-        .select(`
-          *,
-          sender:profiles!sender_id(username, email),
-          archive_file:archive_files!archive_file_id(id, archive_number, description)
-        `)
-        .eq('id', id)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (!data) {
+      if (!declarationResult.data) {
         toast({
           variant: 'destructive',
           title: 'خطأ',
           description: 'الإقرار غير موجود',
         });
-        navigate('/manage');
+        navigate('/');
         return;
       }
 
-      setDeclaration(data as any);
+      setDeclaration(declarationResult.data as any);
+      setHistory(historyResult.data as any || []);
+      setArchiveFiles(sortArchiveNumbers(archiveFilesResult.data || []));
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -164,8 +180,7 @@ export default function DeclarationDetails() {
         description: 'تم تحديث ملف الأرشفة',
       });
 
-      // Reload to get updated archive_file data
-      await loadDeclaration();
+      await loadAllData();
       setEditingArchive(false);
     } catch (error: any) {
       toast({
@@ -178,7 +193,7 @@ export default function DeclarationDetails() {
     }
   };
 
-  const handleStatusUpdate = async (newStatus: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected') => {
+  const handleStatusUpdate = async (newStatus: typeof declaration.status) => {
     if (!declaration) return;
 
     setUpdating(true);
@@ -196,6 +211,7 @@ export default function DeclarationDetails() {
       });
 
       setDeclaration({ ...declaration, status: newStatus });
+      await loadAllData(); // Reload to get updated history
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -212,7 +228,12 @@ export default function DeclarationDetails() {
       <div className="min-h-screen">
         <Navigation />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">جاري التحميل...</div>
+          <Skeleton className="h-8 w-48 mb-4" />
+          <Skeleton className="h-12 w-full mb-6" />
+          <div className="grid gap-6">
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-48 w-full" />
+          </div>
         </div>
       </div>
     );
@@ -229,191 +250,286 @@ export default function DeclarationDetails() {
       <Navigation />
       
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs />
+
         {/* Header */}
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate('/manage')}
+            onClick={() => navigate('/')}
             className="gap-2 mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            العودة للإدارة
+            العودة للوحة التحكم
           </Button>
           
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h1 className="text-3xl font-bold mb-2">تفاصيل الإقرار</h1>
-              <p className="text-muted-foreground">رقم الإقرار: {declaration.id}</p>
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">تفاصيل الإقرار</h1>
+              <p className="text-muted-foreground font-mono">{declaration.id}</p>
             </div>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={() => navigate(`/declaration/${declaration.id}/timeline`)}
-                className="gap-2"
-              >
-                <Clock className="w-4 h-4" />
-                مسار الإقرار
-              </Button>
-              <Badge className={statusColors[declaration.status]}>
-                {statusLabels[declaration.status]}
-              </Badge>
-            </div>
+            <Badge className={statusColors[declaration.status]}>
+              {statusLabels[declaration.status]}
+            </Badge>
           </div>
         </div>
 
-        {/* Main Details Card */}
-        <Card className="glass-card mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              المعلومات الأساسية
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="text-sm text-muted-foreground">نوع الإقرار</label>
-                <p className="text-lg font-medium">{typeLabels[declaration.type]}</p>
-              </div>
-              
-              <div>
-                <label className="text-sm text-muted-foreground">الحالة</label>
-                {canUpdateStatus ? (
-                  <Select
-                    value={declaration.status}
-                    onValueChange={(value: any) => handleStatusUpdate(value)}
-                    disabled={updating}
-                  >
-                    <SelectTrigger className="w-full mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">مسودة</SelectItem>
-                      <SelectItem value="pending_warehouse_signature">بانتظار توقيع المخزن</SelectItem>
-                      <SelectItem value="warehouse_signed">موقّع من المخزن</SelectItem>
-                      <SelectItem value="sent_to_admin_office">مُرسل إلى المكتب الإداري</SelectItem>
-                      <SelectItem value="received_by_admin_office">مستلم من المكتب الإداري</SelectItem>
-                      <SelectItem value="returned_to_warehouse">مُعاد إلى المخزن للأرشفة</SelectItem>
-                      <SelectItem value="archived">مؤرشف</SelectItem>
-                      <SelectItem value="rejected">مرفوض / يحتاج إلى تصحيح</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="text-lg font-medium">{statusLabels[declaration.status]}</p>
-                )}
-              </div>
+        {/* Tabs: Details + Timeline */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="details" className="gap-2">
+              <Info className="w-4 h-4" />
+              التفاصيل
+            </TabsTrigger>
+            <TabsTrigger value="timeline" className="gap-2">
+              <History className="w-4 h-4" />
+              المسار ({history.length})
+            </TabsTrigger>
+          </TabsList>
 
-              <div>
-                <label className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  تاريخ الإنشاء
-                </label>
-                <p className="text-lg">
-                  {toGregorianDateLong(declaration.created_at)}
-                </p>
-              </div>
-
-              <div>
-                <label className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  آخر تحديث
-                </label>
-                <p className="text-lg">
-                  {toGregorianDateLong(declaration.updated_at)}
-                </p>
-              </div>
-
-              <div className="md:col-span-2">
-                <Label className="flex items-center gap-2 mb-2">
-                  <Archive className="w-4 h-4" />
-                  ملف الأرشفة
-                </Label>
-                {canUpdateStatus ? (
-                  <div className="flex gap-2">
-                    <Select
-                      value={selectedArchiveFileId}
-                      onValueChange={setSelectedArchiveFileId}
-                      disabled={updating || !editingArchive}
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="اختر ملف الأرشفة" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">بدون ملف أرشفة</SelectItem>
-                        {archiveFiles.map((file) => (
-                          <SelectItem key={file.id} value={file.id}>
-                            {file.archive_number} {file.description ? `- ${file.description}` : ''}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {!editingArchive ? (
-                      <Button
-                        onClick={() => setEditingArchive(true)}
-                        variant="outline"
+          {/* Details Tab */}
+          <TabsContent value="details" className="space-y-6">
+            {/* Main Details Card */}
+            <Card className="glass-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  المعلومات الأساسية
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-sm text-muted-foreground">نوع الإقرار</label>
+                    <p className="text-lg font-medium">{typeLabels[declaration.type]}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm text-muted-foreground">الحالة</label>
+                    {canUpdateStatus ? (
+                      <Select
+                        value={declaration.status}
+                        onValueChange={(value: any) => handleStatusUpdate(value)}
                         disabled={updating}
                       >
-                        تعديل
-                      </Button>
+                        <SelectTrigger className="w-full mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="draft">مسودة</SelectItem>
+                          <SelectItem value="pending_warehouse_signature">بانتظار توقيع المخزن</SelectItem>
+                          <SelectItem value="warehouse_signed">موقّع من المخزن</SelectItem>
+                          <SelectItem value="sent_to_admin_office">مُرسل إلى المكتب الإداري</SelectItem>
+                          <SelectItem value="received_by_admin_office">مستلم من المكتب الإداري</SelectItem>
+                          <SelectItem value="returned_to_warehouse">مُعاد إلى المخزن للأرشفة</SelectItem>
+                          <SelectItem value="archived">مؤرشف</SelectItem>
+                          <SelectItem value="rejected">مرفوض / يحتاج إلى تصحيح</SelectItem>
+                        </SelectContent>
+                      </Select>
                     ) : (
-                      <>
-                        <Button
-                          onClick={handleArchiveFileUpdate}
-                          disabled={updating}
-                        >
-                          <Save className="w-4 h-4 mr-2" />
-                          حفظ
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            setSelectedArchiveFileId(declaration.archive_file_id || '');
-                            setEditingArchive(false);
-                          }}
-                          variant="outline"
-                          disabled={updating}
-                        >
-                          إلغاء
-                        </Button>
-                      </>
+                      <p className="text-lg font-medium">{statusLabels[declaration.status]}</p>
                     )}
                   </div>
-                ) : (
-                  <p className="text-lg font-medium">
-                    {declaration.archive_file 
-                      ? `${declaration.archive_file.archive_number}${declaration.archive_file.description ? ` - ${declaration.archive_file.description}` : ''}`
-                      : 'لم يتم تحديد ملف أرشفة'}
-                  </p>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  اختر ملف الأرشيف الذي يحتوي على هذا الإقرار. يمكن لملف واحد أن يحتوي على عدة إقرارات.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Sender Details Card */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="w-5 h-5" />
-              معلومات المرسل
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="text-sm text-muted-foreground">اسم المستخدم</label>
-                <p className="text-lg font-medium">{declaration.sender.username}</p>
-              </div>
-              
-              <div>
-                <label className="text-sm text-muted-foreground">البريد الإلكتروني</label>
-                <p className="text-lg font-medium">{declaration.sender.email}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                  <div>
+                    <label className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      تاريخ الإنشاء
+                    </label>
+                    <p className="text-lg">
+                      {toGregorianDateLong(declaration.created_at)}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      آخر تحديث
+                    </label>
+                    <p className="text-lg">
+                      {toGregorianDateLong(declaration.updated_at)}
+                    </p>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label className="flex items-center gap-2 mb-2">
+                      <Archive className="w-4 h-4" />
+                      ملف الأرشفة
+                    </Label>
+                    {canUpdateStatus ? (
+                      <div className="flex gap-2">
+                        <Select
+                          value={selectedArchiveFileId}
+                          onValueChange={setSelectedArchiveFileId}
+                          disabled={updating || !editingArchive}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="اختر ملف الأرشفة" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">بدون ملف أرشفة</SelectItem>
+                            {archiveFiles.map((file) => (
+                              <SelectItem key={file.id} value={file.id}>
+                                {file.archive_number} {file.description ? `- ${file.description}` : ''}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {!editingArchive ? (
+                          <Button
+                            onClick={() => setEditingArchive(true)}
+                            variant="outline"
+                            disabled={updating}
+                          >
+                            تعديل
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              onClick={handleArchiveFileUpdate}
+                              disabled={updating}
+                            >
+                              <Save className="w-4 h-4 me-2" />
+                              حفظ
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                setSelectedArchiveFileId(declaration.archive_file_id || '');
+                                setEditingArchive(false);
+                              }}
+                              variant="outline"
+                              disabled={updating}
+                            >
+                              إلغاء
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-lg font-medium">
+                        {declaration.archive_file 
+                          ? `${declaration.archive_file.archive_number}${declaration.archive_file.description ? ` - ${declaration.archive_file.description}` : ''}`
+                          : 'لم يتم تحديد ملف أرشفة'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Sender Details Card */}
+            <Card className="glass-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  معلومات المرسل
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-sm text-muted-foreground">اسم المستخدم</label>
+                    <p className="text-lg font-medium">{declaration.sender.username}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm text-muted-foreground">البريد الإلكتروني</label>
+                    <p className="text-lg font-medium">{declaration.sender.email}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Timeline Tab */}
+          <TabsContent value="timeline" className="space-y-6">
+            <Card className="glass-card border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  الخط الزمني للإقرار
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {history.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    لا يوجد سجل تغييرات لهذا الإقرار
+                  </div>
+                ) : (
+                  <div className="relative">
+                    {/* Timeline Line */}
+                    <div className="absolute end-4 top-0 bottom-0 w-0.5 bg-border/50" />
+
+                    {/* Timeline Items */}
+                    <div className="space-y-6">
+                      {history.map((entry, index) => {
+                        const isFirst = index === 0;
+                        
+                        return (
+                          <div key={entry.id} className="relative pe-12">
+                            {/* Timeline Dot */}
+                            <div className="absolute end-0 top-1 w-8 h-8 rounded-full bg-background border-2 border-primary flex items-center justify-center">
+                              {isFirst ? (
+                                <CheckCircle2 className="w-4 h-4 text-primary" />
+                              ) : (
+                                <Circle className="w-3 h-3 text-primary fill-primary" />
+                              )}
+                            </div>
+
+                            {/* Timeline Content */}
+                            <Card className="glass-card border-border/50">
+                              <CardContent className="p-4">
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                      {entry.old_status ? (
+                                        <>
+                                          <Badge className={statusColors[entry.old_status as keyof typeof statusColors]}>
+                                            {statusLabels[entry.old_status as keyof typeof statusLabels]}
+                                          </Badge>
+                                          <span className="text-muted-foreground">←</span>
+                                          <Badge className={statusColors[entry.new_status as keyof typeof statusColors]}>
+                                            {statusLabels[entry.new_status as keyof typeof statusLabels]}
+                                          </Badge>
+                                        </>
+                                      ) : (
+                                        <Badge className={statusColors[entry.new_status as keyof typeof statusColors]}>
+                                          {statusLabels[entry.new_status as keyof typeof statusLabels]}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                                      <User className="w-4 h-4" />
+                                      <span>{entry.changer?.username}</span>
+                                    </div>
+
+                                    {entry.notes && (
+                                      <p className="text-sm text-muted-foreground mt-2">
+                                        {entry.notes}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div className="text-start ms-4">
+                                    <div className="text-sm font-medium">
+                                      {toGregorianDateTime(entry.changed_at)}
+                                    </div>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

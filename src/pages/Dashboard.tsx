@@ -1,16 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { FAB } from '@/components/FAB';
 import { CreateDeclarationDialog } from '@/components/CreateDeclarationDialog';
 import { ArchiveFilesManagement } from '@/components/ArchiveFilesManagement';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { DeclarationTableSkeleton } from '@/components/declarations/DeclarationTableSkeleton';
 import { StatusQuickAction } from '@/components/declarations/StatusQuickAction';
 import { DeclarationRowExpand } from '@/components/declarations/DeclarationRowExpand';
+import { StatsCard } from '@/components/ui/StatsCard';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -47,8 +51,6 @@ import {
   FolderOpen,
   LayoutDashboard,
   Archive,
-  TrendingUp,
-  Clock,
   AlertCircle,
   CheckCircle,
   ChevronDown,
@@ -100,27 +102,19 @@ export default function Dashboard() {
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declarationToDelete, setDeclarationToDelete] = useState<Declaration | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  useEffect(() => {
-    loadDeclarations();
-    loadProfiles();
-  }, []);
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      ctrl: true,
+      action: () => setCreateDialogOpen(true),
+      description: 'New declaration',
+    },
+  ]);
 
-  const loadProfiles = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username')
-        .order('username');
-
-      if (error) throw error;
-      setProfiles(data || []);
-    } catch (error: any) {
-      console.error('Error loading profiles:', error);
-    }
-  };
-
-  const loadDeclarations = async () => {
+  const loadDeclarations = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('declarations')
@@ -156,6 +150,25 @@ export default function Dashboard() {
       });
     } finally {
       setLoading(false);
+    }
+  }, [t]);
+
+  useEffect(() => {
+    loadDeclarations();
+    loadProfiles();
+  }, [loadDeclarations]);
+
+  const loadProfiles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .order('username');
+
+      if (error) throw error;
+      setProfiles(data || []);
+    } catch (error: any) {
+      console.error('Error loading profiles:', error);
     }
   };
 
@@ -269,29 +282,29 @@ export default function Dashboard() {
     );
   };
 
-  const statsCards = [
-    { labelKey: 'totalDeclarations', value: stats.total, icon: FileText, color: 'text-primary', bgColor: 'bg-primary/10' },
-    { labelKey: 'pendingWarehouseSignature', value: stats.pending_warehouse_signature, icon: AlertCircle, color: 'text-yellow-600 dark:text-yellow-400', bgColor: 'bg-yellow-500/10' },
-    { labelKey: 'warehouseSigned', value: stats.warehouse_signed, icon: CheckCircle, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-500/10' },
-    { labelKey: 'archived', value: stats.archived, icon: Archive, color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-500/10' },
-  ];
-
   return (
     <div className="min-h-screen">
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs />
+
         {/* Header with Stats */}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-3xl font-bold gradient-text">{t('systemTitle')}</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-2xl md:text-3xl font-bold gradient-text">{t('systemTitle')}</h1>
+              <p className="text-muted-foreground text-sm">
                 {t('welcome')}, {user?.username}!
               </p>
             </div>
             <div className="flex gap-2">
-              <CreateDeclarationDialog onSuccess={loadDeclarations} />
+              <CreateDeclarationDialog 
+                onSuccess={loadDeclarations}
+                open={createDialogOpen}
+                onOpenChange={setCreateDialogOpen}
+              />
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/trash')}
@@ -305,22 +318,34 @@ export default function Dashboard() {
 
           {/* Compact Stats Bar */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {statsCards.map((stat) => {
-              const Icon = stat.icon;
-              return (
-                <Card key={stat.labelKey} className="glass-card border-border/50 p-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                      <Icon className={`w-5 h-5 ${stat.color}`} />
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold">{stat.value}</div>
-                      <div className="text-xs text-muted-foreground">{t(stat.labelKey)}</div>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
+            <StatsCard
+              label={t('totalDeclarations')}
+              value={stats.total}
+              icon={FileText}
+              color="text-primary"
+              bgColor="bg-primary/10"
+            />
+            <StatsCard
+              label={t('pendingWarehouseSignature')}
+              value={stats.pending_warehouse_signature}
+              icon={AlertCircle}
+              color="text-yellow-600 dark:text-yellow-400"
+              bgColor="bg-yellow-500/10"
+            />
+            <StatsCard
+              label={t('warehouseSigned')}
+              value={stats.warehouse_signed}
+              icon={CheckCircle}
+              color="text-blue-600 dark:text-blue-400"
+              bgColor="bg-blue-500/10"
+            />
+            <StatsCard
+              label={t('archived')}
+              value={stats.archived}
+              icon={Archive}
+              color="text-green-600 dark:text-green-400"
+              bgColor="bg-green-500/10"
+            />
           </div>
         </div>
 
@@ -344,7 +369,7 @@ export default function Dashboard() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <Card className="glass-card border-border/50 p-6">
-              <h3 className="text-lg font-semibold mb-4">{t('recentDeclarations')}</h3>
+              <h3 className="text-base font-semibold mb-4">{t('recentDeclarations')}</h3>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -387,7 +412,7 @@ export default function Dashboard() {
                                 </Button>
                               </CollapsibleTrigger>
                             </TableCell>
-                            <TableCell className="font-medium font-mono">{declaration.id}</TableCell>
+                            <TableCell className="font-medium font-mono text-sm">{declaration.id}</TableCell>
                             <TableCell>{declaration.type}</TableCell>
                             <TableCell>{declaration.sender?.username || t('unknown')}</TableCell>
                             <TableCell>
@@ -587,7 +612,7 @@ export default function Dashboard() {
                                 onCheckedChange={() => toggleSelectItem(declaration.id)}
                               />
                             </TableCell>
-                            <TableCell className="font-medium font-mono">{declaration.id}</TableCell>
+                            <TableCell className="font-medium font-mono text-sm">{declaration.id}</TableCell>
                             <TableCell>{declaration.type}</TableCell>
                             <TableCell>{declaration.sender?.username || t('unknown')}</TableCell>
                             <TableCell className="font-mono text-sm">
@@ -656,6 +681,9 @@ export default function Dashboard() {
           userRole={user?.role}
         />
       </main>
+
+      {/* FAB for creating new declaration */}
+      <FAB onSuccess={loadDeclarations} />
     </div>
   );
 }
