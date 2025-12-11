@@ -12,8 +12,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Users, FileText, Activity, TrendingUp, Shield, UserCheck, BarChart3, Download, RefreshCw, Clock } from 'lucide-react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { toGregorianDateTime, toGregorianDate } from '@/utils/dateUtils';
-import { exportToExcel } from '@/utils/excelExport';
-import { generateDeclarationsPDF } from '@/utils/pdfExport';
+import { exportDeclarationsToExcel } from '@/utils/excelExport';
+import { exportDeclarationsToPDF } from '@/utils/pdfExport';
 
 interface SystemStats {
   totalUsers: number;
@@ -128,8 +128,8 @@ export default function Reports() {
     try {
       const { data, error } = await supabase.from('declarations').select(`*, sender:profiles!sender_id(username)`).is('deleted_at', null).order('created_at', { ascending: false });
       if (error) throw error;
-      const formattedData = (data || []).map(d => ({ 'رقم الإقرار': d.id, 'النوع': d.type, 'المرسل': d.sender?.username || 'غير معروف', 'الحالة': statusLabels[d.status] || d.status, 'رقم الأرشيف': d.archive_number || '-', 'تاريخ الإنشاء': toGregorianDate(d.created_at) }));
-      exportToExcel(formattedData, 'تقرير_الإقرارات');
+      const formattedData = (data || []).map(d => ({ id: d.id, type: d.type, sender: d.sender?.username || 'غير معروف', status: statusLabels[d.status] || d.status, created_at: toGregorianDate(d.created_at) }));
+      exportDeclarationsToExcel(formattedData, 'تقرير_الإقرارات');
       toast({ title: t('success'), description: 'تم تصدير التقرير بنجاح' });
     } catch (error: any) { toast({ variant: 'destructive', title: t('error'), description: error.message }); }
     finally { setExporting(false); }
@@ -140,7 +140,9 @@ export default function Reports() {
     try {
       const { data, error } = await supabase.from('declarations').select(`*, sender:profiles!sender_id(username)`).is('deleted_at', null).order('created_at', { ascending: false });
       if (error) throw error;
-      await generateDeclarationsPDF(data || [], 'تقرير الإقرارات');
+      const formattedData = (data || []).map(d => ({ id: d.id, type: d.type, sender: d.sender?.username || 'غير معروف', status: statusLabels[d.status] || d.status, created_at: toGregorianDate(d.created_at) }));
+      const doc = exportDeclarationsToPDF(formattedData, 'تقرير الإقرارات');
+      doc.save(`تقرير_الإقرارات_${new Date().toISOString().split('T')[0]}.pdf`);
       toast({ title: t('success'), description: 'تم تصدير التقرير بنجاح' });
     } catch (error: any) { toast({ variant: 'destructive', title: t('error'), description: error.message }); }
     finally { setExporting(false); }
