@@ -28,7 +28,30 @@ interface SystemStats {
   }[];
 }
 
-import { statusLabels, CHART_COLORS } from '@/constants/statusLabels';
+const COLORS = {
+  admin: 'hsl(var(--destructive))',
+  manager: 'hsl(var(--chart-2))',
+  user: 'hsl(var(--chart-1))',
+  draft: 'hsl(var(--muted))',
+  pending: 'hsl(var(--chart-3))',
+  signed: 'hsl(var(--chart-1))',
+  sent: 'hsl(var(--chart-2))',
+  received: 'hsl(var(--primary))',
+  returned: 'hsl(var(--chart-4))',
+  archived: 'hsl(var(--chart-5))',
+  rejected: 'hsl(var(--destructive))',
+};
+
+const statusLabels: Record<string, string> = {
+  draft: 'مسودة',
+  pending_warehouse_signature: 'بانتظار التوقيع',
+  warehouse_signed: 'موقّع',
+  sent_to_admin_office: 'مُرسل',
+  received_by_admin_office: 'مستلم',
+  returned_to_warehouse: 'مُعاد',
+  archived: 'مؤرشف',
+  rejected: 'مرفوض',
+};
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -127,20 +150,20 @@ export default function AdminDashboard() {
   };
 
   const roleData = [
-    { name: 'مدير النظام', value: stats.adminCount, color: CHART_COLORS.admin },
-    { name: 'مدير فرعي', value: stats.managerCount, color: CHART_COLORS.manager },
-    { name: 'مستخدم', value: stats.userCount, color: CHART_COLORS.user },
+    { name: 'مدير النظام', value: stats.adminCount, color: COLORS.admin },
+    { name: 'مدير فرعي', value: stats.managerCount, color: COLORS.manager },
+    { name: 'مستخدم', value: stats.userCount, color: COLORS.user },
   ];
 
   const statusColorMap: Record<string, string> = {
-    draft: CHART_COLORS.draft,
-    pending_warehouse_signature: CHART_COLORS.pending,
-    warehouse_signed: CHART_COLORS.signed,
-    sent_to_admin_office: CHART_COLORS.sent,
-    received_by_admin_office: CHART_COLORS.received,
-    returned_to_warehouse: CHART_COLORS.returned,
-    archived: CHART_COLORS.archived,
-    rejected: CHART_COLORS.rejected,
+    draft: COLORS.draft,
+    pending_warehouse_signature: COLORS.pending,
+    warehouse_signed: COLORS.signed,
+    sent_to_admin_office: COLORS.sent,
+    received_by_admin_office: COLORS.received,
+    returned_to_warehouse: COLORS.returned,
+    archived: COLORS.archived,
+    rejected: COLORS.rejected,
   };
 
   if (loading) {
@@ -214,7 +237,7 @@ export default function AdminDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 rounded-lg bg-chart-2/10">
-                  <UserCheck className="w-6 h-6" style={{ color: CHART_COLORS.manager }} />
+                  <UserCheck className="w-6 h-6" style={{ color: COLORS.manager }} />
                 </div>
               </div>
               <div className="text-3xl font-bold mb-1">{stats.managerCount}</div>
@@ -298,7 +321,7 @@ export default function AdminDashboard() {
                   />
                   <Bar dataKey="count" radius={[8, 8, 0, 0]}>
                     {stats.declarationsByStatus.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={statusColorMap[entry.status] || CHART_COLORS.user} />
+                      <Cell key={`cell-${index}`} fill={statusColorMap[entry.status] || COLORS.user} />
                     ))}
                   </Bar>
                 </BarChart>

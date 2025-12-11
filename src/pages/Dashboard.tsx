@@ -10,15 +10,11 @@ import { FAB } from '@/components/FAB';
 import { CreateDeclarationDialog } from '@/components/CreateDeclarationDialog';
 import { ArchiveFilesManagement } from '@/components/ArchiveFilesManagement';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+import { DeclarationTableSkeleton } from '@/components/declarations/DeclarationTableSkeleton';
 import { StatusQuickAction } from '@/components/declarations/StatusQuickAction';
 import { DeclarationRowExpand } from '@/components/declarations/DeclarationRowExpand';
 import { StatsCard } from '@/components/ui/StatsCard';
-import { EmptyState } from '@/components/EmptyState';
-import { TableSkeleton, CardSkeleton } from '@/components/ui/TableSkeleton';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { useDeclarationsRealtime } from '@/hooks/useRealtimeUpdates';
-import { statusLabels, statusColors } from '@/constants/statusLabels';
-import { Declaration, DeletedDeclaration, DeclarationStats, Profile } from '@/types/declarations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -26,12 +22,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { toGregorianDate, toGregorianDateLong } from '@/utils/dateUtils';
-import { differenceInDays } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Select,
   SelectContent,
@@ -62,9 +55,22 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronUp,
-  RefreshCw,
-  Plus,
 } from 'lucide-react';
+
+interface Declaration {
+  id: string;
+  type: 'دخول' | 'خروج';
+  sender_id: string;
+  sender?: { username: string };
+  status: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected';
+  archive_number: string | null;
+  created_at: string;
+}
+
+interface Profile {
+  id: string;
+  username: string;
+}
 
 export default function Dashboard() {
   const { t, language } = useLanguage();
@@ -81,11 +87,9 @@ export default function Dashboard() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
-  const [deletedDeclarations, setDeletedDeclarations] = useState<DeletedDeclaration[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingTrash, setLoadingTrash] = useState(true);
-  const [stats, setStats] = useState<DeclarationStats>({
+  const [stats, setStats] = useState({
     total: 0,
     draft: 0,
     pending_warehouse_signature: 0,
@@ -114,7 +118,10 @@ export default function Dashboard() {
     try {
       const { data, error } = await supabase
         .from('declarations')
-        .select(`*, sender:profiles!sender_id(username)`)
+        .select(`
+          *,
+          sender:profiles!sender_id(username)
+        `)
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
@@ -123,7 +130,7 @@ export default function Dashboard() {
       setDeclarations(data || []);
       
       // Calculate stats
-      const newStats: DeclarationStats = {
+      const newStats = {
         total: data?.length || 0,
         draft: data?.filter(d => d.status === 'draft').length || 0,
         pending_warehouse_signature: data?.filter(d => d.status === 'pending_warehouse_signature').length || 0,
@@ -146,29 +153,16 @@ export default function Dashboard() {
     }
   }, [t]);
 
-  const loadDeletedDeclarations = useCallback(async () => {
-    try {
-      setLoadingTrash(true);
-      const { data, error } = await supabase
-        .from('declarations')
-        .select(`*, sender:profiles!sender_id(username)`)
-        .not('deleted_at', 'is', null)
-        .order('deleted_at', { ascending: false });
-
-      if (error) throw error;
-      setDeletedDeclarations((data || []) as DeletedDeclaration[]);
-    } catch (error: any) {
-      console.error('Error loading deleted declarations:', error);
-    } finally {
-      setLoadingTrash(false);
-    }
-  }, []);
+  useEffect(() => {
+    loadDeclarations();
+    loadProfiles();
+  }, [loadDeclarations]);
 
   const loadProfiles = async () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, email, created_at, updated_at')
+        .select('id, username')
         .order('username');
 
       if (error) throw error;
@@ -177,18 +171,6 @@ export default function Dashboard() {
       console.error('Error loading profiles:', error);
     }
   };
-
-  useEffect(() => {
-    loadDeclarations();
-    loadDeletedDeclarations();
-    loadProfiles();
-  }, [loadDeclarations, loadDeletedDeclarations]);
-
-  // Realtime updates
-  useDeclarationsRealtime(() => {
-    loadDeclarations();
-    loadDeletedDeclarations();
-  });
 
   const handleDelete = async (declaration: Declaration) => {
     setDeclarationToDelete(declaration);
@@ -239,6 +221,7 @@ export default function Dashboard() {
       
       setDeleteDialogOpen(false);
       setDeclarationToDelete(null);
+      await loadDeclarations();
     } catch (error: any) {
       toast({
         title: t('error'),
@@ -248,41 +231,9 @@ export default function Dashboard() {
     }
   };
 
-  const handleRestore = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('declarations')
-        .update({ deleted_at: null, deleted_by: null })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({ title: t('success'), description: 'تم استرجاع الإقرار بنجاح' });
-    } catch (error: any) {
-      toast({ title: t('error'), description: error.message, variant: 'destructive' });
-    }
-  };
-
-  const handlePermanentDelete = async (id: string) => {
-    if (!window.confirm('⚠️ تحذير: سيتم حذف الإقرار نهائياً ولا يمكن استرجاعه. هل أنت متأكد؟')) return;
-
-    try {
-      const { error } = await supabase.from('declarations').delete().eq('id', id);
-      if (error) throw error;
-      toast({ title: t('success'), description: 'تم حذف الإقرار نهائياً' });
-    } catch (error: any) {
-      toast({ title: t('error'), description: error.message, variant: 'destructive' });
-    }
-  };
-
-  const getDaysRemaining = (deletedAt: string) => {
-    const daysPassed = differenceInDays(new Date(), new Date(deletedAt));
-    return Math.max(0, 30 - daysPassed);
-  };
-
   const filteredDeclarations = declarations.filter(dec => {
     const matchesSearch = dec.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         dec.sender?.username?.toLowerCase().includes(searchQuery.toLowerCase());
+                         dec.sender?.username.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || dec.status === statusFilter;
     const matchesSender = senderFilter === 'all' || dec.sender_id === senderFilter;
     
@@ -354,193 +305,155 @@ export default function Dashboard() {
                 open={createDialogOpen}
                 onOpenChange={setCreateDialogOpen}
               />
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/trash')}
+                className="gap-2"
+              >
+                <Archive className="w-4 h-4" />
+                {t('trashBin')}
+              </Button>
             </div>
           </div>
 
           {/* Compact Stats Bar */}
-          {loading ? (
-            <CardSkeleton count={4} />
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="grid grid-cols-2 md:grid-cols-4 gap-4"
-            >
-              <StatsCard
-                label={t('totalDeclarations')}
-                value={stats.total}
-                icon={FileText}
-                color="text-primary"
-                bgColor="bg-primary/10"
-              />
-              <StatsCard
-                label={t('pendingWarehouseSignature')}
-                value={stats.pending_warehouse_signature}
-                icon={AlertCircle}
-                color="text-yellow-600 dark:text-yellow-400"
-                bgColor="bg-yellow-500/10"
-              />
-              <StatsCard
-                label={t('warehouseSigned')}
-                value={stats.warehouse_signed}
-                icon={CheckCircle}
-                color="text-blue-600 dark:text-blue-400"
-                bgColor="bg-blue-500/10"
-              />
-              <StatsCard
-                label={t('archived')}
-                value={stats.archived}
-                icon={Archive}
-                color="text-green-600 dark:text-green-400"
-                bgColor="bg-green-500/10"
-              />
-            </motion.div>
-          )}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <StatsCard
+              label={t('totalDeclarations')}
+              value={stats.total}
+              icon={FileText}
+              color="text-primary"
+              bgColor="bg-primary/10"
+            />
+            <StatsCard
+              label={t('pendingWarehouseSignature')}
+              value={stats.pending_warehouse_signature}
+              icon={AlertCircle}
+              color="text-yellow-600 dark:text-yellow-400"
+              bgColor="bg-yellow-500/10"
+            />
+            <StatsCard
+              label={t('warehouseSigned')}
+              value={stats.warehouse_signed}
+              icon={CheckCircle}
+              color="text-blue-600 dark:text-blue-400"
+              bgColor="bg-blue-500/10"
+            />
+            <StatsCard
+              label={t('archived')}
+              value={stats.archived}
+              icon={Archive}
+              color="text-green-600 dark:text-green-400"
+              bgColor="bg-green-500/10"
+            />
+          </div>
         </div>
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="overview" className="gap-2">
               <LayoutDashboard className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('overview')}</span>
+              {t('overview')}
             </TabsTrigger>
             <TabsTrigger value="manage" className="gap-2">
               <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('manage')}</span>
+              {t('manage')}
             </TabsTrigger>
             <TabsTrigger value="archive" className="gap-2">
               <FolderOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('archiveFiles')}</span>
-            </TabsTrigger>
-            <TabsTrigger value="trash" className="gap-2 relative">
-              <Trash2 className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('trashBin')}</span>
-              {deletedDeclarations.length > 0 && (
-                <Badge variant="destructive" className="absolute -top-2 -end-2 h-5 w-5 p-0 text-xs flex items-center justify-center">
-                  {deletedDeclarations.length}
-                </Badge>
-              )}
+              {t('archiveFiles')}
             </TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            <AnimatePresence mode="wait">
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Card className="glass-card border-border/50 p-6">
-                  <h3 className="text-base font-semibold mb-4">{t('recentDeclarations')}</h3>
+            <Card className="glass-card border-border/50 p-6">
+              <h3 className="text-base font-semibold mb-4">{t('recentDeclarations')}</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-8"></TableHead>
+                    <TableHead>{t('declarationId')}</TableHead>
+                    <TableHead>{t('type')}</TableHead>
+                    <TableHead>{t('sender')}</TableHead>
+                    <TableHead>{t('status')}</TableHead>
+                    <TableHead>{t('createdDate')}</TableHead>
+                    <TableHead>{t('actions')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {loading ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-8"></TableHead>
-                          <TableHead>{t('declarationId')}</TableHead>
-                          <TableHead>{t('type')}</TableHead>
-                          <TableHead>{t('sender')}</TableHead>
-                          <TableHead>{t('status')}</TableHead>
-                          <TableHead>{t('createdDate')}</TableHead>
-                          <TableHead>{t('actions')}</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableSkeleton rows={5} columns={7} />
-                      </TableBody>
-                    </Table>
-                  ) : declarations.length === 0 ? (
-                    <EmptyState
-                      variant="declarations"
-                      title={t('noDeclarations')}
-                      description="لم يتم إنشاء أي إقرارات بعد. ابدأ بإنشاء إقرار جديد."
-                      actionLabel={t('createDeclaration')}
-                      onAction={() => setCreateDialogOpen(true)}
-                    />
+                    <DeclarationTableSkeleton rows={5} />
+                  ) : declarations.slice(0, 5).length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        {t('noDeclarations')}
+                      </TableCell>
+                    </TableRow>
                   ) : (
-                    <>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-8"></TableHead>
-                            <TableHead>{t('declarationId')}</TableHead>
-                            <TableHead>{t('type')}</TableHead>
-                            <TableHead>{t('sender')}</TableHead>
-                            <TableHead>{t('status')}</TableHead>
-                            <TableHead>{t('createdDate')}</TableHead>
-                            <TableHead>{t('actions')}</TableHead>
+                    declarations.slice(0, 5).map((declaration) => (
+                      <Collapsible key={declaration.id} asChild open={expandedRows.includes(declaration.id)}>
+                        <>
+                          <TableRow className="hover:bg-muted/5">
+                            <TableCell>
+                              <CollapsibleTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  onClick={() => toggleRowExpand(declaration.id)}
+                                >
+                                  {expandedRows.includes(declaration.id) ? (
+                                    <ChevronUp className="w-4 h-4" />
+                                  ) : (
+                                    <ChevronDown className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              </CollapsibleTrigger>
+                            </TableCell>
+                            <TableCell className="font-medium font-mono text-sm">{declaration.id}</TableCell>
+                            <TableCell>{declaration.type}</TableCell>
+                            <TableCell>{declaration.sender?.username || t('unknown')}</TableCell>
+                            <TableCell>
+                              <StatusQuickAction
+                                declarationId={declaration.id}
+                                currentStatus={declaration.status}
+                                onStatusChange={loadDeclarations}
+                              />
+                            </TableCell>
+                            <TableCell>{toGregorianDate(declaration.created_at)}</TableCell>
+                            <TableCell>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => navigate(`/declaration/${declaration.id}`)}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {declarations.slice(0, 5).map((declaration) => (
-                            <Collapsible key={declaration.id} asChild open={expandedRows.includes(declaration.id)}>
-                              <>
-                                <TableRow className="hover:bg-muted/5">
-                                  <TableCell>
-                                    <CollapsibleTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-6 w-6"
-                                        onClick={() => toggleRowExpand(declaration.id)}
-                                      >
-                                        {expandedRows.includes(declaration.id) ? (
-                                          <ChevronUp className="w-4 h-4" />
-                                        ) : (
-                                          <ChevronDown className="w-4 h-4" />
-                                        )}
-                                      </Button>
-                                    </CollapsibleTrigger>
-                                  </TableCell>
-                                  <TableCell className="font-medium font-mono text-sm">{declaration.id}</TableCell>
-                                  <TableCell>{declaration.type}</TableCell>
-                                  <TableCell>{declaration.sender?.username || t('unknown')}</TableCell>
-                                  <TableCell>
-                                    <StatusQuickAction
-                                      declarationId={declaration.id}
-                                      currentStatus={declaration.status}
-                                      onStatusChange={loadDeclarations}
-                                    />
-                                  </TableCell>
-                                  <TableCell>{toGregorianDate(declaration.created_at)}</TableCell>
-                                  <TableCell>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon"
-                                      onClick={() => navigate(`/declaration/${declaration.id}`)}
-                                    >
-                                      <Eye className="w-4 h-4" />
-                                    </Button>
-                                  </TableCell>
-                                </TableRow>
-                                <CollapsibleContent asChild>
-                                  <tr>
-                                    <td colSpan={7} className="p-0">
-                                      <DeclarationRowExpand declarationId={declaration.id} />
-                                    </td>
-                                  </tr>
-                                </CollapsibleContent>
-                              </>
-                            </Collapsible>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      {declarations.length > 5 && (
-                        <div className="mt-4 text-center">
-                          <Button variant="link" onClick={() => setActiveTab('manage')}>
-                            {t('viewAll')} ({declarations.length})
-                          </Button>
-                        </div>
-                      )}
-                    </>
+                          <CollapsibleContent asChild>
+                            <tr>
+                              <td colSpan={7} className="p-0">
+                                <DeclarationRowExpand declarationId={declaration.id} />
+                              </td>
+                            </tr>
+                          </CollapsibleContent>
+                        </>
+                      </Collapsible>
+                    ))
                   )}
-                </Card>
-              </motion.div>
-            </AnimatePresence>
+                </TableBody>
+              </Table>
+              {declarations.length > 5 && (
+                <div className="mt-4 text-center">
+                  <Button variant="link" onClick={() => setActiveTab('manage')}>
+                    {t('viewAll')} ({declarations.length})
+                  </Button>
+                </div>
+              )}
+            </Card>
           </TabsContent>
 
           {/* Manage Tab */}
@@ -567,9 +480,14 @@ export default function Dashboard() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t('allStatuses')}</SelectItem>
-                    {Object.entries(statusLabels).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
-                    ))}
+                    <SelectItem value="draft">{t('draft')}</SelectItem>
+                    <SelectItem value="pending_warehouse_signature">{t('pendingWarehouseSignature')}</SelectItem>
+                    <SelectItem value="warehouse_signed">{t('warehouseSigned')}</SelectItem>
+                    <SelectItem value="sent_to_admin_office">{t('sentToAdminOffice')}</SelectItem>
+                    <SelectItem value="received_by_admin_office">{t('receivedByAdminOffice')}</SelectItem>
+                    <SelectItem value="returned_to_warehouse">{t('returnedToWarehouse')}</SelectItem>
+                    <SelectItem value="archived">{t('archived')}</SelectItem>
+                    <SelectItem value="rejected">{t('rejected')}</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -629,18 +547,12 @@ export default function Dashboard() {
 
             {/* Bulk Actions */}
             {selectedItems.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <Card className="glass-card border-border/50 p-3 flex items-center gap-3">
-                  <span className="text-sm font-medium">
-                    {selectedItems.length} {t('selected')}
-                  </span>
-                  <Button size="sm" variant="outline">{t('bulkActions')}</Button>
-                </Card>
-              </motion.div>
+              <Card className="glass-card border-border/50 p-3 flex items-center gap-3">
+                <span className="text-sm font-medium">
+                  {selectedItems.length} {t('selected')}
+                </span>
+                <Button size="sm" variant="outline">{t('bulkActions')}</Button>
+              </Card>
             )}
 
             {/* Declarations Table */}
@@ -666,17 +578,11 @@ export default function Dashboard() {
                 </TableHeader>
                 <TableBody>
                   {loading ? (
-                    <TableSkeleton rows={10} columns={9} />
+                    <DeclarationTableSkeleton rows={10} />
                   ) : filteredDeclarations.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={9} className="text-center py-8">
-                        <EmptyState
-                          variant="search"
-                          title={hasActiveFilters ? 'لا توجد نتائج' : t('noDeclarations')}
-                          description={hasActiveFilters ? 'جرب تعديل الفلاتر للحصول على نتائج أخرى' : 'ابدأ بإنشاء إقرار جديد'}
-                          actionLabel={hasActiveFilters ? t('clearFilters') : t('createDeclaration')}
-                          onAction={hasActiveFilters ? clearFilters : () => setCreateDialogOpen(true)}
-                        />
+                        {t('noDeclarations')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -763,132 +669,6 @@ export default function Dashboard() {
           {/* Archive Files Tab */}
           <TabsContent value="archive">
             <ArchiveFilesManagement />
-          </TabsContent>
-
-          {/* Trash Tab */}
-          <TabsContent value="trash" className="space-y-6">
-            <AnimatePresence mode="wait">
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-6"
-              >
-                {/* Info Card */}
-                <Card className="glass-card border-border/50 p-4 bg-blue-500/5 border-blue-500/20">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm space-y-1">
-                      <p className="text-foreground font-medium">معلومات مهمة عن سلة المحذوفات:</p>
-                      <ul className="text-muted-foreground space-y-1 mr-4">
-                        <li>• يمكن استرجاع الإقرارات المحذوفة خلال 30 يوم من تاريخ الحذف</li>
-                        <li>• بعد 30 يوم، سيتم حذف الإقرار نهائياً بشكل تلقائي</li>
-                      </ul>
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Trash Table */}
-                <Card className="glass-card border-border/50 overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t('declarationId')}</TableHead>
-                        <TableHead>{t('type')}</TableHead>
-                        <TableHead>{t('sender')}</TableHead>
-                        <TableHead>{t('archiveNumber')}</TableHead>
-                        <TableHead>{t('status')}</TableHead>
-                        <TableHead>تاريخ الحذف</TableHead>
-                        <TableHead>الأيام المتبقية</TableHead>
-                        <TableHead className="text-right">{t('actions')}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loadingTrash ? (
-                        <TableSkeleton rows={5} columns={8} />
-                      ) : deletedDeclarations.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={8} className="text-center py-8">
-                            <EmptyState
-                              variant="trash"
-                              title="سلة المحذوفات فارغة"
-                              description="لا توجد إقرارات محذوفة حالياً"
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        deletedDeclarations.map((declaration) => {
-                          const daysRemaining = getDaysRemaining(declaration.deleted_at);
-                          const isUrgent = daysRemaining <= 7;
-                          
-                          return (
-                            <TableRow key={declaration.id} className="hover:bg-muted/5">
-                              <TableCell className="font-medium font-mono text-sm">{declaration.id}</TableCell>
-                              <TableCell>{declaration.type}</TableCell>
-                              <TableCell>{declaration.sender?.username || 'Unknown'}</TableCell>
-                              <TableCell className="font-mono text-sm">
-                                {declaration.archive_number || <span className="text-muted-foreground">-</span>}
-                              </TableCell>
-                              <TableCell>
-                                <Badge className={statusColors[declaration.status]}>
-                                  {statusLabels[declaration.status] || declaration.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{toGregorianDate(declaration.deleted_at)}</TableCell>
-                              <TableCell>
-                                <Badge 
-                                  variant="outline"
-                                  className={isUrgent ? 'border-red-500/50 text-red-700 dark:text-red-300' : ''}
-                                >
-                                  {daysRemaining} {daysRemaining === 1 ? 'يوم' : 'أيام'}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex justify-end gap-2">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    onClick={() => navigate(`/declaration/${declaration.id}`)}
-                                    title={t('view')}
-                                  >
-                                    <Eye className="w-4 h-4" />
-                                  </Button>
-                                  {(user?.role === 'admin' || (user?.role === 'manager' && declaration.sender_id === user.id)) && (
-                                    <>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon"
-                                        className="text-green-600 hover:text-green-700 dark:text-green-400"
-                                        onClick={() => handleRestore(declaration.id)}
-                                        title="استرجاع"
-                                      >
-                                        <RefreshCw className="w-4 h-4" />
-                                      </Button>
-                                      {user?.role === 'admin' && (
-                                        <Button 
-                                          variant="ghost" 
-                                          size="icon" 
-                                          className="text-destructive hover:text-destructive"
-                                          onClick={() => handlePermanentDelete(declaration.id)}
-                                          title="حذف نهائي"
-                                        >
-                                          <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                      )}
-                                    </>
-                                  )}
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
-                      )}
-                    </TableBody>
-                  </Table>
-                </Card>
-              </motion.div>
-            </AnimatePresence>
           </TabsContent>
         </Tabs>
 

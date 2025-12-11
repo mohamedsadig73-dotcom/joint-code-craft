@@ -17,6 +17,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const Trash = lazy(() => import("./pages/Trash"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Profile = lazy(() => import("./pages/Profile"));
 const DeclarationDetails = lazy(() => import("./pages/DeclarationDetails"));
@@ -76,7 +77,22 @@ function AppRoutes() {
               </ProtectedRoute>
             } 
           />
-          {/* Trash is now integrated into Dashboard */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/trash" 
+            element={
+              <ProtectedRoute>
+                <Trash />
+              </ProtectedRoute>
+            } 
+          />
           <Route 
             path="/reports"
             element={
