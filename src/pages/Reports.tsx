@@ -29,19 +29,7 @@ interface SystemStats {
   completionRate: number;
 }
 
-const COLORS = {
-  admin: 'hsl(var(--destructive))', manager: 'hsl(var(--chart-2))', user: 'hsl(var(--chart-1))',
-  draft: 'hsl(var(--muted))', pending: 'hsl(var(--chart-3))', signed: 'hsl(var(--chart-1))',
-  sent: 'hsl(var(--chart-2))', received: 'hsl(var(--primary))', returned: 'hsl(var(--chart-4))',
-  archived: 'hsl(var(--chart-5))', rejected: 'hsl(var(--destructive))',
-  entrance: 'hsl(var(--chart-1))', exit: 'hsl(var(--chart-2))',
-};
-
-const statusLabels: Record<string, string> = {
-  draft: 'مسودة', pending_warehouse_signature: 'بانتظار التوقيع', warehouse_signed: 'موقّع',
-  sent_to_admin_office: 'مُرسل', received_by_admin_office: 'مستلم', returned_to_warehouse: 'مُعاد',
-  archived: 'مؤرشف', rejected: 'مرفوض',
-};
+import { statusLabels, CHART_COLORS } from '@/constants/statusLabels';
 
 export default function Reports() {
   const { user } = useAuth();
@@ -148,9 +136,9 @@ export default function Reports() {
     finally { setExporting(false); }
   };
 
-  const roleData = [{ name: t('systemAdmins'), value: stats.adminCount, color: COLORS.admin }, { name: t('managers'), value: stats.managerCount, color: COLORS.manager }, { name: t('regularUser'), value: stats.userCount, color: COLORS.user }];
-  const typeData = stats.declarationsByType.map(d => ({ name: d.type, value: d.count, color: d.type === 'دخول' ? COLORS.entrance : COLORS.exit }));
-  const statusColorMap: Record<string, string> = { draft: COLORS.draft, pending_warehouse_signature: COLORS.pending, warehouse_signed: COLORS.signed, sent_to_admin_office: COLORS.sent, received_by_admin_office: COLORS.received, returned_to_warehouse: COLORS.returned, archived: COLORS.archived, rejected: COLORS.rejected };
+  const roleData = [{ name: t('systemAdmins'), value: stats.adminCount, color: CHART_COLORS.admin }, { name: t('managers'), value: stats.managerCount, color: CHART_COLORS.manager }, { name: t('regularUser'), value: stats.userCount, color: CHART_COLORS.user }];
+  const typeData = stats.declarationsByType.map(d => ({ name: d.type, value: d.count, color: d.type === 'دخول' ? CHART_COLORS.entrance : CHART_COLORS.exit }));
+  const statusColorMap: Record<string, string> = { draft: CHART_COLORS.draft, pending_warehouse_signature: CHART_COLORS.pending, warehouse_signed: CHART_COLORS.signed, sent_to_admin_office: CHART_COLORS.sent, received_by_admin_office: CHART_COLORS.received, returned_to_warehouse: CHART_COLORS.returned, archived: CHART_COLORS.archived, rejected: CHART_COLORS.rejected };
 
   if (loading) return (<div className="min-h-screen"><Navigation /><main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><div className="space-y-6"><div className="grid grid-cols-2 md:grid-cols-4 gap-4">{[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}</div></div></main></div>);
 
@@ -176,7 +164,7 @@ export default function Reports() {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <Card className="glass-card border-border/50"><CardHeader><CardTitle className="flex items-center gap-2"><Users className="w-5 h-5" />{t('userDistribution')}</CardTitle><CardDescription>{t('rolePercentage')}</CardDescription></CardHeader><CardContent><ResponsiveContainer width="100%" height={280}><PieChart><Pie data={roleData} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} outerRadius={80} dataKey="value">{roleData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}</Pie><Tooltip /><Legend /></PieChart></ResponsiveContainer></CardContent></Card>
-          <Card className="glass-card border-border/50"><CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5" />{t('declarationDistribution')}</CardTitle></CardHeader><CardContent><ResponsiveContainer width="100%" height={280}><BarChart data={stats.declarationsByStatus}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} /><YAxis stroke="hsl(var(--muted-foreground))" /><Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} /><Bar dataKey="count" radius={[8, 8, 0, 0]}>{stats.declarationsByStatus.map((entry, index) => <Cell key={`cell-${index}`} fill={statusColorMap[entry.status] || COLORS.user} />)}</Bar></BarChart></ResponsiveContainer></CardContent></Card>
+          <Card className="glass-card border-border/50"><CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5" />{t('declarationDistribution')}</CardTitle></CardHeader><CardContent><ResponsiveContainer width="100%" height={280}><BarChart data={stats.declarationsByStatus}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} /><YAxis stroke="hsl(var(--muted-foreground))" /><Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} /><Bar dataKey="count" radius={[8, 8, 0, 0]}>{stats.declarationsByStatus.map((entry, index) => <Cell key={`cell-${index}`} fill={statusColorMap[entry.status] || CHART_COLORS.user} />)}</Bar></BarChart></ResponsiveContainer></CardContent></Card>
         </div>
         <Card className="glass-card border-border/50"><CardHeader><CardTitle className="flex items-center gap-2"><Activity className="w-5 h-5" />{t('recentActivities')}</CardTitle></CardHeader><CardContent><div className="space-y-3">{stats.recentActivities.length === 0 ? <p className="text-center text-muted-foreground py-8">{t('noRecentActivities')}</p> : stats.recentActivities.map((activity) => <div key={activity.id} className="flex items-start gap-4 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"><div className="w-2 h-2 mt-2 rounded-full bg-primary animate-pulse"></div><div className="flex-1"><p className="text-sm">{activity.message}</p><p className="text-xs text-muted-foreground mt-1">{toGregorianDateTime(activity.timestamp)}</p></div></div>)}</div></CardContent></Card>
       </main>
