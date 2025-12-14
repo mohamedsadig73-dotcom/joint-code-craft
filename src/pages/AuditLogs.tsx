@@ -10,6 +10,14 @@ import { Button } from '@/components/ui/button';
 import { FileText, Shield, RefreshCw, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { EmptyState } from '@/components/EmptyState';
+import { TableSkeleton, CardSkeleton } from '@/components/ui/TableSkeleton';
+import { 
+  auditActionLabels, 
+  auditActionColors, 
+  tableLabels,
+  emptyStateMessages 
+} from '@/constants/statusLabels';
 
 interface AuditLog {
   id: string;
@@ -78,43 +86,15 @@ export default function AuditLogs() {
   };
 
   const getActionBadge = (action: string) => {
-    const colors: Record<string, string> = {
-      CREATE: 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30',
-      UPDATE: 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30',
-      DELETE: 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30',
-      ASSIGN_ROLE: 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30',
-      UPDATE_ROLE: 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/30',
-      REMOVE_ROLE: 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30',
-    };
-
     return (
-      <Badge className={colors[action] || 'bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30'}>
-        {action}
+      <Badge className={auditActionColors[action] || 'bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30'}>
+        {auditActionLabels[action] || action}
       </Badge>
     );
   };
 
-  const getActionLabel = (action: string) => {
-    const labels: Record<string, string> = {
-      CREATE: 'إنشاء',
-      UPDATE: 'تحديث',
-      DELETE: 'حذف',
-      ASSIGN_ROLE: 'تعيين دور',
-      UPDATE_ROLE: 'تحديث دور',
-      REMOVE_ROLE: 'إزالة دور',
-    };
-    return labels[action] || action;
-  };
-
   const getTableLabel = (tableName: string) => {
-    const labels: Record<string, string> = {
-      declarations: 'الإقرارات',
-      user_roles: 'أدوار المستخدمين',
-      profiles: 'الملفات الشخصية',
-      maintenance_items: 'بنود الصيانة',
-      maintenance_schedule: 'جدول الصيانة',
-    };
-    return labels[tableName] || tableName;
+    return tableLabels[tableName] || tableName;
   };
 
   const filteredLogs = logs.filter(log => {
@@ -158,53 +138,57 @@ export default function AuditLogs() {
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="glass-card border-border/50 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-xl bg-primary/10">
-                <FileText className="w-6 h-6 text-primary" />
+        {loading ? (
+          <CardSkeleton count={4} />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <Card className="glass-card border-border/50 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-primary/10">
+                  <FileText className="w-6 h-6 text-primary" />
+                </div>
               </div>
-            </div>
-            <div className="text-3xl font-bold mb-1">{logs.length}</div>
-            <div className="text-sm text-muted-foreground">إجمالي السجلات</div>
-          </Card>
+              <div className="text-3xl font-bold mb-1">{logs.length}</div>
+              <div className="text-sm text-muted-foreground">إجمالي السجلات</div>
+            </Card>
 
-          <Card className="glass-card border-border/50 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-xl bg-green-500/10">
-                <FileText className="w-6 h-6 text-green-700 dark:text-green-300" />
+            <Card className="glass-card border-border/50 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-green-500/10">
+                  <FileText className="w-6 h-6 text-green-700 dark:text-green-300" />
+                </div>
               </div>
-            </div>
-            <div className="text-3xl font-bold mb-1">
-              {logs.filter(l => l.action === 'CREATE').length}
-            </div>
-            <div className="text-sm text-muted-foreground">عمليات إنشاء</div>
-          </Card>
+              <div className="text-3xl font-bold mb-1">
+                {logs.filter(l => l.action === 'CREATE').length}
+              </div>
+              <div className="text-sm text-muted-foreground">عمليات إنشاء</div>
+            </Card>
 
-          <Card className="glass-card border-border/50 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-xl bg-blue-500/10">
-                <FileText className="w-6 h-6 text-blue-700 dark:text-blue-300" />
+            <Card className="glass-card border-border/50 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-blue-500/10">
+                  <FileText className="w-6 h-6 text-blue-700 dark:text-blue-300" />
+                </div>
               </div>
-            </div>
-            <div className="text-3xl font-bold mb-1">
-              {logs.filter(l => l.action === 'UPDATE').length}
-            </div>
-            <div className="text-sm text-muted-foreground">عمليات تحديث</div>
-          </Card>
+              <div className="text-3xl font-bold mb-1">
+                {logs.filter(l => l.action === 'UPDATE').length}
+              </div>
+              <div className="text-sm text-muted-foreground">عمليات تحديث</div>
+            </Card>
 
-          <Card className="glass-card border-border/50 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-xl bg-red-500/10">
-                <FileText className="w-6 h-6 text-red-700 dark:text-red-300" />
+            <Card className="glass-card border-border/50 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-red-500/10">
+                  <FileText className="w-6 h-6 text-red-700 dark:text-red-300" />
+                </div>
               </div>
-            </div>
-            <div className="text-3xl font-bold mb-1">
-              {logs.filter(l => l.action === 'DELETE').length}
-            </div>
-            <div className="text-sm text-muted-foreground">عمليات حذف</div>
-          </Card>
-        </div>
+              <div className="text-3xl font-bold mb-1">
+                {logs.filter(l => l.action === 'DELETE').length}
+              </div>
+              <div className="text-sm text-muted-foreground">عمليات حذف</div>
+            </Card>
+          </div>
+        )}
 
         {/* Filters */}
         <Card className="glass-card border-border/50 p-6 mb-8">
@@ -267,17 +251,17 @@ export default function AuditLogs() {
                   <TableHead>المعرف</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+            <TableBody>
                 {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
-                      جاري التحميل...
-                    </TableCell>
-                  </TableRow>
+                  <TableSkeleton rows={5} columns={5} />
                 ) : filteredLogs.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
-                      لا توجد سجلات
+                    <TableCell colSpan={5} className="p-0">
+                      <EmptyState
+                        variant="search"
+                        title={emptyStateMessages.auditLogs.title}
+                        description={emptyStateMessages.auditLogs.description}
+                      />
                     </TableCell>
                   </TableRow>
                 ) : (

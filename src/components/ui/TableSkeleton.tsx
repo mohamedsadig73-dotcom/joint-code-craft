@@ -1,5 +1,6 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import { TableRow, TableCell } from '@/components/ui/table';
+import { Card } from '@/components/ui/card';
 
 interface TableSkeletonProps {
   rows?: number;
@@ -36,9 +37,9 @@ export function CardSkeleton({ count = 4 }: CardSkeletonProps) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {Array.from({ length: count }).map((_, index) => (
-        <div 
+        <Card 
           key={index} 
-          className="p-4 rounded-lg border border-border/50 bg-card animate-pulse"
+          className="p-4 glass-card border-border/50 animate-pulse"
           style={{ animationDelay: `${index * 100}ms` }}
         >
           <div className="flex items-center justify-between mb-3">
@@ -46,7 +47,7 @@ export function CardSkeleton({ count = 4 }: CardSkeletonProps) {
           </div>
           <Skeleton className="h-8 w-16 mb-2" />
           <Skeleton className="h-3 w-24" />
-        </div>
+        </Card>
       ))}
     </div>
   );
@@ -65,6 +66,79 @@ export function ChartSkeleton() {
           }} 
         />
       ))}
+    </div>
+  );
+}
+
+export function ListSkeleton({ count = 5 }: { count?: number }) {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: count }).map((_, index) => (
+        <div 
+          key={index}
+          className="flex items-center gap-4 p-4 rounded-lg bg-muted/30 animate-pulse"
+          style={{ animationDelay: `${index * 100}ms` }}
+        >
+          <Skeleton className="w-10 h-10 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+          <Skeleton className="h-6 w-16 rounded-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function FormSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="grid grid-cols-2 gap-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+        ))}
+      </div>
+      <Skeleton className="h-24 w-full rounded-lg" />
+      <div className="flex justify-end gap-2">
+        <Skeleton className="h-10 w-24 rounded-lg" />
+        <Skeleton className="h-10 w-24 rounded-lg" />
+      </div>
+    </div>
+  );
+}
+
+export function PageSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Skeleton className="h-10 w-32 rounded-lg" />
+      </div>
+      
+      {/* Stats */}
+      <CardSkeleton count={4} />
+      
+      {/* Table */}
+      <Card className="p-6 glass-card border-border/50">
+        <Skeleton className="h-6 w-32 mb-4" />
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Skeleton 
+              key={index} 
+              className="h-12 w-full rounded-lg"
+              style={{ animationDelay: `${index * 100}ms` }}
+            />
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }

@@ -10,6 +10,8 @@ import { NotificationListener } from "@/components/NotificationListener";
 import { RegisterSW } from "@/components/RegisterSW";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { Onboarding } from "@/components/Onboarding";
 
 // Lazy load pages for better performance
 const Login = lazy(() => import("./pages/Login"));
@@ -51,6 +53,8 @@ function AppRoutes() {
   return (
     <>
       {isAuthenticated && <NotificationListener />}
+      {isAuthenticated && <Onboarding />}
+      {isAuthenticated && <MobileBottomNav />}
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route 
