@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Phone, Mail, MapPin } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/EmptyState';
+import { SuccessAnimation, useSuccessAnimation } from '@/components/ui/SuccessAnimation';
+import { emptyStateMessages } from '@/constants/statusLabels';
 
 interface Vendor {
   id: string;
@@ -28,6 +32,7 @@ export function VendorsManagement() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
+  const { trigger: triggerSuccess, SuccessAnimation: SuccessAnimationComponent } = useSuccessAnimation();
   const [formData, setFormData] = useState({
     name: '',
     contact_person: '',
@@ -39,11 +44,7 @@ export function VendorsManagement() {
     active: true,
   });
 
-  useEffect(() => {
-    loadVendors();
-  }, []);
-
-  const loadVendors = async () => {
+  const loadVendors = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('maintenance_vendors')
@@ -61,7 +62,11 @@ export function VendorsManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadVendors();
+  }, [loadVendors]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,12 +77,14 @@ export function VendorsManagement() {
           .update(formData)
           .eq('id', editingVendor.id);
         if (error) throw error;
+        triggerSuccess('success', 'تم تحديث المورد بنجاح');
         toast({ title: 'تم تحديث المورد بنجاح' });
       } else {
         const { error } = await supabase
           .from('maintenance_vendors')
           .insert([formData]);
         if (error) throw error;
+        triggerSuccess('success', 'تم إضافة المورد بنجاح');
         toast({ title: 'تم إضافة المورد بنجاح' });
       }
       
@@ -103,6 +110,7 @@ export function VendorsManagement() {
         .eq('id', id);
       
       if (error) throw error;
+      triggerSuccess('success', 'تم حذف المورد بنجاح');
       toast({ title: 'تم حذف المورد بنجاح' });
       loadVendors();
     } catch (error: any) {
@@ -145,7 +153,8 @@ export function VendorsManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <SuccessAnimationComponent />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold">إدارة الموردين وشركات الصيانة</h2>
           <p className="text-muted-foreground">إضافة وتعديل معلومات الموردين</p>
@@ -275,15 +284,17 @@ export function VendorsManagement() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  جاري التحميل...
-                </TableCell>
-              </TableRow>
+              <TableSkeleton rows={5} columns={6} />
             ) : vendors.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  لا توجد موردين مسجلين
+                <TableCell colSpan={6}>
+                  <EmptyState
+                    variant="maintenance"
+                    title={emptyStateMessages.vendors.title}
+                    description={emptyStateMessages.vendors.description}
+                    actionLabel="إضافة مورد جديد"
+                    onAction={() => setDialogOpen(true)}
+                  />
                 </TableCell>
               </TableRow>
             ) : (
