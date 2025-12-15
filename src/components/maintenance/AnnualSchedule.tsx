@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -11,6 +11,10 @@ import { toast } from '@/hooks/use-toast';
 import { Calendar, Check, X, Clock, AlertCircle, Download, FileSpreadsheet } from 'lucide-react';
 import { exportMaintenanceToPDF, exportMaintenanceToExcel, MaintenanceReportData } from '@/utils/maintenanceReports';
 import { AttachmentsManager } from './AttachmentsManager';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/EmptyState';
+import { SuccessAnimation, useSuccessAnimation } from '@/components/ui/SuccessAnimation';
+import { maintenanceStatusLabels, emptyStateMessages } from '@/constants/statusLabels';
 
 const MONTHS = [
   'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
@@ -50,6 +54,7 @@ export function AnnualSchedule() {
   const [loading, setLoading] = useState(true);
   const [selectedCell, setSelectedCell] = useState<ScheduleEntry | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { trigger: triggerSuccess, SuccessAnimation: SuccessAnimationComponent } = useSuccessAnimation();
   const [updateData, setUpdateData] = useState<{
     status: 'pending' | 'done' | 'not_required' | 'overdue';
     executed_date: string;
@@ -66,7 +71,7 @@ export function AnnualSchedule() {
     loadSchedule();
   }, [selectedYear]);
 
-  const loadSchedule = async () => {
+  const loadSchedule = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -106,7 +111,11 @@ export function AnnualSchedule() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedYear]);
+
+  useEffect(() => {
+    loadSchedule();
+  }, [loadSchedule]);
 
   const handleCellClick = (itemId: string, month: number) => {
     const itemSchedule = schedule[itemId] || [];
@@ -140,6 +149,7 @@ export function AnnualSchedule() {
 
       if (error) throw error;
 
+      triggerSuccess('success', 'تم تحديث الحالة بنجاح');
       toast({ title: 'تم تحديث الحالة بنجاح' });
       setDialogOpen(false);
       loadSchedule();
@@ -165,6 +175,7 @@ export function AnnualSchedule() {
         if (error) throw error;
       }
 
+      triggerSuccess('success', 'تم توليد الجدول السنوي بنجاح');
       toast({ title: 'تم توليد الجدول السنوي بنجاح' });
       loadSchedule();
     } catch (error: any) {
@@ -270,7 +281,8 @@ export function AnnualSchedule() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <SuccessAnimationComponent />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold">الجدول السنوي للصيانة</h2>
           <p className="text-muted-foreground">متابعة تنفيذ الصيانة الدورية</p>

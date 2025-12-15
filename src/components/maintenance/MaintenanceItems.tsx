@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -12,14 +12,12 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Calendar, DollarSign, Eye } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/EmptyState';
+import { SuccessAnimation, useSuccessAnimation } from '@/components/ui/SuccessAnimation';
+import { frequencyLabels, emptyStateMessages } from '@/constants/statusLabels';
 
-const FREQUENCIES = [
-  { value: 'monthly', label: 'شهري' },
-  { value: 'quarterly', label: 'ربع سنوي' },
-  { value: 'semiannual', label: 'نصف سنوي' },
-  { value: 'annual', label: 'سنوي' },
-  { value: 'ad_hoc', label: 'عند الحاجة' },
-];
+const FREQUENCIES = Object.entries(frequencyLabels).map(([value, label]) => ({ value, label }));
 
 interface MaintenanceItem {
   id: string;
@@ -55,6 +53,7 @@ export function MaintenanceItems() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MaintenanceItem | null>(null);
+  const { trigger: triggerSuccess, SuccessAnimation: SuccessAnimationComponent } = useSuccessAnimation();
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
@@ -79,11 +78,7 @@ export function MaintenanceItems() {
     vendor_id: '',
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [itemsRes, assetsRes, vendorsRes] = await Promise.all([
         supabase.from('maintenance_items').select('*').order('name'),
@@ -107,7 +102,11 @@ export function MaintenanceItems() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,6 +125,7 @@ export function MaintenanceItems() {
           .update(submitData)
           .eq('id', editingItem.id);
         if (error) throw error;
+        triggerSuccess('success', 'تم تحديث البند بنجاح');
         toast({ title: 'تم تحديث البند بنجاح' });
       } else {
         const { data: newItem, error } = await supabase
@@ -145,6 +145,7 @@ export function MaintenanceItems() {
           });
         
         if (scheduleError) throw scheduleError;
+        triggerSuccess('success', 'تم إضافة البند وتوليد الجدول السنوي بنجاح');
         toast({ title: 'تم إضافة البند وتوليد الجدول السنوي بنجاح' });
       }
       
@@ -170,6 +171,7 @@ export function MaintenanceItems() {
         .eq('id', id);
       
       if (error) throw error;
+      triggerSuccess('success', 'تم حذف البند بنجاح');
       toast({ title: 'تم حذف البند بنجاح' });
       loadData();
     } catch (error: any) {
@@ -220,7 +222,8 @@ export function MaintenanceItems() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <SuccessAnimationComponent />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold">إدارة بنود الصيانة</h2>
           <p className="text-muted-foreground">تحديد المهام الدورية والمتطلبات</p>
@@ -404,15 +407,17 @@ export function MaintenanceItems() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  جاري التحميل...
-                </TableCell>
-              </TableRow>
+              <TableSkeleton rows={5} columns={7} />
             ) : items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  لا توجد بنود صيانة مسجلة
+                <TableCell colSpan={7}>
+                  <EmptyState
+                    variant="maintenance"
+                    title={emptyStateMessages.maintenance.title}
+                    description={emptyStateMessages.maintenance.description}
+                    actionLabel="إضافة بند جديد"
+                    onAction={() => setDialogOpen(true)}
+                  />
                 </TableCell>
               </TableRow>
             ) : (

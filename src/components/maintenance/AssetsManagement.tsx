@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,18 +9,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Building2 } from 'lucide-react';
+import { Plus, Edit, Trash2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/EmptyState';
+import { SuccessAnimation, useSuccessAnimation } from '@/components/ui/SuccessAnimation';
+import { assetTypeLabels, emptyStateMessages } from '@/constants/statusLabels';
 
-const ASSET_TYPES = [
-  { value: 'electrical', label: 'كهربائي' },
-  { value: 'plumbing', label: 'سباكة' },
-  { value: 'hvac', label: 'تكييف وتهوية' },
-  { value: 'safety', label: 'أمن وسلامة' },
-  { value: 'equipment', label: 'معدات' },
-  { value: 'building', label: 'مباني' },
-  { value: 'other', label: 'أخرى' },
-];
+const ASSET_TYPES = Object.entries(assetTypeLabels).map(([value, label]) => ({ value, label }));
 
 interface Asset {
   id: string;
@@ -41,6 +37,7 @@ export function AssetsManagement() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
+  const { trigger: triggerSuccess, SuccessAnimation: SuccessAnimationComponent } = useSuccessAnimation();
   const [formData, setFormData] = useState<{
     name: string;
     code: string;
@@ -65,11 +62,7 @@ export function AssetsManagement() {
     active: true,
   });
 
-  useEffect(() => {
-    loadAssets();
-  }, []);
-
-  const loadAssets = async () => {
+  const loadAssets = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('maintenance_assets')
@@ -87,7 +80,11 @@ export function AssetsManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadAssets();
+  }, [loadAssets]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,12 +95,14 @@ export function AssetsManagement() {
           .update(formData)
           .eq('id', editingAsset.id);
         if (error) throw error;
+        triggerSuccess('success', 'تم تحديث الأصل بنجاح');
         toast({ title: 'تم تحديث الأصل بنجاح' });
       } else {
         const { error } = await supabase
           .from('maintenance_assets')
           .insert([formData]);
         if (error) throw error;
+        triggerSuccess('success', 'تم إضافة الأصل بنجاح');
         toast({ title: 'تم إضافة الأصل بنجاح' });
       }
       
@@ -129,6 +128,7 @@ export function AssetsManagement() {
         .eq('id', id);
       
       if (error) throw error;
+      triggerSuccess('success', 'تم حذف الأصل بنجاح');
       toast({ title: 'تم حذف الأصل بنجاح' });
       loadAssets();
     } catch (error: any) {
@@ -179,7 +179,8 @@ export function AssetsManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <SuccessAnimationComponent />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold">إدارة الأصول والمعدات</h2>
           <p className="text-muted-foreground">تسجيل ومتابعة الأصول والمعدات</p>
@@ -342,15 +343,17 @@ export function AssetsManagement() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  جاري التحميل...
-                </TableCell>
-              </TableRow>
+              <TableSkeleton rows={5} columns={7} />
             ) : assets.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  لا توجد أصول مسجلة
+                <TableCell colSpan={7}>
+                  <EmptyState
+                    variant="maintenance"
+                    title={emptyStateMessages.assets.title}
+                    description={emptyStateMessages.assets.description}
+                    actionLabel="إضافة أصل جديد"
+                    onAction={() => setDialogOpen(true)}
+                  />
                 </TableCell>
               </TableRow>
             ) : (
