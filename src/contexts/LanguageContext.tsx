@@ -343,6 +343,13 @@ const translations = {
     
     // Maintenance
     maintenanceSystem: 'Maintenance System',
+    
+    // Offline Mode
+    offline: 'Offline',
+    syncing: 'Syncing...',
+    pendingSync: 'pending sync',
+    offlineMessage: 'You are offline. Changes will be saved locally.',
+    operationsPending: 'operations pending sync',
   },
   ar: {
     // Navigation
@@ -665,6 +672,13 @@ const translations = {
     
     // Maintenance
     maintenanceSystem: 'نظام الصيانة',
+    
+    // Offline Mode
+    offline: 'غير متصل',
+    syncing: 'جاري المزامنة...',
+    pendingSync: 'عملية معلقة',
+    offlineMessage: 'أنت غير متصل بالإنترنت. التغييرات ستُحفظ محلياً.',
+    operationsPending: 'عملية في انتظار المزامنة',
   },
 };
 

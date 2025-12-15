@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { NotificationCenter } from '@/components/NotificationCenter';
+import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { 
   LayoutDashboard, 
   FolderOpen, 
@@ -169,6 +170,9 @@ export function Navigation() {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-3">
+            {/* Offline Indicator */}
+            <OfflineIndicator />
+            
             {/* Force Update Button */}
             <Button
               variant="ghost"

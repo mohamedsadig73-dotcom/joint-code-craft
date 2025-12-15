@@ -12,6 +12,7 @@ import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Onboarding } from "@/components/Onboarding";
+import { OfflineBanner } from "@/components/OfflineIndicator";
 
 // Lazy load pages for better performance
 const Login = lazy(() => import("./pages/Login"));
@@ -55,6 +56,7 @@ function AppRoutes() {
       {isAuthenticated && <NotificationListener />}
       {isAuthenticated && <Onboarding />}
       {isAuthenticated && <MobileBottomNav />}
+      {isAuthenticated && <OfflineBanner />}
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route 
