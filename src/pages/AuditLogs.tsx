@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigation } from '@/components/Navigation';
 import { Card } from '@/components/ui/card';
@@ -12,13 +12,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { EmptyState } from '@/components/EmptyState';
 import { TableSkeleton, CardSkeleton } from '@/components/ui/TableSkeleton';
+import { VirtualizedList } from '@/components/VirtualizedList';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   auditActionLabels, 
   auditActionColors, 
   tableLabels,
   emptyStateMessages 
 } from '@/constants/statusLabels';
-
 interface AuditLog {
   id: string;
   user_id: string;
@@ -36,30 +37,24 @@ interface AuditLog {
 
 export default function AuditLogs() {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterAction, setFilterAction] = useState<string>('all');
   const [filterTable, setFilterTable] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    if (user?.role === 'admin') {
-      loadLogs();
-    }
-  }, [user]);
-
-  const loadLogs = async () => {
+  const loadLogs = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('audit_logs')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(500);
 
       if (error) throw error;
 
-      // جلب معلومات المستخدمين بشكل منفصل
       const userIds = [...new Set(data?.map(log => log.user_id))];
       const { data: profiles } = await supabase
         .from('profiles')
@@ -83,8 +78,13 @@ export default function AuditLogs() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      loadLogs();
+    }
+  }, [user, loadLogs]);
   const getActionBadge = (action: string) => {
     return (
       <Badge className={auditActionColors[action] || 'bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30'}>
@@ -97,7 +97,7 @@ export default function AuditLogs() {
     return tableLabels[tableName] || tableName;
   };
 
-  const filteredLogs = logs.filter(log => {
+  const filteredLogs = useMemo(() => logs.filter(log => {
     const matchesAction = filterAction === 'all' || log.action === filterAction;
     const matchesTable = filterTable === 'all' || log.table_name === filterTable;
     const matchesSearch = searchTerm === '' || 
@@ -106,8 +106,7 @@ export default function AuditLogs() {
       log.profiles?.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     return matchesAction && matchesTable && matchesSearch;
-  });
-
+  }), [logs, filterAction, filterTable, searchTerm]);
   if (user?.role !== 'admin') {
     return (
       <div className="min-h-screen">
