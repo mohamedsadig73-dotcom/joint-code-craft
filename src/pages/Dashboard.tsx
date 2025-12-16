@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,8 +15,12 @@ import { DeclarationRowExpand } from '@/components/declarations/DeclarationRowEx
 import { StatsCard } from '@/components/ui/StatsCard';
 import { EmptyState } from '@/components/EmptyState';
 import { TableSkeleton, CardSkeleton } from '@/components/ui/TableSkeleton';
+import { SmartNudge } from '@/components/SmartNudge';
+import { SwipeableRow } from '@/components/SwipeableRow';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useDeclarationsRealtime } from '@/hooks/useRealtimeUpdates';
+import { useSmartNudges } from '@/hooks/useSmartNudges';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { statusLabels, statusColors } from '@/constants/statusLabels';
 import { Declaration, DeletedDeclaration, DeclarationStats, Profile } from '@/types/declarations';
 import { Button } from '@/components/ui/button';
@@ -64,12 +68,13 @@ import {
   ChevronUp,
   RefreshCw,
   Plus,
+  Edit,
 } from 'lucide-react';
-
 export default function Dashboard() {
   const { t, language } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   // State
   const [activeTab, setActiveTab] = useState('overview');
@@ -99,6 +104,22 @@ export default function Dashboard() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declarationToDelete, setDeclarationToDelete] = useState<Declaration | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  // Smart Nudges
+  const completionRate = useMemo(() => {
+    if (stats.total === 0) return 0;
+    return Math.round((stats.archived / stats.total) * 100);
+  }, [stats]);
+
+  const hasOverdueItems = useMemo(() => {
+    return stats.pending_warehouse_signature > 0 || stats.returned_to_warehouse > 0;
+  }, [stats]);
+
+  const { activeNudge, dismissNudge } = useSmartNudges({
+    totalItems: stats.total,
+    completionRate,
+    hasOverdueItems,
+  });
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -280,7 +301,7 @@ export default function Dashboard() {
     return Math.max(0, 30 - daysPassed);
   };
 
-  const filteredDeclarations = declarations.filter(dec => {
+  const filteredDeclarations = useMemo(() => declarations.filter(dec => {
     const matchesSearch = dec.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          dec.sender?.username?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || dec.status === statusFilter;
@@ -299,38 +320,39 @@ export default function Dashboard() {
     }
     
     return matchesSearch && matchesStatus && matchesSender && matchesDate;
-  });
+  }), [declarations, searchQuery, statusFilter, senderFilter, dateFrom, dateTo]);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSearchQuery('');
     setStatusFilter('all');
     setSenderFilter('all');
     setDateFrom(undefined);
     setDateTo(undefined);
-  };
+  }, []);
 
-  const hasActiveFilters = searchQuery || statusFilter !== 'all' || senderFilter !== 'all' || dateFrom || dateTo;
-
-  const toggleSelectAll = () => {
+  const hasActiveFilters = useMemo(() => 
+    searchQuery || statusFilter !== 'all' || senderFilter !== 'all' || dateFrom || dateTo
+  , [searchQuery, statusFilter, senderFilter, dateFrom, dateTo]);
+  
+  const toggleSelectAll = useCallback(() => {
     if (selectedItems.length === filteredDeclarations.length) {
       setSelectedItems([]);
     } else {
       setSelectedItems(filteredDeclarations.map(d => d.id));
     }
-  };
+  }, [selectedItems.length, filteredDeclarations]);
 
-  const toggleSelectItem = (id: string) => {
+  const toggleSelectItem = useCallback((id: string) => {
     setSelectedItems(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
-  };
+  }, []);
 
-  const toggleRowExpand = (id: string) => {
+  const toggleRowExpand = useCallback((id: string) => {
     setExpandedRows(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
-  };
-
+  }, []);
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -396,6 +418,15 @@ export default function Dashboard() {
                 bgColor="bg-green-500/10"
               />
             </motion.div>
+          )}
+
+          {/* Smart Nudge */}
+          {activeNudge && (
+            <SmartNudge
+              nudge={activeNudge}
+              onDismiss={dismissNudge}
+              className="mt-4"
+            />
           )}
         </div>
 
@@ -643,121 +674,180 @@ export default function Dashboard() {
               </motion.div>
             )}
 
-            {/* Declarations Table */}
-            <Card className="glass-card border-border/50 overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-8"></TableHead>
-                    <TableHead className="w-12">
-                      <Checkbox
-                        checked={selectedItems.length === filteredDeclarations.length && filteredDeclarations.length > 0}
-                        onCheckedChange={toggleSelectAll}
-                      />
-                    </TableHead>
-                    <TableHead>{t('declarationId')}</TableHead>
-                    <TableHead>{t('type')}</TableHead>
-                    <TableHead>{t('sender')}</TableHead>
-                    <TableHead>{t('archiveNumber')}</TableHead>
-                    <TableHead>{t('status')}</TableHead>
-                    <TableHead>{t('createdDate')}</TableHead>
-                    <TableHead>{t('actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableSkeleton rows={10} columns={9} />
-                  ) : filteredDeclarations.length === 0 ? (
+            {/* Mobile Cards View */}
+            {isMobile ? (
+              <div className="space-y-3">
+                {loading ? (
+                  <CardSkeleton count={5} />
+                ) : filteredDeclarations.length === 0 ? (
+                  <EmptyState
+                    variant="search"
+                    title={hasActiveFilters ? 'لا توجد نتائج' : t('noDeclarations')}
+                    description={hasActiveFilters ? 'جرب تعديل الفلاتر للحصول على نتائج أخرى' : 'ابدأ بإنشاء إقرار جديد'}
+                    actionLabel={hasActiveFilters ? t('clearFilters') : t('createDeclaration')}
+                    onAction={hasActiveFilters ? clearFilters : () => setCreateDialogOpen(true)}
+                  />
+                ) : (
+                  filteredDeclarations.map((declaration) => (
+                    <SwipeableRow
+                      key={declaration.id}
+                      onEdit={() => navigate(`/declaration/${declaration.id}`)}
+                      onDelete={(user?.role === 'admin' || (user?.role === 'manager' && declaration.sender_id === user?.id)) 
+                        ? () => handleDelete(declaration) 
+                        : undefined}
+                      editLabel={t('view')}
+                      deleteLabel={t('delete')}
+                    >
+                      <Card className="p-4 space-y-3 bg-background border-border/50">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="font-mono text-xs">
+                              {declaration.type}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground font-mono">
+                              #{declaration.id.slice(0, 8)}
+                            </span>
+                          </div>
+                          <StatusQuickAction
+                            declarationId={declaration.id}
+                            currentStatus={declaration.status}
+                            onStatusChange={loadDeclarations}
+                          />
+                        </div>
+                        
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span>{declaration.sender?.username || t('unknown')}</span>
+                          <span>•</span>
+                          <span>{toGregorianDate(declaration.created_at)}</span>
+                        </div>
+
+                        {declaration.archive_number && (
+                          <div className="text-xs text-muted-foreground">
+                            {t('archiveNumber')}: <span className="font-mono">{declaration.archive_number}</span>
+                          </div>
+                        )}
+                      </Card>
+                    </SwipeableRow>
+                  ))
+                )}
+              </div>
+            ) : (
+              /* Desktop Table View */
+              <Card className="glass-card border-border/50 overflow-hidden">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8">
-                        <EmptyState
-                          variant="search"
-                          title={hasActiveFilters ? 'لا توجد نتائج' : t('noDeclarations')}
-                          description={hasActiveFilters ? 'جرب تعديل الفلاتر للحصول على نتائج أخرى' : 'ابدأ بإنشاء إقرار جديد'}
-                          actionLabel={hasActiveFilters ? t('clearFilters') : t('createDeclaration')}
-                          onAction={hasActiveFilters ? clearFilters : () => setCreateDialogOpen(true)}
+                      <TableHead className="w-8"></TableHead>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={selectedItems.length === filteredDeclarations.length && filteredDeclarations.length > 0}
+                          onCheckedChange={toggleSelectAll}
                         />
-                      </TableCell>
+                      </TableHead>
+                      <TableHead>{t('declarationId')}</TableHead>
+                      <TableHead>{t('type')}</TableHead>
+                      <TableHead>{t('sender')}</TableHead>
+                      <TableHead>{t('archiveNumber')}</TableHead>
+                      <TableHead>{t('status')}</TableHead>
+                      <TableHead>{t('createdDate')}</TableHead>
+                      <TableHead>{t('actions')}</TableHead>
                     </TableRow>
-                  ) : (
-                    filteredDeclarations.map((declaration) => (
-                      <Collapsible key={declaration.id} asChild open={expandedRows.includes(declaration.id)}>
-                        <>
-                          <TableRow className="hover:bg-muted/5">
-                            <TableCell>
-                              <CollapsibleTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6"
-                                  onClick={() => toggleRowExpand(declaration.id)}
-                                >
-                                  {expandedRows.includes(declaration.id) ? (
-                                    <ChevronUp className="w-4 h-4" />
-                                  ) : (
-                                    <ChevronDown className="w-4 h-4" />
-                                  )}
-                                </Button>
-                              </CollapsibleTrigger>
-                            </TableCell>
-                            <TableCell>
-                              <Checkbox
-                                checked={selectedItems.includes(declaration.id)}
-                                onCheckedChange={() => toggleSelectItem(declaration.id)}
-                              />
-                            </TableCell>
-                            <TableCell className="font-medium font-mono text-sm">{declaration.id}</TableCell>
-                            <TableCell>{declaration.type}</TableCell>
-                            <TableCell>{declaration.sender?.username || t('unknown')}</TableCell>
-                            <TableCell className="font-mono text-sm">
-                              {declaration.archive_number || <span className="text-muted-foreground">-</span>}
-                            </TableCell>
-                            <TableCell>
-                              <StatusQuickAction
-                                declarationId={declaration.id}
-                                currentStatus={declaration.status}
-                                onStatusChange={loadDeclarations}
-                              />
-                            </TableCell>
-                            <TableCell>{toGregorianDate(declaration.created_at)}</TableCell>
-                            <TableCell>
-                              <div className="flex justify-end gap-1">
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  onClick={() => navigate(`/declaration/${declaration.id}`)}
-                                  title={t('view')}
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                                {(user?.role === 'admin' || (user?.role === 'manager' && declaration.sender_id === user.id)) && (
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      <TableSkeleton rows={10} columns={9} />
+                    ) : filteredDeclarations.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={9} className="text-center py-8">
+                          <EmptyState
+                            variant="search"
+                            title={hasActiveFilters ? 'لا توجد نتائج' : t('noDeclarations')}
+                            description={hasActiveFilters ? 'جرب تعديل الفلاتر للحصول على نتائج أخرى' : 'ابدأ بإنشاء إقرار جديد'}
+                            actionLabel={hasActiveFilters ? t('clearFilters') : t('createDeclaration')}
+                            onAction={hasActiveFilters ? clearFilters : () => setCreateDialogOpen(true)}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredDeclarations.map((declaration) => (
+                        <Collapsible key={declaration.id} asChild open={expandedRows.includes(declaration.id)}>
+                          <>
+                            <TableRow className="hover:bg-muted/5">
+                              <TableCell>
+                                <CollapsibleTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={() => toggleRowExpand(declaration.id)}
+                                  >
+                                    {expandedRows.includes(declaration.id) ? (
+                                      <ChevronUp className="w-4 h-4" />
+                                    ) : (
+                                      <ChevronDown className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                </CollapsibleTrigger>
+                              </TableCell>
+                              <TableCell>
+                                <Checkbox
+                                  checked={selectedItems.includes(declaration.id)}
+                                  onCheckedChange={() => toggleSelectItem(declaration.id)}
+                                />
+                              </TableCell>
+                              <TableCell className="font-medium font-mono text-sm">{declaration.id}</TableCell>
+                              <TableCell>{declaration.type}</TableCell>
+                              <TableCell>{declaration.sender?.username || t('unknown')}</TableCell>
+                              <TableCell className="font-mono text-sm">
+                                {declaration.archive_number || <span className="text-muted-foreground">-</span>}
+                              </TableCell>
+                              <TableCell>
+                                <StatusQuickAction
+                                  declarationId={declaration.id}
+                                  currentStatus={declaration.status}
+                                  onStatusChange={loadDeclarations}
+                                />
+                              </TableCell>
+                              <TableCell>{toGregorianDate(declaration.created_at)}</TableCell>
+                              <TableCell>
+                                <div className="flex justify-end gap-1">
                                   <Button 
                                     variant="ghost" 
-                                    size="icon" 
-                                    className="text-destructive hover:text-destructive"
-                                    onClick={() => handleDelete(declaration)}
-                                    title={t('delete')}
+                                    size="icon"
+                                    onClick={() => navigate(`/declaration/${declaration.id}`)}
+                                    title={t('view')}
                                   >
-                                    <Trash2 className="w-4 h-4" />
+                                    <Eye className="w-4 h-4" />
                                   </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                          <CollapsibleContent asChild>
-                            <tr>
-                              <td colSpan={9} className="p-0">
-                                <DeclarationRowExpand declarationId={declaration.id} />
-                              </td>
-                            </tr>
-                          </CollapsibleContent>
-                        </>
-                      </Collapsible>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </Card>
+                                  {(user?.role === 'admin' || (user?.role === 'manager' && declaration.sender_id === user.id)) && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="text-destructive hover:text-destructive"
+                                      onClick={() => handleDelete(declaration)}
+                                      title={t('delete')}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                            <CollapsibleContent asChild>
+                              <tr>
+                                <td colSpan={9} className="p-0">
+                                  <DeclarationRowExpand declarationId={declaration.id} />
+                                </td>
+                              </tr>
+                            </CollapsibleContent>
+                          </>
+                        </Collapsible>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Archive Files Tab */}

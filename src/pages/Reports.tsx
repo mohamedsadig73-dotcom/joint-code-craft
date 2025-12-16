@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -9,12 +9,12 @@ import { StatsCard } from '@/components/ui/StatsCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { VirtualizedList } from '@/components/VirtualizedList';
 import { Users, FileText, Activity, TrendingUp, Shield, UserCheck, BarChart3, Download, RefreshCw, Clock } from 'lucide-react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { toGregorianDateTime, toGregorianDate } from '@/utils/dateUtils';
 import { exportDeclarationsToExcel } from '@/utils/excelExport';
 import { exportDeclarationsToPDF } from '@/utils/pdfExport';
-
 interface SystemStats {
   totalUsers: number;
   adminCount: number;
@@ -136,10 +136,9 @@ export default function Reports() {
     finally { setExporting(false); }
   };
 
-  const roleData = [{ name: t('systemAdmins'), value: stats.adminCount, color: CHART_COLORS.admin }, { name: t('managers'), value: stats.managerCount, color: CHART_COLORS.manager }, { name: t('regularUser'), value: stats.userCount, color: CHART_COLORS.user }];
-  const typeData = stats.declarationsByType.map(d => ({ name: d.type, value: d.count, color: d.type === 'دخول' ? CHART_COLORS.entrance : CHART_COLORS.exit }));
-  const statusColorMap: Record<string, string> = { draft: CHART_COLORS.draft, pending_warehouse_signature: CHART_COLORS.pending, warehouse_signed: CHART_COLORS.signed, sent_to_admin_office: CHART_COLORS.sent, received_by_admin_office: CHART_COLORS.received, returned_to_warehouse: CHART_COLORS.returned, archived: CHART_COLORS.archived, rejected: CHART_COLORS.rejected };
-
+  const roleData = useMemo(() => [{ name: t('systemAdmins'), value: stats.adminCount, color: CHART_COLORS.admin }, { name: t('managers'), value: stats.managerCount, color: CHART_COLORS.manager }, { name: t('regularUser'), value: stats.userCount, color: CHART_COLORS.user }], [stats, t]);
+  const typeData = useMemo(() => stats.declarationsByType.map(d => ({ name: d.type, value: d.count, color: d.type === 'دخول' ? CHART_COLORS.entrance : CHART_COLORS.exit })), [stats.declarationsByType]);
+  const statusColorMap: Record<string, string> = useMemo(() => ({ draft: CHART_COLORS.draft, pending_warehouse_signature: CHART_COLORS.pending, warehouse_signed: CHART_COLORS.signed, sent_to_admin_office: CHART_COLORS.sent, received_by_admin_office: CHART_COLORS.received, returned_to_warehouse: CHART_COLORS.returned, archived: CHART_COLORS.archived, rejected: CHART_COLORS.rejected }), []);
   if (loading) return (<div className="min-h-screen"><Navigation /><main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><div className="space-y-6"><div className="grid grid-cols-2 md:grid-cols-4 gap-4">{[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}</div></div></main></div>);
 
   return (
