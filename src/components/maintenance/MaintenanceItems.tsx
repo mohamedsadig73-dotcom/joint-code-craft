@@ -16,6 +16,10 @@ import { TableSkeleton } from '@/components/ui/TableSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { SuccessAnimation, useSuccessAnimation } from '@/components/ui/SuccessAnimation';
 import { frequencyLabels, emptyStateMessages } from '@/constants/statusLabels';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { MaintenanceMobileCard } from './MaintenanceMobileCard';
+import { formatNumber, formatCurrency, formatDateArabic } from '@/utils/numberFormat';
 
 const FREQUENCIES = Object.entries(frequencyLabels).map(([value, label]) => ({ value, label }));
 
@@ -47,6 +51,8 @@ interface Vendor {
 
 export function MaintenanceItems() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const { language, t } = useLanguage();
   const [items, setItems] = useState<MaintenanceItem[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -392,109 +398,142 @@ export function MaintenanceItems() {
         </Dialog>
       </div>
 
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>اسم البند</TableHead>
-              <TableHead>التكرار</TableHead>
-              <TableHead>آخر صيانة</TableHead>
-              <TableHead>الصيانة القادمة</TableHead>
-              <TableHead>التكلفة المقدرة</TableHead>
-              <TableHead>الحالة</TableHead>
-              <TableHead className="text-left">الإجراءات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableSkeleton rows={5} columns={7} />
-            ) : items.length === 0 ? (
+      {/* Mobile View */}
+      {isMobile ? (
+        <div className="space-y-4">
+          {loading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-32 bg-muted/50 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : items.length === 0 ? (
+            <EmptyState
+              variant="maintenance"
+              title={emptyStateMessages.maintenance.title}
+              description={emptyStateMessages.maintenance.description}
+              actionLabel={t('addMaintenanceItem') || 'إضافة بند جديد'}
+              onAction={() => setDialogOpen(true)}
+            />
+          ) : (
+            items.map((item) => (
+              <MaintenanceMobileCard
+                key={item.id}
+                item={item}
+                frequencyLabel={getFrequencyLabel(item.frequency)}
+                onEdit={() => handleEdit(item)}
+                onDelete={() => handleDelete(item.id)}
+                onView={() => navigate(`/maintenance/item/${item.id}`)}
+              />
+            ))
+          )}
+        </div>
+      ) : (
+        /* Desktop Table View */
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7}>
-                  <EmptyState
-                    variant="maintenance"
-                    title={emptyStateMessages.maintenance.title}
-                    description={emptyStateMessages.maintenance.description}
-                    actionLabel="إضافة بند جديد"
-                    onAction={() => setDialogOpen(true)}
-                  />
-                </TableCell>
+                <TableHead>{t('itemName') || 'اسم البند'}</TableHead>
+                <TableHead>{t('frequency') || 'التكرار'}</TableHead>
+                <TableHead>{t('lastMaintenance') || 'آخر صيانة'}</TableHead>
+                <TableHead>{t('nextMaintenance') || 'الصيانة القادمة'}</TableHead>
+                <TableHead>{t('estimatedCost') || 'التكلفة المقدرة'}</TableHead>
+                <TableHead>{t('status')}</TableHead>
+                <TableHead className="text-left">{t('actions')}</TableHead>
               </TableRow>
-            ) : (
-              items.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{getFrequencyLabel(item.frequency)}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    {item.last_maintenance_date ? (
-                      <div className="flex items-center gap-1 text-sm">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(item.last_maintenance_date).toLocaleDateString('ar-SA')}
-                      </div>
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {item.next_maintenance_date ? (
-                      <div className="flex items-center gap-1 text-sm">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(item.next_maintenance_date).toLocaleDateString('ar-SA')}
-                      </div>
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {item.estimated_cost ? (
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="w-3 h-3" />
-                        {item.estimated_cost.toFixed(2)}
-                      </div>
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={item.active ? 'default' : 'secondary'}>
-                      {item.active ? 'نشط' : 'غير نشط'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => navigate(`/maintenance/item/${item.id}`)}
-                        title="عرض التفاصيل"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(item)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(item.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableSkeleton rows={5} columns={7} />
+              ) : items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      variant="maintenance"
+                      title={emptyStateMessages.maintenance.title}
+                      description={emptyStateMessages.maintenance.description}
+                      actionLabel={t('addMaintenanceItem') || 'إضافة بند جديد'}
+                      onAction={() => setDialogOpen(true)}
+                    />
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ) : (
+                items.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{getFrequencyLabel(item.frequency)}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {item.last_maintenance_date ? (
+                        <div className="flex items-center gap-1 text-sm">
+                          <Calendar className="w-3 h-3" />
+                          {formatDateArabic(item.last_maintenance_date, language)}
+                        </div>
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {item.next_maintenance_date ? (
+                        <div className="flex items-center gap-1 text-sm">
+                          <Calendar className="w-3 h-3" />
+                          {formatDateArabic(item.next_maintenance_date, language)}
+                        </div>
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {item.estimated_cost ? (
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="w-3 h-3" />
+                          {formatCurrency(item.estimated_cost, language)}
+                        </div>
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={item.active ? 'default' : 'secondary'}>
+                        {item.active ? t('active') || 'نشط' : t('inactive') || 'غير نشط'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => navigate(`/maintenance/item/${item.id}`)}
+                          title={t('viewDetails') || 'عرض التفاصيل'}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(item)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }

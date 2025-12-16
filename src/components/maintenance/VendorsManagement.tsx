@@ -14,6 +14,9 @@ import { TableSkeleton } from '@/components/ui/TableSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { SuccessAnimation, useSuccessAnimation } from '@/components/ui/SuccessAnimation';
 import { emptyStateMessages } from '@/constants/statusLabels';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { VendorMobileCard } from './MaintenanceMobileCard';
 
 interface Vendor {
   id: string;
@@ -28,6 +31,8 @@ interface Vendor {
 }
 
 export function VendorsManagement() {
+  const isMobile = useIsMobile();
+  const { t } = useLanguage();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -270,91 +275,122 @@ export function VendorsManagement() {
         </Dialog>
       </div>
 
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>اسم المورد</TableHead>
-              <TableHead>الشخص المسؤول</TableHead>
-              <TableHead>معلومات الاتصال</TableHead>
-              <TableHead>التخصص</TableHead>
-              <TableHead>الحالة</TableHead>
-              <TableHead className="text-left">الإجراءات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableSkeleton rows={5} columns={6} />
-            ) : vendors.length === 0 ? (
+      {/* Mobile View */}
+      {isMobile ? (
+        <div className="space-y-4">
+          {loading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-32 bg-muted/50 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : vendors.length === 0 ? (
+            <EmptyState
+              variant="maintenance"
+              title={emptyStateMessages.vendors.title}
+              description={emptyStateMessages.vendors.description}
+              actionLabel={t('addVendor') || 'إضافة مورد جديد'}
+              onAction={() => setDialogOpen(true)}
+            />
+          ) : (
+            vendors.map((vendor) => (
+              <VendorMobileCard
+                key={vendor.id}
+                vendor={vendor}
+                onEdit={() => handleEdit(vendor)}
+                onDelete={() => handleDelete(vendor.id)}
+              />
+            ))
+          )}
+        </div>
+      ) : (
+        /* Desktop Table View */
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={6}>
-                  <EmptyState
-                    variant="maintenance"
-                    title={emptyStateMessages.vendors.title}
-                    description={emptyStateMessages.vendors.description}
-                    actionLabel="إضافة مورد جديد"
-                    onAction={() => setDialogOpen(true)}
-                  />
-                </TableCell>
+                <TableHead>{t('vendorName') || 'اسم المورد'}</TableHead>
+                <TableHead>{t('contactPerson') || 'الشخص المسؤول'}</TableHead>
+                <TableHead>{t('contactInfo') || 'معلومات الاتصال'}</TableHead>
+                <TableHead>{t('specialization') || 'التخصص'}</TableHead>
+                <TableHead>{t('status')}</TableHead>
+                <TableHead className="text-left">{t('actions')}</TableHead>
               </TableRow>
-            ) : (
-              vendors.map((vendor) => (
-                <TableRow key={vendor.id}>
-                  <TableCell className="font-medium">{vendor.name}</TableCell>
-                  <TableCell>{vendor.contact_person || '-'}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1 text-sm">
-                      {vendor.phone && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Phone className="w-3 h-3" />
-                          {vendor.phone}
-                        </div>
-                      )}
-                      {vendor.email && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Mail className="w-3 h-3" />
-                          {vendor.email}
-                        </div>
-                      )}
-                      {vendor.address && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <MapPin className="w-3 h-3" />
-                          {vendor.address}
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>{vendor.specialization || '-'}</TableCell>
-                  <TableCell>
-                    <Badge variant={vendor.active ? 'default' : 'secondary'}>
-                      {vendor.active ? 'نشط' : 'غير نشط'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(vendor)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(vendor.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableSkeleton rows={5} columns={6} />
+              ) : vendors.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6}>
+                    <EmptyState
+                      variant="maintenance"
+                      title={emptyStateMessages.vendors.title}
+                      description={emptyStateMessages.vendors.description}
+                      actionLabel={t('addVendor') || 'إضافة مورد جديد'}
+                      onAction={() => setDialogOpen(true)}
+                    />
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ) : (
+                vendors.map((vendor) => (
+                  <TableRow key={vendor.id}>
+                    <TableCell className="font-medium">{vendor.name}</TableCell>
+                    <TableCell>{vendor.contact_person || '-'}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1 text-sm">
+                        {vendor.phone && (
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Phone className="w-3 h-3" />
+                            {vendor.phone}
+                          </div>
+                        )}
+                        {vendor.email && (
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Mail className="w-3 h-3" />
+                            {vendor.email}
+                          </div>
+                        )}
+                        {vendor.address && (
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <MapPin className="w-3 h-3" />
+                            {vendor.address}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>{vendor.specialization || '-'}</TableCell>
+                    <TableCell>
+                      <Badge variant={vendor.active ? 'default' : 'secondary'}>
+                        {vendor.active ? t('active') || 'نشط' : t('inactive') || 'غير نشط'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(vendor)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(vendor.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }

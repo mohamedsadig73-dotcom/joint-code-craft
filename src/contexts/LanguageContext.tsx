@@ -343,6 +343,26 @@ const translations = {
     
     // Maintenance
     maintenanceSystem: 'Maintenance System',
+    itemName: 'Item Name',
+    frequency: 'Frequency',
+    lastMaintenance: 'Last Maintenance',
+    nextMaintenance: 'Next Maintenance',
+    estimatedCost: 'Estimated Cost',
+    active: 'Active',
+    inactive: 'Inactive',
+    viewDetails: 'View Details',
+    addMaintenanceItem: 'Add Maintenance Item',
+    addAsset: 'Add Asset',
+    addVendor: 'Add Vendor',
+    assetName: 'Asset Name',
+    vendorName: 'Vendor Name',
+    contactPerson: 'Contact Person',
+    contactInfo: 'Contact Info',
+    specialization: 'Specialization',
+    location: 'Location',
+    site: 'Site',
+    code: 'Code',
+    phone: 'Phone',
     
     // Offline Mode
     offline: 'Offline',
