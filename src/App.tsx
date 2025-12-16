@@ -15,6 +15,7 @@ import { Onboarding } from "@/components/Onboarding";
 import { OfflineBanner } from "@/components/OfflineIndicator";
 
 // Lazy load pages for better performance
+const Landing = lazy(() => import("./pages/Landing"));
 const Login = lazy(() => import("./pages/Login"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -74,6 +75,7 @@ function AppRoutes() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/install" element={<InstallApp />} />
+          <Route path="/landing" element={<Landing />} />
           <Route 
             path="/" 
             element={

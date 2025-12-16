@@ -15,6 +15,9 @@ import { TableSkeleton } from '@/components/ui/TableSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { SuccessAnimation, useSuccessAnimation } from '@/components/ui/SuccessAnimation';
 import { assetTypeLabels, emptyStateMessages } from '@/constants/statusLabels';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { AssetMobileCard } from './MaintenanceMobileCard';
 
 const ASSET_TYPES = Object.entries(assetTypeLabels).map(([value, label]) => ({ value, label }));
 
@@ -33,6 +36,8 @@ interface Asset {
 }
 
 export function AssetsManagement() {
+  const isMobile = useIsMobile();
+  const { t } = useLanguage();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -328,74 +333,106 @@ export function AssetsManagement() {
         </Dialog>
       </div>
 
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>الاسم</TableHead>
-              <TableHead>الرمز</TableHead>
-              <TableHead>النوع</TableHead>
-              <TableHead>الموقع</TableHead>
-              <TableHead>المنشأة</TableHead>
-              <TableHead>الحالة</TableHead>
-              <TableHead className="text-left">الإجراءات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableSkeleton rows={5} columns={7} />
-            ) : assets.length === 0 ? (
+      {/* Mobile View */}
+      {isMobile ? (
+        <div className="space-y-4">
+          {loading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-32 bg-muted/50 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : assets.length === 0 ? (
+            <EmptyState
+              variant="maintenance"
+              title={emptyStateMessages.assets.title}
+              description={emptyStateMessages.assets.description}
+              actionLabel={t('addAsset') || 'إضافة أصل جديد'}
+              onAction={() => setDialogOpen(true)}
+            />
+          ) : (
+            assets.map((asset) => (
+              <AssetMobileCard
+                key={asset.id}
+                asset={asset}
+                typeLabel={getTypeLabel(asset.type)}
+                onEdit={() => handleEdit(asset)}
+                onDelete={() => handleDelete(asset.id)}
+              />
+            ))
+          )}
+        </div>
+      ) : (
+        /* Desktop Table View */
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7}>
-                  <EmptyState
-                    variant="maintenance"
-                    title={emptyStateMessages.assets.title}
-                    description={emptyStateMessages.assets.description}
-                    actionLabel="إضافة أصل جديد"
-                    onAction={() => setDialogOpen(true)}
-                  />
-                </TableCell>
+                <TableHead>{t('assetName') || 'الاسم'}</TableHead>
+                <TableHead>{t('code') || 'الرمز'}</TableHead>
+                <TableHead>{t('type')}</TableHead>
+                <TableHead>{t('location') || 'الموقع'}</TableHead>
+                <TableHead>{t('site') || 'المنشأة'}</TableHead>
+                <TableHead>{t('status')}</TableHead>
+                <TableHead className="text-left">{t('actions')}</TableHead>
               </TableRow>
-            ) : (
-              assets.map((asset) => (
-                <TableRow key={asset.id}>
-                  <TableCell className="font-medium">{asset.name}</TableCell>
-                  <TableCell>{asset.code || '-'}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{getTypeLabel(asset.type)}</Badge>
-                  </TableCell>
-                  <TableCell>{asset.location}</TableCell>
-                  <TableCell>{asset.site || '-'}</TableCell>
-                  <TableCell>
-                    <Badge variant={asset.active ? 'default' : 'secondary'}>
-                      {asset.active ? 'نشط' : 'غير نشط'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(asset)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(asset.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableSkeleton rows={5} columns={7} />
+              ) : assets.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      variant="maintenance"
+                      title={emptyStateMessages.assets.title}
+                      description={emptyStateMessages.assets.description}
+                      actionLabel={t('addAsset') || 'إضافة أصل جديد'}
+                      onAction={() => setDialogOpen(true)}
+                    />
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ) : (
+                assets.map((asset) => (
+                  <TableRow key={asset.id}>
+                    <TableCell className="font-medium">{asset.name}</TableCell>
+                    <TableCell>{asset.code || '-'}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{getTypeLabel(asset.type)}</Badge>
+                    </TableCell>
+                    <TableCell>{asset.location}</TableCell>
+                    <TableCell>{asset.site || '-'}</TableCell>
+                    <TableCell>
+                      <Badge variant={asset.active ? 'default' : 'secondary'}>
+                        {asset.active ? t('active') || 'نشط' : t('inactive') || 'غير نشط'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(asset)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(asset.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }
