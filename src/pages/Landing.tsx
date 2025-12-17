@@ -66,9 +66,9 @@ export default function Landing() {
               <span className="text-xl font-bold text-foreground">DTS</span>
             </div>
             <nav className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-foreground/80 hover:text-foreground transition">Features</a>
-              <a href="#stats" className="text-foreground/80 hover:text-foreground transition">Stats</a>
-              <a href="#contact" className="text-foreground/80 hover:text-foreground transition">Contact</a>
+              <a href="#features" className="text-foreground/80 hover:text-foreground transition link-animated">Features</a>
+              <a href="#stats" className="text-foreground/80 hover:text-foreground transition link-animated">Stats</a>
+              <a href="#contact" className="text-foreground/80 hover:text-foreground transition link-animated">Contact</a>
             </nav>
             <div className="flex items-center gap-4">
               <Link to="/login">
@@ -86,8 +86,8 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+      {/* Hero Section - FIX #5: Improved spacing */}
+      <section className="pt-40 pb-28 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -98,18 +98,18 @@ export default function Landing() {
               Declaration Tracking
               <span className="block mt-2 gradient-text">Made Simple</span>
             </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-10">
               Transform your manual declaration workflow into an intelligent digital system 
-              with real-time tracking, automated approvals, and comprehensive reporting.
+              with real-time tracking, automated approvals, and comprehensive reporting
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/login">
-                <Button size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary/90 gap-2">
+                <Button size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary/90 gap-2 btn-interactive px-8 py-6 text-base">
                   Start Free Trial
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-5 h-5" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="border-border/50 text-foreground hover:bg-background/20">
+              <Button size="lg" variant="outline" className="border-border/50 text-foreground hover:bg-background/20 hover:border-secondary/50 px-8 py-6 text-base">
                 Watch Demo
               </Button>
             </div>
@@ -117,10 +117,11 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section id="stats" className="py-16 px-4 sm:px-6 lg:px-8">
+      {/* Stats Section - FIX #5: Improved spacing with divider */}
+      <section id="stats" className="py-20 px-4 sm:px-6 lg:px-8 relative">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
             {stats.map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -128,31 +129,32 @@ export default function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className="text-center"
+                className="text-center p-6 rounded-xl hover:bg-background/5 transition-colors"
               >
-                <div className="text-3xl sm:text-4xl font-bold text-secondary mb-2">
+                <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-secondary mb-3">
                   {stat.value}
                 </div>
-                <div className="text-muted-foreground">{stat.label}</div>
+                <div className="text-muted-foreground font-medium">{stat.label}</div>
               </motion.div>
             ))}
           </div>
         </div>
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
+      {/* Features Section - FIX #5: Improved spacing */}
+      <section id="features" className="py-28 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+          <div className="text-center mb-20">
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-5">
               Everything You Need
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              A complete solution for managing declarations, tracking status, and generating reports.
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+              A complete solution for managing declarations, tracking status, and generating reports
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
@@ -161,14 +163,14 @@ export default function Landing() {
                 transition={{ delay: index * 0.1 }}
                 viewport={{ once: true }}
               >
-                <Card className="glass-card border-border/50 p-6 h-full hover:border-secondary/50 transition-colors">
-                  <div className="p-3 rounded-xl bg-secondary/10 w-fit mb-4">
-                    <feature.icon className="w-6 h-6 text-secondary" />
+                <Card className="glass-card border-border/50 p-8 h-full card-interactive">
+                  <div className="p-4 rounded-xl bg-secondary/10 w-fit mb-5 transition-colors group-hover:bg-secondary/20">
+                    <feature.icon className="w-7 h-7 text-secondary" />
                   </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                  <h3 className="text-xl font-semibold text-foreground mb-3">
                     {feature.title}
                   </h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground leading-relaxed">
                     {feature.description}
                   </p>
                 </Card>
@@ -178,21 +180,23 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      {/* CTA Section - FIX #5: Improved spacing */}
+      <section className="py-28 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <Card className="glass-card border-border/50 p-12">
-            <Globe className="w-12 h-12 text-secondary mx-auto mb-6" />
-            <h2 className="text-3xl font-bold text-foreground mb-4">
+          <Card className="glass-card border-border/50 p-16 card-interactive">
+            <div className="p-4 rounded-full bg-secondary/10 w-fit mx-auto mb-8">
+              <Globe className="w-10 h-10 text-secondary" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-5">
               Ready to Get Started?
             </h2>
-            <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-              Join thousands of users who have streamlined their declaration workflow with our platform.
+            <p className="text-muted-foreground mb-10 max-w-xl mx-auto text-lg">
+              Join thousands of users who have streamlined their declaration workflow with our platform
             </p>
             <Link to="/login">
-              <Button size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary/90 gap-2">
+              <Button size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary/90 gap-2 btn-interactive px-10 py-6 text-base">
                 Create Free Account
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
           </Card>
