@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
+import { ThemeToggleSimple } from '@/components/ThemeToggle';
 import { 
   LayoutDashboard, 
   FolderOpen, 
@@ -185,6 +186,9 @@ export function Navigation() {
               <RefreshCw className={`w-4 h-4 ${isUpdating ? 'animate-spin' : ''}`} />
               <span className="hidden md:inline">{t('forceUpdate')}</span>
             </Button>
+
+            {/* Theme Toggle */}
+            <ThemeToggleSimple />
 
             {/* Language Toggle */}
             <Button
