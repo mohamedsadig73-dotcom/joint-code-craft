@@ -370,6 +370,12 @@ const translations = {
     pendingSync: 'pending sync',
     offlineMessage: 'You are offline. Changes will be saved locally.',
     operationsPending: 'operations pending sync',
+    
+    // Theme
+    toggleTheme: 'Toggle Theme',
+    lightMode: 'Light',
+    darkMode: 'Dark',
+    systemMode: 'System',
   },
   ar: {
     // Navigation
@@ -699,6 +705,12 @@ const translations = {
     pendingSync: 'عملية معلقة',
     offlineMessage: 'أنت غير متصل بالإنترنت. التغييرات ستُحفظ محلياً.',
     operationsPending: 'عملية في انتظار المزامنة',
+    
+    // Theme
+    toggleTheme: 'تبديل السمة',
+    lightMode: 'فاتح',
+    darkMode: 'داكن',
+    systemMode: 'النظام',
   },
 };
 

@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { NotificationListener } from "@/components/NotificationListener";
 import { RegisterSW } from "@/components/RegisterSW";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
@@ -13,6 +14,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Onboarding } from "@/components/Onboarding";
 import { OfflineBanner } from "@/components/OfflineIndicator";
+import { Loader2 } from "lucide-react";
 
 // Lazy load pages for better performance
 const Landing = lazy(() => import("./pages/Landing"));
@@ -42,10 +44,14 @@ const queryClient = new QueryClient({
   },
 });
 
-// Loading component
+// Enhanced Loading component with better visuals
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  <div className="min-h-screen flex flex-col items-center justify-center gap-4" role="status" aria-label="Loading">
+    <div className="relative">
+      <div className="absolute inset-0 rounded-full bg-secondary/20 animate-ping" />
+      <Loader2 className="h-12 w-12 text-secondary animate-spin" />
+    </div>
+    <p className="text-muted-foreground text-sm animate-pulse">جاري التحميل...</p>
   </div>
 );
 
@@ -154,21 +160,23 @@ function AppRoutes() {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <RegisterSW />
-      <BrowserRouter>
-        <AuthProvider>
-          <LanguageProvider>
-            <AppRoutes />
-            <PWAInstallPrompt />
-          </LanguageProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <RegisterSW />
+        <BrowserRouter>
+          <AuthProvider>
+            <LanguageProvider>
+              <AppRoutes />
+              <PWAInstallPrompt />
+            </LanguageProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;
