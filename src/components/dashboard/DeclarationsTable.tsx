@@ -25,6 +25,7 @@ import { StatusQuickAction } from '@/components/declarations/StatusQuickAction';
 import { DeclarationRowExpand } from '@/components/declarations/DeclarationRowExpand';
 import { Pagination } from '@/components/dashboard/Pagination';
 import { ExportToolbar } from '@/components/dashboard/ExportToolbar';
+import { SortableHeader, useSortableTable, type SortConfig } from '@/components/dashboard/SortableHeader';
 import { VirtualizedList } from '@/components/VirtualizedList';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -96,14 +97,18 @@ export function DeclarationsTable({
   const totalPages = useServerPagination ? (serverTotalPages || 1) : Math.ceil(declarations.length / clientPageSize);
   const totalCount = useServerPagination ? (serverTotalCount || 0) : declarations.length;
   
-  // For client-side pagination, slice the declarations
+  // Sorting state
+  const { sortConfig, handleSort, sortedData } = useSortableTable(declarations);
+  
+  // For client-side pagination, slice the declarations (after sorting)
   const displayedDeclarations = useMemo(() => {
+    const dataToDisplay = useServerPagination ? declarations : sortedData;
     if (useServerPagination) {
-      return declarations; // Server already returns paginated data
+      return dataToDisplay; // Server already returns paginated data
     }
     const startIndex = (clientCurrentPage - 1) * clientPageSize;
-    return declarations.slice(startIndex, startIndex + clientPageSize);
-  }, [declarations, clientCurrentPage, clientPageSize, useServerPagination]);
+    return dataToDisplay.slice(startIndex, startIndex + clientPageSize);
+  }, [declarations, sortedData, clientCurrentPage, clientPageSize, useServerPagination]);
   
   const handlePageChange = (page: number) => {
     if (useServerPagination && serverOnPageChange) {
@@ -416,12 +421,54 @@ export function DeclarationsTable({
                 aria-label={t('selectAll')}
               />
             </TableHead>
-            <TableHead>{t('declarationId')}</TableHead>
-            <TableHead>{t('type')}</TableHead>
-            <TableHead>{t('sender')}</TableHead>
-            <TableHead>{t('archiveNumber')}</TableHead>
-            <TableHead>{t('status')}</TableHead>
-            <TableHead>{t('createdDate')}</TableHead>
+            <TableHead>
+              <SortableHeader
+                label={t('declarationId')}
+                column="id"
+                currentSort={sortConfig}
+                onSort={handleSort}
+              />
+            </TableHead>
+            <TableHead>
+              <SortableHeader
+                label={t('type')}
+                column="type"
+                currentSort={sortConfig}
+                onSort={handleSort}
+              />
+            </TableHead>
+            <TableHead>
+              <SortableHeader
+                label={t('sender')}
+                column="sender"
+                currentSort={sortConfig}
+                onSort={handleSort}
+              />
+            </TableHead>
+            <TableHead>
+              <SortableHeader
+                label={t('archiveNumber')}
+                column="archive_number"
+                currentSort={sortConfig}
+                onSort={handleSort}
+              />
+            </TableHead>
+            <TableHead>
+              <SortableHeader
+                label={t('status')}
+                column="status"
+                currentSort={sortConfig}
+                onSort={handleSort}
+              />
+            </TableHead>
+            <TableHead>
+              <SortableHeader
+                label={t('createdDate')}
+                column="created_at"
+                currentSort={sortConfig}
+                onSort={handleSort}
+              />
+            </TableHead>
             <TableHead>{t('actions')}</TableHead>
           </TableRow>
         </TableHeader>

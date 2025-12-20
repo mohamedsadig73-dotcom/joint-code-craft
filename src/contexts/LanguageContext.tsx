@@ -299,9 +299,15 @@ const translations = {
     createdDate: 'Created Date',
     actions: 'Actions',
     bulkActions: 'Bulk Actions',
+    changeStatusTo: 'Change status to...',
+    bulkStatusChanged: 'Status changed',
+    bulkDeleted: 'Items moved to trash',
+    confirmBulkDelete: 'Confirm Bulk Delete',
+    bulkDeleteWarning: 'Are you sure you want to delete {count} declarations? They will be moved to trash.',
+    sortAscending: 'Sort ascending',
+    sortDescending: 'Sort descending',
     showing: 'Showing',
     of: 'of',
-    results: 'results',
     
     // Reports
     reportsAnalytics: 'Reports & Analytics',
@@ -905,9 +911,15 @@ const translations = {
     createdDate: 'تاريخ الإنشاء',
     actions: 'الإجراءات',
     bulkActions: 'إجراءات جماعية',
+    changeStatusTo: 'تغيير الحالة إلى...',
+    bulkStatusChanged: 'تم تغيير الحالة',
+    bulkDeleted: 'تم نقل العناصر إلى سلة المحذوفات',
+    confirmBulkDelete: 'تأكيد الحذف الجماعي',
+    bulkDeleteWarning: 'هل أنت متأكد من حذف {count} إقرار؟ سيتم نقلها إلى سلة المحذوفات.',
+    sortAscending: 'ترتيب تصاعدي',
+    sortDescending: 'ترتيب تنازلي',
     showing: 'عرض',
     of: 'من',
-    results: 'نتيجة',
     
     // Reports
     reportsAnalytics: 'التقارير والتحليلات',

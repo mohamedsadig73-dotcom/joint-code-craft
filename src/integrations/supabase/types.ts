@@ -565,6 +565,7 @@ export type Database = {
           email: string
           id: string
           phone: string | null
+          theme_preference: string | null
           updated_at: string
           username: string
         }
@@ -576,6 +577,7 @@ export type Database = {
           email: string
           id: string
           phone?: string | null
+          theme_preference?: string | null
           updated_at?: string
           username: string
         }
@@ -587,6 +589,7 @@ export type Database = {
           email?: string
           id?: string
           phone?: string | null
+          theme_preference?: string | null
           updated_at?: string
           username?: string
         }

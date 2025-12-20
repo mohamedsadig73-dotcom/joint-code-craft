@@ -16,6 +16,7 @@ import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
 import { DeclarationsTable } from '@/components/dashboard/DeclarationsTable';
 import { TrashTable } from '@/components/dashboard/TrashTable';
 import { RecentDeclarationsTable } from '@/components/dashboard/RecentDeclarationsTable';
+import { BulkActionsToolbar } from '@/components/dashboard/BulkActionsToolbar';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useDeclarationsRealtime } from '@/hooks/useRealtimeUpdates';
 import { useSmartNudges } from '@/hooks/useSmartNudges';
@@ -432,19 +433,15 @@ export default function Dashboard() {
               totalCount={totalCount}
             />
 
-            {/* Bulk Actions */}
-            {selectedItems.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="glass-card border-border/50 p-3 flex items-center gap-3 rounded-lg"
-              >
-                <span className="text-sm font-medium">
-                  {selectedItems.length} {t('selected')}
-                </span>
-              </motion.div>
-            )}
+            {/* Bulk Actions Toolbar */}
+            <BulkActionsToolbar
+              selectedItems={selectedItems}
+              onClearSelection={() => setSelectedItems([])}
+              onActionComplete={() => {
+                loadDeclarations();
+                refreshPaginated();
+              }}
+            />
 
             {/* Declarations Table */}
             <DeclarationsTable
