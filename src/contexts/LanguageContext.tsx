@@ -753,6 +753,57 @@ const translations = {
     unknownUser: 'Unknown',
     failedLoginAttempt: 'Failed Login',
     
+    // Declaration Details Page
+    backToDashboard: 'Back to Dashboard',
+    declarationDetailsTitle: 'Declaration Details',
+    detailsTab: 'Details',
+    timelineTab: 'Timeline',
+    coreInfo: 'Core Information',
+    declarationTypeLabel: 'Declaration Type',
+    statusLabel: 'Status',
+    createdDateLabel: 'Created Date',
+    lastUpdateLabel: 'Last Update',
+    archiveFileLabel: 'Archive File',
+    selectArchiveFile: 'Select archive file',
+    noArchiveFile: 'No archive file',
+    editBtn: 'Edit',
+    saveBtn: 'Save',
+    cancelBtn: 'Cancel',
+    senderInfo: 'Sender Information',
+    usernameColumn: 'Username',
+    emailColumn: 'Email',
+    declarationTimeline: 'Declaration Timeline',
+    noHistoryRecords: 'No history records for this declaration',
+    declarationNotExist: 'Declaration does not exist',
+    archiveFileUpdated: 'Archive file updated',
+    archiveFileUpdateFailed: 'Failed to update archive file',
+    statusUpdateSuccess: 'Declaration status updated',
+    statusUpdateError: 'Failed to update status',
+    
+    // Status Labels Full
+    statusDraft: 'Draft',
+    statusPendingWarehouseSignature: 'Awaiting Warehouse Signature',
+    statusWarehouseSigned: 'Signed by Warehouse',
+    statusSentToAdminOffice: 'Sent to Admin Office',
+    statusReceivedByAdminOffice: 'Received by Admin Office',
+    statusReturnedToWarehouse: 'Returned to Warehouse for Archiving',
+    statusArchived: 'Archived',
+    statusRejected: 'Rejected / Needs Correction',
+    
+    // Forgot Password Page
+    forgotPasswordTitle: 'Forgot Password?',
+    forgotPasswordDesc: 'Enter your email and we will send you a password reset link',
+    emailAddress: 'Email Address',
+    sendResetLink: 'Send Reset Link',
+    sendingResetLink: 'Sending...',
+    resetLinkSent: 'Sent Successfully',
+    resetLinkSentDesc: 'Check your email to reset your password',
+    resetLinkFailed: 'Failed to send reset email',
+    backToLogin: 'Back to Login',
+    
+    // Reset Password Page
+    invalidResetLink: 'Invalid or expired link',
+    
   },
   ar: {
     // Navigation
@@ -1496,6 +1547,57 @@ const translations = {
     adminOnlyPage: 'هذه الصفحة متاحة للمسؤولين فقط',
     unknownUser: 'غير معروف',
     failedLoginAttempt: 'محاولة دخول فاشلة',
+    
+    // Declaration Details Page
+    backToDashboard: 'العودة للوحة التحكم',
+    declarationDetailsTitle: 'تفاصيل الإقرار',
+    detailsTab: 'التفاصيل',
+    timelineTab: 'المسار',
+    coreInfo: 'المعلومات الأساسية',
+    declarationTypeLabel: 'نوع الإقرار',
+    statusLabel: 'الحالة',
+    createdDateLabel: 'تاريخ الإنشاء',
+    lastUpdateLabel: 'آخر تحديث',
+    archiveFileLabel: 'ملف الأرشفة',
+    selectArchiveFile: 'اختر ملف الأرشفة',
+    noArchiveFile: 'بدون ملف أرشفة',
+    editBtn: 'تعديل',
+    saveBtn: 'حفظ',
+    cancelBtn: 'إلغاء',
+    senderInfo: 'معلومات المرسل',
+    usernameColumn: 'اسم المستخدم',
+    emailColumn: 'البريد الإلكتروني',
+    declarationTimeline: 'الخط الزمني للإقرار',
+    noHistoryRecords: 'لا يوجد سجل تغييرات لهذا الإقرار',
+    declarationNotExist: 'الإقرار غير موجود',
+    archiveFileUpdated: 'تم تحديث ملف الأرشفة',
+    archiveFileUpdateFailed: 'فشل تحديث ملف الأرشفة',
+    statusUpdateSuccess: 'تم تحديث حالة الإقرار',
+    statusUpdateError: 'فشل تحديث الحالة',
+    
+    // Status Labels Full
+    statusDraft: 'مسودة',
+    statusPendingWarehouseSignature: 'بانتظار توقيع المخزن',
+    statusWarehouseSigned: 'موقّع من المخزن',
+    statusSentToAdminOffice: 'مُرسل إلى المكتب الإداري',
+    statusReceivedByAdminOffice: 'مستلم من المكتب الإداري',
+    statusReturnedToWarehouse: 'مُعاد إلى المخزن للأرشفة',
+    statusArchived: 'مؤرشف',
+    statusRejected: 'مرفوض / يحتاج إلى تصحيح',
+    
+    // Forgot Password Page
+    forgotPasswordTitle: 'نسيت كلمة المرور؟',
+    forgotPasswordDesc: 'أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور',
+    emailAddress: 'البريد الإلكتروني',
+    sendResetLink: 'إرسال رابط إعادة التعيين',
+    sendingResetLink: 'جاري الإرسال...',
+    resetLinkSent: 'تم الإرسال بنجاح',
+    resetLinkSentDesc: 'تحقق من بريدك الإلكتروني لإعادة تعيين كلمة المرور',
+    resetLinkFailed: 'فشل إرسال رسالة إعادة التعيين',
+    backToLogin: 'العودة لتسجيل الدخول',
+    
+    // Reset Password Page
+    invalidResetLink: 'رابط غير صالح أو منتهي الصلاحية',
     
   },
 };
