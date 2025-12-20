@@ -1,123 +1,150 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Receipt, 
-  DollarSign, 
-  Search, 
-  Download,
-  Calendar,
-  TrendingUp,
-  FileText,
-  CreditCard,
-  Building2,
-  Package,
-  Truck
-} from 'lucide-react';
-import { format, subMonths } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import { Receipt, Plus, DollarSign, Clock, CheckCircle, AlertTriangle, Download, TrendingUp, Search, CreditCard, Calendar } from 'lucide-react';
+import { format } from 'date-fns';
 import ReactECharts from 'echarts-for-react';
 
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  tenantName: string;
-  tenantCode: string;
-  period: string;
-  storageCharges: number;
-  handlingCharges: number;
-  shippingCharges: number;
-  additionalCharges: number;
-  totalAmount: number;
-  status: 'paid' | 'pending' | 'overdue';
-  dueDate: string;
-  createdAt: string;
-}
-
-interface BillingRate {
-  id: string;
-  service: string;
-  description: string;
-  rate: number;
-  unit: string;
-}
-
-const WMSBilling: React.FC = () => {
+export default function WMSBilling() {
   const { language } = useLanguage();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const isRTL = language === 'ar';
-
-  const [loading, setLoading] = useState(true);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [formData, setFormData] = useState({
+    tenant_id: '',
+    customer_name: '',
+    invoice_date: new Date().toISOString().split('T')[0],
+    due_date: '',
+    subtotal: '',
+    tax_amount: '',
+    notes: ''
+  });
 
-  const billingRates: BillingRate[] = [
-    { id: '1', service: language === 'ar' ? 'التخزين' : 'Storage', description: language === 'ar' ? 'لكل متر مربع / شهر' : 'Per sqm / month', rate: 50, unit: 'm²/month' },
-    { id: '2', service: language === 'ar' ? 'الاستلام' : 'Receiving', description: language === 'ar' ? 'لكل باليت' : 'Per pallet', rate: 15, unit: 'pallet' },
-    { id: '3', service: language === 'ar' ? 'الانتقاء' : 'Picking', description: language === 'ar' ? 'لكل طلب' : 'Per order', rate: 5, unit: 'order' },
-    { id: '4', service: language === 'ar' ? 'التعبئة' : 'Packing', description: language === 'ar' ? 'لكل صندوق' : 'Per carton', rate: 3, unit: 'carton' },
-    { id: '5', service: language === 'ar' ? 'الشحن' : 'Shipping', description: language === 'ar' ? 'لكل شحنة' : 'Per shipment', rate: 25, unit: 'shipment' },
-  ];
-
-  useEffect(() => {
-    loadInvoices();
-  }, []);
-
-  const loadInvoices = async () => {
-    setLoading(true);
-    
-    // Generate sample invoices
-    const sampleInvoices: Invoice[] = [];
-    const tenants = [
-      { name: 'ABC Trading', code: 'TN-001' },
-      { name: 'XYZ Logistics', code: 'TN-002' },
-      { name: 'Global Imports', code: 'TN-003' },
-      { name: 'Quick Commerce', code: 'TN-004' },
-    ];
-
-    for (let i = 0; i < 12; i++) {
-      const tenant = tenants[i % tenants.length];
-      const date = subMonths(new Date(), Math.floor(i / tenants.length));
-      const storage = Math.round(500 + Math.random() * 1000);
-      const handling = Math.round(200 + Math.random() * 500);
-      const shipping = Math.round(100 + Math.random() * 300);
-      const additional = Math.round(Math.random() * 100);
-      
-      sampleInvoices.push({
-        id: crypto.randomUUID(),
-        invoiceNumber: `INV-${format(date, 'yyyyMM')}-${(i % tenants.length + 1).toString().padStart(3, '0')}`,
-        tenantName: tenant.name,
-        tenantCode: tenant.code,
-        period: format(date, 'MMMM yyyy'),
-        storageCharges: storage,
-        handlingCharges: handling,
-        shippingCharges: shipping,
-        additionalCharges: additional,
-        totalAmount: storage + handling + shipping + additional,
-        status: i < 4 ? 'pending' : i < 8 ? 'paid' : Math.random() > 0.5 ? 'paid' : 'overdue',
-        dueDate: format(new Date(date.getFullYear(), date.getMonth() + 1, 15), 'yyyy-MM-dd'),
-        createdAt: format(date, 'yyyy-MM-dd')
-      });
+  const { data: invoices = [], isLoading } = useQuery({
+    queryKey: ['wms-invoices'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wms_invoices')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
     }
+  });
 
-    setInvoices(sampleInvoices);
-    setLoading(false);
+  const { data: tenants = [] } = useQuery({
+    queryKey: ['wms-3pl-tenants-select'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wms_3pl_tenants')
+        .select('id, tenant_name, tenant_code')
+        .eq('is_active', true);
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const subtotal = parseFloat(data.subtotal) || 0;
+      const tax = parseFloat(data.tax_amount) || 0;
+      const total = subtotal + tax;
+      
+      const { data: invoiceNum } = await supabase.rpc('generate_invoice_number');
+      
+      const { error } = await supabase.from('wms_invoices').insert({
+        invoice_number: invoiceNum,
+        tenant_id: data.tenant_id || null,
+        customer_name: data.customer_name || null,
+        invoice_date: data.invoice_date,
+        due_date: data.due_date || null,
+        subtotal,
+        tax_amount: tax,
+        total_amount: total,
+        notes: data.notes || null,
+        created_by: user?.id
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wms-invoices'] });
+      toast({ title: language === 'ar' ? 'تم إنشاء الفاتورة بنجاح' : 'Invoice created successfully' });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: language === 'ar' ? 'خطأ' : 'Error', variant: 'destructive' });
+    }
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from('wms_invoices').update({ status }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wms-invoices'] });
+      toast({ title: language === 'ar' ? 'تم تحديث الحالة' : 'Status updated' });
+    }
+  });
+
+  const resetForm = () => {
+    setFormData({
+      tenant_id: '',
+      customer_name: '',
+      invoice_date: new Date().toISOString().split('T')[0],
+      due_date: '',
+      subtotal: '',
+      tax_amount: '',
+      notes: ''
+    });
   };
 
-  const filteredInvoices = invoices.filter(inv => 
-    inv.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    inv.tenantName.toLowerCase().includes(searchTerm.toLowerCase())
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMutation.mutate(formData);
+  };
+
+  const filteredInvoices = invoices.filter((inv: any) =>
+    inv.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    inv.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalRevenue = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.totalAmount, 0);
-  const pendingAmount = invoices.filter(i => i.status === 'pending').reduce((sum, i) => sum + i.totalAmount, 0);
-  const overdueAmount = invoices.filter(i => i.status === 'overdue').reduce((sum, i) => sum + i.totalAmount, 0);
+  const getStatusBadge = (status: string | null) => {
+    switch (status) {
+      case 'paid':
+        return <Badge className="bg-green-500">{language === 'ar' ? 'مدفوعة' : 'Paid'}</Badge>;
+      case 'overdue':
+        return <Badge variant="destructive">{language === 'ar' ? 'متأخرة' : 'Overdue'}</Badge>;
+      case 'cancelled':
+        return <Badge variant="secondary">{language === 'ar' ? 'ملغاة' : 'Cancelled'}</Badge>;
+      default:
+        return <Badge variant="outline">{language === 'ar' ? 'غير مدفوعة' : 'Unpaid'}</Badge>;
+    }
+  };
+
+  const totalRevenue = invoices.filter((i: any) => i.status === 'paid').reduce((sum: number, i: any) => sum + (i.total_amount || 0), 0);
+  const pendingAmount = invoices.filter((i: any) => i.status === 'unpaid').reduce((sum: number, i: any) => sum + (i.total_amount || 0), 0);
+  const overdueAmount = invoices.filter((i: any) => i.status === 'overdue').reduce((sum: number, i: any) => sum + (i.total_amount || 0), 0);
 
   const revenueChartOption = {
     tooltip: { trigger: 'axis' },
@@ -128,45 +155,12 @@ const WMSBilling: React.FC = () => {
     yAxis: { type: 'value' },
     series: [
       {
-        name: language === 'ar' ? 'التخزين' : 'Storage',
+        name: language === 'ar' ? 'الإيرادات' : 'Revenue',
         type: 'bar',
-        stack: 'total',
         data: [4500, 5200, 4800, 5500, 6000, 5800],
-        itemStyle: { color: '#3b82f6' }
-      },
-      {
-        name: language === 'ar' ? 'المناولة' : 'Handling',
-        type: 'bar',
-        stack: 'total',
-        data: [2000, 2500, 2200, 2800, 3000, 2900],
         itemStyle: { color: '#10b981' }
-      },
-      {
-        name: language === 'ar' ? 'الشحن' : 'Shipping',
-        type: 'bar',
-        stack: 'total',
-        data: [1500, 1800, 1600, 2000, 2200, 2100],
-        itemStyle: { color: '#f59e0b' }
       }
     ]
-  };
-
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive'> = {
-      paid: 'default',
-      pending: 'secondary',
-      overdue: 'destructive'
-    };
-    const labels: Record<string, { ar: string; en: string }> = {
-      paid: { ar: 'مدفوع', en: 'Paid' },
-      pending: { ar: 'معلق', en: 'Pending' },
-      overdue: { ar: 'متأخر', en: 'Overdue' }
-    };
-    return (
-      <Badge variant={variants[status]}>
-        {labels[status]?.[language === 'ar' ? 'ar' : 'en']}
-      </Badge>
-    );
   };
 
   const breadcrumbItems = [
@@ -180,7 +174,7 @@ const WMSBilling: React.FC = () => {
       <main className="container mx-auto px-4 py-6">
         <Breadcrumbs items={breadcrumbItems} className="mb-4" />
 
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Receipt className="h-6 w-6" />
@@ -190,10 +184,92 @@ const WMSBilling: React.FC = () => {
               {language === 'ar' ? 'إدارة الفواتير وتتبع الإيرادات' : 'Manage invoices and track revenue'}
             </p>
           </div>
-          <Button>
-            <FileText className="h-4 w-4 me-2" />
-            {language === 'ar' ? 'إنشاء فاتورة' : 'Generate Invoice'}
-          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" />
+                {language === 'ar' ? 'إنشاء فاتورة' : 'Create Invoice'}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{language === 'ar' ? 'إنشاء فاتورة جديدة' : 'Create New Invoice'}</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>{language === 'ar' ? 'المستأجر (اختياري)' : 'Tenant (optional)'}</Label>
+                  <Select value={formData.tenant_id} onValueChange={(v) => setFormData({ ...formData, tenant_id: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={language === 'ar' ? 'اختر مستأجر' : 'Select tenant'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tenants.map((t: any) => (
+                        <SelectItem key={t.id} value={t.id}>{t.tenant_name} ({t.tenant_code})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>{language === 'ar' ? 'اسم العميل' : 'Customer Name'}</Label>
+                  <Input
+                    value={formData.customer_name}
+                    onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'تاريخ الفاتورة' : 'Invoice Date'}</Label>
+                    <Input
+                      type="date"
+                      value={formData.invoice_date}
+                      onChange={(e) => setFormData({ ...formData, invoice_date: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'تاريخ الاستحقاق' : 'Due Date'}</Label>
+                    <Input
+                      type="date"
+                      value={formData.due_date}
+                      onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'المبلغ الفرعي' : 'Subtotal'}</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.subtotal}
+                      onChange={(e) => setFormData({ ...formData, subtotal: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'الضريبة' : 'Tax'}</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.tax_amount}
+                      onChange={(e) => setFormData({ ...formData, tax_amount: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>{language === 'ar' ? 'ملاحظات' : 'Notes'}</Label>
+                  <Textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>{language === 'ar' ? 'إلغاء' : 'Cancel'}</Button>
+                  <Button type="submit" disabled={createMutation.isPending}>{language === 'ar' ? 'إنشاء' : 'Create'}</Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Stats Cards */}
@@ -205,10 +281,8 @@ const WMSBilling: React.FC = () => {
                   <DollarSign className="h-6 w-6 text-green-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'إجمالي الإيرادات' : 'Total Revenue'}
-                  </p>
-                  <p className="text-2xl font-bold">${totalRevenue.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'إجمالي الإيرادات' : 'Total Revenue'}</p>
+                  <p className="text-2xl font-bold text-green-600">${totalRevenue.toFixed(2)}</p>
                 </div>
               </div>
             </CardContent>
@@ -217,13 +291,11 @@ const WMSBilling: React.FC = () => {
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-lg bg-yellow-500/10">
-                  <CreditCard className="h-6 w-6 text-yellow-500" />
+                  <Clock className="h-6 w-6 text-yellow-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'المعلقة' : 'Pending'}
-                  </p>
-                  <p className="text-2xl font-bold">${pendingAmount.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'قيد الانتظار' : 'Pending'}</p>
+                  <p className="text-2xl font-bold text-yellow-600">${pendingAmount.toFixed(2)}</p>
                 </div>
               </div>
             </CardContent>
@@ -232,13 +304,11 @@ const WMSBilling: React.FC = () => {
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-lg bg-red-500/10">
-                  <Calendar className="h-6 w-6 text-red-500" />
+                  <AlertTriangle className="h-6 w-6 text-red-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'المتأخرة' : 'Overdue'}
-                  </p>
-                  <p className="text-2xl font-bold">${overdueAmount.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'متأخرة' : 'Overdue'}</p>
+                  <p className="text-2xl font-bold text-red-600">${overdueAmount.toFixed(2)}</p>
                 </div>
               </div>
             </CardContent>
@@ -247,15 +317,11 @@ const WMSBilling: React.FC = () => {
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-lg bg-blue-500/10">
-                  <TrendingUp className="h-6 w-6 text-blue-500" />
+                  <Receipt className="h-6 w-6 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'معدل التحصيل' : 'Collection Rate'}
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {Math.round((totalRevenue / (totalRevenue + pendingAmount + overdueAmount)) * 100)}%
-                  </p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'إجمالي الفواتير' : 'Total Invoices'}</p>
+                  <p className="text-2xl font-bold">{invoices.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -267,10 +333,6 @@ const WMSBilling: React.FC = () => {
             <TabsTrigger value="invoices">
               <Receipt className="h-4 w-4 me-2" />
               {language === 'ar' ? 'الفواتير' : 'Invoices'}
-            </TabsTrigger>
-            <TabsTrigger value="rates">
-              <DollarSign className="h-4 w-4 me-2" />
-              {language === 'ar' ? 'أسعار الخدمات' : 'Service Rates'}
             </TabsTrigger>
             <TabsTrigger value="analytics">
               <TrendingUp className="h-4 w-4 me-2" />
@@ -295,84 +357,58 @@ const WMSBilling: React.FC = () => {
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                {loading ? (
+                {isLoading ? (
                   <div className="p-6 space-y-4">
-                    {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-16" />)}
+                    {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16" />)}
+                  </div>
+                ) : filteredInvoices.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Receipt className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">{language === 'ar' ? 'لا توجد فواتير' : 'No invoices found'}</p>
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>{language === 'ar' ? 'رقم الفاتورة' : 'Invoice #'}</TableHead>
-                        <TableHead>{language === 'ar' ? 'المستأجر' : 'Tenant'}</TableHead>
-                        <TableHead>{language === 'ar' ? 'الفترة' : 'Period'}</TableHead>
-                        <TableHead>{language === 'ar' ? 'التخزين' : 'Storage'}</TableHead>
-                        <TableHead>{language === 'ar' ? 'المناولة' : 'Handling'}</TableHead>
-                        <TableHead>{language === 'ar' ? 'الإجمالي' : 'Total'}</TableHead>
+                        <TableHead>{language === 'ar' ? 'العميل' : 'Customer'}</TableHead>
+                        <TableHead>{language === 'ar' ? 'التاريخ' : 'Date'}</TableHead>
+                        <TableHead>{language === 'ar' ? 'الاستحقاق' : 'Due'}</TableHead>
+                        <TableHead>{language === 'ar' ? 'المبلغ' : 'Amount'}</TableHead>
                         <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
                         <TableHead>{language === 'ar' ? 'الإجراءات' : 'Actions'}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredInvoices.map(invoice => (
+                      {filteredInvoices.map((invoice: any) => (
                         <TableRow key={invoice.id}>
-                          <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                          <TableCell>
-                            <div>
-                              <p>{invoice.tenantName}</p>
-                              <p className="text-sm text-muted-foreground">{invoice.tenantCode}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>{invoice.period}</TableCell>
-                          <TableCell>${invoice.storageCharges}</TableCell>
-                          <TableCell>${invoice.handlingCharges}</TableCell>
-                          <TableCell className="font-bold">${invoice.totalAmount}</TableCell>
+                          <TableCell className="font-mono">{invoice.invoice_number}</TableCell>
+                          <TableCell>{invoice.customer_name || '-'}</TableCell>
+                          <TableCell>{format(new Date(invoice.invoice_date), 'yyyy-MM-dd')}</TableCell>
+                          <TableCell>{invoice.due_date ? format(new Date(invoice.due_date), 'yyyy-MM-dd') : '-'}</TableCell>
+                          <TableCell className="font-bold">${invoice.total_amount?.toFixed(2) || '0.00'}</TableCell>
                           <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="sm">
-                              <Download className="h-4 w-4" />
-                            </Button>
+                            <Select
+                              value={invoice.status || 'unpaid'}
+                              onValueChange={(v) => updateStatusMutation.mutate({ id: invoice.id, status: v })}
+                            >
+                              <SelectTrigger className="w-28">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="unpaid">{language === 'ar' ? 'غير مدفوعة' : 'Unpaid'}</SelectItem>
+                                <SelectItem value="paid">{language === 'ar' ? 'مدفوعة' : 'Paid'}</SelectItem>
+                                <SelectItem value="overdue">{language === 'ar' ? 'متأخرة' : 'Overdue'}</SelectItem>
+                                <SelectItem value="cancelled">{language === 'ar' ? 'ملغاة' : 'Cancelled'}</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="rates">
-            <Card>
-              <CardHeader>
-                <CardTitle>{language === 'ar' ? 'أسعار الخدمات' : 'Service Rates'}</CardTitle>
-                <CardDescription>
-                  {language === 'ar' ? 'الأسعار المطبقة على خدمات المستودع' : 'Rates applied to warehouse services'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{language === 'ar' ? 'الخدمة' : 'Service'}</TableHead>
-                      <TableHead>{language === 'ar' ? 'الوصف' : 'Description'}</TableHead>
-                      <TableHead>{language === 'ar' ? 'السعر' : 'Rate'}</TableHead>
-                      <TableHead>{language === 'ar' ? 'الوحدة' : 'Unit'}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {billingRates.map(rate => (
-                      <TableRow key={rate.id}>
-                        <TableCell className="font-medium">{rate.service}</TableCell>
-                        <TableCell>{rate.description}</TableCell>
-                        <TableCell className="font-bold">${rate.rate}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{rate.unit}</Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
               </CardContent>
             </Card>
           </TabsContent>
@@ -391,6 +427,4 @@ const WMSBilling: React.FC = () => {
       </main>
     </div>
   );
-};
-
-export default WMSBilling;
+}

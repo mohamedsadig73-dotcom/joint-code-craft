@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -12,10 +14,12 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 import { 
   ShoppingCart, 
   Link as LinkIcon, 
-  Settings,
   CheckCircle,
   XCircle,
   RefreshCw,
@@ -23,140 +27,139 @@ import {
   TrendingUp,
   Clock,
   ExternalLink,
-  Zap
+  Zap,
+  Plus
 } from 'lucide-react';
+import { format } from 'date-fns';
 
-interface EcommerceChannel {
-  id: string;
-  name: string;
-  platform: string;
-  logo: string;
-  isConnected: boolean;
-  lastSync: string | null;
-  ordersToday: number;
-  ordersTotal: number;
-  syncEnabled: boolean;
-  apiKey?: string;
-}
-
-interface PendingOrder {
-  id: string;
-  orderNumber: string;
-  channel: string;
-  customerName: string;
-  items: number;
-  total: number;
-  status: string;
-  createdAt: string;
-}
-
-const WMSEcommerce: React.FC = () => {
+export default function WMSEcommerce() {
   const { language } = useLanguage();
+  const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const isRTL = language === 'ar';
-
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [syncing, setSyncing] = useState<string | null>(null);
-  const [configDialogOpen, setConfigDialogOpen] = useState(false);
-  const [selectedChannel, setSelectedChannel] = useState<EcommerceChannel | null>(null);
+  const [formData, setFormData] = useState({
+    platform_name: '',
+    platform_type: 'shopify',
+    api_url: ''
+  });
 
-  const [channels, setChannels] = useState<EcommerceChannel[]>([
-    {
-      id: '1',
-      name: 'Shopify Store',
-      platform: 'shopify',
-      logo: '🛍️',
-      isConnected: true,
-      lastSync: new Date().toISOString(),
-      ordersToday: 24,
-      ordersTotal: 1250,
-      syncEnabled: true
-    },
-    {
-      id: '2',
-      name: 'WooCommerce',
-      platform: 'woocommerce',
-      logo: '🛒',
-      isConnected: true,
-      lastSync: new Date(Date.now() - 3600000).toISOString(),
-      ordersToday: 12,
-      ordersTotal: 890,
-      syncEnabled: true
-    },
-    {
-      id: '3',
-      name: 'Amazon Seller',
-      platform: 'amazon',
-      logo: '📦',
-      isConnected: false,
-      lastSync: null,
-      ordersToday: 0,
-      ordersTotal: 0,
-      syncEnabled: false
-    },
-    {
-      id: '4',
-      name: 'eBay Store',
-      platform: 'ebay',
-      logo: '🏪',
-      isConnected: false,
-      lastSync: null,
-      ordersToday: 0,
-      ordersTotal: 0,
-      syncEnabled: false
-    },
-    {
-      id: '5',
-      name: 'Magento',
-      platform: 'magento',
-      logo: '🔶',
-      isConnected: false,
-      lastSync: null,
-      ordersToday: 0,
-      ordersTotal: 0,
-      syncEnabled: false
+  const { data: platforms = [], isLoading } = useQuery({
+    queryKey: ['wms-ecommerce-platforms'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wms_ecommerce_platforms')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
     }
-  ]);
+  });
 
-  const pendingOrders: PendingOrder[] = [
-    { id: '1', orderNumber: 'SH-1001', channel: 'Shopify', customerName: 'John Doe', items: 3, total: 149.99, status: 'pending', createdAt: new Date().toISOString() },
-    { id: '2', orderNumber: 'SH-1002', channel: 'Shopify', customerName: 'Jane Smith', items: 1, total: 59.99, status: 'pending', createdAt: new Date().toISOString() },
-    { id: '3', orderNumber: 'WC-502', channel: 'WooCommerce', customerName: 'Bob Wilson', items: 5, total: 299.99, status: 'processing', createdAt: new Date().toISOString() },
-    { id: '4', orderNumber: 'SH-1003', channel: 'Shopify', customerName: 'Alice Brown', items: 2, total: 89.99, status: 'pending', createdAt: new Date().toISOString() },
-  ];
+  const { data: orders = [] } = useQuery({
+    queryKey: ['wms-ecommerce-orders'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wms_ecommerce_orders')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    }
+  });
 
-  const handleSync = async (channelId: string) => {
-    setSyncing(channelId);
-    
-    // Simulate sync
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setChannels(prev => prev.map(ch => 
-      ch.id === channelId 
-        ? { ...ch, lastSync: new Date().toISOString() }
-        : ch
-    ));
+  const createMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const { error } = await supabase.from('wms_ecommerce_platforms').insert({
+        platform_name: data.platform_name,
+        platform_type: data.platform_type,
+        api_url: data.api_url || null,
+        created_by: user?.id
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wms-ecommerce-platforms'] });
+      toast({ title: language === 'ar' ? 'تمت إضافة المنصة بنجاح' : 'Platform added successfully' });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: language === 'ar' ? 'خطأ' : 'Error', variant: 'destructive' });
+    }
+  });
 
-    toast({
-      title: language === 'ar' ? 'تمت المزامنة' : 'Sync Complete',
-      description: language === 'ar' ? 'تم مزامنة الطلبات بنجاح' : 'Orders synced successfully'
-    });
-    
-    setSyncing(null);
+  const toggleConnectionMutation = useMutation({
+    mutationFn: async ({ id, is_connected }: { id: string; is_connected: boolean }) => {
+      const { error } = await supabase
+        .from('wms_ecommerce_platforms')
+        .update({ 
+          is_connected, 
+          last_sync_at: is_connected ? new Date().toISOString() : null,
+          sync_status: is_connected ? 'synced' : 'idle'
+        })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wms-ecommerce-platforms'] });
+      toast({ title: language === 'ar' ? 'تم تحديث الاتصال' : 'Connection updated' });
+    }
+  });
+
+  const syncMutation = useMutation({
+    mutationFn: async (platformId: string) => {
+      setSyncing(platformId);
+      await supabase
+        .from('wms_ecommerce_platforms')
+        .update({ sync_status: 'syncing' })
+        .eq('id', platformId);
+      
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const { error } = await supabase
+        .from('wms_ecommerce_platforms')
+        .update({ 
+          sync_status: 'synced',
+          last_sync_at: new Date().toISOString()
+        })
+        .eq('id', platformId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wms-ecommerce-platforms'] });
+      toast({ title: language === 'ar' ? 'تمت المزامنة بنجاح' : 'Sync completed' });
+      setSyncing(null);
+    },
+    onError: () => {
+      setSyncing(null);
+    }
+  });
+
+  const resetForm = () => {
+    setFormData({ platform_name: '', platform_type: 'shopify', api_url: '' });
   };
 
-  const handleConnect = (channel: EcommerceChannel) => {
-    setSelectedChannel(channel);
-    setConfigDialogOpen(true);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMutation.mutate(formData);
   };
 
-  const handleToggleSync = (channelId: string, enabled: boolean) => {
-    setChannels(prev => prev.map(ch =>
-      ch.id === channelId ? { ...ch, syncEnabled: enabled } : ch
-    ));
+  const getPlatformIcon = (type: string) => {
+    switch (type) {
+      case 'shopify': return '🛍️';
+      case 'woocommerce': return '🔌';
+      case 'magento': return '🧲';
+      case 'amazon': return '📦';
+      default: return '🌐';
+    }
   };
 
-  const totalOrdersToday = channels.reduce((sum, ch) => sum + ch.ordersToday, 0);
-  const connectedChannels = channels.filter(ch => ch.isConnected).length;
+  const connectedPlatforms = platforms.filter((p: any) => p.is_connected);
+  const pendingOrders = orders.filter((o: any) => o.status === 'pending').length;
 
   const breadcrumbItems = [
     { label: language === 'ar' ? 'نظام WMS' : 'WMS', href: '/wms' },
@@ -169,7 +172,7 @@ const WMSEcommerce: React.FC = () => {
       <main className="container mx-auto px-4 py-6">
         <Breadcrumbs items={breadcrumbItems} className="mb-4" />
 
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <ShoppingCart className="h-6 w-6" />
@@ -179,6 +182,56 @@ const WMSEcommerce: React.FC = () => {
               {language === 'ar' ? 'ربط المتاجر الإلكترونية ومزامنة الطلبات' : 'Connect online stores and sync orders'}
             </p>
           </div>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" />
+                {language === 'ar' ? 'إضافة منصة' : 'Add Platform'}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{language === 'ar' ? 'إضافة منصة جديدة' : 'Add New Platform'}</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>{language === 'ar' ? 'اسم المنصة' : 'Platform Name'}</Label>
+                  <Input
+                    value={formData.platform_name}
+                    onChange={(e) => setFormData({ ...formData, platform_name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{language === 'ar' ? 'نوع المنصة' : 'Platform Type'}</Label>
+                  <Select value={formData.platform_type} onValueChange={(v) => setFormData({ ...formData, platform_type: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="shopify">🛍️ Shopify</SelectItem>
+                      <SelectItem value="woocommerce">🔌 WooCommerce</SelectItem>
+                      <SelectItem value="magento">🧲 Magento</SelectItem>
+                      <SelectItem value="amazon">📦 Amazon</SelectItem>
+                      <SelectItem value="other">🌐 {language === 'ar' ? 'أخرى' : 'Other'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>{language === 'ar' ? 'رابط API (اختياري)' : 'API URL (optional)'}</Label>
+                  <Input
+                    value={formData.api_url}
+                    onChange={(e) => setFormData({ ...formData, api_url: e.target.value })}
+                    placeholder="https://..."
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>{language === 'ar' ? 'إلغاء' : 'Cancel'}</Button>
+                  <Button type="submit" disabled={createMutation.isPending}>{language === 'ar' ? 'إنشاء' : 'Create'}</Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Stats Cards */}
@@ -190,10 +243,8 @@ const WMSEcommerce: React.FC = () => {
                   <LinkIcon className="h-6 w-6 text-green-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'القنوات المتصلة' : 'Connected Channels'}
-                  </p>
-                  <p className="text-2xl font-bold">{connectedChannels}/{channels.length}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'المنصات المتصلة' : 'Connected'}</p>
+                  <p className="text-2xl font-bold">{connectedPlatforms.length}/{platforms.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -205,10 +256,8 @@ const WMSEcommerce: React.FC = () => {
                   <Package className="h-6 w-6 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'طلبات اليوم' : 'Orders Today'}
-                  </p>
-                  <p className="text-2xl font-bold">{totalOrdersToday}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'إجمالي الطلبات' : 'Total Orders'}</p>
+                  <p className="text-2xl font-bold">{orders.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -220,10 +269,8 @@ const WMSEcommerce: React.FC = () => {
                   <Clock className="h-6 w-6 text-orange-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'قيد الانتظار' : 'Pending'}
-                  </p>
-                  <p className="text-2xl font-bold">{pendingOrders.filter(o => o.status === 'pending').length}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'قيد الانتظار' : 'Pending'}</p>
+                  <p className="text-2xl font-bold">{pendingOrders}</p>
                 </div>
               </div>
             </CardContent>
@@ -232,186 +279,148 @@ const WMSEcommerce: React.FC = () => {
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-lg bg-purple-500/10">
-                  <TrendingUp className="h-6 w-6 text-purple-500" />
+                  <CheckCircle className="h-6 w-6 text-purple-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'إجمالي الطلبات' : 'Total Orders'}
-                  </p>
-                  <p className="text-2xl font-bold">{channels.reduce((sum, ch) => sum + ch.ordersTotal, 0)}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'حالة المزامنة' : 'Sync Status'}</p>
+                  <p className="text-lg font-bold text-green-600">{language === 'ar' ? 'متصل' : 'Active'}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs defaultValue="channels" className="space-y-4">
+        <Tabs defaultValue="platforms" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="channels">
+            <TabsTrigger value="platforms">
               <LinkIcon className="h-4 w-4 me-2" />
-              {language === 'ar' ? 'القنوات' : 'Channels'}
+              {language === 'ar' ? 'المنصات' : 'Platforms'}
             </TabsTrigger>
             <TabsTrigger value="orders">
               <Package className="h-4 w-4 me-2" />
-              {language === 'ar' ? 'الطلبات المعلقة' : 'Pending Orders'}
-              <Badge variant="secondary" className="ms-2">{pendingOrders.length}</Badge>
+              {language === 'ar' ? 'الطلبات' : 'Orders'}
+              {orders.length > 0 && <Badge variant="secondary" className="ms-2">{orders.length}</Badge>}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="channels">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {channels.map(channel => (
-                <Card key={channel.id} className={channel.isConnected ? 'border-green-500/30' : ''}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-3xl">{channel.logo}</span>
-                        <div>
-                          <CardTitle className="text-lg">{channel.name}</CardTitle>
-                          <CardDescription>{channel.platform}</CardDescription>
-                        </div>
-                      </div>
-                      {channel.isConnected ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-muted-foreground" />
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {channel.isConnected ? (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4 text-sm">
+          <TabsContent value="platforms">
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-48" />)}
+              </div>
+            ) : platforms.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <ShoppingCart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">{language === 'ar' ? 'لا توجد منصات. أضف منصة جديدة للبدء.' : 'No platforms. Add a new platform to get started.'}</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {platforms.map((platform: any) => (
+                  <Card key={platform.id} className={platform.is_connected ? 'border-green-500/30' : ''}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-3xl">{getPlatformIcon(platform.platform_type)}</span>
                           <div>
-                            <p className="text-muted-foreground">{language === 'ar' ? 'طلبات اليوم' : 'Today'}</p>
-                            <p className="text-2xl font-bold">{channel.ordersToday}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">{language === 'ar' ? 'الإجمالي' : 'Total'}</p>
-                            <p className="text-2xl font-bold">{channel.ordersTotal}</p>
+                            <CardTitle className="text-lg">{platform.platform_name}</CardTitle>
+                            <CardDescription className="capitalize">{platform.platform_type}</CardDescription>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={channel.syncEnabled}
-                              onCheckedChange={(checked) => handleToggleSync(channel.id, checked)}
-                            />
-                            <span className="text-sm">
-                              {language === 'ar' ? 'مزامنة تلقائية' : 'Auto-sync'}
-                            </span>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleSync(channel.id)}
-                            disabled={syncing === channel.id}
-                          >
-                            <RefreshCw className={`h-4 w-4 me-1 ${syncing === channel.id ? 'animate-spin' : ''}`} />
-                            {language === 'ar' ? 'مزامنة' : 'Sync'}
-                          </Button>
-                        </div>
-
-                        {channel.lastSync && (
-                          <p className="text-xs text-muted-foreground">
-                            {language === 'ar' ? 'آخر مزامنة:' : 'Last sync:'} {new Date(channel.lastSync).toLocaleString()}
-                          </p>
+                        {platform.is_connected ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-muted-foreground" />
                         )}
                       </div>
-                    ) : (
+                    </CardHeader>
+                    <CardContent>
                       <div className="space-y-4">
-                        <p className="text-sm text-muted-foreground">
-                          {language === 'ar' ? 'غير متصل. اضغط للربط.' : 'Not connected. Click to connect.'}
-                        </p>
-                        <Button onClick={() => handleConnect(channel)} className="w-full">
-                          <Zap className="h-4 w-4 me-2" />
-                          {language === 'ar' ? 'ربط' : 'Connect'}
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">{language === 'ar' ? 'الاتصال' : 'Connection'}</span>
+                          <Switch
+                            checked={platform.is_connected || false}
+                            onCheckedChange={(checked) => toggleConnectionMutation.mutate({ id: platform.id, is_connected: checked })}
+                          />
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">{language === 'ar' ? 'حالة المزامنة' : 'Sync Status'}</span>
+                          <Badge variant={platform.is_connected ? 'default' : 'secondary'}>
+                            {platform.sync_status === 'syncing' ? (language === 'ar' ? 'جاري...' : 'Syncing...') :
+                             platform.is_connected ? (language === 'ar' ? 'متصل' : 'Connected') : (language === 'ar' ? 'غير متصل' : 'Disconnected')}
+                          </Badge>
+                        </div>
+
+                        {platform.last_sync_at && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">{language === 'ar' ? 'آخر مزامنة' : 'Last Sync'}</span>
+                            <span>{format(new Date(platform.last_sync_at), 'yyyy-MM-dd HH:mm')}</span>
+                          </div>
+                        )}
+
+                        <Button 
+                          className="w-full gap-2" 
+                          variant="outline"
+                          disabled={!platform.is_connected || syncing === platform.id}
+                          onClick={() => syncMutation.mutate(platform.id)}
+                        >
+                          <RefreshCw className={`w-4 h-4 ${syncing === platform.id ? 'animate-spin' : ''}`} />
+                          {language === 'ar' ? 'مزامنة الآن' : 'Sync Now'}
                         </Button>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="orders">
             <Card>
               <CardHeader>
-                <CardTitle>{language === 'ar' ? 'الطلبات المعلقة من المتاجر' : 'Pending Store Orders'}</CardTitle>
+                <CardTitle>{language === 'ar' ? 'طلبات المتاجر' : 'Store Orders'}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{language === 'ar' ? 'رقم الطلب' : 'Order #'}</TableHead>
-                      <TableHead>{language === 'ar' ? 'القناة' : 'Channel'}</TableHead>
-                      <TableHead>{language === 'ar' ? 'العميل' : 'Customer'}</TableHead>
-                      <TableHead>{language === 'ar' ? 'المنتجات' : 'Items'}</TableHead>
-                      <TableHead>{language === 'ar' ? 'الإجمالي' : 'Total'}</TableHead>
-                      <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
-                      <TableHead>{language === 'ar' ? 'الإجراءات' : 'Actions'}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pendingOrders.map(order => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.orderNumber}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{order.channel}</Badge>
-                        </TableCell>
-                        <TableCell>{order.customerName}</TableCell>
-                        <TableCell>{order.items}</TableCell>
-                        <TableCell>${order.total}</TableCell>
-                        <TableCell>
-                          <Badge variant={order.status === 'pending' ? 'secondary' : 'default'}>
-                            {order.status === 'pending' 
-                              ? (language === 'ar' ? 'معلق' : 'Pending')
-                              : (language === 'ar' ? 'قيد التنفيذ' : 'Processing')}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm">
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
+                {orders.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">{language === 'ar' ? 'لا توجد طلبات' : 'No orders yet'}</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{language === 'ar' ? 'رقم الطلب' : 'Order #'}</TableHead>
+                        <TableHead>{language === 'ar' ? 'العميل' : 'Customer'}</TableHead>
+                        <TableHead>{language === 'ar' ? 'المبلغ' : 'Amount'}</TableHead>
+                        <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
+                        <TableHead>{language === 'ar' ? 'التاريخ' : 'Date'}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {orders.map((order: any) => (
+                        <TableRow key={order.id}>
+                          <TableCell className="font-mono">{order.order_number || order.external_order_id}</TableCell>
+                          <TableCell>{order.customer_name || '-'}</TableCell>
+                          <TableCell>${order.total_amount?.toFixed(2) || '0.00'}</TableCell>
+                          <TableCell>
+                            <Badge variant={order.status === 'completed' ? 'default' : 'outline'}>
+                              {order.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{order.order_date ? format(new Date(order.order_date), 'yyyy-MM-dd') : '-'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Config Dialog */}
-        <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {language === 'ar' ? 'ربط' : 'Connect'} {selectedChannel?.name}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div>
-                <Label>{language === 'ar' ? 'مفتاح API' : 'API Key'}</Label>
-                <Input placeholder="sk_live_..." type="password" />
-              </div>
-              <div>
-                <Label>{language === 'ar' ? 'رابط المتجر' : 'Store URL'}</Label>
-                <Input placeholder="https://yourstore.com" />
-              </div>
-              <Button className="w-full">
-                <LinkIcon className="h-4 w-4 me-2" />
-                {language === 'ar' ? 'ربط المتجر' : 'Connect Store'}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </main>
     </div>
   );
-};
-
-export default WMSEcommerce;
+}

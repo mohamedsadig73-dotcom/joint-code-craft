@@ -1,206 +1,199 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import { Building2, Plus, Edit, Trash2, Users, Calendar, Package, Search, Warehouse, TrendingUp } from 'lucide-react';
+import { format } from 'date-fns';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Building2, 
-  Plus, 
-  Search, 
-  Edit, 
-  Settings,
-  Package,
-  Warehouse,
-  TrendingUp,
-  Users,
-  BarChart3,
-  MapPin,
-  FileText
-} from 'lucide-react';
 
-interface Tenant {
-  id: string;
-  name: string;
-  code: string;
-  contactPerson: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  allocatedSpace: number;
-  usedSpace: number;
-  productCount: number;
-  orderCount: number;
-  isActive: boolean;
-  billingPlan: string;
-  createdAt: string;
-}
-
-const WMS3PLTenants: React.FC = () => {
+export default function WMS3PLTenants() {
   const { language } = useLanguage();
+  const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const isRTL = language === 'ar';
-
-  const [loading, setLoading] = useState(true);
-  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingTenant, setEditingTenant] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  
   const [formData, setFormData] = useState({
-    name: '',
-    code: '',
-    contactPerson: '',
+    tenant_code: '',
+    tenant_name: '',
+    contact_person: '',
     email: '',
     phone: '',
     address: '',
-    allocatedSpace: 0,
-    billingPlan: 'standard'
+    contract_start: '',
+    contract_end: '',
+    storage_allocation: '',
+    billing_cycle: 'monthly',
+    notes: ''
   });
 
-  useEffect(() => {
-    loadTenants();
-  }, []);
-
-  const loadTenants = async () => {
-    setLoading(true);
-    
-    // Simulate tenants from suppliers with additional data
-    const { data: suppliers } = await supabase
-      .from('wms_suppliers')
-      .select('*')
-      .eq('is_active', true);
-
-    const { data: inventory } = await supabase
-      .from('wms_inventory')
-      .select('product_id, quantity');
-
-    const { data: orders } = await supabase
-      .from('wms_inbound_orders')
-      .select('id, supplier_id');
-
-    if (suppliers) {
-      const tenantData: Tenant[] = suppliers.map((supplier, index) => {
-        const supplierOrders = orders?.filter(o => o.supplier_id === supplier.id).length || 0;
-        
-        return {
-          id: supplier.id,
-          name: supplier.name,
-          code: supplier.code || `TN-${(index + 1).toString().padStart(3, '0')}`,
-          contactPerson: supplier.contact_person,
-          email: supplier.email,
-          phone: supplier.phone,
-          address: supplier.address,
-          allocatedSpace: Math.round(100 + Math.random() * 400),
-          usedSpace: Math.round(50 + Math.random() * 200),
-          productCount: Math.round(10 + Math.random() * 50),
-          orderCount: supplierOrders,
-          isActive: supplier.is_active ?? true,
-          billingPlan: ['basic', 'standard', 'premium'][Math.floor(Math.random() * 3)],
-          createdAt: supplier.created_at || new Date().toISOString()
-        };
-      });
-
-      setTenants(tenantData);
+  const { data: tenants = [], isLoading } = useQuery({
+    queryKey: ['wms-3pl-tenants'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wms_3pl_tenants')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
     }
-    
-    setLoading(false);
-  };
+  });
 
-  const handleSave = async () => {
-    if (!formData.name.trim() || !formData.code.trim()) {
-      toast({
-        title: language === 'ar' ? 'خطأ' : 'Error',
-        description: language === 'ar' ? 'الاسم والرمز مطلوبان' : 'Name and code are required',
-        variant: 'destructive'
+  const createMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const { error } = await supabase.from('wms_3pl_tenants').insert({
+        tenant_code: data.tenant_code,
+        tenant_name: data.tenant_name,
+        contact_person: data.contact_person || null,
+        email: data.email || null,
+        phone: data.phone || null,
+        address: data.address || null,
+        contract_start: data.contract_start || null,
+        contract_end: data.contract_end || null,
+        storage_allocation: data.storage_allocation ? parseFloat(data.storage_allocation) : null,
+        billing_cycle: data.billing_cycle,
+        notes: data.notes || null,
+        created_by: user?.id
       });
-      return;
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wms-3pl-tenants'] });
+      toast({ title: language === 'ar' ? 'تم إضافة المستأجر بنجاح' : 'Tenant added successfully' });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: language === 'ar' ? 'خطأ' : 'Error', variant: 'destructive' });
     }
+  });
 
-    setSaving(true);
-    
-    const newTenant: Tenant = {
-      id: crypto.randomUUID(),
-      name: formData.name,
-      code: formData.code,
-      contactPerson: formData.contactPerson || null,
-      email: formData.email || null,
-      phone: formData.phone || null,
-      address: formData.address || null,
-      allocatedSpace: formData.allocatedSpace,
-      usedSpace: 0,
-      productCount: 0,
-      orderCount: 0,
-      isActive: true,
-      billingPlan: formData.billingPlan,
-      createdAt: new Date().toISOString()
-    };
+  const updateMutation = useMutation({
+    mutationFn: async (data: typeof formData & { id: string }) => {
+      const { error } = await supabase
+        .from('wms_3pl_tenants')
+        .update({
+          tenant_code: data.tenant_code,
+          tenant_name: data.tenant_name,
+          contact_person: data.contact_person || null,
+          email: data.email || null,
+          phone: data.phone || null,
+          address: data.address || null,
+          contract_start: data.contract_start || null,
+          contract_end: data.contract_end || null,
+          storage_allocation: data.storage_allocation ? parseFloat(data.storage_allocation) : null,
+          billing_cycle: data.billing_cycle,
+          notes: data.notes || null
+        })
+        .eq('id', data.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wms-3pl-tenants'] });
+      toast({ title: language === 'ar' ? 'تم تحديث المستأجر بنجاح' : 'Tenant updated successfully' });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: language === 'ar' ? 'خطأ' : 'Error', variant: 'destructive' });
+    }
+  });
 
-    setTenants(prev => [newTenant, ...prev]);
-    
-    toast({
-      title: language === 'ar' ? 'تم الإنشاء' : 'Created',
-      description: language === 'ar' ? 'تم إنشاء المستأجر بنجاح' : 'Tenant created successfully'
-    });
-
-    resetForm();
-    setDialogOpen(false);
-    setSaving(false);
-  };
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('wms_3pl_tenants').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wms-3pl-tenants'] });
+      toast({ title: language === 'ar' ? 'تم حذف المستأجر بنجاح' : 'Tenant deleted successfully' });
+    },
+    onError: () => {
+      toast({ title: language === 'ar' ? 'خطأ' : 'Error', variant: 'destructive' });
+    }
+  });
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      code: '',
-      contactPerson: '',
+      tenant_code: '',
+      tenant_name: '',
+      contact_person: '',
       email: '',
       phone: '',
       address: '',
-      allocatedSpace: 0,
-      billingPlan: 'standard'
+      contract_start: '',
+      contract_end: '',
+      storage_allocation: '',
+      billing_cycle: 'monthly',
+      notes: ''
     });
+    setEditingTenant(null);
   };
 
-  const filteredTenants = tenants.filter(t => 
-    t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.code.toLowerCase().includes(searchTerm.toLowerCase())
+  const handleEdit = (tenant: any) => {
+    setEditingTenant(tenant);
+    setFormData({
+      tenant_code: tenant.tenant_code,
+      tenant_name: tenant.tenant_name,
+      contact_person: tenant.contact_person || '',
+      email: tenant.email || '',
+      phone: tenant.phone || '',
+      address: tenant.address || '',
+      contract_start: tenant.contract_start || '',
+      contract_end: tenant.contract_end || '',
+      storage_allocation: tenant.storage_allocation?.toString() || '',
+      billing_cycle: tenant.billing_cycle || 'monthly',
+      notes: tenant.notes || ''
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingTenant) {
+      updateMutation.mutate({ ...formData, id: editingTenant.id });
+    } else {
+      createMutation.mutate(formData);
+    }
+  };
+
+  const filteredTenants = tenants.filter((t: any) =>
+    t.tenant_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    t.tenant_code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalSpace = tenants.reduce((sum, t) => sum + t.allocatedSpace, 0);
-  const usedSpace = tenants.reduce((sum, t) => sum + t.usedSpace, 0);
+  const activeTenants = tenants.filter((t: any) => t.is_active);
+  const totalStorage = tenants.reduce((sum: number, t: any) => sum + (t.storage_allocation || 0), 0);
 
   const breadcrumbItems = [
     { label: language === 'ar' ? 'نظام WMS' : 'WMS', href: '/wms' },
     { label: language === 'ar' ? 'إدارة المستأجرين (3PL)' : '3PL Tenants' }
   ];
 
-  const getBillingBadge = (plan: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'outline'> = {
-      premium: 'default',
-      standard: 'secondary',
-      basic: 'outline'
-    };
+  const getBillingLabel = (cycle: string) => {
     const labels: Record<string, { ar: string; en: string }> = {
-      premium: { ar: 'مميز', en: 'Premium' },
-      standard: { ar: 'قياسي', en: 'Standard' },
-      basic: { ar: 'أساسي', en: 'Basic' }
+      weekly: { ar: 'أسبوعي', en: 'Weekly' },
+      monthly: { ar: 'شهري', en: 'Monthly' },
+      quarterly: { ar: 'ربع سنوي', en: 'Quarterly' },
+      yearly: { ar: 'سنوي', en: 'Yearly' }
     };
-    return (
-      <Badge variant={variants[plan] || 'outline'}>
-        {labels[plan]?.[language === 'ar' ? 'ar' : 'en'] || plan}
-      </Badge>
-    );
+    return labels[cycle]?.[language === 'ar' ? 'ar' : 'en'] || cycle;
   };
 
   return (
@@ -209,86 +202,135 @@ const WMS3PLTenants: React.FC = () => {
       <main className="container mx-auto px-4 py-6">
         <Breadcrumbs items={breadcrumbItems} className="mb-4" />
 
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Building2 className="h-6 w-6" />
               {language === 'ar' ? 'إدارة المستأجرين (3PL)' : '3PL Tenant Management'}
             </h1>
             <p className="text-muted-foreground">
-              {language === 'ar' ? 'إدارة العملاء والمساحات المخصصة في المستودع' : 'Manage clients and allocated warehouse space'}
+              {language === 'ar' ? 'إدارة العملاء والمساحات المخصصة' : 'Manage clients and allocated space'}
             </p>
           </div>
-          
-          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 me-2" />
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" />
                 {language === 'ar' ? 'إضافة مستأجر' : 'Add Tenant'}
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>
-                  {language === 'ar' ? 'إضافة مستأجر جديد' : 'Add New Tenant'}
-                </DialogTitle>
+                <DialogTitle>{editingTenant ? (language === 'ar' ? 'تعديل مستأجر' : 'Edit Tenant') : (language === 'ar' ? 'إضافة مستأجر جديد' : 'Add New Tenant')}</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 mt-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>{language === 'ar' ? 'الاسم *' : 'Name *'}</Label>
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'رمز المستأجر *' : 'Tenant Code *'}</Label>
                     <Input
-                      value={formData.name}
-                      onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label>{language === 'ar' ? 'الرمز *' : 'Code *'}</Label>
-                    <Input
-                      value={formData.code}
-                      onChange={e => setFormData({ ...formData, code: e.target.value })}
+                      value={formData.tenant_code}
+                      onChange={(e) => setFormData({ ...formData, tenant_code: e.target.value })}
                       placeholder="TN-001"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'اسم المستأجر *' : 'Tenant Name *'}</Label>
+                    <Input
+                      value={formData.tenant_name}
+                      onChange={(e) => setFormData({ ...formData, tenant_name: e.target.value })}
+                      required
                     />
                   </div>
                 </div>
-                <div>
-                  <Label>{language === 'ar' ? 'جهة الاتصال' : 'Contact Person'}</Label>
-                  <Input
-                    value={formData.contactPerson}
-                    onChange={e => setFormData({ ...formData, contactPerson: e.target.value })}
-                  />
-                </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'جهة الاتصال' : 'Contact Person'}</Label>
+                    <Input
+                      value={formData.contact_person}
+                      onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label>{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</Label>
                     <Input
                       type="email"
                       value={formData.email}
-                      onChange={e => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     />
                   </div>
-                  <div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <Label>{language === 'ar' ? 'الهاتف' : 'Phone'}</Label>
                     <Input
                       value={formData.phone}
-                      onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'دورة الفوترة' : 'Billing Cycle'}</Label>
+                    <Select value={formData.billing_cycle} onValueChange={(v) => setFormData({ ...formData, billing_cycle: v })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly">{language === 'ar' ? 'أسبوعي' : 'Weekly'}</SelectItem>
+                        <SelectItem value="monthly">{language === 'ar' ? 'شهري' : 'Monthly'}</SelectItem>
+                        <SelectItem value="quarterly">{language === 'ar' ? 'ربع سنوي' : 'Quarterly'}</SelectItem>
+                        <SelectItem value="yearly">{language === 'ar' ? 'سنوي' : 'Yearly'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'بداية العقد' : 'Contract Start'}</Label>
+                    <Input
+                      type="date"
+                      value={formData.contract_start}
+                      onChange={(e) => setFormData({ ...formData, contract_start: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'نهاية العقد' : 'Contract End'}</Label>
+                    <Input
+                      type="date"
+                      value={formData.contract_end}
+                      onChange={(e) => setFormData({ ...formData, contract_end: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'المساحة (م²)' : 'Space (m²)'}</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.storage_allocation}
+                      onChange={(e) => setFormData({ ...formData, storage_allocation: e.target.value })}
                     />
                   </div>
                 </div>
-                <div>
-                  <Label>{language === 'ar' ? 'المساحة المخصصة (م²)' : 'Allocated Space (m²)'}</Label>
+                <div className="space-y-2">
+                  <Label>{language === 'ar' ? 'العنوان' : 'Address'}</Label>
                   <Input
-                    type="number"
-                    value={formData.allocatedSpace}
-                    onChange={e => setFormData({ ...formData, allocatedSpace: Number(e.target.value) })}
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   />
                 </div>
-                <Button onClick={handleSave} disabled={saving} className="w-full">
-                  {saving 
-                    ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...')
-                    : (language === 'ar' ? 'حفظ' : 'Save')}
-                </Button>
-              </div>
+                <div className="space-y-2">
+                  <Label>{language === 'ar' ? 'ملاحظات' : 'Notes'}</Label>
+                  <Textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>{language === 'ar' ? 'إلغاء' : 'Cancel'}</Button>
+                  <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                    {editingTenant ? (language === 'ar' ? 'تحديث' : 'Update') : (language === 'ar' ? 'إنشاء' : 'Create')}
+                  </Button>
+                </div>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
@@ -302,10 +344,21 @@ const WMS3PLTenants: React.FC = () => {
                   <Building2 className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'إجمالي المستأجرين' : 'Total Tenants'}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'إجمالي المستأجرين' : 'Total Tenants'}</p>
                   <p className="text-2xl font-bold">{tenants.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-lg bg-green-500/10">
+                  <Users className="h-6 w-6 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'النشطون' : 'Active'}</p>
+                  <p className="text-2xl font-bold">{activeTenants.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -317,27 +370,8 @@ const WMS3PLTenants: React.FC = () => {
                   <Warehouse className="h-6 w-6 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'المساحة الكلية' : 'Total Space'}
-                  </p>
-                  <p className="text-2xl font-bold">{totalSpace} m²</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-green-500/10">
-                  <TrendingUp className="h-6 w-6 text-green-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'نسبة الاستخدام' : 'Utilization'}
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {totalSpace > 0 ? Math.round((usedSpace / totalSpace) * 100) : 0}%
-                  </p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'إجمالي المساحة' : 'Total Space'}</p>
+                  <p className="text-2xl font-bold">{totalStorage.toFixed(0)} m²</p>
                 </div>
               </div>
             </CardContent>
@@ -346,13 +380,11 @@ const WMS3PLTenants: React.FC = () => {
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-lg bg-purple-500/10">
-                  <Package className="h-6 w-6 text-purple-500" />
+                  <Calendar className="h-6 w-6 text-purple-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'إجمالي المنتجات' : 'Total Products'}
-                  </p>
-                  <p className="text-2xl font-bold">{tenants.reduce((sum, t) => sum + t.productCount, 0)}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'العقود النشطة' : 'Active Contracts'}</p>
+                  <p className="text-2xl font-bold">{activeTenants.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -374,36 +406,38 @@ const WMS3PLTenants: React.FC = () => {
 
         {/* Tenants Table */}
         <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5" />
+              {language === 'ar' ? 'قائمة المستأجرين' : 'Tenants List'}
+            </CardTitle>
+          </CardHeader>
           <CardContent className="p-0">
-            {loading ? (
+            {isLoading ? (
               <div className="p-6 space-y-4">
-                {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-16" />)}
+                {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16" />)}
+              </div>
+            ) : filteredTenants.length === 0 ? (
+              <div className="text-center py-12">
+                <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">{language === 'ar' ? 'لا يوجد مستأجرين' : 'No tenants found'}</p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{language === 'ar' ? 'المستأجر' : 'Tenant'}</TableHead>
-                    <TableHead>{language === 'ar' ? 'جهة الاتصال' : 'Contact'}</TableHead>
-                    <TableHead>{language === 'ar' ? 'المساحة' : 'Space'}</TableHead>
-                    <TableHead>{language === 'ar' ? 'المنتجات' : 'Products'}</TableHead>
-                    <TableHead>{language === 'ar' ? 'الطلبات' : 'Orders'}</TableHead>
-                    <TableHead>{language === 'ar' ? 'الخطة' : 'Plan'}</TableHead>
-                    <TableHead>{language === 'ar' ? 'الإجراءات' : 'Actions'}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTenants.length === 0 ? (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-12">
-                        <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">
-                          {language === 'ar' ? 'لا يوجد مستأجرين' : 'No tenants found'}
-                        </p>
-                      </TableCell>
+                      <TableHead>{language === 'ar' ? 'المستأجر' : 'Tenant'}</TableHead>
+                      <TableHead>{language === 'ar' ? 'جهة الاتصال' : 'Contact'}</TableHead>
+                      <TableHead>{language === 'ar' ? 'المساحة' : 'Space'}</TableHead>
+                      <TableHead>{language === 'ar' ? 'دورة الفوترة' : 'Billing'}</TableHead>
+                      <TableHead>{language === 'ar' ? 'العقد' : 'Contract'}</TableHead>
+                      <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
+                      <TableHead>{language === 'ar' ? 'الإجراءات' : 'Actions'}</TableHead>
                     </TableRow>
-                  ) : (
-                    filteredTenants.map(tenant => (
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTenants.map((tenant: any) => (
                       <TableRow key={tenant.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -411,58 +445,58 @@ const WMS3PLTenants: React.FC = () => {
                               <Building2 className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                              <p className="font-medium">{tenant.name}</p>
-                              <p className="text-sm text-muted-foreground">{tenant.code}</p>
+                              <p className="font-medium">{tenant.tenant_name}</p>
+                              <p className="text-sm text-muted-foreground font-mono">{tenant.tenant_code}</p>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            <p>{tenant.contactPerson || '-'}</p>
+                            <p>{tenant.contact_person || '-'}</p>
                             <p className="text-muted-foreground">{tenant.email || '-'}</p>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                              <span>{tenant.usedSpace} / {tenant.allocatedSpace} m²</span>
-                            </div>
-                            <Progress 
-                              value={(tenant.usedSpace / tenant.allocatedSpace) * 100} 
-                              className="h-2"
-                            />
+                          {tenant.storage_allocation ? `${tenant.storage_allocation} m²` : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{getBillingLabel(tenant.billing_cycle)}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {tenant.contract_start && (
+                              <p>{format(new Date(tenant.contract_start), 'yyyy-MM-dd')}</p>
+                            )}
+                            {tenant.contract_end && (
+                              <p className="text-muted-foreground">→ {format(new Date(tenant.contract_end), 'yyyy-MM-dd')}</p>
+                            )}
+                            {!tenant.contract_start && !tenant.contract_end && '-'}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">{tenant.productCount}</Badge>
+                          <Badge variant={tenant.is_active ? 'default' : 'secondary'}>
+                            {tenant.is_active ? (language === 'ar' ? 'نشط' : 'Active') : (language === 'ar' ? 'غير نشط' : 'Inactive')}
+                          </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary">{tenant.orderCount}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          {getBillingBadge(tenant.billingPlan)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Button variant="ghost" size="sm">
-                              <Edit className="h-4 w-4" />
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="ghost" onClick={() => handleEdit(tenant)}>
+                              <Edit className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
-                              <Settings className="h-4 w-4" />
+                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteMutation.mutate(tenant.id)}>
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
       </main>
     </div>
   );
-};
-
-export default WMS3PLTenants;
+}

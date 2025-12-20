@@ -1,149 +1,193 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { 
-  Factory, 
-  Cog, 
-  Package,
-  Clock,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  Play,
-  Pause,
-  RotateCcw,
-  Layers,
-  ArrowRight
-} from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import { Factory, Plus, Play, Pause, CheckCircle, Clock, Package, Layers, Cog, TrendingUp } from 'lucide-react';
+import { format } from 'date-fns';
 import ReactECharts from 'echarts-for-react';
 
-interface ProductionOrder {
-  id: string;
-  orderNumber: string;
-  productName: string;
-  targetQty: number;
-  completedQty: number;
-  wipQty: number;
-  status: 'pending' | 'in_progress' | 'completed' | 'on_hold';
-  priority: 'high' | 'medium' | 'low';
-  startDate: string | null;
-  dueDate: string;
-  workCenter: string;
-}
-
-interface WIPItem {
-  id: string;
-  productName: string;
-  stage: string;
-  quantity: number;
-  startedAt: string;
-  estimatedCompletion: string;
-  operator: string;
-  status: 'active' | 'paused' | 'blocked';
-}
-
-interface WorkCenter {
-  id: string;
-  name: string;
-  status: 'running' | 'idle' | 'maintenance';
-  currentOrder: string | null;
-  efficiency: number;
-  uptime: number;
-}
-
-const WMSMES: React.FC = () => {
+export default function WMSMES() {
   const { language } = useLanguage();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const isRTL = language === 'ar';
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    product_id: '',
+    production_line: '',
+    quantity_ordered: '',
+    due_date: '',
+    priority: 'normal',
+    notes: ''
+  });
 
-  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>([
-    { id: '1', orderNumber: 'PO-001', productName: 'Widget A', targetQty: 1000, completedQty: 750, wipQty: 150, status: 'in_progress', priority: 'high', startDate: '2024-01-15', dueDate: '2024-01-20', workCenter: 'Assembly Line 1' },
-    { id: '2', orderNumber: 'PO-002', productName: 'Widget B', targetQty: 500, completedQty: 500, wipQty: 0, status: 'completed', priority: 'medium', startDate: '2024-01-14', dueDate: '2024-01-18', workCenter: 'Assembly Line 2' },
-    { id: '3', orderNumber: 'PO-003', productName: 'Component X', targetQty: 2000, completedQty: 0, wipQty: 0, status: 'pending', priority: 'low', startDate: null, dueDate: '2024-01-25', workCenter: 'Machine Shop' },
-    { id: '4', orderNumber: 'PO-004', productName: 'Assembly Y', targetQty: 300, completedQty: 100, wipQty: 50, status: 'on_hold', priority: 'high', startDate: '2024-01-16', dueDate: '2024-01-22', workCenter: 'Assembly Line 1' },
-  ]);
+  const { data: workOrders = [], isLoading } = useQuery({
+    queryKey: ['wms-mes-work-orders'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wms_mes_work_orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    }
+  });
 
-  const [wipItems, setWIPItems] = useState<WIPItem[]>([
-    { id: '1', productName: 'Widget A', stage: 'Assembly', quantity: 100, startedAt: '2024-01-17 08:00', estimatedCompletion: '2024-01-17 14:00', operator: 'Ahmed', status: 'active' },
-    { id: '2', productName: 'Widget A', stage: 'Quality Check', quantity: 50, startedAt: '2024-01-17 10:00', estimatedCompletion: '2024-01-17 12:00', operator: 'Sara', status: 'active' },
-    { id: '3', productName: 'Assembly Y', stage: 'Packaging', quantity: 50, startedAt: '2024-01-17 09:00', estimatedCompletion: '2024-01-17 11:00', operator: 'Mohamed', status: 'paused' },
-  ]);
+  const { data: wipItems = [] } = useQuery({
+    queryKey: ['wms-wip-items'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wms_wip_items')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    }
+  });
 
-  const workCenters: WorkCenter[] = [
-    { id: '1', name: 'Assembly Line 1', status: 'running', currentOrder: 'PO-001', efficiency: 92, uptime: 98 },
-    { id: '2', name: 'Assembly Line 2', status: 'idle', currentOrder: null, efficiency: 0, uptime: 95 },
-    { id: '3', name: 'Machine Shop', status: 'running', currentOrder: 'PO-005', efficiency: 88, uptime: 96 },
-    { id: '4', name: 'Packaging Station', status: 'maintenance', currentOrder: null, efficiency: 0, uptime: 0 },
-  ];
+  const { data: products = [] } = useQuery({
+    queryKey: ['wms-products-select'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wms_products')
+        .select('id, name, sku')
+        .eq('is_active', true);
+      if (error) throw error;
+      return data;
+    }
+  });
 
-  const totalProduction = productionOrders.reduce((sum, o) => sum + o.completedQty, 0);
-  const totalWIP = productionOrders.reduce((sum, o) => sum + o.wipQty, 0);
-  const activeOrders = productionOrders.filter(o => o.status === 'in_progress').length;
+  const createMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const { data: woNumber } = await supabase.rpc('generate_work_order_number');
+      
+      const { error } = await supabase.from('wms_mes_work_orders').insert({
+        work_order_number: woNumber,
+        product_id: data.product_id || null,
+        production_line: data.production_line || null,
+        quantity_ordered: parseInt(data.quantity_ordered),
+        due_date: data.due_date || null,
+        priority: data.priority,
+        notes: data.notes || null,
+        created_by: user?.id
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wms-mes-work-orders'] });
+      toast({ title: language === 'ar' ? 'تم إنشاء أمر العمل بنجاح' : 'Work order created successfully' });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: language === 'ar' ? 'خطأ' : 'Error', variant: 'destructive' });
+    }
+  });
 
-  const productionChartOption = {
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status, additionalData }: { id: string; status: string; additionalData?: any }) => {
+      const updateData: Record<string, unknown> = { status };
+      if (status === 'in_progress' && !additionalData?.start_date) {
+        updateData.start_date = new Date().toISOString();
+      }
+      if (status === 'completed') {
+        updateData.completed_date = new Date().toISOString();
+        const wo = workOrders.find((w: any) => w.id === id);
+        if (wo) updateData.quantity_completed = wo.quantity_ordered;
+      }
+      Object.assign(updateData, additionalData);
+      
+      const { error } = await supabase.from('wms_mes_work_orders').update(updateData).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wms-mes-work-orders'] });
+      toast({ title: language === 'ar' ? 'تم تحديث الحالة' : 'Status updated' });
+    }
+  });
+
+  const resetForm = () => {
+    setFormData({
+      product_id: '',
+      production_line: '',
+      quantity_ordered: '',
+      due_date: '',
+      priority: 'normal',
+      notes: ''
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMutation.mutate(formData);
+  };
+
+  const getStatusBadge = (status: string | null) => {
+    switch (status) {
+      case 'completed': return <Badge className="bg-green-500">{language === 'ar' ? 'مكتمل' : 'Completed'}</Badge>;
+      case 'in_progress': return <Badge className="bg-blue-500">{language === 'ar' ? 'قيد التنفيذ' : 'In Progress'}</Badge>;
+      case 'on_hold': return <Badge variant="secondary">{language === 'ar' ? 'معلق' : 'On Hold'}</Badge>;
+      case 'cancelled': return <Badge variant="destructive">{language === 'ar' ? 'ملغي' : 'Cancelled'}</Badge>;
+      default: return <Badge variant="outline">{language === 'ar' ? 'معلق' : 'Pending'}</Badge>;
+    }
+  };
+
+  const getPriorityBadge = (priority: string | null) => {
+    switch (priority) {
+      case 'high': return <Badge variant="destructive">{language === 'ar' ? 'عالي' : 'High'}</Badge>;
+      case 'low': return <Badge variant="secondary">{language === 'ar' ? 'منخفض' : 'Low'}</Badge>;
+      default: return <Badge variant="outline">{language === 'ar' ? 'عادي' : 'Normal'}</Badge>;
+    }
+  };
+
+  const getCompletionRate = (wo: any) => {
+    if (!wo.quantity_ordered || wo.quantity_ordered === 0) return 0;
+    return Math.round(((wo.quantity_completed || 0) / wo.quantity_ordered) * 100);
+  };
+
+  const pendingOrders = workOrders.filter((wo: any) => wo.status === 'pending').length;
+  const inProgressOrders = workOrders.filter((wo: any) => wo.status === 'in_progress').length;
+  const completedOrders = workOrders.filter((wo: any) => wo.status === 'completed').length;
+  const totalWIP = wipItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
+  const totalCompleted = workOrders.reduce((sum: number, wo: any) => sum + (wo.quantity_completed || 0), 0);
+
+  const chartOption = {
     tooltip: { trigger: 'axis' },
-    legend: { data: [language === 'ar' ? 'مكتمل' : 'Completed', language === 'ar' ? 'قيد التنفيذ' : 'WIP'] },
-    xAxis: { type: 'category', data: productionOrders.map(o => o.orderNumber) },
+    xAxis: { type: 'category', data: workOrders.slice(0, 6).map((wo: any) => wo.work_order_number) },
     yAxis: { type: 'value' },
     series: [
       {
         name: language === 'ar' ? 'مكتمل' : 'Completed',
         type: 'bar',
         stack: 'total',
-        data: productionOrders.map(o => o.completedQty),
+        data: workOrders.slice(0, 6).map((wo: any) => wo.quantity_completed || 0),
         itemStyle: { color: '#10b981' }
       },
       {
         name: language === 'ar' ? 'قيد التنفيذ' : 'WIP',
         type: 'bar',
         stack: 'total',
-        data: productionOrders.map(o => o.wipQty),
+        data: workOrders.slice(0, 6).map((wo: any) => wo.quantity_in_progress || 0),
         itemStyle: { color: '#f59e0b' }
       }
     ]
-  };
-
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      in_progress: 'default',
-      completed: 'secondary',
-      pending: 'outline',
-      on_hold: 'destructive'
-    };
-    const labels: Record<string, { ar: string; en: string }> = {
-      in_progress: { ar: 'قيد التنفيذ', en: 'In Progress' },
-      completed: { ar: 'مكتمل', en: 'Completed' },
-      pending: { ar: 'معلق', en: 'Pending' },
-      on_hold: { ar: 'متوقف', en: 'On Hold' }
-    };
-    return (
-      <Badge variant={variants[status]}>
-        {labels[status]?.[language === 'ar' ? 'ar' : 'en']}
-      </Badge>
-    );
-  };
-
-  const getPriorityBadge = (priority: string) => {
-    const colors: Record<string, string> = {
-      high: 'bg-red-500',
-      medium: 'bg-yellow-500',
-      low: 'bg-green-500'
-    };
-    return <div className={`h-2 w-2 rounded-full ${colors[priority]}`} />;
-  };
-
-  const getWorkCenterStatus = (status: string) => {
-    switch (status) {
-      case 'running': return <Badge className="bg-green-500">{language === 'ar' ? 'يعمل' : 'Running'}</Badge>;
-      case 'idle': return <Badge variant="secondary">{language === 'ar' ? 'خامل' : 'Idle'}</Badge>;
-      case 'maintenance': return <Badge variant="destructive">{language === 'ar' ? 'صيانة' : 'Maintenance'}</Badge>;
-    }
   };
 
   const breadcrumbItems = [
@@ -157,16 +201,79 @@ const WMSMES: React.FC = () => {
       <main className="container mx-auto px-4 py-6">
         <Breadcrumbs items={breadcrumbItems} className="mb-4" />
 
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Factory className="h-6 w-6" />
               {language === 'ar' ? 'تكامل نظام التصنيع (MES)' : 'Manufacturing Execution System (MES)'}
             </h1>
             <p className="text-muted-foreground">
-              {language === 'ar' ? 'إدارة أوامر الإنتاج والعمل الجاري' : 'Manage production orders and work-in-progress'}
+              {language === 'ar' ? 'إدارة أوامر الإنتاج والعمل الجاري' : 'Manage production orders and WIP'}
             </p>
           </div>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" />
+                {language === 'ar' ? 'أمر عمل جديد' : 'New Work Order'}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{language === 'ar' ? 'إنشاء أمر عمل' : 'Create Work Order'}</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>{language === 'ar' ? 'المنتج' : 'Product'}</Label>
+                  <Select value={formData.product_id} onValueChange={(v) => setFormData({ ...formData, product_id: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={language === 'ar' ? 'اختر منتج' : 'Select product'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.map((p: any) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name} ({p.sku})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'خط الإنتاج' : 'Production Line'}</Label>
+                    <Input value={formData.production_line} onChange={(e) => setFormData({ ...formData, production_line: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'الكمية المطلوبة' : 'Quantity'}</Label>
+                    <Input type="number" value={formData.quantity_ordered} onChange={(e) => setFormData({ ...formData, quantity_ordered: e.target.value })} required />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'تاريخ الاستحقاق' : 'Due Date'}</Label>
+                    <Input type="date" value={formData.due_date} onChange={(e) => setFormData({ ...formData, due_date: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'الأولوية' : 'Priority'}</Label>
+                    <Select value={formData.priority} onValueChange={(v) => setFormData({ ...formData, priority: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">{language === 'ar' ? 'منخفض' : 'Low'}</SelectItem>
+                        <SelectItem value="normal">{language === 'ar' ? 'عادي' : 'Normal'}</SelectItem>
+                        <SelectItem value="high">{language === 'ar' ? 'عالي' : 'High'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>{language === 'ar' ? 'ملاحظات' : 'Notes'}</Label>
+                  <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>{language === 'ar' ? 'إلغاء' : 'Cancel'}</Button>
+                  <Button type="submit" disabled={createMutation.isPending}>{language === 'ar' ? 'إنشاء' : 'Create'}</Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Stats Cards */}
@@ -174,14 +281,10 @@ const WMSMES: React.FC = () => {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-green-500/10">
-                  <CheckCircle className="h-6 w-6 text-green-500" />
-                </div>
+                <div className="p-3 rounded-lg bg-yellow-500/10"><Clock className="h-6 w-6 text-yellow-500" /></div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'الإنتاج المكتمل' : 'Completed'}
-                  </p>
-                  <p className="text-2xl font-bold">{totalProduction.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'معلقة' : 'Pending'}</p>
+                  <p className="text-2xl font-bold">{pendingOrders}</p>
                 </div>
               </div>
             </CardContent>
@@ -189,14 +292,10 @@ const WMSMES: React.FC = () => {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-orange-500/10">
-                  <Layers className="h-6 w-6 text-orange-500" />
-                </div>
+                <div className="p-3 rounded-lg bg-blue-500/10"><Cog className="h-6 w-6 text-blue-500" /></div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'العمل الجاري (WIP)' : 'Work in Progress'}
-                  </p>
-                  <p className="text-2xl font-bold">{totalWIP.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'قيد التنفيذ' : 'In Progress'}</p>
+                  <p className="text-2xl font-bold">{inProgressOrders}</p>
                 </div>
               </div>
             </CardContent>
@@ -204,14 +303,10 @@ const WMSMES: React.FC = () => {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-blue-500/10">
-                  <Cog className="h-6 w-6 text-blue-500" />
-                </div>
+                <div className="p-3 rounded-lg bg-green-500/10"><CheckCircle className="h-6 w-6 text-green-500" /></div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'أوامر نشطة' : 'Active Orders'}
-                  </p>
-                  <p className="text-2xl font-bold">{activeOrders}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'مكتملة' : 'Completed'}</p>
+                  <p className="text-2xl font-bold text-green-600">{completedOrders}</p>
                 </div>
               </div>
             </CardContent>
@@ -219,16 +314,10 @@ const WMSMES: React.FC = () => {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-purple-500/10">
-                  <TrendingUp className="h-6 w-6 text-purple-500" />
-                </div>
+                <div className="p-3 rounded-lg bg-orange-500/10"><Layers className="h-6 w-6 text-orange-500" /></div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'متوسط الكفاءة' : 'Avg Efficiency'}
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {Math.round(workCenters.filter(w => w.status === 'running').reduce((sum, w) => sum + w.efficiency, 0) / workCenters.filter(w => w.status === 'running').length || 0)}%
-                  </p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'WIP' : 'WIP Items'}</p>
+                  <p className="text-2xl font-bold">{totalWIP}</p>
                 </div>
               </div>
             </CardContent>
@@ -237,71 +326,81 @@ const WMSMES: React.FC = () => {
 
         <Tabs defaultValue="orders" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="orders">
-              <Package className="h-4 w-4 me-2" />
-              {language === 'ar' ? 'أوامر الإنتاج' : 'Production Orders'}
-            </TabsTrigger>
-            <TabsTrigger value="wip">
-              <Layers className="h-4 w-4 me-2" />
-              {language === 'ar' ? 'العمل الجاري' : 'Work in Progress'}
-              <Badge variant="secondary" className="ms-2">{wipItems.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="workcenters">
-              <Factory className="h-4 w-4 me-2" />
-              {language === 'ar' ? 'مراكز العمل' : 'Work Centers'}
-            </TabsTrigger>
+            <TabsTrigger value="orders"><Package className="h-4 w-4 me-2" />{language === 'ar' ? 'أوامر الإنتاج' : 'Work Orders'}</TabsTrigger>
+            <TabsTrigger value="wip"><Layers className="h-4 w-4 me-2" />{language === 'ar' ? 'العمل الجاري' : 'WIP'}{wipItems.length > 0 && <Badge variant="secondary" className="ms-2">{wipItems.length}</Badge>}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="orders">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>{language === 'ar' ? 'أوامر الإنتاج' : 'Production Orders'}</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>{language === 'ar' ? 'أوامر الإنتاج' : 'Work Orders'}</CardTitle></CardHeader>
                 <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{language === 'ar' ? 'الأمر' : 'Order'}</TableHead>
-                        <TableHead>{language === 'ar' ? 'المنتج' : 'Product'}</TableHead>
-                        <TableHead>{language === 'ar' ? 'التقدم' : 'Progress'}</TableHead>
-                        <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
-                        <TableHead>{language === 'ar' ? 'مركز العمل' : 'Work Center'}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {productionOrders.map(order => (
-                        <TableRow key={order.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {getPriorityBadge(order.priority)}
-                              <span className="font-medium">{order.orderNumber}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{order.productName}</TableCell>
-                          <TableCell>
-                            <div className="space-y-1 min-w-[120px]">
-                              <Progress value={(order.completedQty / order.targetQty) * 100} className="h-2" />
-                              <p className="text-xs text-muted-foreground">
-                                {order.completedQty} / {order.targetQty}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>{getStatusBadge(order.status)}</TableCell>
-                          <TableCell className="text-sm">{order.workCenter}</TableCell>
+                  {isLoading ? (
+                    <div className="p-6 space-y-4">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}</div>
+                  ) : workOrders.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Factory className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground">{language === 'ar' ? 'لا توجد أوامر عمل' : 'No work orders'}</p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{language === 'ar' ? 'الأمر' : 'Order'}</TableHead>
+                          <TableHead>{language === 'ar' ? 'الخط' : 'Line'}</TableHead>
+                          <TableHead>{language === 'ar' ? 'التقدم' : 'Progress'}</TableHead>
+                          <TableHead>{language === 'ar' ? 'الأولوية' : 'Priority'}</TableHead>
+                          <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
+                          <TableHead>{language === 'ar' ? 'الإجراءات' : 'Actions'}</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {workOrders.map((wo: any) => (
+                          <TableRow key={wo.id}>
+                            <TableCell className="font-mono">{wo.work_order_number}</TableCell>
+                            <TableCell>{wo.production_line || '-'}</TableCell>
+                            <TableCell>
+                              <div className="space-y-1 min-w-[100px]">
+                                <Progress value={getCompletionRate(wo)} className="h-2" />
+                                <p className="text-xs text-muted-foreground">{wo.quantity_completed || 0} / {wo.quantity_ordered}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell>{getPriorityBadge(wo.priority)}</TableCell>
+                            <TableCell>{getStatusBadge(wo.status)}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-1">
+                                {wo.status === 'pending' && (
+                                  <Button size="sm" variant="outline" onClick={() => updateStatusMutation.mutate({ id: wo.id, status: 'in_progress' })}><Play className="w-4 h-4" /></Button>
+                                )}
+                                {wo.status === 'in_progress' && (
+                                  <>
+                                    <Button size="sm" variant="outline" onClick={() => updateStatusMutation.mutate({ id: wo.id, status: 'on_hold' })}><Pause className="w-4 h-4" /></Button>
+                                    <Button size="sm" variant="outline" className="text-green-600" onClick={() => updateStatusMutation.mutate({ id: wo.id, status: 'completed' })}><CheckCircle className="w-4 h-4" /></Button>
+                                  </>
+                                )}
+                                {wo.status === 'on_hold' && (
+                                  <Button size="sm" variant="outline" onClick={() => updateStatusMutation.mutate({ id: wo.id, status: 'in_progress' })}><Play className="w-4 h-4" /></Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle>{language === 'ar' ? 'ملخص الإنتاج' : 'Production Summary'}</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>{language === 'ar' ? 'ملخص الإنتاج' : 'Production Summary'}</CardTitle></CardHeader>
                 <CardContent>
-                  <ReactECharts option={productionChartOption} style={{ height: '300px' }} />
+                  {workOrders.length > 0 ? (
+                    <ReactECharts option={chartOption} style={{ height: '300px' }} />
+                  ) : (
+                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                      {language === 'ar' ? 'لا توجد بيانات' : 'No data'}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -310,114 +409,46 @@ const WMSMES: React.FC = () => {
           <TabsContent value="wip">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Layers className="h-5 w-5" />
-                  {language === 'ar' ? 'العمل الجاري (WIP)' : 'Work in Progress (WIP)'}
-                </CardTitle>
-                <CardDescription>
-                  {language === 'ar' ? 'المنتجات قيد التصنيع حالياً' : 'Products currently being manufactured'}
-                </CardDescription>
+                <CardTitle className="flex items-center gap-2"><Layers className="h-5 w-5" />{language === 'ar' ? 'العمل الجاري (WIP)' : 'Work in Progress'}</CardTitle>
+                <CardDescription>{language === 'ar' ? 'المنتجات قيد التصنيع' : 'Products being manufactured'}</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{language === 'ar' ? 'المنتج' : 'Product'}</TableHead>
-                      <TableHead>{language === 'ar' ? 'المرحلة' : 'Stage'}</TableHead>
-                      <TableHead>{language === 'ar' ? 'الكمية' : 'Quantity'}</TableHead>
-                      <TableHead>{language === 'ar' ? 'المشغل' : 'Operator'}</TableHead>
-                      <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
-                      <TableHead>{language === 'ar' ? 'الإجراءات' : 'Actions'}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {wipItems.map(item => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.productName}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{item.stage}</Badge>
-                        </TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>{item.operator}</TableCell>
-                        <TableCell>
-                          {item.status === 'active' 
-                            ? <Badge className="bg-green-500">{language === 'ar' ? 'نشط' : 'Active'}</Badge>
-                            : item.status === 'paused'
-                              ? <Badge variant="secondary">{language === 'ar' ? 'متوقف' : 'Paused'}</Badge>
-                              : <Badge variant="destructive">{language === 'ar' ? 'محجوب' : 'Blocked'}</Badge>}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            {item.status === 'active' ? (
-                              <Button variant="ghost" size="sm"><Pause className="h-4 w-4" /></Button>
-                            ) : (
-                              <Button variant="ghost" size="sm"><Play className="h-4 w-4" /></Button>
-                            )}
-                            <Button variant="ghost" size="sm"><ArrowRight className="h-4 w-4" /></Button>
-                          </div>
-                        </TableCell>
+                {wipItems.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Layers className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">{language === 'ar' ? 'لا توجد عناصر قيد التنفيذ' : 'No WIP items'}</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{language === 'ar' ? 'أمر العمل' : 'Work Order'}</TableHead>
+                        <TableHead>{language === 'ar' ? 'الكمية' : 'Quantity'}</TableHead>
+                        <TableHead>{language === 'ar' ? 'المرحلة' : 'Stage'}</TableHead>
+                        <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
+                        <TableHead>{language === 'ar' ? 'تاريخ البدء' : 'Started'}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {wipItems.map((item: any) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-mono">{item.work_order_id?.slice(0, 8)}...</TableCell>
+                          <TableCell>{item.quantity}</TableCell>
+                          <TableCell><Badge variant="outline">{item.stage || '-'}</Badge></TableCell>
+                          <TableCell>
+                            <Badge variant={item.status === 'completed' ? 'default' : 'outline'}>{item.status}</Badge>
+                          </TableCell>
+                          <TableCell>{item.started_at ? format(new Date(item.started_at), 'yyyy-MM-dd HH:mm') : '-'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="workcenters">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {workCenters.map(wc => (
-                <Card key={wc.id}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{wc.name}</CardTitle>
-                      {getWorkCenterStatus(wc.status)}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {wc.status === 'running' ? (
-                      <div className="space-y-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground">{language === 'ar' ? 'الأمر الحالي' : 'Current Order'}</p>
-                          <p className="font-medium">{wc.currentOrder}</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-sm text-muted-foreground">{language === 'ar' ? 'الكفاءة' : 'Efficiency'}</p>
-                            <div className="flex items-center gap-2">
-                              <span className="text-2xl font-bold">{wc.efficiency}%</span>
-                              <Progress value={wc.efficiency} className="flex-1 h-2" />
-                            </div>
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">{language === 'ar' ? 'وقت التشغيل' : 'Uptime'}</p>
-                            <span className="text-2xl font-bold">{wc.uptime}%</span>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="py-6 text-center">
-                        {wc.status === 'idle' ? (
-                          <Clock className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                        ) : (
-                          <Cog className="h-8 w-8 mx-auto text-muted-foreground mb-2 animate-spin" />
-                        )}
-                        <p className="text-muted-foreground">
-                          {wc.status === 'idle' 
-                            ? (language === 'ar' ? 'في انتظار العمل' : 'Waiting for work')
-                            : (language === 'ar' ? 'تحت الصيانة' : 'Under maintenance')}
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           </TabsContent>
         </Tabs>
       </main>
     </div>
   );
-};
-
-export default WMSMES;
+}
