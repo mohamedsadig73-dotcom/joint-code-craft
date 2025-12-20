@@ -37,6 +37,9 @@ const WMSCycleCount = lazy(() => import('@/pages/WMS/WMSCycleCount'));
 const WMSReports = lazy(() => import('@/pages/WMS/WMSReports'));
 const WMSAlerts = lazy(() => import('@/pages/WMS/WMSAlerts'));
 const WMSShipments = lazy(() => import('@/pages/WMS/WMSShipments'));
+const WMSRMA = lazy(() => import('@/pages/WMS/WMSRMA'));
+const WMSCrossDock = lazy(() => import('@/pages/WMS/WMSCrossDock'));
+const WMSSerialNumbers = lazy(() => import('@/pages/WMS/WMSSerialNumbers'));
 
 // Enhanced Loading component
 const PageLoader = () => (
