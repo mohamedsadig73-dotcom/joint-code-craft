@@ -278,6 +278,7 @@ const WMSInboundDetails: React.FC = () => {
       return;
     }
 
+    // Update the line status
     const { error } = await supabase
       .from('wms_inbound_lines')
       .update({ 
@@ -292,13 +293,66 @@ const WMSInboundDetails: React.FC = () => {
         description: error.message,
         variant: 'destructive'
       });
-    } else {
-      toast({
-        title: language === 'ar' ? 'تم الاستلام' : 'Received',
-        description: language === 'ar' ? 'تم تسجيل الاستلام بنجاح' : 'Receipt recorded successfully'
-      });
-      loadLines();
+      return;
     }
+
+    // Update inventory - add received quantity
+    if (line.location_id) {
+      // Check if inventory record exists
+      const { data: existingInventory } = await supabase
+        .from('wms_inventory')
+        .select('id, quantity')
+        .eq('product_id', line.product_id)
+        .eq('location_id', line.location_id)
+        .eq('lot_number', line.lot_number || '')
+        .maybeSingle();
+
+      if (existingInventory) {
+        // Update existing inventory
+        await supabase
+          .from('wms_inventory')
+          .update({ 
+            quantity: existingInventory.quantity + qty,
+            available_quantity: existingInventory.quantity + qty
+          })
+          .eq('id', existingInventory.id);
+      } else {
+        // Create new inventory record
+        await supabase
+          .from('wms_inventory')
+          .insert({
+            product_id: line.product_id,
+            location_id: line.location_id,
+            quantity: qty,
+            available_quantity: qty,
+            lot_number: line.lot_number,
+            expiry_date: line.expiry_date,
+            status: 'available',
+            received_date: new Date().toISOString().split('T')[0]
+          });
+      }
+
+      // Record transaction
+      await supabase
+        .from('wms_transactions')
+        .insert({
+          transaction_type: 'receive',
+          product_id: line.product_id,
+          to_location_id: line.location_id,
+          quantity: qty,
+          lot_number: line.lot_number,
+          reference_type: 'inbound_order',
+          reference_id: id,
+          performed_by: user?.id,
+          reason: `Received from inbound order ${order?.order_number}`
+        });
+    }
+
+    toast({
+      title: language === 'ar' ? 'تم الاستلام' : 'Received',
+      description: language === 'ar' ? 'تم تسجيل الاستلام وتحديث المخزون' : 'Receipt recorded and inventory updated'
+    });
+    loadLines();
   };
 
   const completeOrder = async () => {

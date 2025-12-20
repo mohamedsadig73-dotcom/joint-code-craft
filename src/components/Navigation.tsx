@@ -24,7 +24,8 @@ import {
   ArrowUpFromLine,
   ClipboardList,
   Truck,
-  ChevronDown
+  ChevronDown,
+  AlertTriangle
 } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -144,6 +145,8 @@ export function Navigation() {
     { path: '/wms/suppliers', icon: Truck, labelKey: 'wmsSuppliers' },
     { path: '/wms/transactions', icon: ClipboardList, labelKey: 'wmsTransactions' },
     { path: '/wms/cycle-count', icon: BarChart3, labelKey: 'wmsCycleCount' },
+    { path: '/wms/reports', icon: BarChart3, labelKey: 'wmsReports' },
+    { path: '/wms/alerts', icon: AlertTriangle, labelKey: 'wmsAlerts' },
   ];
 
   const navItems = [
