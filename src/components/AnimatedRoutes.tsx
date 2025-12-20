@@ -42,6 +42,9 @@ const WMSCrossDock = lazy(() => import('@/pages/WMS/WMSCrossDock'));
 const WMSSerialNumbers = lazy(() => import('@/pages/WMS/WMSSerialNumbers'));
 const WMSAdvancedReports = lazy(() => import('@/pages/WMS/WMSAdvancedReports'));
 const WMSWorkerProductivity = lazy(() => import('@/pages/WMS/WMSWorkerProductivity'));
+const WMSCustomers = lazy(() => import('@/pages/WMS/WMSCustomers'));
+const WMSCustomerPortal = lazy(() => import('@/pages/WMS/WMSCustomerPortal'));
+const WMSPredictiveAnalytics = lazy(() => import('@/pages/WMS/WMSPredictiveAnalytics'));
 // Enhanced Loading component
 const PageLoader = () => (
   <div className="min-h-screen flex flex-col items-center justify-center gap-4" role="status" aria-label="Loading">
@@ -378,6 +381,36 @@ export function AnimatedRoutes() {
               <ProtectedRoute requiredRole="manager">
                 <PageTransition>
                   <WMSWorkerProductivity />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/customers"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSCustomers />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/customer-portal"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSCustomerPortal />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/predictive-analytics"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSPredictiveAnalytics />
                 </PageTransition>
               </ProtectedRoute>
             }
