@@ -98,21 +98,11 @@ export function AnimatedRoutes() {
             }
           />
           <Route
-            path="/reports"
+            path="/reports-analytics"
             element={
               <ProtectedRoute>
                 <PageTransition>
-                  <Reports />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/analytics"
-            element={
-              <ProtectedRoute>
-                <PageTransition>
-                  <Analytics />
+                  <ReportsAnalytics />
                 </PageTransition>
               </ProtectedRoute>
             }
