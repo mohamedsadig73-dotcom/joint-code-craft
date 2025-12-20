@@ -332,6 +332,36 @@ export function AnimatedRoutes() {
             }
           />
           <Route
+            path="/wms/rma"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSRMA />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/cross-dock"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSCrossDock />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/serial-numbers"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSSerialNumbers />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="*"
             element={
               <PageTransition>
