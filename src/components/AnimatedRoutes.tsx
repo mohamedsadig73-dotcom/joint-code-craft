@@ -50,6 +50,8 @@ const WMSBilling = lazy(() => import('@/pages/WMS/WMSBilling'));
 const WMSEcommerce = lazy(() => import('@/pages/WMS/WMSEcommerce'));
 const WMSTemperatureZones = lazy(() => import('@/pages/WMS/WMSTemperatureZones'));
 const WMSMES = lazy(() => import('@/pages/WMS/WMSMES'));
+const WMSCompliance = lazy(() => import('@/pages/WMS/WMSCompliance'));
+const SecuritySettings = lazy(() => import('@/pages/SecuritySettings'));
 // Enhanced Loading component
 const PageLoader = () => (
   <div className="min-h-screen flex flex-col items-center justify-center gap-4" role="status" aria-label="Loading">
@@ -416,6 +418,76 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <WMSPredictiveAnalytics />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/3pl-tenants"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMS3PLTenants />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/billing"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSBilling />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/ecommerce"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSEcommerce />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/temperature-zones"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSTemperatureZones />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/mes"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSMES />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/compliance"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSCompliance />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/security"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <SecuritySettings />
                 </PageTransition>
               </ProtectedRoute>
             }
