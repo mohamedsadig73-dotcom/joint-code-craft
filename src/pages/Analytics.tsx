@@ -168,15 +168,15 @@ export default function Analytics() {
           ...values,
         }));
 
-      // Weekly activity
-      const weekDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+      // Weekly activity with translated day names
+      const weekDaysEn = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
       const weeklyActivityData: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
       allDeclarations.forEach(d => {
         const day = new Date(d.created_at).getDay();
         weeklyActivityData[day]++;
       });
       const weeklyActivity = Object.entries(weeklyActivityData).map(([day, count]) => ({
-        day: weekDays[parseInt(day)],
+        day: t(weekDaysEn[parseInt(day)]),
         count,
       }));
 
@@ -195,7 +195,7 @@ export default function Analytics() {
       // Top senders
       const senderCounts: Record<string, number> = {};
       allDeclarations.forEach(d => {
-        const username = d.sender?.username || 'غير معروف';
+        const username = d.sender?.username || t('unknown');
         senderCounts[username] = (senderCounts[username] || 0) + 1;
       });
       const topSenders = Object.entries(senderCounts)
@@ -225,9 +225,9 @@ export default function Analytics() {
 
       // Performance metrics for radial chart
       const performanceMetrics = [
-        { metric: 'معدل الإنجاز', value: completionRate, target: 100, fill: '#22c55e' },
-        { metric: 'سرعة المعالجة', value: Math.max(0, 100 - avgProcessingDays * 10), target: 100, fill: '#3b82f6' },
-        { metric: 'الكفاءة', value: Math.round(100 - (pendingCount / Math.max(allDeclarations.length, 1)) * 100), target: 100, fill: '#f59e0b' },
+        { metric: t('completionRateMetric'), value: completionRate, target: 100, fill: '#22c55e' },
+        { metric: t('processingSpeedMetric'), value: Math.max(0, 100 - avgProcessingDays * 10), target: 100, fill: '#3b82f6' },
+        { metric: t('efficiencyMetric'), value: Math.round(100 - (pendingCount / Math.max(allDeclarations.length, 1)) * 100), target: 100, fill: '#f59e0b' },
       ];
 
       setData({
@@ -248,7 +248,7 @@ export default function Analytics() {
       });
 
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'خطأ', description: error.message });
+      toast({ variant: 'destructive', title: t('error'), description: error.message });
     } finally {
       setLoading(false);
     }
@@ -300,11 +300,11 @@ export default function Analytics() {
                 <Activity className="w-6 h-6 text-primary" />
               </div>
               <h1 className="text-2xl md:text-3xl font-bold gradient-text">
-                تحليلات متقدمة
+                {t('analyticsTitle')}
               </h1>
             </div>
             <p className="text-muted-foreground text-sm">
-              رؤية شاملة لأداء نظام الإقرارات
+              {t('analyticsSubtitle')}
             </p>
           </div>
           <div className="flex gap-3">
@@ -314,15 +314,15 @@ export default function Analytics() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1month">شهر واحد</SelectItem>
-                <SelectItem value="3months">3 أشهر</SelectItem>
-                <SelectItem value="6months">6 أشهر</SelectItem>
-                <SelectItem value="1year">سنة</SelectItem>
+                <SelectItem value="1month">{t('oneMonth')}</SelectItem>
+                <SelectItem value="3months">{t('threeMonths')}</SelectItem>
+                <SelectItem value="6months">{t('sixMonths')}</SelectItem>
+                <SelectItem value="1year">{t('oneYear')}</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" onClick={loadAnalytics}>
               <RefreshCw className={`w-4 h-4 me-2 ${loading ? 'animate-spin' : ''}`} />
-              تحديث
+              {t('refreshData')}
             </Button>
           </div>
         </div>
@@ -340,7 +340,7 @@ export default function Analytics() {
                 </Badge>
               </div>
               <div className="text-3xl font-bold mb-1">{data.totalDeclarations}</div>
-              <div className="text-sm text-muted-foreground">إجمالي الإقرارات</div>
+              <div className="text-sm text-muted-foreground">{t('totalDeclarationsCard')}</div>
             </Card>
           </StaggerItem>
 
@@ -352,7 +352,7 @@ export default function Analytics() {
                 </div>
               </div>
               <div className="text-3xl font-bold mb-1">{data.completionRate}%</div>
-              <div className="text-sm text-muted-foreground">معدل الإنجاز</div>
+              <div className="text-sm text-muted-foreground">{t('completionRateCard')}</div>
             </Card>
           </StaggerItem>
 
@@ -364,7 +364,7 @@ export default function Analytics() {
                 </div>
               </div>
               <div className="text-3xl font-bold mb-1">{data.avgProcessingDays}</div>
-              <div className="text-sm text-muted-foreground">متوسط أيام المعالجة</div>
+              <div className="text-sm text-muted-foreground">{t('avgProcessingDaysCard')}</div>
             </Card>
           </StaggerItem>
 
@@ -376,12 +376,12 @@ export default function Analytics() {
                 </div>
                 {data.overdueCount > 0 && (
                   <Badge variant="destructive" className="text-xs">
-                    {data.overdueCount} متأخر
+                    {data.overdueCount} {t('delayed')}
                   </Badge>
                 )}
               </div>
               <div className="text-3xl font-bold mb-1">{data.pendingCount}</div>
-              <div className="text-sm text-muted-foreground">قيد المعالجة</div>
+              <div className="text-sm text-muted-foreground">{t('inProcessingCard')}</div>
             </Card>
           </StaggerItem>
         </StaggerContainer>
@@ -391,15 +391,15 @@ export default function Analytics() {
           <TabsList className="grid w-full max-w-md grid-cols-3">
             <TabsTrigger value="overview" className="gap-2">
               <BarChart3 className="w-4 h-4" />
-              نظرة عامة
+              {t('overviewTab')}
             </TabsTrigger>
             <TabsTrigger value="trends" className="gap-2">
               <TrendingUp className="w-4 h-4" />
-              الاتجاهات
+              {t('trendsTab')}
             </TabsTrigger>
             <TabsTrigger value="performance" className="gap-2">
               <Award className="w-4 h-4" />
-              الأداء
+              {t('performanceTab')}
             </TabsTrigger>
           </TabsList>
 
@@ -416,9 +416,9 @@ export default function Analytics() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <PieChartIcon className="w-5 h-5" />
-                      توزيع الحالات
+                      {t('statusDistributionChart')}
                     </CardTitle>
-                    <CardDescription>نسبة كل حالة من إجمالي الإقرارات</CardDescription>
+                    <CardDescription>{t('statusDistributionDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
@@ -461,9 +461,9 @@ export default function Analytics() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <BarChart3 className="w-5 h-5" />
-                      توزيع الأنواع
+                      {t('typeDistributionChart')}
                     </CardTitle>
-                    <CardDescription>مقارنة بين إقرارات الدخول والخروج</CardDescription>
+                    <CardDescription>{t('typeDistributionDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
@@ -503,9 +503,9 @@ export default function Analytics() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Calendar className="w-5 h-5" />
-                    النشاط الأسبوعي
+                    {t('weeklyActivityChart')}
                   </CardTitle>
-                  <CardDescription>توزيع الإقرارات حسب أيام الأسبوع</CardDescription>
+                  <CardDescription>{t('weeklyActivityDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={250}>
@@ -539,9 +539,9 @@ export default function Analytics() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="w-5 h-5" />
-                    الاتجاه الشهري
+                    {t('monthlyTrendChart')}
                   </CardTitle>
-                  <CardDescription>تطور أعداد الإقرارات على مدار الأشهر</CardDescription>
+                  <CardDescription>{t('monthlyTrendDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={350}>
@@ -566,17 +566,17 @@ export default function Analytics() {
                       <Area
                         type="monotone"
                         dataKey="total"
-                        name="الإجمالي"
+                        name={t('totalLabel')}
                         stroke="hsl(var(--primary))"
                         fill="url(#colorTotal)"
                         strokeWidth={2}
                       />
-                      <Bar dataKey="دخول" name="دخول" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="خروج" name="خروج" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="دخول" name={t('inboundType')} fill="#22c55e" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="خروج" name={t('outboundType')} fill="#ef4444" radius={[4, 4, 0, 0]} />
                       <Line
                         type="monotone"
                         dataKey="completed"
-                        name="مكتملة"
+                        name={t('completedLabel')}
                         stroke="#f59e0b"
                         strokeWidth={2}
                         dot={{ fill: '#f59e0b', strokeWidth: 2 }}
@@ -597,9 +597,9 @@ export default function Analytics() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="w-5 h-5" />
-                    التوزيع الزمني
+                    {t('timeDistributionChart')}
                   </CardTitle>
-                  <CardDescription>أوقات الذروة لإنشاء الإقرارات خلال اليوم</CardDescription>
+                  <CardDescription>{t('timeDistributionDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={250}>
@@ -623,7 +623,7 @@ export default function Analytics() {
                       <Area
                         type="monotone"
                         dataKey="count"
-                        name="عدد الإقرارات"
+                        name={t('declarationCount')}
                         stroke="#8b5cf6"
                         fill="url(#colorHourly)"
                         strokeWidth={2}
@@ -647,9 +647,9 @@ export default function Analytics() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Award className="w-5 h-5" />
-                      مؤشرات الأداء
+                      {t('performanceIndicatorsChart')}
                     </CardTitle>
-                    <CardDescription>نسبة تحقيق الأهداف المحددة</CardDescription>
+                    <CardDescription>{t('performanceIndicatorsDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
@@ -696,9 +696,9 @@ export default function Analytics() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Users className="w-5 h-5" />
-                      أكثر المرسلين نشاطاً
+                      {t('topSendersChart')}
                     </CardTitle>
-                    <CardDescription>ترتيب المستخدمين حسب عدد الإقرارات</CardDescription>
+                    <CardDescription>{t('topSendersDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -716,7 +716,7 @@ export default function Analytics() {
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-1">
                               <span className="font-medium">{sender.username}</span>
-                              <span className="text-sm text-muted-foreground">{sender.count} إقرار</span>
+                              <span className="text-sm text-muted-foreground">{sender.count} {t('declarationCount')}</span>
                             </div>
                             <div className="h-2 bg-muted rounded-full overflow-hidden">
                               <motion.div
