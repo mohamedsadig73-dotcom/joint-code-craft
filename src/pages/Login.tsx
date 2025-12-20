@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Globe, Lock, Mail, Loader2 } from 'lucide-react';
+import { Globe, Lock, Mail, Loader2, Eye, EyeOff, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { validatePassword, getPasswordStrength } from '@/utils/authValidation';
 
 export default function Login() {
   const [isSignup, setIsSignup] = useState(false);
@@ -15,17 +16,44 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login, signup } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Password validation for signup
+  const passwordErrors = useMemo(() => {
+    if (!isSignup || !password) return [];
+    return validatePassword(password, t);
+  }, [password, isSignup, t]);
+
+  const passwordStrength = useMemo(() => {
+    if (!password) return { score: 0, label: 'none' };
+    return getPasswordStrength(password);
+  }, [password]);
+
+  const isPasswordValid = passwordErrors.length === 0 && password.length >= 10;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      toast({
+        variant: 'destructive',
+        title: t('error'),
+        description: t('invalidEmail'),
+      });
+      setLoading(false);
+      return;
+    }
+    
     if (isSignup) {
-      if (!username) {
+      // Validate username
+      if (!username || username.trim().length < 2) {
         toast({
           variant: 'destructive',
           title: t('error'),
@@ -34,11 +62,21 @@ export default function Login() {
         setLoading(false);
         return;
       }
+
+      // Validate password strength
+      if (passwordErrors.length > 0) {
+        toast({
+          variant: 'destructive',
+          title: t('error'),
+          description: passwordErrors[0],
+        });
+        setLoading(false);
+        return;
+      }
       
-      const result = await signup(email, password, username);
+      const result = await signup(email.trim(), password, username.trim());
       if (result.success) {
-        // بعد إنشاء الحساب، نحاول تسجيل الدخول مباشرة
-        const loginResult = await login(email, password);
+        const loginResult = await login(email.trim(), password);
         if (loginResult.success) {
           toast({
             title: t('success'),
@@ -63,20 +101,19 @@ export default function Login() {
         setLoading(false);
       }
     } else {
-      const result = await login(email, password);
+      const result = await login(email.trim(), password);
       if (result.success) {
         navigate('/');
       } else {
-        // تسجيل محاولة الدخول الفاشلة
         try {
           await supabase.rpc('log_failed_login_attempt', {
-            _email: email,
+            _email: email.trim(),
             _error_message: result.error || 'Invalid credentials',
-            _ip_address: null, // سيتم جمعها من الـ edge function إذا لزم الأمر
+            _ip_address: null,
             _user_agent: navigator.userAgent
           });
         } catch (logError) {
-          console.error('Failed to log failed login attempt:', logError);
+          // Silent fail for audit logging
         }
         
         toast({
@@ -89,10 +126,24 @@ export default function Login() {
     }
   };
 
+  const getStrengthColor = () => {
+    switch (passwordStrength.label) {
+      case 'weak': return 'bg-destructive';
+      case 'medium': return 'bg-warning';
+      case 'strong': return 'bg-green-500';
+      default: return 'bg-muted';
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Skip to main content link */}
+      <a href="#login-form" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-primary-foreground px-4 py-2 rounded-md z-50">
+        {t('skipToContent')}
+      </a>
+
       {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
         <div className="absolute w-96 h-96 bg-primary/20 rounded-full blur-3xl top-0 left-0 animate-pulse" />
         <div className="absolute w-96 h-96 bg-secondary/20 rounded-full blur-3xl bottom-0 right-0 animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
@@ -103,22 +154,23 @@ export default function Login() {
         size="sm"
         onClick={toggleLanguage}
         className="absolute top-4 right-4 gap-2 z-10"
+        aria-label={t('switchLanguage')}
       >
-        <Globe className="w-4 h-4" />
+        <Globe className="w-4 h-4" aria-hidden="true" />
         {language === 'en' ? 'العربية' : 'English'}
       </Button>
 
       {/* Login/Signup Card */}
-      <div className="glass-card rounded-2xl p-8 w-full max-w-md relative z-10 shadow-2xl">
+      <div className="glass-card rounded-2xl p-8 w-full max-w-md relative z-10 shadow-2xl" role="main">
         {/* Loading Overlay */}
         {loading && (
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center z-50 animate-fade-in">
-            <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center z-50 animate-fade-in" aria-live="polite">
+            <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" aria-hidden="true" />
             <p className="text-lg font-medium">
               {isSignup ? t('creatingAccount') : t('loggingIn')}
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              الرجاء الانتظار
+              {t('pleaseWait')}
             </p>
           </div>
         )}
@@ -133,7 +185,7 @@ export default function Login() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form id="login-form" onSubmit={handleSubmit} className="space-y-6" noValidate>
           {isSignup && (
             <div className="space-y-2">
               <Label htmlFor="username">{t('username')}</Label>
@@ -145,14 +197,19 @@ export default function Login() {
                 className="glass-card border-border/50"
                 placeholder={t('username')}
                 required
+                maxLength={50}
+                aria-describedby="username-hint"
               />
+              <p id="username-hint" className="text-xs text-muted-foreground">
+                {t('usernameHint')}
+              </p>
             </div>
           )}
 
           <div className="space-y-2">
             <Label htmlFor="email">{t('email')}</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
               <Input
                 id="email"
                 type="email"
@@ -161,6 +218,8 @@ export default function Login() {
                 className="pl-10 glass-card border-border/50"
                 placeholder={t('email')}
                 required
+                maxLength={255}
+                autoComplete="email"
               />
             </div>
           </div>
@@ -168,28 +227,83 @@ export default function Login() {
           <div className="space-y-2">
             <Label htmlFor="password">{t('password')}</Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 glass-card border-border/50"
+                className="pl-10 pr-10 glass-card border-border/50"
                 placeholder={t('password')}
                 required
-                minLength={6}
+                minLength={isSignup ? 10 : 1}
+                autoComplete={isSignup ? 'new-password' : 'current-password'}
+                aria-describedby={isSignup ? 'password-requirements' : undefined}
               />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? t('hidePassword') : t('showPassword')}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </Button>
             </div>
+
+            {/* Password strength indicator for signup */}
+            {isSignup && password && (
+              <div className="space-y-2" id="password-requirements">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div
+                      key={i}
+                      className={`h-1 flex-1 rounded-full transition-colors ${
+                        i <= passwordStrength.score ? getStrengthColor() : 'bg-muted'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t('passwordStrength')}: {t(passwordStrength.label)}
+                </p>
+                
+                {/* Password requirements checklist */}
+                <ul className="text-xs space-y-1" aria-label={t('passwordRequirements')}>
+                  <li className={`flex items-center gap-1 ${password.length >= 10 ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {password.length >= 10 ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                    {t('passwordMinLength')}
+                  </li>
+                  <li className={`flex items-center gap-1 ${/[A-Z]/.test(password) ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {/[A-Z]/.test(password) ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                    {t('passwordUppercase')}
+                  </li>
+                  <li className={`flex items-center gap-1 ${/[a-z]/.test(password) ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {/[a-z]/.test(password) ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                    {t('passwordLowercase')}
+                  </li>
+                  <li className={`flex items-center gap-1 ${/[0-9]/.test(password) ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {/[0-9]/.test(password) ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                    {t('passwordNumber')}
+                  </li>
+                  <li className={`flex items-center gap-1 ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                    {t('passwordSpecialChar')}
+                  </li>
+                </ul>
+              </div>
+            )}
           </div>
 
           <Button 
             type="submit" 
             className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold"
-            disabled={loading}
+            disabled={loading || (isSignup && !isPasswordValid)}
           >
             {loading ? (
               <span className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                 {isSignup ? t('creatingAccount') : t('loggingIn')}
               </span>
             ) : (
@@ -202,6 +316,7 @@ export default function Login() {
           <button
             onClick={() => {
               setIsSignup(!isSignup);
+              setPassword('');
               setLoading(false);
             }}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
