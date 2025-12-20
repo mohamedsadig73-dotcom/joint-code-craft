@@ -594,6 +594,11 @@ const translations = {
     last7Days: 'Last 7 Days',
     last30Days: 'Last 30 Days',
     last90Days: 'Last 90 Days',
+    
+    // Dashboard Actions
+    declarationRestored: 'Declaration restored successfully',
+    declarationPermanentlyDeleted: 'Declaration permanently deleted',
+    permanentDeleteWarning: '⚠️ Warning: This declaration will be permanently deleted and cannot be recovered. Are you sure?',
   },
   ar: {
     // Navigation
@@ -1180,6 +1185,11 @@ const translations = {
     last7Days: 'آخر 7 أيام',
     last30Days: 'آخر 30 يوم',
     last90Days: 'آخر 90 يوم',
+    
+    // Dashboard Actions
+    declarationRestored: 'تم استرجاع الإقرار بنجاح',
+    declarationPermanentlyDeleted: 'تم حذف الإقرار نهائياً',
+    permanentDeleteWarning: '⚠️ تحذير: سيتم حذف الإقرار نهائياً ولا يمكن استرجاعه. هل أنت متأكد؟',
   },
 };
 
