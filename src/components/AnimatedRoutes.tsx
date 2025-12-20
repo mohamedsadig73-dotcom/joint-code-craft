@@ -45,6 +45,11 @@ const WMSWorkerProductivity = lazy(() => import('@/pages/WMS/WMSWorkerProductivi
 const WMSCustomers = lazy(() => import('@/pages/WMS/WMSCustomers'));
 const WMSCustomerPortal = lazy(() => import('@/pages/WMS/WMSCustomerPortal'));
 const WMSPredictiveAnalytics = lazy(() => import('@/pages/WMS/WMSPredictiveAnalytics'));
+const WMS3PLTenants = lazy(() => import('@/pages/WMS/WMS3PLTenants'));
+const WMSBilling = lazy(() => import('@/pages/WMS/WMSBilling'));
+const WMSEcommerce = lazy(() => import('@/pages/WMS/WMSEcommerce'));
+const WMSTemperatureZones = lazy(() => import('@/pages/WMS/WMSTemperatureZones'));
+const WMSMES = lazy(() => import('@/pages/WMS/WMSMES'));
 // Enhanced Loading component
 const PageLoader = () => (
   <div className="min-h-screen flex flex-col items-center justify-center gap-4" role="status" aria-label="Loading">
