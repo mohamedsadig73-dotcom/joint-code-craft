@@ -29,7 +29,10 @@ import {
   RotateCcw,
   ArrowRightLeft,
   Hash,
-  Ship
+  Ship,
+  Target,
+  Users,
+  Keyboard
 } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -154,6 +157,8 @@ export function Navigation() {
     { path: '/wms/cross-dock', icon: ArrowRightLeft, labelKey: 'wmsCrossDock' },
     { path: '/wms/serial-numbers', icon: Hash, labelKey: 'wmsSerialNumbers' },
     { path: '/wms/reports', icon: BarChart3, labelKey: 'wmsReports' },
+    { path: '/wms/advanced-reports', icon: Target, labelKey: 'wmsAdvancedReports' },
+    ...(user?.role === 'admin' || user?.role === 'manager' ? [{ path: '/wms/worker-productivity', icon: Users, labelKey: 'wmsWorkerProductivity' }] : []),
     { path: '/wms/alerts', icon: AlertTriangle, labelKey: 'wmsAlerts' },
   ];
 

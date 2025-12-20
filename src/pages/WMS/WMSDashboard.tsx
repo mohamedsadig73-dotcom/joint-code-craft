@@ -9,6 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import ReactECharts from 'echarts-for-react';
+import { RoleBasedDashboard } from '@/components/wms/RoleBasedDashboard';
+import { KeyboardShortcutsDialog } from '@/components/wms/KeyboardShortcutsDialog';
+import { useWMSKeyboardShortcuts } from '@/hooks/useWMSKeyboardShortcuts';
 import { 
   Package, 
   MapPin, 
@@ -26,7 +29,8 @@ import {
   Calendar,
   DollarSign,
   Activity,
-  PackageCheck
+  PackageCheck,
+  Keyboard
 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 
@@ -51,7 +55,11 @@ export default function WMSDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const isRTL = language === 'ar';
+
+  // Initialize keyboard shortcuts
+  useWMSKeyboardShortcuts(language);
 
   useEffect(() => {
     loadDashboardStats();
@@ -261,6 +269,9 @@ export default function WMSDashboard() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="ghost" size="icon" onClick={() => setShowShortcuts(true)} title={language === 'ar' ? 'اختصارات لوحة المفاتيح' : 'Keyboard Shortcuts'}>
+              <Keyboard className="h-4 w-4" />
+            </Button>
             <Button variant="outline" onClick={() => navigate('/wms/reports')}>
               <BarChart3 className="h-4 w-4 me-2" />
               {language === 'ar' ? 'التقارير' : 'Reports'}
@@ -280,6 +291,9 @@ export default function WMSDashboard() {
             </Button>
           </div>
         </div>
+
+        {/* Role-based Quick Actions */}
+        <RoleBasedDashboard />
 
         {/* KPI Cards - Row 1 */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -539,6 +553,9 @@ export default function WMSDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Keyboard Shortcuts Dialog */}
+      <KeyboardShortcutsDialog open={showShortcuts} onOpenChange={setShowShortcuts} />
     </div>
   );
 }
