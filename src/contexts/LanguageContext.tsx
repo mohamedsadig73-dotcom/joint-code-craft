@@ -217,6 +217,14 @@ const translations = {
     tryAdjustingFilters: 'Try adjusting your search filters',
     bulkExport: 'Bulk Export',
     
+    // Keyboard navigation
+    keyboardShortcuts: 'Keyboard shortcuts',
+    navigateRows: 'Navigate rows',
+    viewDetailsKey: 'View details',
+    selectRow: 'Select row',
+    expandRow: 'Expand row',
+    deleteRow: 'Delete row',
+    
     // Reports Page
     reportsTitle: 'Reports & Analytics',
     reportsSubtitle: 'Comprehensive analysis of declarations and system performance',
@@ -809,6 +817,13 @@ const translations = {
     tryAdjustingFilters: 'جرب تعديل فلاتر البحث',
     bulkExport: 'التصدير الجماعي',
     
+    // Keyboard navigation
+    keyboardShortcuts: 'اختصارات لوحة المفاتيح',
+    navigateRows: 'التنقل بين الصفوف',
+    viewDetailsKey: 'عرض التفاصيل',
+    selectRow: 'تحديد الصف',
+    expandRow: 'توسيع الصف',
+    deleteRow: 'حذف الصف',
     // Reports Page
     reportsTitle: 'التقارير والتحليلات',
     reportsSubtitle: 'تحليل شامل للإقرارات وأداء النظام',

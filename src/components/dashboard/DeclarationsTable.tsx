@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Eye, Trash2, ChevronDown, ChevronUp, Keyboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { TableSkeleton, CardSkeleton } from '@/components/ui/TableSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { SwipeableRow } from '@/components/SwipeableRow';
@@ -24,8 +25,10 @@ import { Pagination } from '@/components/dashboard/Pagination';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTableKeyboardNavigation } from '@/hooks/useTableKeyboardNavigation';
 import { toGregorianDate } from '@/utils/dateUtils';
 import { Declaration } from '@/types/declarations';
+import { cn } from '@/lib/utils';
 
 interface DeclarationsTableProps {
   declarations: Declaration[];
@@ -113,6 +116,48 @@ export function DeclarationsTable({
     }
   };
 
+  // Keyboard navigation
+  const handleRowSelect = useCallback((index: number) => {
+    const declaration = displayedDeclarations[index];
+    if (declaration) {
+      onToggleSelectItem(declaration.id);
+    }
+  }, [displayedDeclarations, onToggleSelectItem]);
+
+  const handleRowExpand = useCallback((index: number) => {
+    const declaration = displayedDeclarations[index];
+    if (declaration) {
+      onToggleRowExpand(declaration.id);
+    }
+  }, [displayedDeclarations, onToggleRowExpand]);
+
+  const handleRowAction = useCallback((index: number, action: 'view' | 'delete' | 'edit') => {
+    const declaration = displayedDeclarations[index];
+    if (!declaration) return;
+
+    switch (action) {
+      case 'view':
+        navigate(`/declaration/${declaration.id}`);
+        break;
+      case 'delete':
+        if (user?.role === 'admin' || (user?.role === 'manager' && declaration.sender_id === user?.id)) {
+          onDelete(declaration);
+        }
+        break;
+    }
+  }, [displayedDeclarations, navigate, onDelete, user]);
+
+  const {
+    focusedIndex,
+    handleKeyDown,
+    getRowProps,
+  } = useTableKeyboardNavigation({
+    totalRows: displayedDeclarations.length,
+    onRowSelect: handleRowSelect,
+    onRowExpand: handleRowExpand,
+    onRowAction: handleRowAction,
+  });
+
   if (isMobile) {
     return (
       <div className="space-y-3">
@@ -187,6 +232,29 @@ export function DeclarationsTable({
 
   return (
     <Card className="glass-card border-border/50 overflow-hidden">
+      {/* Keyboard shortcuts hint */}
+      <div className="flex items-center justify-end px-4 py-2 border-b border-border/30">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+                <Keyboard className="w-4 h-4" />
+                <span className="hidden sm:inline text-xs">{t('keyboardShortcuts')}</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <div className="text-xs space-y-1">
+                <p><kbd className="px-1 bg-muted rounded">↑↓</kbd> {t('navigateRows')}</p>
+                <p><kbd className="px-1 bg-muted rounded">Enter</kbd> {t('viewDetailsKey')}</p>
+                <p><kbd className="px-1 bg-muted rounded">Space</kbd> {t('selectRow')}</p>
+                <p><kbd className="px-1 bg-muted rounded">E</kbd> {t('expandRow')}</p>
+                <p><kbd className="px-1 bg-muted rounded">Del</kbd> {t('deleteRow')}</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+      
       <Table>
         <TableHeader>
           <TableRow>
@@ -207,7 +275,12 @@ export function DeclarationsTable({
             <TableHead>{t('actions')}</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody 
+          onKeyDown={handleKeyDown}
+          role="rowgroup"
+          tabIndex={0}
+          className="focus:outline-none"
+        >
           {loading ? (
             <TableSkeleton rows={10} columns={9} />
           ) : declarations.length === 0 ? (
@@ -223,10 +296,16 @@ export function DeclarationsTable({
               </TableCell>
             </TableRow>
           ) : (
-            displayedDeclarations.map((declaration) => (
+            displayedDeclarations.map((declaration, index) => (
               <Collapsible key={declaration.id} asChild open={expandedRows.includes(declaration.id)}>
                 <>
-                  <TableRow className="hover:bg-muted/5">
+                  <TableRow 
+                    className={cn(
+                      "hover:bg-muted/5 cursor-pointer transition-all",
+                      focusedIndex === index && "ring-2 ring-primary/50 ring-inset bg-primary/5"
+                    )}
+                    {...getRowProps(index)}
+                  >
                     <TableCell>
                       <CollapsibleTrigger asChild>
                         <Button
