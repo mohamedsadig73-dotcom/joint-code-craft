@@ -29,7 +29,9 @@ const WMSLocations = lazy(() => import('@/pages/WMS/WMSLocations'));
 const WMSInventory = lazy(() => import('@/pages/WMS/WMSInventory'));
 const WMSSuppliers = lazy(() => import('@/pages/WMS/WMSSuppliers'));
 const WMSInbound = lazy(() => import('@/pages/WMS/WMSInbound'));
+const WMSInboundDetails = lazy(() => import('@/pages/WMS/WMSInboundDetails'));
 const WMSOutbound = lazy(() => import('@/pages/WMS/WMSOutbound'));
+const WMSOutboundDetails = lazy(() => import('@/pages/WMS/WMSOutboundDetails'));
 const WMSTransactions = lazy(() => import('@/pages/WMS/WMSTransactions'));
 const WMSCycleCount = lazy(() => import('@/pages/WMS/WMSCycleCount'));
 
@@ -234,11 +236,31 @@ export function AnimatedRoutes() {
             }
           />
           <Route
+            path="/wms/inbound/:id"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSInboundDetails />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/wms/outbound"
             element={
               <ProtectedRoute>
                 <PageTransition>
                   <WMSOutbound />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/outbound/:id"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSOutboundDetails />
                 </PageTransition>
               </ProtectedRoute>
             }
