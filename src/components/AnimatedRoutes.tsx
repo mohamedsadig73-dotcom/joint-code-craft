@@ -27,6 +27,11 @@ const WMSDashboard = lazy(() => import('@/pages/WMS/WMSDashboard'));
 const WMSProducts = lazy(() => import('@/pages/WMS/WMSProducts'));
 const WMSLocations = lazy(() => import('@/pages/WMS/WMSLocations'));
 const WMSInventory = lazy(() => import('@/pages/WMS/WMSInventory'));
+const WMSSuppliers = lazy(() => import('@/pages/WMS/WMSSuppliers'));
+const WMSInbound = lazy(() => import('@/pages/WMS/WMSInbound'));
+const WMSOutbound = lazy(() => import('@/pages/WMS/WMSOutbound'));
+const WMSTransactions = lazy(() => import('@/pages/WMS/WMSTransactions'));
+const WMSCycleCount = lazy(() => import('@/pages/WMS/WMSCycleCount'));
 
 // Enhanced Loading component
 const PageLoader = () => (
@@ -204,6 +209,56 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <WMSLocations />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/suppliers"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSSuppliers />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/inbound"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSInbound />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/outbound"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSOutbound />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/transactions"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSTransactions />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/cycle-count"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSCycleCount />
                 </PageTransition>
               </ProtectedRoute>
             }
