@@ -577,6 +577,23 @@ const translations = {
     // Reports & Analytics Tabs (new keys only)
     exportTab: 'Export',
     adminStatsTab: 'Admin Stats',
+    
+    // Pagination
+    rowsPerPage: 'Rows per page',
+    firstPage: 'First page',
+    previousPage: 'Previous page',
+    nextPage: 'Next page',
+    lastPage: 'Last page',
+    page: 'Page',
+    
+    // Dashboard Charts
+    quickStatsOverview: 'Quick Stats Overview',
+    declarationBreakdown: 'Breakdown of declarations by status',
+    
+    // Date range presets
+    last7Days: 'Last 7 Days',
+    last30Days: 'Last 30 Days',
+    last90Days: 'Last 90 Days',
   },
   ar: {
     // Navigation
@@ -1146,6 +1163,23 @@ const translations = {
     // Reports & Analytics Tabs (new keys only)
     exportTab: 'تصدير',
     adminStatsTab: 'إحصائيات المدير',
+    
+    // Pagination
+    rowsPerPage: 'عدد الصفوف',
+    firstPage: 'الصفحة الأولى',
+    previousPage: 'الصفحة السابقة',
+    nextPage: 'الصفحة التالية',
+    lastPage: 'الصفحة الأخيرة',
+    page: 'صفحة',
+    
+    // Dashboard Charts
+    quickStatsOverview: 'نظرة سريعة على الإحصائيات',
+    declarationBreakdown: 'توزيع الإقرارات حسب الحالة',
+    
+    // Date range presets
+    last7Days: 'آخر 7 أيام',
+    last30Days: 'آخر 30 يوم',
+    last90Days: 'آخر 90 يوم',
   },
 };
 

@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,6 +20,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { SwipeableRow } from '@/components/SwipeableRow';
 import { StatusQuickAction } from '@/components/declarations/StatusQuickAction';
 import { DeclarationRowExpand } from '@/components/declarations/DeclarationRowExpand';
+import { Pagination } from '@/components/dashboard/Pagination';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -58,6 +60,26 @@ export function DeclarationsTable({
   const { user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  
+  const totalPages = Math.ceil(declarations.length / pageSize);
+  
+  const paginatedDeclarations = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return declarations.slice(startIndex, startIndex + pageSize);
+  }, [declarations, currentPage, pageSize]);
+  
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
 
   if (isMobile) {
     return (
@@ -73,47 +95,59 @@ export function DeclarationsTable({
             onAction={hasActiveFilters ? onClearFilters : onCreateNew}
           />
         ) : (
-          declarations.map((declaration) => (
-            <SwipeableRow
-              key={declaration.id}
-              onEdit={() => navigate(`/declaration/${declaration.id}`)}
-              onDelete={(user?.role === 'admin' || (user?.role === 'manager' && declaration.sender_id === user?.id)) 
-                ? () => onDelete(declaration) 
-                : undefined}
-              editLabel={t('view')}
-              deleteLabel={t('delete')}
-            >
-              <Card className="p-4 space-y-3 bg-background border-border/50">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="font-mono text-xs">
-                      {declaration.type}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground font-mono">
-                      #{declaration.id.slice(0, 8)}
-                    </span>
+          <>
+            {paginatedDeclarations.map((declaration) => (
+              <SwipeableRow
+                key={declaration.id}
+                onEdit={() => navigate(`/declaration/${declaration.id}`)}
+                onDelete={(user?.role === 'admin' || (user?.role === 'manager' && declaration.sender_id === user?.id)) 
+                  ? () => onDelete(declaration) 
+                  : undefined}
+                editLabel={t('view')}
+                deleteLabel={t('delete')}
+              >
+                <Card className="p-4 space-y-3 bg-background border-border/50">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="font-mono text-xs">
+                        {declaration.type}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground font-mono">
+                        #{declaration.id.slice(0, 8)}
+                      </span>
+                    </div>
+                    <StatusQuickAction
+                      declarationId={declaration.id}
+                      currentStatus={declaration.status}
+                      onStatusChange={onStatusChange}
+                    />
                   </div>
-                  <StatusQuickAction
-                    declarationId={declaration.id}
-                    currentStatus={declaration.status}
-                    onStatusChange={onStatusChange}
-                  />
-                </div>
-                
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>{declaration.sender?.username || t('unknown')}</span>
-                  <span>•</span>
-                  <span>{toGregorianDate(declaration.created_at)}</span>
-                </div>
+                  
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span>{declaration.sender?.username || t('unknown')}</span>
+                    <span>•</span>
+                    <span>{toGregorianDate(declaration.created_at)}</span>
+                  </div>
 
-                {declaration.archive_number && (
-                  <div className="text-xs text-muted-foreground">
-                    {t('archiveNumber')}: <span className="font-mono">{declaration.archive_number}</span>
-                  </div>
-                )}
-              </Card>
-            </SwipeableRow>
-          ))
+                  {declaration.archive_number && (
+                    <div className="text-xs text-muted-foreground">
+                      {t('archiveNumber')}: <span className="font-mono">{declaration.archive_number}</span>
+                    </div>
+                  )}
+                </Card>
+              </SwipeableRow>
+            ))}
+            {declarations.length > pageSize && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalItems={declarations.length}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+              />
+            )}
+          </>
         )}
       </div>
     );
@@ -157,7 +191,7 @@ export function DeclarationsTable({
               </TableCell>
             </TableRow>
           ) : (
-            declarations.map((declaration) => (
+            paginatedDeclarations.map((declaration) => (
               <Collapsible key={declaration.id} asChild open={expandedRows.includes(declaration.id)}>
                 <>
                   <TableRow className="hover:bg-muted/5">
@@ -236,6 +270,18 @@ export function DeclarationsTable({
           )}
         </TableBody>
       </Table>
+      
+      {/* Pagination */}
+      {declarations.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={declarations.length}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      )}
     </Card>
   );
 }
