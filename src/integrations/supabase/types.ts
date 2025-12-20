@@ -88,6 +88,66 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_logs: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          data: Json | null
+          description: string | null
+          id: string
+          log_type: string
+          related_entity_id: string | null
+          related_entity_type: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          data?: Json | null
+          description?: string | null
+          id?: string
+          log_type: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          data?: Json | null
+          description?: string | null
+          id?: string
+          log_type?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_logs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_logs_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       declaration_deletion_log: {
         Row: {
           archive_number: string | null
@@ -250,6 +310,119 @@ export type Database = {
           {
             foreignKeyName: "declarations_sender_id_fkey"
             columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gdpr_requests: {
+        Row: {
+          created_at: string | null
+          data_exported_url: string | null
+          due_date: string | null
+          id: string
+          notes: string | null
+          processed_at: string | null
+          processed_by: string | null
+          request_type: string
+          requester_email: string
+          requester_name: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_exported_url?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          request_type: string
+          requester_email: string
+          requester_name?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_exported_url?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          request_type?: string
+          requester_email?: string
+          requester_name?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gdpr_requests_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      haccp_checks: {
+        Row: {
+          check_point: string
+          check_type: string
+          corrective_action: string | null
+          created_at: string | null
+          deviation_notes: string | null
+          humidity_reading: number | null
+          id: string
+          is_compliant: boolean | null
+          location_id: string | null
+          next_check_due: string | null
+          temperature_reading: number | null
+          verification_date: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          check_point: string
+          check_type: string
+          corrective_action?: string | null
+          created_at?: string | null
+          deviation_notes?: string | null
+          humidity_reading?: number | null
+          id?: string
+          is_compliant?: boolean | null
+          location_id?: string | null
+          next_check_due?: string | null
+          temperature_reading?: number | null
+          verification_date?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          check_point?: string
+          check_type?: string
+          corrective_action?: string | null
+          created_at?: string | null
+          deviation_notes?: string | null
+          humidity_reading?: number | null
+          id?: string
+          is_compliant?: boolean | null
+          location_id?: string | null
+          next_check_due?: string | null
+          temperature_reading?: number | null
+          verification_date?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "haccp_checks_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "wms_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "haccp_checks_verified_by_fkey"
+            columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -625,6 +798,50 @@ export type Database = {
         }
         Relationships: []
       }
+      user_2fa_settings: {
+        Row: {
+          backup_codes: string[] | null
+          created_at: string | null
+          id: string
+          is_enabled: boolean | null
+          last_verified_at: string | null
+          method: string | null
+          totp_secret: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          last_verified_at?: string | null
+          method?: string | null
+          totp_secret?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          last_verified_at?: string | null
+          method?: string | null
+          totp_secret?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_2fa_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -647,6 +864,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verification_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          type: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          type: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          type?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_codes_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -2307,6 +2562,10 @@ export type Database = {
         Args: { _item_id: string; _year: number }
         Returns: undefined
       }
+      generate_verification_code: {
+        Args: { _type?: string; _user_id: string }
+        Returns: string
+      }
       generate_wms_order_number: { Args: { prefix: string }; Returns: string }
       generate_work_order_number: { Args: never; Returns: string }
       has_role: {
@@ -2334,6 +2593,10 @@ export type Database = {
           _user_agent?: string
         }
         Returns: string
+      }
+      verify_code: {
+        Args: { _code: string; _type?: string; _user_id: string }
+        Returns: boolean
       }
     }
     Enums: {
