@@ -7,7 +7,7 @@ import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { ThemeToggleSimple } from '@/components/ThemeToggle';
 import { 
   LayoutDashboard, 
-  FolderOpen, 
+  Warehouse, 
   BarChart3, 
   LogOut, 
   User,
@@ -15,9 +15,16 @@ import {
   Shield,
   Download,
   Wrench,
-  FileText,
   History,
-  RefreshCw
+  RefreshCw,
+  Package,
+  MapPin,
+  Boxes,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  ClipboardList,
+  Truck,
+  ChevronDown
 } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +34,9 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 
 export function Navigation() {
@@ -124,9 +134,20 @@ export function Navigation() {
     }
   };
 
+  const wmsSubItems = [
+    { path: '/wms', icon: LayoutDashboard, labelKey: 'wmsDashboard' },
+    { path: '/wms/products', icon: Package, labelKey: 'wmsProducts' },
+    { path: '/wms/inventory', icon: Boxes, labelKey: 'wmsInventory' },
+    { path: '/wms/locations', icon: MapPin, labelKey: 'wmsLocations' },
+    { path: '/wms/inbound', icon: ArrowDownToLine, labelKey: 'wmsInbound' },
+    { path: '/wms/outbound', icon: ArrowUpFromLine, labelKey: 'wmsOutbound' },
+    { path: '/wms/suppliers', icon: Truck, labelKey: 'wmsSuppliers' },
+    { path: '/wms/transactions', icon: ClipboardList, labelKey: 'wmsTransactions' },
+    { path: '/wms/cycle-count', icon: BarChart3, labelKey: 'wmsCycleCount' },
+  ];
+
   const navItems = [
     { path: '/', icon: LayoutDashboard, labelKey: 'declarations' },
-    { path: '/wms', icon: FolderOpen, labelKey: 'inventory' },
     { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
     { path: '/reports-analytics', icon: BarChart3, labelKey: 'reportsTitle' },
   ];
@@ -153,6 +174,32 @@ export function Navigation() {
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center gap-2">
+            {/* WMS Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant={location.pathname.startsWith('/wms') ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Warehouse className="w-4 h-4" />
+                  {t('wmsTitle')}
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                {wmsSubItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <DropdownMenuItem key={item.path} onClick={() => navigate(item.path)} className="gap-2 cursor-pointer">
+                      <Icon className="w-4 h-4" />
+                      {t(item.labelKey)}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {allNavItems.map((item) => {
               const Icon = item.icon;
               const isReportsLink = item.path === '/reports-analytics';
@@ -249,22 +296,31 @@ export function Navigation() {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden flex justify-around py-2 border-t border-border/50">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link key={item.path} to={item.path}>
-                <Button
-                  variant={isActive(item.path) ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className="gap-2"
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="text-xs">{t(item.labelKey)}</span>
-                </Button>
-              </Link>
-            );
-          })}
+        <div className="md:hidden flex justify-around py-2 border-t border-border/50 overflow-x-auto">
+          <Link to="/">
+            <Button variant={isActive('/') ? 'secondary' : 'ghost'} size="sm" className="gap-1 px-2">
+              <LayoutDashboard className="w-4 h-4" />
+              <span className="text-xs">{t('declarations')}</span>
+            </Button>
+          </Link>
+          <Link to="/wms">
+            <Button variant={location.pathname.startsWith('/wms') ? 'secondary' : 'ghost'} size="sm" className="gap-1 px-2">
+              <Warehouse className="w-4 h-4" />
+              <span className="text-xs">{t('wmsTitle')}</span>
+            </Button>
+          </Link>
+          <Link to="/maintenance">
+            <Button variant={isActive('/maintenance') ? 'secondary' : 'ghost'} size="sm" className="gap-1 px-2">
+              <Wrench className="w-4 h-4" />
+              <span className="text-xs">{t('maintenance')}</span>
+            </Button>
+          </Link>
+          <Link to="/reports-analytics">
+            <Button variant={isActive('/reports-analytics') ? 'secondary' : 'ghost'} size="sm" className="gap-1 px-2">
+              <BarChart3 className="w-4 h-4" />
+              <span className="text-xs">{t('reportsTitle')}</span>
+            </Button>
+          </Link>
         </div>
       </div>
     </nav>
