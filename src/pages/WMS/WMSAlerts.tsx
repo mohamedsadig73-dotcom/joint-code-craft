@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +17,8 @@ import {
   Bell,
   CheckCircle,
   RefreshCw,
-  TrendingDown
+  TrendingDown,
+  Mail
 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 
@@ -41,12 +44,15 @@ interface ExpiryAlert {
 
 const WMSAlerts: React.FC = () => {
   const { language } = useLanguage();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const isRTL = language === 'ar';
 
   const [loading, setLoading] = useState(true);
   const [lowStockAlerts, setLowStockAlerts] = useState<LowStockAlert[]>([]);
   const [expiryAlerts, setExpiryAlerts] = useState<ExpiryAlert[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     loadAlerts();
@@ -65,6 +71,60 @@ const WMSAlerts: React.FC = () => {
     setRefreshing(true);
     await loadAlerts();
     setRefreshing(false);
+  };
+
+  const sendEmailAlerts = async () => {
+    if (!user?.email) {
+      toast({
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'لا يوجد بريد إلكتروني' : 'No email found',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      const alerts = [
+        ...lowStockAlerts.map(a => ({
+          productName: a.productName,
+          sku: a.sku,
+          quantity: a.currentQty,
+          minStock: a.minStock,
+          locationCode: a.locationCode
+        })),
+        ...expiryAlerts.map(a => ({
+          productName: a.productName,
+          sku: a.sku,
+          quantity: a.quantity,
+          expiryDate: a.expiryDate,
+          daysUntilExpiry: a.daysUntilExpiry,
+          locationCode: a.locationCode
+        }))
+      ];
+
+      const { error } = await supabase.functions.invoke('send-wms-alert-email', {
+        body: {
+          alertType: 'critical',
+          recipientEmail: user.email,
+          alerts
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: language === 'ar' ? 'تم الإرسال' : 'Sent',
+        description: language === 'ar' ? 'تم إرسال التنبيهات بالبريد' : 'Alerts sent via email'
+      });
+    } catch (err) {
+      toast({
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'فشل إرسال البريد' : 'Failed to send email',
+        variant: 'destructive'
+      });
+    }
+    setSendingEmail(false);
   };
 
   const loadLowStockAlerts = async () => {
@@ -176,10 +236,16 @@ const WMSAlerts: React.FC = () => {
               {language === 'ar' ? 'مراقبة المخزون المنخفض والمنتجات قريبة الانتهاء' : 'Monitor low stock and expiring products'}
             </p>
           </div>
-          <Button onClick={refreshAlerts} disabled={refreshing} variant="outline">
-            <RefreshCw className={`h-4 w-4 me-2 ${refreshing ? 'animate-spin' : ''}`} />
-            {language === 'ar' ? 'تحديث' : 'Refresh'}
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={sendEmailAlerts} disabled={sendingEmail || totalAlerts === 0} variant="outline">
+              <Mail className={`h-4 w-4 me-2 ${sendingEmail ? 'animate-pulse' : ''}`} />
+              {language === 'ar' ? 'إرسال بالبريد' : 'Email Alerts'}
+            </Button>
+            <Button onClick={refreshAlerts} disabled={refreshing} variant="outline">
+              <RefreshCw className={`h-4 w-4 me-2 ${refreshing ? 'animate-spin' : ''}`} />
+              {language === 'ar' ? 'تحديث' : 'Refresh'}
+            </Button>
+          </div>
         </div>
 
         {/* Summary Cards */}
