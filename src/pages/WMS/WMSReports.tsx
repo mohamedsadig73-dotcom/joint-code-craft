@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   Package, 
   TrendingUp, 
@@ -15,10 +16,12 @@ import {
   Calendar,
   DollarSign,
   BarChart3,
-  PieChart
+  PieChart,
+  FileDown
 } from 'lucide-react';
 import ReactECharts from 'echarts-for-react';
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { exportWMSReportToPDF } from '@/utils/wmsReportsPdf';
 
 interface InventoryStats {
   totalProducts: number;
@@ -272,11 +275,26 @@ const WMSReports: React.FC = () => {
       <main className="container mx-auto px-4 py-6">
         <Breadcrumbs items={breadcrumbItems} className="mb-4" />
 
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">{language === 'ar' ? 'تقارير المستودع' : 'Warehouse Reports'}</h1>
-          <p className="text-muted-foreground">
-            {language === 'ar' ? 'تحليل شامل لأداء المستودع' : 'Comprehensive warehouse performance analysis'}
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold">{language === 'ar' ? 'تقارير المستودع' : 'Warehouse Reports'}</h1>
+            <p className="text-muted-foreground">
+              {language === 'ar' ? 'تحليل شامل لأداء المستودع' : 'Comprehensive warehouse performance analysis'}
+            </p>
+          </div>
+          <Button 
+            onClick={() => exportWMSReportToPDF({
+              inventoryStats,
+              transactionStats,
+              topProducts,
+              lowStockProducts,
+              language
+            })}
+            disabled={loading}
+          >
+            <FileDown className="h-4 w-4 me-2" />
+            {language === 'ar' ? 'تصدير PDF' : 'Export PDF'}
+          </Button>
         </div>
 
         {/* KPI Cards */}

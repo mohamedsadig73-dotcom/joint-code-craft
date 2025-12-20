@@ -17,6 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Plus, Package, User, Calendar, MapPin, CheckCircle, Edit, Trash2, PackageCheck, Truck } from 'lucide-react';
 import { format } from 'date-fns';
+import BarcodeScanner from '@/components/wms/BarcodeScanner';
 
 interface OutboundOrder {
   id: string;
@@ -461,6 +462,12 @@ const WMSOutboundDetails: React.FC = () => {
             <div className="flex gap-2">
               {canManage && order?.status !== 'completed' && (
                 <>
+                  <BarcodeScanner 
+                    onProductFound={(product) => {
+                      setFormData(prev => ({...prev, product_id: product.id}));
+                      setDialogOpen(true);
+                    }}
+                  />
                   <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
                     <DialogTrigger asChild>
                       <Button size="sm">
