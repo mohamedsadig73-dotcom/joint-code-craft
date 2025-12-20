@@ -60,14 +60,14 @@ export function VendorsManagement() {
       setVendors(data || []);
     } catch (error: any) {
       toast({
-        title: 'خطأ',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadVendors();
@@ -82,15 +82,15 @@ export function VendorsManagement() {
           .update(formData)
           .eq('id', editingVendor.id);
         if (error) throw error;
-        triggerSuccess('success', 'تم تحديث المورد بنجاح');
-        toast({ title: 'تم تحديث المورد بنجاح' });
+        triggerSuccess('success', t('vendorUpdatedSuccess'));
+        toast({ title: t('vendorUpdatedSuccess') });
       } else {
         const { error } = await supabase
           .from('maintenance_vendors')
           .insert([formData]);
         if (error) throw error;
-        triggerSuccess('success', 'تم إضافة المورد بنجاح');
-        toast({ title: 'تم إضافة المورد بنجاح' });
+        triggerSuccess('success', t('vendorAddedSuccess'));
+        toast({ title: t('vendorAddedSuccess') });
       }
       
       setDialogOpen(false);
@@ -98,7 +98,7 @@ export function VendorsManagement() {
       loadVendors();
     } catch (error: any) {
       toast({
-        title: 'خطأ',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       });
@@ -106,7 +106,7 @@ export function VendorsManagement() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذا المورد؟')) return;
+    if (!window.confirm(t('confirmDeleteVendor'))) return;
     
     try {
       const { error } = await supabase
@@ -115,12 +115,12 @@ export function VendorsManagement() {
         .eq('id', id);
       
       if (error) throw error;
-      triggerSuccess('success', 'تم حذف المورد بنجاح');
-      toast({ title: 'تم حذف المورد بنجاح' });
+      triggerSuccess('success', t('vendorDeletedSuccess'));
+      toast({ title: t('vendorDeletedSuccess') });
       loadVendors();
     } catch (error: any) {
       toast({
-        title: 'خطأ',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       });
@@ -161,8 +161,8 @@ export function VendorsManagement() {
       <SuccessAnimationComponent />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold">إدارة الموردين وشركات الصيانة</h2>
-          <p className="text-muted-foreground">إضافة وتعديل معلومات الموردين</p>
+          <h2 className="text-2xl font-bold">{t('vendorsTitle')}</h2>
+          <p className="text-muted-foreground">{t('vendorsDesc')}</p>
         </div>
         
         <Dialog open={dialogOpen} onOpenChange={(open) => {
@@ -172,20 +172,20 @@ export function VendorsManagement() {
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="w-4 h-4" />
-              إضافة مورد جديد
+              {t('addNewVendor')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingVendor ? 'تعديل المورد' : 'إضافة مورد جديد'}
+                {editingVendor ? t('editVendorTitle') : t('addVendorTitle')}
               </DialogTitle>
             </DialogHeader>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">اسم المورد *</Label>
+                  <Label htmlFor="name">{t('vendorNameLabel')} *</Label>
                   <Input
                     id="name"
                     required
@@ -195,7 +195,7 @@ export function VendorsManagement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="contact_person">الشخص المسؤول</Label>
+                  <Label htmlFor="contact_person">{t('responsiblePerson')}</Label>
                   <Input
                     id="contact_person"
                     value={formData.contact_person}
@@ -204,7 +204,7 @@ export function VendorsManagement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">رقم الهاتف</Label>
+                  <Label htmlFor="phone">{t('phoneLabel')}</Label>
                   <Input
                     id="phone"
                     type="tel"
@@ -214,7 +214,7 @@ export function VendorsManagement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">البريد الإلكتروني</Label>
+                  <Label htmlFor="email">{t('emailFieldLabel')}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -224,7 +224,7 @@ export function VendorsManagement() {
                 </div>
 
                 <div className="space-y-2 col-span-2">
-                  <Label htmlFor="address">العنوان</Label>
+                  <Label htmlFor="address">{t('addressLabel')}</Label>
                   <Input
                     id="address"
                     value={formData.address}
@@ -233,17 +233,17 @@ export function VendorsManagement() {
                 </div>
 
                 <div className="space-y-2 col-span-2">
-                  <Label htmlFor="specialization">التخصص</Label>
+                  <Label htmlFor="specialization">{t('specializationLabel')}</Label>
                   <Input
                     id="specialization"
-                    placeholder="مثال: كهرباء، سباكة، تكييف"
+                    placeholder={t('specializationPlaceholder')}
                     value={formData.specialization}
                     onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
                   />
                 </div>
 
                 <div className="space-y-2 col-span-2">
-                  <Label htmlFor="notes">ملاحظات</Label>
+                  <Label htmlFor="notes">{t('notesLabel')}</Label>
                   <Textarea
                     id="notes"
                     value={formData.notes}
@@ -258,16 +258,16 @@ export function VendorsManagement() {
                     checked={formData.active}
                     onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
                   />
-                  <Label htmlFor="active">مورد نشط</Label>
+                  <Label htmlFor="active">{t('activeVendor')}</Label>
                 </div>
               </div>
 
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  إلغاء
+                  {t('cancel')}
                 </Button>
                 <Button type="submit">
-                  {editingVendor ? 'تحديث' : 'إضافة'}
+                  {editingVendor ? t('update') : t('add')}
                 </Button>
               </div>
             </form>
@@ -289,7 +289,7 @@ export function VendorsManagement() {
               variant="maintenance"
               title={emptyStateMessages.vendors.title}
               description={emptyStateMessages.vendors.description}
-              actionLabel={t('addVendor') || 'إضافة مورد جديد'}
+              actionLabel={t('addNewVendor')}
               onAction={() => setDialogOpen(true)}
             />
           ) : (
@@ -309,10 +309,10 @@ export function VendorsManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('vendorName') || 'اسم المورد'}</TableHead>
-                <TableHead>{t('contactPerson') || 'الشخص المسؤول'}</TableHead>
-                <TableHead>{t('contactInfo') || 'معلومات الاتصال'}</TableHead>
-                <TableHead>{t('specialization') || 'التخصص'}</TableHead>
+                <TableHead>{t('vendorName')}</TableHead>
+                <TableHead>{t('contactPerson')}</TableHead>
+                <TableHead>{t('contactInfo')}</TableHead>
+                <TableHead>{t('specialization')}</TableHead>
                 <TableHead>{t('status')}</TableHead>
                 <TableHead className="text-left">{t('actions')}</TableHead>
               </TableRow>
@@ -327,7 +327,7 @@ export function VendorsManagement() {
                       variant="maintenance"
                       title={emptyStateMessages.vendors.title}
                       description={emptyStateMessages.vendors.description}
-                      actionLabel={t('addVendor') || 'إضافة مورد جديد'}
+                      actionLabel={t('addNewVendor')}
                       onAction={() => setDialogOpen(true)}
                     />
                   </TableCell>
@@ -362,7 +362,7 @@ export function VendorsManagement() {
                     <TableCell>{vendor.specialization || '-'}</TableCell>
                     <TableCell>
                       <Badge variant={vendor.active ? 'default' : 'secondary'}>
-                        {vendor.active ? t('active') || 'نشط' : t('inactive') || 'غير نشط'}
+                        {vendor.active ? t('active') : t('inactive')}
                       </Badge>
                     </TableCell>
                     <TableCell>

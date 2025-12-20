@@ -9,17 +9,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { FileText, Shield, RefreshCw, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
 import { EmptyState } from '@/components/EmptyState';
 import { TableSkeleton, CardSkeleton } from '@/components/ui/TableSkeleton';
-import { VirtualizedList } from '@/components/VirtualizedList';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   auditActionLabels, 
   auditActionColors, 
   tableLabels,
   emptyStateMessages 
 } from '@/constants/statusLabels';
+
 interface AuditLog {
   id: string;
   user_id: string;
@@ -37,7 +37,7 @@ interface AuditLog {
 
 export default function AuditLogs() {
   const { user } = useAuth();
-  const isMobile = useIsMobile();
+  const { t, language } = useLanguage();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterAction, setFilterAction] = useState<string>('all');
@@ -71,30 +71,47 @@ export default function AuditLogs() {
       setLogs(logsWithProfiles as any);
     } catch (error: any) {
       toast({
-        title: 'خطأ',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (user?.role === 'admin') {
       loadLogs();
     }
   }, [user, loadLogs]);
+
   const getActionBadge = (action: string) => {
+    const actionLabelsTranslated: Record<string, string> = {
+      CREATE: t('createAction'),
+      UPDATE: t('updateAction'),
+      DELETE: t('deleteAction'),
+      ASSIGN_ROLE: t('assignRole'),
+      UPDATE_ROLE: t('updateRole'),
+      REMOVE_ROLE: t('removeRole'),
+      FAILED_LOGIN: t('failedLoginAttempt'),
+    };
+    
     return (
       <Badge className={auditActionColors[action] || 'bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30'}>
-        {auditActionLabels[action] || action}
+        {actionLabelsTranslated[action] || auditActionLabels[action] || action}
       </Badge>
     );
   };
 
   const getTableLabel = (tableName: string) => {
-    return tableLabels[tableName] || tableName;
+    const tableLabelsTranslated: Record<string, string> = {
+      declarations: t('declarationsTable'),
+      user_roles: t('userRolesTable'),
+      maintenance_items: t('maintenanceItemsTable'),
+      maintenance_schedule: t('maintenanceScheduleTable'),
+    };
+    return tableLabelsTranslated[tableName] || tableLabels[tableName] || tableName;
   };
 
   const filteredLogs = useMemo(() => logs.filter(log => {
@@ -107,15 +124,16 @@ export default function AuditLogs() {
     
     return matchesAction && matchesTable && matchesSearch;
   }), [logs, filterAction, filterTable, searchTerm]);
+
   if (user?.role !== 'admin') {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <Navigation />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card className="glass-card border-border/50 p-8 text-center">
             <Shield className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-2xl font-bold mb-2">غير مصرح</h2>
-            <p className="text-muted-foreground">هذه الصفحة متاحة للمسؤولين فقط</p>
+            <h2 className="text-2xl font-bold mb-2">{t('unauthorized')}</h2>
+            <p className="text-muted-foreground">{t('adminOnlyPage')}</p>
           </Card>
         </main>
       </div>
@@ -123,16 +141,16 @@ export default function AuditLogs() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 gradient-text">
-            سجل التدقيق (Audit Logs)
+            {t('auditLogsTitle')}
           </h1>
           <p className="text-muted-foreground">
-            سجل شامل لجميع العمليات المهمة في النظام
+            {t('auditLogsDesc')}
           </p>
         </div>
 
@@ -148,7 +166,7 @@ export default function AuditLogs() {
                 </div>
               </div>
               <div className="text-3xl font-bold mb-1">{logs.length}</div>
-              <div className="text-sm text-muted-foreground">إجمالي السجلات</div>
+              <div className="text-sm text-muted-foreground">{t('totalLogs')}</div>
             </Card>
 
             <Card className="glass-card border-border/50 p-6">
@@ -160,7 +178,7 @@ export default function AuditLogs() {
               <div className="text-3xl font-bold mb-1">
                 {logs.filter(l => l.action === 'CREATE').length}
               </div>
-              <div className="text-sm text-muted-foreground">عمليات إنشاء</div>
+              <div className="text-sm text-muted-foreground">{t('createOperations')}</div>
             </Card>
 
             <Card className="glass-card border-border/50 p-6">
@@ -172,7 +190,7 @@ export default function AuditLogs() {
               <div className="text-3xl font-bold mb-1">
                 {logs.filter(l => l.action === 'UPDATE').length}
               </div>
-              <div className="text-sm text-muted-foreground">عمليات تحديث</div>
+              <div className="text-sm text-muted-foreground">{t('updateOperations')}</div>
             </Card>
 
             <Card className="glass-card border-border/50 p-6">
@@ -184,7 +202,7 @@ export default function AuditLogs() {
               <div className="text-3xl font-bold mb-1">
                 {logs.filter(l => l.action === 'DELETE').length}
               </div>
-              <div className="text-sm text-muted-foreground">عمليات حذف</div>
+              <div className="text-sm text-muted-foreground">{t('deleteOperations')}</div>
             </Card>
           </div>
         )}
@@ -194,44 +212,44 @@ export default function AuditLogs() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground`} />
                 <Input
-                  placeholder="بحث بالمعرف أو المستخدم..."
+                  placeholder={t('searchByIdOrUser')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pr-10"
+                  className={language === 'ar' ? 'pr-10' : 'pl-10'}
                 />
               </div>
             </div>
             <Select value={filterAction} onValueChange={setFilterAction}>
               <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="نوع العملية" />
+                <SelectValue placeholder={t('operationType')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">جميع العمليات</SelectItem>
-                <SelectItem value="CREATE">إنشاء</SelectItem>
-                <SelectItem value="UPDATE">تحديث</SelectItem>
-                <SelectItem value="DELETE">حذف</SelectItem>
-                <SelectItem value="ASSIGN_ROLE">تعيين دور</SelectItem>
-                <SelectItem value="UPDATE_ROLE">تحديث دور</SelectItem>
-                <SelectItem value="REMOVE_ROLE">إزالة دور</SelectItem>
+                <SelectItem value="all">{t('allOperations')}</SelectItem>
+                <SelectItem value="CREATE">{t('createAction')}</SelectItem>
+                <SelectItem value="UPDATE">{t('updateAction')}</SelectItem>
+                <SelectItem value="DELETE">{t('deleteAction')}</SelectItem>
+                <SelectItem value="ASSIGN_ROLE">{t('assignRole')}</SelectItem>
+                <SelectItem value="UPDATE_ROLE">{t('updateRole')}</SelectItem>
+                <SelectItem value="REMOVE_ROLE">{t('removeRole')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterTable} onValueChange={setFilterTable}>
               <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="الجدول" />
+                <SelectValue placeholder={t('tableFilter')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">جميع الجداول</SelectItem>
-                <SelectItem value="declarations">الإقرارات</SelectItem>
-                <SelectItem value="user_roles">أدوار المستخدمين</SelectItem>
-                <SelectItem value="maintenance_items">بنود الصيانة</SelectItem>
-                <SelectItem value="maintenance_schedule">جدول الصيانة</SelectItem>
+                <SelectItem value="all">{t('allTables')}</SelectItem>
+                <SelectItem value="declarations">{t('declarationsTable')}</SelectItem>
+                <SelectItem value="user_roles">{t('userRolesTable')}</SelectItem>
+                <SelectItem value="maintenance_items">{t('maintenanceItemsTable')}</SelectItem>
+                <SelectItem value="maintenance_schedule">{t('maintenanceScheduleTable')}</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" onClick={loadLogs}>
-              <RefreshCw className="w-4 h-4 ml-2" />
-              تحديث
+              <RefreshCw className="w-4 h-4 me-2" />
+              {t('refresh')}
             </Button>
           </div>
         </Card>
@@ -239,18 +257,18 @@ export default function AuditLogs() {
         {/* Logs Table */}
         <Card className="glass-card border-border/50">
           <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4">السجلات</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('logsTableTitle')}</h3>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>التاريخ والوقت</TableHead>
-                  <TableHead>المستخدم</TableHead>
-                  <TableHead>العملية</TableHead>
-                  <TableHead>الجدول</TableHead>
-                  <TableHead>المعرف</TableHead>
+                  <TableHead>{t('dateTimeColumn')}</TableHead>
+                  <TableHead>{t('userColumn')}</TableHead>
+                  <TableHead>{t('operationColumn')}</TableHead>
+                  <TableHead>{t('tableColumn')}</TableHead>
+                  <TableHead>{t('idColumn')}</TableHead>
                 </TableRow>
               </TableHeader>
-            <TableBody>
+              <TableBody>
                 {loading ? (
                   <TableSkeleton rows={5} columns={5} />
                 ) : filteredLogs.length === 0 ? (
@@ -267,7 +285,7 @@ export default function AuditLogs() {
                   filteredLogs.map((log) => (
                     <TableRow key={log.id}>
                       <TableCell className="font-mono text-sm">
-                        {new Date(log.created_at).toLocaleString('ar-SA', {
+                        {new Date(log.created_at).toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US', {
                           year: 'numeric',
                           month: '2-digit',
                           day: '2-digit',
@@ -277,7 +295,7 @@ export default function AuditLogs() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{log.profiles?.username || 'غير معروف'}</div>
+                          <div className="font-medium">{log.profiles?.username || t('unknownUser')}</div>
                           <div className="text-sm text-muted-foreground">{log.profiles?.email}</div>
                         </div>
                       </TableCell>
