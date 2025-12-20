@@ -127,8 +127,7 @@ export function Navigation() {
   const navItems = [
     { path: '/', icon: LayoutDashboard, labelKey: 'declarations' },
     { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
-    { path: '/reports', icon: BarChart3, labelKey: 'reports' },
-    { path: '/analytics', icon: FileText, labelKey: 'analytics' },
+    { path: '/reports-analytics', icon: BarChart3, labelKey: 'reportsTitle' },
   ];
 
   // Add admin dashboard link for admins only
