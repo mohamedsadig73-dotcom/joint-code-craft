@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay, startOfMonth, startOfYear } from 'date-fns';
 import { 
   Users, FileText, Activity, TrendingUp, Shield, UserCheck, 
   BarChart3, Download, RefreshCw, Clock, CalendarIcon, 
@@ -278,7 +278,51 @@ export default function ReportsAnalytics() {
             <p className="text-muted-foreground text-sm">{t('reportsSubtitle')}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {/* Date Range Picker */}
+            {/* Date Range Presets */}
+            <div className="flex flex-wrap gap-1">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => { setDateFrom(subDays(new Date(), 7)); setDateTo(new Date()); }}
+                className="text-xs"
+              >
+                {t('last7Days')}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => { setDateFrom(subDays(new Date(), 30)); setDateTo(new Date()); }}
+                className="text-xs"
+              >
+                {t('last30Days')}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => { setDateFrom(subDays(new Date(), 90)); setDateTo(new Date()); }}
+                className="text-xs"
+              >
+                {t('last90Days')}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => { setDateFrom(startOfMonth(new Date())); setDateTo(new Date()); }}
+                className="text-xs"
+              >
+                {t('thisMonth')}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => { setDateFrom(startOfYear(new Date())); setDateTo(new Date()); }}
+                className="text-xs"
+              >
+                {t('thisYear')}
+              </Button>
+            </div>
+            
+            {/* Custom Date Range Picker */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className={cn("justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>

@@ -154,12 +154,14 @@ export function Navigation() {
           <div className="hidden md:flex items-center gap-2">
             {allNavItems.map((item) => {
               const Icon = item.icon;
+              const isReportsLink = item.path === '/reports-analytics';
               return (
                 <Link key={item.path} to={item.path}>
                   <Button
                     variant={isActive(item.path) ? 'secondary' : 'ghost'}
                     size="sm"
                     className="gap-2"
+                    data-tour={isReportsLink ? 'nav-reports' : undefined}
                   >
                     <Icon className="w-4 h-4" />
                     {t(item.labelKey)}
@@ -203,7 +205,9 @@ export function Navigation() {
             </Button>
 
             {/* Notifications */}
-            <NotificationCenter />
+            <div data-tour="notifications">
+              <NotificationCenter />
+            </div>
 
             {/* User Menu */}
             <DropdownMenu>
