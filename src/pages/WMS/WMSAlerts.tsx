@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AutoReplenishmentPanel } from '@/components/wms/AutoReplenishmentPanel';
 import { 
   AlertTriangle, 
   Package, 
@@ -18,7 +19,8 @@ import {
   CheckCircle,
   RefreshCw,
   TrendingDown,
-  Mail
+  Mail,
+  ShoppingCart
 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 
@@ -299,7 +301,10 @@ const WMSAlerts: React.FC = () => {
           </Card>
         </div>
 
-        <Tabs defaultValue="low-stock" className="space-y-4">
+        {/* Auto Replenishment Panel */}
+        <AutoReplenishmentPanel autoCheck={true} />
+
+        <Tabs defaultValue="low-stock" className="space-y-4 mt-6">
           <TabsList>
             <TabsTrigger value="low-stock" className="relative">
               <Package className="h-4 w-4 me-2" />
