@@ -92,12 +92,12 @@ export default function Reports() {
       const averageProcessingTime = completedDeclarations.length > 0 ? Math.round(totalDays / completedDeclarations.length) : 0;
       const recentActivities = activities.map(a => ({
         id: a.id, type: 'status_change',
-        message: `${(a.profiles as any)?.username || 'مستخدم'} قام بتغيير حالة الإقرار ${a.declaration_id}`,
+        message: `${(a.profiles as any)?.username || t('userLabel')} ${t('changedDeclarationStatus')} ${a.declaration_id}`,
         timestamp: a.changed_at,
       }));
 
       setStats({ totalUsers: roles.length, adminCount, managerCount, userCount, totalDeclarations: declarations.length, declarationsByStatus, declarationsByType, monthlyTrends, recentActivities, averageProcessingTime, completionRate });
-    } catch (error: any) { toast({ variant: 'destructive', title: 'خطأ', description: error.message }); }
+    } catch (error: any) { toast({ variant: 'destructive', title: t('error'), description: error.message }); }
     finally { setLoading(false); }
   }, [toast, language]);
 
@@ -116,9 +116,9 @@ export default function Reports() {
     try {
       const { data, error } = await supabase.from('declarations').select(`*, sender:profiles!sender_id(username)`).is('deleted_at', null).order('created_at', { ascending: false });
       if (error) throw error;
-      const formattedData = (data || []).map(d => ({ id: d.id, type: d.type, sender: d.sender?.username || 'غير معروف', status: statusLabels[d.status] || d.status, created_at: toGregorianDate(d.created_at) }));
-      exportDeclarationsToExcel(formattedData, 'تقرير_الإقرارات');
-      toast({ title: t('success'), description: 'تم تصدير التقرير بنجاح' });
+      const formattedData = (data || []).map(d => ({ id: d.id, type: d.type, sender: d.sender?.username || t('unknown'), status: statusLabels[d.status] || d.status, created_at: toGregorianDate(d.created_at) }));
+      exportDeclarationsToExcel(formattedData, language === 'ar' ? 'تقرير_الإقرارات' : 'Declarations_Report');
+      toast({ title: t('success'), description: t('exportSuccess') });
     } catch (error: any) { toast({ variant: 'destructive', title: t('error'), description: error.message }); }
     finally { setExporting(false); }
   };
@@ -128,10 +128,11 @@ export default function Reports() {
     try {
       const { data, error } = await supabase.from('declarations').select(`*, sender:profiles!sender_id(username)`).is('deleted_at', null).order('created_at', { ascending: false });
       if (error) throw error;
-      const formattedData = (data || []).map(d => ({ id: d.id, type: d.type, sender: d.sender?.username || 'غير معروف', status: statusLabels[d.status] || d.status, created_at: toGregorianDate(d.created_at) }));
-      const doc = exportDeclarationsToPDF(formattedData, 'تقرير الإقرارات');
-      doc.save(`تقرير_الإقرارات_${new Date().toISOString().split('T')[0]}.pdf`);
-      toast({ title: t('success'), description: 'تم تصدير التقرير بنجاح' });
+      const formattedData = (data || []).map(d => ({ id: d.id, type: d.type, sender: d.sender?.username || t('unknown'), status: statusLabels[d.status] || d.status, created_at: toGregorianDate(d.created_at) }));
+      const reportTitle = language === 'ar' ? 'تقرير الإقرارات' : 'Declarations Report';
+      const doc = exportDeclarationsToPDF(formattedData, reportTitle);
+      doc.save(`${language === 'ar' ? 'تقرير_الإقرارات' : 'Declarations_Report'}_${new Date().toISOString().split('T')[0]}.pdf`);
+      toast({ title: t('success'), description: t('exportSuccess') });
     } catch (error: any) { toast({ variant: 'destructive', title: t('error'), description: error.message }); }
     finally { setExporting(false); }
   };
