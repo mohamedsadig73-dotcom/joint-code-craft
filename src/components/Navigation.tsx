@@ -128,6 +128,7 @@ export function Navigation() {
     { path: '/', icon: LayoutDashboard, labelKey: 'declarations' },
     { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
     { path: '/reports', icon: BarChart3, labelKey: 'reports' },
+    { path: '/analytics', icon: FileText, labelKey: 'analytics' },
   ];
 
   // Add admin dashboard link for admins only
