@@ -26,6 +26,18 @@ const statusColors: Record<DeclarationStatus, string> = {
   rejected: 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30',
 };
 
+// Map database status keys to translation keys
+const statusTranslationKeys: Record<DeclarationStatus, string> = {
+  draft: 'draft',
+  pending_warehouse_signature: 'pendingWarehouseSignature',
+  warehouse_signed: 'warehouseSigned',
+  sent_to_admin_office: 'sentToAdminOffice',
+  received_by_admin_office: 'receivedByAdminOffice',
+  returned_to_warehouse: 'returnedToWarehouse',
+  archived: 'archived',
+  rejected: 'rejected',
+};
+
 const statusOrder: DeclarationStatus[] = [
   'draft',
   'pending_warehouse_signature',
@@ -53,6 +65,10 @@ export function StatusQuickAction({
   const { t } = useLanguage();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+
+  const getStatusLabel = (status: DeclarationStatus) => {
+    return t(statusTranslationKeys[status]);
+  };
 
   const handleStatusChange = async (newStatus: DeclarationStatus) => {
     if (newStatus === currentStatus) return;
@@ -88,14 +104,14 @@ export function StatusQuickAction({
       <DropdownMenuTrigger disabled={disabled || loading} asChild>
         <button className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity disabled:cursor-not-allowed disabled:opacity-50">
           <Badge className={`${statusColors[currentStatus]} ${loading ? 'animate-pulse' : ''}`}>
-            {t(currentStatus)}
+            {getStatusLabel(currentStatus)}
           </Badge>
           <ChevronDown className="w-3 h-3 text-muted-foreground" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
         <DropdownMenuLabel className="text-xs text-muted-foreground">
-          {t('changeStatus')}
+          {t('updateStatus')}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {statusOrder.map((status) => (
@@ -105,7 +121,7 @@ export function StatusQuickAction({
             className="flex items-center justify-between"
           >
             <Badge className={statusColors[status]} variant="outline">
-              {t(status)}
+              {getStatusLabel(status)}
             </Badge>
             {status === currentStatus && (
               <Check className="w-4 h-4 text-primary" />
