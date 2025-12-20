@@ -40,6 +40,14 @@ interface DeclarationsTableProps {
   hasActiveFilters: boolean;
   onClearFilters: () => void;
   onCreateNew: () => void;
+  // Server-side pagination props
+  currentPage?: number;
+  totalPages?: number;
+  pageSize?: number;
+  totalCount?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
+  useServerPagination?: boolean;
 }
 
 export function DeclarationsTable({
@@ -55,30 +63,54 @@ export function DeclarationsTable({
   hasActiveFilters,
   onClearFilters,
   onCreateNew,
+  // Server-side pagination
+  currentPage: serverCurrentPage,
+  totalPages: serverTotalPages,
+  pageSize: serverPageSize,
+  totalCount: serverTotalCount,
+  onPageChange: serverOnPageChange,
+  onPageSizeChange: serverOnPageSizeChange,
+  useServerPagination = false,
 }: DeclarationsTableProps) {
   const { t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  // Client-side pagination state (used when useServerPagination is false)
+  const [clientCurrentPage, setClientCurrentPage] = useState(1);
+  const [clientPageSize, setClientPageSize] = useState(20);
   
-  const totalPages = Math.ceil(declarations.length / pageSize);
+  // Determine which pagination values to use
+  const currentPage = useServerPagination ? (serverCurrentPage || 1) : clientCurrentPage;
+  const pageSize = useServerPagination ? (serverPageSize || 20) : clientPageSize;
+  const totalPages = useServerPagination ? (serverTotalPages || 1) : Math.ceil(declarations.length / clientPageSize);
+  const totalCount = useServerPagination ? (serverTotalCount || 0) : declarations.length;
   
-  const paginatedDeclarations = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return declarations.slice(startIndex, startIndex + pageSize);
-  }, [declarations, currentPage, pageSize]);
+  // For client-side pagination, slice the declarations
+  const displayedDeclarations = useMemo(() => {
+    if (useServerPagination) {
+      return declarations; // Server already returns paginated data
+    }
+    const startIndex = (clientCurrentPage - 1) * clientPageSize;
+    return declarations.slice(startIndex, startIndex + clientPageSize);
+  }, [declarations, clientCurrentPage, clientPageSize, useServerPagination]);
   
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    if (useServerPagination && serverOnPageChange) {
+      serverOnPageChange(page);
+    } else {
+      setClientCurrentPage(page);
+    }
   };
   
   const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
+    if (useServerPagination && serverOnPageSizeChange) {
+      serverOnPageSizeChange(size);
+    } else {
+      setClientPageSize(size);
+      setClientCurrentPage(1);
+    }
   };
 
   if (isMobile) {
@@ -96,7 +128,7 @@ export function DeclarationsTable({
           />
         ) : (
           <>
-            {paginatedDeclarations.map((declaration) => (
+            {displayedDeclarations.map((declaration) => (
               <SwipeableRow
                 key={declaration.id}
                 onEdit={() => navigate(`/declaration/${declaration.id}`)}
@@ -137,12 +169,12 @@ export function DeclarationsTable({
                 </Card>
               </SwipeableRow>
             ))}
-            {declarations.length > pageSize && (
+            {totalCount > pageSize && (
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
                 pageSize={pageSize}
-                totalItems={declarations.length}
+                totalItems={totalCount}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
               />
@@ -191,7 +223,7 @@ export function DeclarationsTable({
               </TableCell>
             </TableRow>
           ) : (
-            paginatedDeclarations.map((declaration) => (
+            displayedDeclarations.map((declaration) => (
               <Collapsible key={declaration.id} asChild open={expandedRows.includes(declaration.id)}>
                 <>
                   <TableRow className="hover:bg-muted/5">
@@ -272,12 +304,12 @@ export function DeclarationsTable({
       </Table>
       
       {/* Pagination */}
-      {declarations.length > 0 && (
+      {totalCount > 0 && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
           pageSize={pageSize}
-          totalItems={declarations.length}
+          totalItems={totalCount}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />

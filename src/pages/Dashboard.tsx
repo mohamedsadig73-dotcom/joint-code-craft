@@ -19,6 +19,7 @@ import { RecentDeclarationsTable } from '@/components/dashboard/RecentDeclaratio
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useDeclarationsRealtime } from '@/hooks/useRealtimeUpdates';
 import { useSmartNudges } from '@/hooks/useSmartNudges';
+import { usePaginatedDeclarations } from '@/hooks/usePaginatedDeclarations';
 import { Declaration, DeletedDeclaration, DeclarationStats, Profile } from '@/types/declarations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -45,10 +46,8 @@ export default function Dashboard() {
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
-  const [declarations, setDeclarations] = useState<Declaration[]>([]);
   const [deletedDeclarations, setDeletedDeclarations] = useState<DeletedDeclaration[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState(true);
   const [loadingTrash, setLoadingTrash] = useState(true);
   const [stats, setStats] = useState<DeclarationStats>({
     total: 0,
@@ -64,6 +63,33 @@ export default function Dashboard() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declarationToDelete, setDeclarationToDelete] = useState<Declaration | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  // Server-side paginated declarations for Manage tab
+  const paginatedFilters = useMemo(() => ({
+    searchQuery: searchQuery || undefined,
+    statusFilter: statusFilter !== 'all' ? statusFilter : undefined,
+    senderFilter: senderFilter !== 'all' ? senderFilter : undefined,
+    dateFrom,
+    dateTo,
+  }), [searchQuery, statusFilter, senderFilter, dateFrom, dateTo]);
+
+  const {
+    declarations: paginatedDeclarations,
+    totalCount,
+    currentPage,
+    totalPages,
+    pageSize,
+    loading: paginatedLoading,
+    goToPage,
+    setPageSize,
+    refresh: refreshPaginated,
+  } = usePaginatedDeclarations({
+    pageSize: 20,
+    filters: paginatedFilters,
+  });
+
+  // All declarations for overview and stats (limited to recent)
+  const [allDeclarations, setAllDeclarations] = useState<Declaration[]>([]);
 
   // Smart Nudges
   const completionRate = useMemo(() => {
@@ -97,15 +123,21 @@ export default function Dashboard() {
         .from('declarations')
         .select(`*, sender:profiles!sender_id(username)`)
         .is('deleted_at', null)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100); // For overview and stats
 
       if (error) throw error;
 
-      setDeclarations(data || []);
+      setAllDeclarations(data || []);
       
-      // Calculate stats
+      // Calculate stats from all non-paginated data
+      const { count: totalCount } = await supabase
+        .from('declarations')
+        .select('*', { count: 'exact', head: true })
+        .is('deleted_at', null);
+
       const newStats: DeclarationStats = {
-        total: data?.length || 0,
+        total: totalCount || data?.length || 0,
         draft: data?.filter(d => d.status === 'draft').length || 0,
         pending_warehouse_signature: data?.filter(d => d.status === 'pending_warehouse_signature').length || 0,
         warehouse_signed: data?.filter(d => d.status === 'warehouse_signed').length || 0,
@@ -122,8 +154,6 @@ export default function Dashboard() {
         description: error.message,
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   }, [t]);
 
@@ -262,26 +292,7 @@ export default function Dashboard() {
     }
   };
 
-  const filteredDeclarations = useMemo(() => declarations.filter(dec => {
-    const matchesSearch = dec.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         dec.sender?.username?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || dec.status === statusFilter;
-    const matchesSender = senderFilter === 'all' || dec.sender_id === senderFilter;
-    
-    let matchesDate = true;
-    if (dateFrom || dateTo) {
-      const decDate = new Date(dec.created_at);
-      if (dateFrom && dateTo) {
-        matchesDate = decDate >= dateFrom && decDate <= dateTo;
-      } else if (dateFrom) {
-        matchesDate = decDate >= dateFrom;
-      } else if (dateTo) {
-        matchesDate = decDate <= dateTo;
-      }
-    }
-    
-    return matchesSearch && matchesStatus && matchesSender && matchesDate;
-  }), [declarations, searchQuery, statusFilter, senderFilter, dateFrom, dateTo]);
+  // No longer need client-side filtering - server handles it
 
   const clearFilters = useCallback(() => {
     setSearchQuery('');
@@ -296,12 +307,12 @@ export default function Dashboard() {
   , [searchQuery, statusFilter, senderFilter, dateFrom, dateTo]);
   
   const toggleSelectAll = useCallback(() => {
-    if (selectedItems.length === filteredDeclarations.length) {
+    if (selectedItems.length === paginatedDeclarations.length) {
       setSelectedItems([]);
     } else {
-      setSelectedItems(filteredDeclarations.map(d => d.id));
+      setSelectedItems(paginatedDeclarations.map(d => d.id));
     }
-  }, [selectedItems.length, filteredDeclarations]);
+  }, [selectedItems.length, paginatedDeclarations]);
 
   const toggleSelectItem = useCallback((id: string) => {
     setSelectedItems(prev =>
@@ -343,7 +354,7 @@ export default function Dashboard() {
 
           {/* Compact Stats Bar */}
           <div data-tour="dashboard-stats">
-            <DashboardStats stats={stats} loading={loading} />
+            <DashboardStats stats={stats} loading={paginatedLoading} />
           </div>
 
           {/* Smart Nudge */}
@@ -385,14 +396,14 @@ export default function Dashboard() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <RecentDeclarationsTable
-              declarations={declarations}
-              loading={loading}
+              declarations={allDeclarations}
+              loading={paginatedLoading}
               expandedRows={expandedRows}
               onToggleRowExpand={toggleRowExpand}
               onStatusChange={loadDeclarations}
               onCreateNew={() => setCreateDialogOpen(true)}
               onViewAll={() => setActiveTab('manage')}
-              totalCount={declarations.length}
+              totalCount={allDeclarations.length}
             />
           </TabsContent>
 
@@ -413,8 +424,8 @@ export default function Dashboard() {
               profiles={profiles}
               hasActiveFilters={!!hasActiveFilters}
               onClearFilters={clearFilters}
-              filteredCount={filteredDeclarations.length}
-              totalCount={declarations.length}
+              filteredCount={paginatedDeclarations.length}
+              totalCount={totalCount}
             />
 
             {/* Bulk Actions */}
@@ -433,18 +444,25 @@ export default function Dashboard() {
 
             {/* Declarations Table */}
             <DeclarationsTable
-              declarations={filteredDeclarations}
-              loading={loading}
+              declarations={paginatedDeclarations}
+              loading={paginatedLoading}
               selectedItems={selectedItems}
               expandedRows={expandedRows}
               onToggleSelectAll={toggleSelectAll}
               onToggleSelectItem={toggleSelectItem}
               onToggleRowExpand={toggleRowExpand}
               onDelete={handleDelete}
-              onStatusChange={loadDeclarations}
+              onStatusChange={() => { loadDeclarations(); refreshPaginated(); }}
               hasActiveFilters={!!hasActiveFilters}
               onClearFilters={clearFilters}
               onCreateNew={() => setCreateDialogOpen(true)}
+              useServerPagination={true}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              totalCount={totalCount}
+              onPageChange={goToPage}
+              onPageSizeChange={setPageSize}
             />
           </TabsContent>
 
