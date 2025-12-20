@@ -36,6 +36,7 @@ const WMSTransactions = lazy(() => import('@/pages/WMS/WMSTransactions'));
 const WMSCycleCount = lazy(() => import('@/pages/WMS/WMSCycleCount'));
 const WMSReports = lazy(() => import('@/pages/WMS/WMSReports'));
 const WMSAlerts = lazy(() => import('@/pages/WMS/WMSAlerts'));
+const WMSShipments = lazy(() => import('@/pages/WMS/WMSShipments'));
 
 // Enhanced Loading component
 const PageLoader = () => (
@@ -313,6 +314,16 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <WMSAlerts />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/shipments"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSShipments />
                 </PageTransition>
               </ProtectedRoute>
             }
