@@ -32,7 +32,9 @@ import {
   Ship,
   Target,
   Users,
-  Keyboard
+  Keyboard,
+  BrainCircuit,
+  Globe2
 } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -150,6 +152,7 @@ export function Navigation() {
     { path: '/wms/inbound', icon: ArrowDownToLine, labelKey: 'wmsInbound' },
     { path: '/wms/outbound', icon: ArrowUpFromLine, labelKey: 'wmsOutbound' },
     { path: '/wms/suppliers', icon: Truck, labelKey: 'wmsSuppliers' },
+    { path: '/wms/customers', icon: Users, labelKey: 'wmsCustomers' },
     { path: '/wms/transactions', icon: ClipboardList, labelKey: 'wmsTransactions' },
     { path: '/wms/cycle-count', icon: BarChart3, labelKey: 'wmsCycleCount' },
     { path: '/wms/shipments', icon: Ship, labelKey: 'wmsShipments' },
@@ -158,7 +161,9 @@ export function Navigation() {
     { path: '/wms/serial-numbers', icon: Hash, labelKey: 'wmsSerialNumbers' },
     { path: '/wms/reports', icon: BarChart3, labelKey: 'wmsReports' },
     { path: '/wms/advanced-reports', icon: Target, labelKey: 'wmsAdvancedReports' },
+    { path: '/wms/predictive-analytics', icon: BrainCircuit, labelKey: 'wmsPredictiveAnalytics' },
     ...(user?.role === 'admin' || user?.role === 'manager' ? [{ path: '/wms/worker-productivity', icon: Users, labelKey: 'wmsWorkerProductivity' }] : []),
+    { path: '/wms/customer-portal', icon: Globe2, labelKey: 'wmsCustomerPortal' },
     { path: '/wms/alerts', icon: AlertTriangle, labelKey: 'wmsAlerts' },
   ];
 
