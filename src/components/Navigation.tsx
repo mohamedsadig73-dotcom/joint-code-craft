@@ -126,6 +126,7 @@ export function Navigation() {
 
   const navItems = [
     { path: '/', icon: LayoutDashboard, labelKey: 'declarations' },
+    { path: '/wms', icon: FolderOpen, labelKey: 'inventory' },
     { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
     { path: '/reports-analytics', icon: BarChart3, labelKey: 'reportsTitle' },
   ];
@@ -144,7 +145,7 @@ export function Navigation() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold gradient-text">DTS</h1>
+            <h1 className="text-2xl font-bold gradient-text">WMS</h1>
             <span className="hidden md:block text-sm text-muted-foreground">
               {t('systemTitle')}
             </span>

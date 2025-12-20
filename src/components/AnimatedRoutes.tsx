@@ -22,6 +22,12 @@ const AuditLogs = lazy(() => import('@/pages/AuditLogs'));
 const InstallApp = lazy(() => import('@/pages/InstallApp'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
+// WMS Pages
+const WMSDashboard = lazy(() => import('@/pages/WMS/WMSDashboard'));
+const WMSProducts = lazy(() => import('@/pages/WMS/WMSProducts'));
+const WMSLocations = lazy(() => import('@/pages/WMS/WMSLocations'));
+const WMSInventory = lazy(() => import('@/pages/WMS/WMSInventory'));
+
 // Enhanced Loading component
 const PageLoader = () => (
   <div className="min-h-screen flex flex-col items-center justify-center gap-4" role="status" aria-label="Loading">
@@ -167,6 +173,47 @@ export function AnimatedRoutes() {
               <ProtectedRoute requiredRole="admin">
                 <PageTransition>
                   <AuditLogs />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          {/* WMS Routes */}
+          <Route
+            path="/wms"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSDashboard />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/products"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSProducts />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/locations"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSLocations />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/inventory"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSInventory />
                 </PageTransition>
               </ProtectedRoute>
             }

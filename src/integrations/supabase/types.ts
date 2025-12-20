@@ -654,6 +654,736 @@ export type Database = {
           },
         ]
       }
+      wms_cycle_counts: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          count_number: string
+          counted_at: string | null
+          counted_by: string | null
+          counted_quantity: number | null
+          created_at: string | null
+          id: string
+          location_id: string | null
+          notes: string | null
+          product_id: string | null
+          status: string | null
+          system_quantity: number | null
+          updated_at: string | null
+          variance: number | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          count_number: string
+          counted_at?: string | null
+          counted_by?: string | null
+          counted_quantity?: number | null
+          created_at?: string | null
+          id?: string
+          location_id?: string | null
+          notes?: string | null
+          product_id?: string | null
+          status?: string | null
+          system_quantity?: number | null
+          updated_at?: string | null
+          variance?: number | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          count_number?: string
+          counted_at?: string | null
+          counted_by?: string | null
+          counted_quantity?: number | null
+          created_at?: string | null
+          id?: string
+          location_id?: string | null
+          notes?: string | null
+          product_id?: string | null
+          status?: string | null
+          system_quantity?: number | null
+          updated_at?: string | null
+          variance?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_cycle_counts_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_cycle_counts_counted_by_fkey"
+            columns: ["counted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_cycle_counts_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "wms_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_cycle_counts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "wms_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wms_inbound_lines: {
+        Row: {
+          created_at: string | null
+          expected_quantity: number
+          expiry_date: string | null
+          id: string
+          inbound_order_id: string
+          location_id: string | null
+          lot_number: string | null
+          notes: string | null
+          product_id: string
+          received_quantity: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expected_quantity: number
+          expiry_date?: string | null
+          id?: string
+          inbound_order_id: string
+          location_id?: string | null
+          lot_number?: string | null
+          notes?: string | null
+          product_id: string
+          received_quantity?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expected_quantity?: number
+          expiry_date?: string | null
+          id?: string
+          inbound_order_id?: string
+          location_id?: string | null
+          lot_number?: string | null
+          notes?: string | null
+          product_id?: string
+          received_quantity?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_inbound_lines_inbound_order_id_fkey"
+            columns: ["inbound_order_id"]
+            isOneToOne: false
+            referencedRelation: "wms_inbound_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_inbound_lines_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "wms_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_inbound_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "wms_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wms_inbound_orders: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          expected_date: string | null
+          id: string
+          notes: string | null
+          order_number: string
+          received_by: string | null
+          received_date: string | null
+          reference_number: string | null
+          status: Database["public"]["Enums"]["wms_order_status"]
+          supplier_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          expected_date?: string | null
+          id?: string
+          notes?: string | null
+          order_number: string
+          received_by?: string | null
+          received_date?: string | null
+          reference_number?: string | null
+          status?: Database["public"]["Enums"]["wms_order_status"]
+          supplier_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          expected_date?: string | null
+          id?: string
+          notes?: string | null
+          order_number?: string
+          received_by?: string | null
+          received_date?: string | null
+          reference_number?: string | null
+          status?: Database["public"]["Enums"]["wms_order_status"]
+          supplier_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_inbound_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_inbound_orders_received_by_fkey"
+            columns: ["received_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_inbound_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "wms_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wms_inventory: {
+        Row: {
+          available_quantity: number | null
+          cost_per_unit: number | null
+          created_at: string | null
+          expiry_date: string | null
+          id: string
+          last_counted_at: string | null
+          location_id: string
+          lot_number: string | null
+          manufacturing_date: string | null
+          product_id: string
+          quantity: number
+          received_date: string | null
+          reserved_quantity: number | null
+          serial_number: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          available_quantity?: number | null
+          cost_per_unit?: number | null
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          last_counted_at?: string | null
+          location_id: string
+          lot_number?: string | null
+          manufacturing_date?: string | null
+          product_id: string
+          quantity?: number
+          received_date?: string | null
+          reserved_quantity?: number | null
+          serial_number?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          available_quantity?: number | null
+          cost_per_unit?: number | null
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          last_counted_at?: string | null
+          location_id?: string
+          lot_number?: string | null
+          manufacturing_date?: string | null
+          product_id?: string
+          quantity?: number
+          received_date?: string | null
+          reserved_quantity?: number | null
+          serial_number?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_inventory_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "wms_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_inventory_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "wms_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wms_locations: {
+        Row: {
+          aisle: string | null
+          bin: string | null
+          code: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          location_type: string
+          max_volume: number | null
+          max_weight: number | null
+          notes: string | null
+          rack: string | null
+          shelf: string | null
+          temperature_zone: string | null
+          updated_at: string | null
+          zone: string
+        }
+        Insert: {
+          aisle?: string | null
+          bin?: string | null
+          code: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          location_type?: string
+          max_volume?: number | null
+          max_weight?: number | null
+          notes?: string | null
+          rack?: string | null
+          shelf?: string | null
+          temperature_zone?: string | null
+          updated_at?: string | null
+          zone: string
+        }
+        Update: {
+          aisle?: string | null
+          bin?: string | null
+          code?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          location_type?: string
+          max_volume?: number | null
+          max_weight?: number | null
+          notes?: string | null
+          rack?: string | null
+          shelf?: string | null
+          temperature_zone?: string | null
+          updated_at?: string | null
+          zone?: string
+        }
+        Relationships: []
+      }
+      wms_outbound_lines: {
+        Row: {
+          created_at: string | null
+          id: string
+          location_id: string | null
+          lot_number: string | null
+          notes: string | null
+          outbound_order_id: string
+          packed_quantity: number | null
+          picked_quantity: number | null
+          product_id: string
+          requested_quantity: number
+          serial_number: string | null
+          shipped_quantity: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          location_id?: string | null
+          lot_number?: string | null
+          notes?: string | null
+          outbound_order_id: string
+          packed_quantity?: number | null
+          picked_quantity?: number | null
+          product_id: string
+          requested_quantity: number
+          serial_number?: string | null
+          shipped_quantity?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          location_id?: string | null
+          lot_number?: string | null
+          notes?: string | null
+          outbound_order_id?: string
+          packed_quantity?: number | null
+          picked_quantity?: number | null
+          product_id?: string
+          requested_quantity?: number
+          serial_number?: string | null
+          shipped_quantity?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_outbound_lines_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "wms_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_outbound_lines_outbound_order_id_fkey"
+            columns: ["outbound_order_id"]
+            isOneToOne: false
+            referencedRelation: "wms_outbound_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_outbound_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "wms_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wms_outbound_orders: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          customer_name: string | null
+          customer_reference: string | null
+          expected_ship_date: string | null
+          id: string
+          notes: string | null
+          order_number: string
+          packed_by: string | null
+          picked_by: string | null
+          priority: string | null
+          shipped_by: string | null
+          shipped_date: string | null
+          shipping_address: string | null
+          status: Database["public"]["Enums"]["wms_order_status"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          customer_name?: string | null
+          customer_reference?: string | null
+          expected_ship_date?: string | null
+          id?: string
+          notes?: string | null
+          order_number: string
+          packed_by?: string | null
+          picked_by?: string | null
+          priority?: string | null
+          shipped_by?: string | null
+          shipped_date?: string | null
+          shipping_address?: string | null
+          status?: Database["public"]["Enums"]["wms_order_status"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          customer_name?: string | null
+          customer_reference?: string | null
+          expected_ship_date?: string | null
+          id?: string
+          notes?: string | null
+          order_number?: string
+          packed_by?: string | null
+          picked_by?: string | null
+          priority?: string | null
+          shipped_by?: string | null
+          shipped_date?: string | null
+          shipping_address?: string | null
+          status?: Database["public"]["Enums"]["wms_order_status"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_outbound_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_outbound_orders_packed_by_fkey"
+            columns: ["packed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_outbound_orders_picked_by_fkey"
+            columns: ["picked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_outbound_orders_shipped_by_fkey"
+            columns: ["shipped_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wms_products: {
+        Row: {
+          barcode: string | null
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          max_stock_level: number | null
+          min_stock_level: number | null
+          name: string
+          name_en: string | null
+          reorder_point: number | null
+          requires_expiry_tracking: boolean | null
+          requires_lot_tracking: boolean | null
+          requires_serial_tracking: boolean | null
+          shelf_life_days: number | null
+          sku: string
+          storage_conditions: string | null
+          unit_of_measure: string
+          updated_at: string | null
+          volume: number | null
+          weight: number | null
+        }
+        Insert: {
+          barcode?: string | null
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_stock_level?: number | null
+          min_stock_level?: number | null
+          name: string
+          name_en?: string | null
+          reorder_point?: number | null
+          requires_expiry_tracking?: boolean | null
+          requires_lot_tracking?: boolean | null
+          requires_serial_tracking?: boolean | null
+          shelf_life_days?: number | null
+          sku: string
+          storage_conditions?: string | null
+          unit_of_measure?: string
+          updated_at?: string | null
+          volume?: number | null
+          weight?: number | null
+        }
+        Update: {
+          barcode?: string | null
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_stock_level?: number | null
+          min_stock_level?: number | null
+          name?: string
+          name_en?: string | null
+          reorder_point?: number | null
+          requires_expiry_tracking?: boolean | null
+          requires_lot_tracking?: boolean | null
+          requires_serial_tracking?: boolean | null
+          shelf_life_days?: number | null
+          sku?: string
+          storage_conditions?: string | null
+          unit_of_measure?: string
+          updated_at?: string | null
+          volume?: number | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_products_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wms_suppliers: {
+        Row: {
+          address: string | null
+          city: string | null
+          code: string | null
+          contact_person: string | null
+          country: string | null
+          created_at: string | null
+          created_by: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          lead_time_days: number | null
+          name: string
+          notes: string | null
+          payment_terms: string | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          code?: string | null
+          contact_person?: string | null
+          country?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          lead_time_days?: number | null
+          name: string
+          notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          code?: string | null
+          contact_person?: string | null
+          country?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          lead_time_days?: number | null
+          name?: string
+          notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_suppliers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wms_transactions: {
+        Row: {
+          created_at: string | null
+          from_location_id: string | null
+          id: string
+          lot_number: string | null
+          performed_at: string | null
+          performed_by: string | null
+          product_id: string
+          quantity: number
+          reason: string | null
+          reference_id: string | null
+          reference_type: string | null
+          serial_number: string | null
+          to_location_id: string | null
+          transaction_type: Database["public"]["Enums"]["wms_transaction_type"]
+        }
+        Insert: {
+          created_at?: string | null
+          from_location_id?: string | null
+          id?: string
+          lot_number?: string | null
+          performed_at?: string | null
+          performed_by?: string | null
+          product_id: string
+          quantity: number
+          reason?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          serial_number?: string | null
+          to_location_id?: string | null
+          transaction_type: Database["public"]["Enums"]["wms_transaction_type"]
+        }
+        Update: {
+          created_at?: string | null
+          from_location_id?: string | null
+          id?: string
+          lot_number?: string | null
+          performed_at?: string | null
+          performed_by?: string | null
+          product_id?: string
+          quantity?: number
+          reason?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          serial_number?: string | null
+          to_location_id?: string | null
+          transaction_type?: Database["public"]["Enums"]["wms_transaction_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_transactions_from_location_id_fkey"
+            columns: ["from_location_id"]
+            isOneToOne: false
+            referencedRelation: "wms_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_transactions_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_transactions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "wms_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_transactions_to_location_id_fkey"
+            columns: ["to_location_id"]
+            isOneToOne: false
+            referencedRelation: "wms_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -672,10 +1402,12 @@ export type Database = {
         Returns: undefined
       }
       generate_archive_number: { Args: never; Returns: string }
+      generate_cycle_count_number: { Args: never; Returns: string }
       generate_maintenance_schedule: {
         Args: { _item_id: string; _year: number }
         Returns: undefined
       }
+      generate_wms_order_number: { Args: { prefix: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -730,6 +1462,22 @@ export type Database = {
         | "annual"
         | "ad_hoc"
       maintenance_status: "pending" | "done" | "not_required" | "overdue"
+      wms_order_status:
+        | "draft"
+        | "pending"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
+      wms_transaction_type:
+        | "receive"
+        | "putaway"
+        | "pick"
+        | "pack"
+        | "ship"
+        | "transfer"
+        | "adjustment"
+        | "cycle_count"
+        | "return"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -886,6 +1634,24 @@ export const Constants = {
         "ad_hoc",
       ],
       maintenance_status: ["pending", "done", "not_required", "overdue"],
+      wms_order_status: [
+        "draft",
+        "pending",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ],
+      wms_transaction_type: [
+        "receive",
+        "putaway",
+        "pick",
+        "pack",
+        "ship",
+        "transfer",
+        "adjustment",
+        "cycle_count",
+        "return",
+      ],
     },
   },
 } as const
