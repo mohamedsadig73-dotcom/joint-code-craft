@@ -1,11 +1,13 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Trash2, ChevronDown, ChevronUp, Keyboard } from 'lucide-react';
+import { Eye, Trash2, ChevronDown, ChevronUp, Keyboard, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Table,
@@ -22,6 +24,8 @@ import { SwipeableRow } from '@/components/SwipeableRow';
 import { StatusQuickAction } from '@/components/declarations/StatusQuickAction';
 import { DeclarationRowExpand } from '@/components/declarations/DeclarationRowExpand';
 import { Pagination } from '@/components/dashboard/Pagination';
+import { ExportToolbar } from '@/components/dashboard/ExportToolbar';
+import { VirtualizedList } from '@/components/VirtualizedList';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -29,6 +33,8 @@ import { useTableKeyboardNavigation } from '@/hooks/useTableKeyboardNavigation';
 import { toGregorianDate } from '@/utils/dateUtils';
 import { Declaration } from '@/types/declarations';
 import { cn } from '@/lib/utils';
+
+const VIRTUAL_ROW_HEIGHT = 52;
 
 interface DeclarationsTableProps {
   declarations: Declaration[];
@@ -230,32 +236,176 @@ export function DeclarationsTable({
     );
   }
 
+  // Virtual scrolling state
+  const [useVirtualScrolling, setUseVirtualScrolling] = useState(false);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Render a single virtualized row
+  const renderVirtualRow = useCallback((declaration: Declaration, index: number) => {
+    const isSelected = selectedItems.includes(declaration.id);
+    const isExpanded = expandedRows.includes(declaration.id);
+    
+    return (
+      <div 
+        className={cn(
+          "grid grid-cols-[2rem_2rem_1fr_4rem_6rem_6rem_1fr_6rem_4rem] gap-2 items-center px-4 border-b border-border/30 hover:bg-muted/5 transition-colors",
+          focusedIndex === index && "ring-2 ring-primary/50 ring-inset bg-primary/5"
+        )}
+        {...getRowProps(index)}
+      >
+        <div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={() => onToggleRowExpand(declaration.id)}
+          >
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </Button>
+        </div>
+        <div>
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => onToggleSelectItem(declaration.id)}
+          />
+        </div>
+        <div className="font-medium font-mono text-xs truncate">{declaration.id}</div>
+        <div className="text-sm">{declaration.type}</div>
+        <div className="text-sm truncate">{declaration.sender?.username || t('unknown')}</div>
+        <div className="font-mono text-xs">{declaration.archive_number || '-'}</div>
+        <div>
+          <StatusQuickAction
+            declarationId={declaration.id}
+            currentStatus={declaration.status}
+            onStatusChange={onStatusChange}
+          />
+        </div>
+        <div className="text-xs">{toGregorianDate(declaration.created_at)}</div>
+        <div className="flex justify-end gap-1">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => navigate(`/declaration/${declaration.id}`)}
+          >
+            <Eye className="w-3.5 h-3.5" />
+          </Button>
+          {(user?.role === 'admin' || (user?.role === 'manager' && declaration.sender_id === user.id)) && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-7 w-7 text-destructive hover:text-destructive"
+              onClick={() => onDelete(declaration)}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }, [selectedItems, expandedRows, focusedIndex, getRowProps, onToggleRowExpand, onToggleSelectItem, onStatusChange, onDelete, navigate, user, t]);
+
   return (
     <Card className="glass-card border-border/50 overflow-hidden">
-      {/* Keyboard shortcuts hint */}
-      <div className="flex items-center justify-end px-4 py-2 border-b border-border/30">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
-                <Keyboard className="w-4 h-4" />
-                <span className="hidden sm:inline text-xs">{t('keyboardShortcuts')}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs">
-              <div className="text-xs space-y-1">
-                <p><kbd className="px-1 bg-muted rounded">↑↓</kbd> {t('navigateRows')}</p>
-                <p><kbd className="px-1 bg-muted rounded">Enter</kbd> {t('viewDetailsKey')}</p>
-                <p><kbd className="px-1 bg-muted rounded">Space</kbd> {t('selectRow')}</p>
-                <p><kbd className="px-1 bg-muted rounded">E</kbd> {t('expandRow')}</p>
-                <p><kbd className="px-1 bg-muted rounded">Del</kbd> {t('deleteRow')}</p>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+      {/* Toolbar with keyboard hints, virtual scrolling toggle, and export */}
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border/30 gap-2 flex-wrap">
+        <div className="flex items-center gap-4">
+          {/* Virtual scrolling toggle */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="virtual-scroll"
+                    checked={useVirtualScrolling}
+                    onCheckedChange={setUseVirtualScrolling}
+                    className="data-[state=checked]:bg-primary"
+                  />
+                  <Label htmlFor="virtual-scroll" className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer">
+                    <Zap className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">{t('virtualScrolling')}</span>
+                  </Label>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="text-xs">{t('virtualScrollingHint')}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Export toolbar */}
+          <ExportToolbar 
+            declarations={displayedDeclarations} 
+            totalCount={totalCount}
+            disabled={loading || declarations.length === 0}
+          />
+
+          {/* Keyboard shortcuts hint */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+                  <Keyboard className="w-4 h-4" />
+                  <span className="hidden sm:inline text-xs">{t('keyboardShortcuts')}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                <div className="text-xs space-y-1">
+                  <p><kbd className="px-1 bg-muted rounded">↑↓</kbd> {t('navigateRows')}</p>
+                  <p><kbd className="px-1 bg-muted rounded">Enter</kbd> {t('viewDetailsKey')}</p>
+                  <p><kbd className="px-1 bg-muted rounded">Space</kbd> {t('selectRow')}</p>
+                  <p><kbd className="px-1 bg-muted rounded">E</kbd> {t('expandRow')}</p>
+                  <p><kbd className="px-1 bg-muted rounded">Del</kbd> {t('deleteRow')}</p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
-      
-      <Table>
+
+      {/* Virtual scrolling mode */}
+      {useVirtualScrolling && !loading && declarations.length > 0 ? (
+        <div>
+          {/* Virtual header */}
+          <div className="grid grid-cols-[2rem_2rem_1fr_4rem_6rem_6rem_1fr_6rem_4rem] gap-2 items-center px-4 py-3 bg-muted/30 border-b border-border/30 text-xs font-medium text-muted-foreground">
+            <div></div>
+            <div>
+              <Checkbox
+                checked={selectedItems.length === declarations.length && declarations.length > 0}
+                onCheckedChange={onToggleSelectAll}
+              />
+            </div>
+            <div>{t('declarationId')}</div>
+            <div>{t('type')}</div>
+            <div>{t('sender')}</div>
+            <div>{t('archiveNumber')}</div>
+            <div>{t('status')}</div>
+            <div>{t('createdDate')}</div>
+            <div>{t('actions')}</div>
+          </div>
+          
+          {/* Virtualized list */}
+          <div 
+            ref={tableContainerRef}
+            onKeyDown={handleKeyDown}
+            tabIndex={0}
+            className="focus:outline-none"
+          >
+            <VirtualizedList
+              items={displayedDeclarations}
+              itemHeight={VIRTUAL_ROW_HEIGHT}
+              containerHeight={Math.min(displayedDeclarations.length * VIRTUAL_ROW_HEIGHT, 520)}
+              renderItem={renderVirtualRow}
+              overscan={5}
+              emptyMessage={t('noDeclarations')}
+            />
+          </div>
+        </div>
+      ) : (
+        /* Standard table mode */
+        <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-8"></TableHead>
@@ -380,7 +530,8 @@ export function DeclarationsTable({
             ))
           )}
         </TableBody>
-      </Table>
+        </Table>
+      )}
       
       {/* Pagination */}
       {totalCount > 0 && (

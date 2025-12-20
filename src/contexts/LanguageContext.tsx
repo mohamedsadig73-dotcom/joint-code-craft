@@ -47,6 +47,13 @@ const translations = {
     all: 'All',
     recentDeclarations: 'Recent Declarations',
     exportAllDeclarations: 'Export All Declarations',
+    exportToExcel: 'Export to Excel',
+    exportToPDF: 'Export to PDF',
+    exportedSuccessfully: 'Exported successfully',
+    noDataToExport: 'No data to export',
+    declarationsReport: 'Declarations Report',
+    virtualScrolling: 'Virtual Scrolling',
+    virtualScrollingHint: 'Enable for better performance with large datasets',
     
     // Admin Dashboard
     adminDashboardTitle: 'Admin Panel',
@@ -647,6 +654,13 @@ const translations = {
     all: 'الكل',
     recentDeclarations: 'الإقرارات الحديثة',
     exportAllDeclarations: 'تصدير جميع الإقرارات',
+    exportToExcel: 'تصدير إلى Excel',
+    exportToPDF: 'تصدير إلى PDF',
+    exportedSuccessfully: 'تم التصدير بنجاح',
+    noDataToExport: 'لا توجد بيانات للتصدير',
+    declarationsReport: 'تقرير الإقرارات',
+    virtualScrolling: 'التمرير الافتراضي',
+    virtualScrollingHint: 'تفعيل لأداء أفضل مع البيانات الكبيرة',
     
     // Admin Dashboard
     adminDashboardTitle: 'لوحة تحكم المدير',
