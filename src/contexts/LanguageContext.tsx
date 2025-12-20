@@ -374,8 +374,21 @@ const translations = {
     unknown: 'Unknown',
     noRecentDeclarations: 'No recent declarations',
     
-    // Manage Page Extended
+    // Trash
     trashBin: 'Trash',
+    deletedDate: 'Deleted Date',
+    daysRemaining: 'Days Remaining',
+    trashEmpty: 'Trash is empty',
+    noDeletedDeclarations: 'No deleted declarations currently',
+    trashInfo: 'Important information about trash:',
+    trashRestore: 'Deleted declarations can be restored within 30 days',
+    trashAutoDelete: 'After 30 days, declarations will be permanently deleted',
+    restore: 'Restore',
+    permanentDelete: 'Permanently delete',
+    noActivitiesInPeriod: 'No activities in the selected period',
+    startCreating: 'No declarations created yet. Start by creating a new one.',
+    
+    // Manage Page Extended
     allSendersFilter: 'All Senders',
     exportExcelBtn: 'Export to Excel',
     exportPDFBtn: 'Export to PDF',
@@ -986,8 +999,21 @@ const translations = {
     unknown: 'غير معروف',
     noRecentDeclarations: 'لا توجد إقرارات حديثة',
     
-    // Manage Page Extended
+    // Trash
     trashBin: 'سلة المحذوفات',
+    deletedDate: 'تاريخ الحذف',
+    daysRemaining: 'الأيام المتبقية',
+    trashEmpty: 'سلة المحذوفات فارغة',
+    noDeletedDeclarations: 'لا توجد إقرارات محذوفة حالياً',
+    trashInfo: 'معلومات مهمة عن سلة المحذوفات:',
+    trashRestore: 'يمكن استرجاع الإقرارات المحذوفة خلال 30 يوم من تاريخ الحذف',
+    trashAutoDelete: 'بعد 30 يوم، سيتم حذف الإقرار نهائياً بشكل تلقائي',
+    restore: 'استرجاع',
+    permanentDelete: 'حذف نهائي',
+    noActivitiesInPeriod: 'لا توجد نشاطات في الفترة المحددة',
+    startCreating: 'لم يتم إنشاء أي إقرارات بعد. ابدأ بإنشاء إقرار جديد.',
+    
+    // Manage Page Extended
     allSendersFilter: 'جميع المرسلين',
     exportExcelBtn: 'تصدير إلى Excel',
     exportPDFBtn: 'تصدير إلى PDF',

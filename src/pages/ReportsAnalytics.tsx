@@ -517,7 +517,7 @@ export default function ReportsAnalytics() {
                 {stats.recentActivities.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <p>{t('noRecentActivities')}</p>
-                      <p className="text-sm mt-1">{language === 'ar' ? 'لا توجد نشاطات في الفترة المحددة' : 'No activities in the selected period'}</p>
+                      <p className="text-sm mt-1">{t('noActivitiesInPeriod')}</p>
                     </div>
                   ) : (
                     stats.recentActivities.map((activity) => (
