@@ -39,7 +39,9 @@ import {
   Receipt,
   ShoppingCart,
   Thermometer,
-  Factory
+  Factory,
+  ShieldCheck,
+  Lock
 } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -174,6 +176,7 @@ export function Navigation() {
     { path: '/wms/ecommerce', icon: ShoppingCart, labelKey: 'wmsEcommerce' },
     { path: '/wms/temperature-zones', icon: Thermometer, labelKey: 'wmsTemperatureZones' },
     { path: '/wms/mes', icon: Factory, labelKey: 'wmsMES' },
+    { path: '/wms/compliance', icon: ShieldCheck, labelKey: 'wmsCompliance' },
     { path: '/wms/alerts', icon: AlertTriangle, labelKey: 'wmsAlerts' },
   ];
 
@@ -305,6 +308,10 @@ export function Navigation() {
                 <DropdownMenuItem onClick={() => navigate('/profile')}>
                   <User className="w-4 h-4 me-2" />
                   {t('profile')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/security')}>
+                  <Lock className="w-4 h-4 me-2" />
+                  {t('securitySettings')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/install')}>
                   <Download className="w-4 h-4 me-2" />
