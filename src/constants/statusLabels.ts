@@ -3,7 +3,24 @@
 // All status labels, colors, permissions, and UI constants
 // ===========================================
 
-// Declaration status labels (Arabic)
+// Status translation key mapping (database key -> translation key)
+export const statusTranslationKeys: Record<string, string> = {
+  draft: 'draft',
+  pending_warehouse_signature: 'pendingWarehouseSignature',
+  warehouse_signed: 'warehouseSigned',
+  sent_to_admin_office: 'sentToAdminOffice',
+  received_by_admin_office: 'receivedByAdminOffice',
+  returned_to_warehouse: 'returnedToWarehouse',
+  archived: 'archived',
+  rejected: 'rejected',
+};
+
+// Helper function to get status translation key
+export const getStatusTranslationKey = (dbStatus: string): string => {
+  return statusTranslationKeys[dbStatus] || dbStatus;
+};
+
+// Declaration status labels (Arabic) - for backward compatibility
 export const statusLabels: Record<string, string> = {
   draft: 'مسودة',
   pending_warehouse_signature: 'بانتظار التوقيع',
@@ -13,6 +30,18 @@ export const statusLabels: Record<string, string> = {
   returned_to_warehouse: 'مُعاد',
   archived: 'مؤرشف',
   rejected: 'مرفوض',
+};
+
+// English status labels
+export const statusLabelsEn: Record<string, string> = {
+  draft: 'Draft',
+  pending_warehouse_signature: 'Awaiting Signature',
+  warehouse_signed: 'Signed',
+  sent_to_admin_office: 'Sent to Admin',
+  received_by_admin_office: 'Received',
+  returned_to_warehouse: 'Returned',
+  archived: 'Archived',
+  rejected: 'Rejected',
 };
 
 // Status colors for badges
@@ -27,12 +56,28 @@ export const statusColors: Record<string, string> = {
   rejected: 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30',
 };
 
-// Maintenance status labels
+// Maintenance status translation keys
+export const maintenanceStatusTranslationKeys: Record<string, string> = {
+  pending: 'pending',
+  done: 'done',
+  not_required: 'notRequired',
+  overdue: 'overdue',
+};
+
+// Maintenance status labels (Arabic)
 export const maintenanceStatusLabels: Record<string, string> = {
   pending: 'مطلوب',
   done: 'تم',
   not_required: 'غير مطلوب',
   overdue: 'متأخر',
+};
+
+// Maintenance status labels (English)
+export const maintenanceStatusLabelsEn: Record<string, string> = {
+  pending: 'Pending',
+  done: 'Completed',
+  not_required: 'Not Required',
+  overdue: 'Overdue',
 };
 
 // Maintenance status colors
@@ -43,7 +88,16 @@ export const maintenanceStatusColors: Record<string, string> = {
   overdue: 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30',
 };
 
-// Frequency labels
+// Frequency translation keys
+export const frequencyTranslationKeys: Record<string, string> = {
+  monthly: 'monthly',
+  quarterly: 'quarterly',
+  semiannual: 'semiannual',
+  annual: 'annual',
+  ad_hoc: 'adHoc',
+};
+
+// Frequency labels (Arabic)
 export const frequencyLabels: Record<string, string> = {
   monthly: 'شهري',
   quarterly: 'ربع سنوي',
@@ -52,7 +106,27 @@ export const frequencyLabels: Record<string, string> = {
   ad_hoc: 'عند الحاجة',
 };
 
-// Asset type labels
+// Frequency labels (English)
+export const frequencyLabelsEn: Record<string, string> = {
+  monthly: 'Monthly',
+  quarterly: 'Quarterly',
+  semiannual: 'Semi-Annual',
+  annual: 'Annual',
+  ad_hoc: 'As Needed',
+};
+
+// Asset type translation keys
+export const assetTypeTranslationKeys: Record<string, string> = {
+  electrical: 'electrical',
+  plumbing: 'plumbing',
+  hvac: 'hvac',
+  safety: 'safety',
+  equipment: 'equipment',
+  building: 'building',
+  other: 'other',
+};
+
+// Asset type labels (Arabic)
 export const assetTypeLabels: Record<string, string> = {
   electrical: 'كهربائي',
   plumbing: 'سباكة',
@@ -63,7 +137,18 @@ export const assetTypeLabels: Record<string, string> = {
   other: 'أخرى',
 };
 
-// Audit action labels
+// Asset type labels (English)
+export const assetTypeLabelsEn: Record<string, string> = {
+  electrical: 'Electrical',
+  plumbing: 'Plumbing',
+  hvac: 'HVAC',
+  safety: 'Safety',
+  equipment: 'Equipment',
+  building: 'Building',
+  other: 'Other',
+};
+
+// Audit action labels (Arabic)
 export const auditActionLabels: Record<string, string> = {
   CREATE: 'إنشاء',
   UPDATE: 'تحديث',
@@ -71,6 +156,16 @@ export const auditActionLabels: Record<string, string> = {
   ASSIGN_ROLE: 'تعيين دور',
   UPDATE_ROLE: 'تحديث دور',
   REMOVE_ROLE: 'إزالة دور',
+};
+
+// Audit action labels (English)
+export const auditActionLabelsEn: Record<string, string> = {
+  CREATE: 'Create',
+  UPDATE: 'Update',
+  DELETE: 'Delete',
+  ASSIGN_ROLE: 'Assign Role',
+  UPDATE_ROLE: 'Update Role',
+  REMOVE_ROLE: 'Remove Role',
 };
 
 // Audit action colors
@@ -83,7 +178,7 @@ export const auditActionColors: Record<string, string> = {
   REMOVE_ROLE: 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30',
 };
 
-// Table labels for audit logs
+// Table labels (Arabic)
 export const tableLabels: Record<string, string> = {
   declarations: 'الإقرارات',
   user_roles: 'أدوار المستخدمين',
@@ -92,6 +187,17 @@ export const tableLabels: Record<string, string> = {
   maintenance_schedule: 'جدول الصيانة',
   maintenance_assets: 'الأصول',
   maintenance_vendors: 'الموردين',
+};
+
+// Table labels (English)
+export const tableLabelsEn: Record<string, string> = {
+  declarations: 'Declarations',
+  user_roles: 'User Roles',
+  profiles: 'Profiles',
+  maintenance_items: 'Maintenance Items',
+  maintenance_schedule: 'Maintenance Schedule',
+  maintenance_assets: 'Assets',
+  maintenance_vendors: 'Vendors',
 };
 
 // Chart colors using CSS variables
@@ -123,11 +229,18 @@ export const statusColorMap: Record<string, string> = {
   rejected: CHART_COLORS.rejected,
 };
 
-// Role labels
+// Role labels (Arabic)
 export const roleLabels: Record<string, string> = {
   admin: 'مدير النظام',
-  manager: 'مدير فرعي',
+  manager: 'مدير',
   user: 'مستخدم',
+};
+
+// Role labels (English)
+export const roleLabelsEn: Record<string, string> = {
+  admin: 'Administrator',
+  manager: 'Manager',
+  user: 'User',
 };
 
 // Role badge colors
@@ -177,7 +290,7 @@ export const rolePermissions = {
   },
 };
 
-// Empty state messages
+// Empty state messages (Arabic)
 export const emptyStateMessages = {
   declarations: {
     title: 'لا توجد إقرارات',
@@ -214,5 +327,45 @@ export const emptyStateMessages = {
   auditLogs: {
     title: 'لا توجد سجلات',
     description: 'لم يتم تسجيل أي عمليات بعد.',
+  },
+};
+
+// Empty state messages (English)
+export const emptyStateMessagesEn = {
+  declarations: {
+    title: 'No Declarations',
+    description: 'No declarations have been created yet. Start by creating a new declaration.',
+  },
+  trash: {
+    title: 'Trash is Empty',
+    description: 'No deleted items at this time.',
+  },
+  users: {
+    title: 'No Users',
+    description: 'No users have been registered yet.',
+  },
+  maintenance: {
+    title: 'No Maintenance Items',
+    description: 'No maintenance items have been added. Start by adding a new item.',
+  },
+  vendors: {
+    title: 'No Vendors',
+    description: 'No vendors have been registered yet.',
+  },
+  assets: {
+    title: 'No Assets',
+    description: 'No assets have been registered yet.',
+  },
+  activities: {
+    title: 'No Activities',
+    description: 'No recent activities have been recorded.',
+  },
+  search: {
+    title: 'No Results',
+    description: 'No results found matching your search.',
+  },
+  auditLogs: {
+    title: 'No Logs',
+    description: 'No operations have been logged yet.',
   },
 };

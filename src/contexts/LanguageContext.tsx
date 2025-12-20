@@ -365,6 +365,27 @@ const translations = {
     code: 'Code',
     phone: 'Phone',
     
+    // Maintenance Status
+    done: 'Completed',
+    notRequired: 'Not Required',
+    overdue: 'Overdue',
+    
+    // Frequency
+    monthly: 'Monthly',
+    quarterly: 'Quarterly',
+    semiannual: 'Semi-Annual',
+    annual: 'Annual',
+    adHoc: 'As Needed',
+    
+    // Asset Types
+    electrical: 'Electrical',
+    plumbing: 'Plumbing',
+    hvac: 'HVAC',
+    safety: 'Safety',
+    equipment: 'Equipment',
+    building: 'Building',
+    other: 'Other',
+    
     // Offline Mode
     offline: 'Offline',
     syncing: 'Syncing...',
@@ -791,6 +812,27 @@ const translations = {
     site: 'المنشأة',
     code: 'الرمز',
     phone: 'الهاتف',
+    
+    // Maintenance Status
+    done: 'تم',
+    notRequired: 'غير مطلوب',
+    overdue: 'متأخر',
+    
+    // Frequency
+    monthly: 'شهري',
+    quarterly: 'ربع سنوي',
+    semiannual: 'نصف سنوي',
+    annual: 'سنوي',
+    adHoc: 'عند الحاجة',
+    
+    // Asset Types
+    electrical: 'كهربائي',
+    plumbing: 'سباكة',
+    hvac: 'تكييف',
+    safety: 'أمان',
+    equipment: 'معدات',
+    building: 'مبنى',
+    other: 'أخرى',
     
     // Offline Mode
     offline: 'غير متصل',
