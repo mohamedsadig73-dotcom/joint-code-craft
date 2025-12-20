@@ -34,7 +34,12 @@ import {
   Users,
   Keyboard,
   BrainCircuit,
-  Globe2
+  Globe2,
+  Building2,
+  Receipt,
+  ShoppingCart,
+  Thermometer,
+  Factory
 } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -164,6 +169,11 @@ export function Navigation() {
     { path: '/wms/predictive-analytics', icon: BrainCircuit, labelKey: 'wmsPredictiveAnalytics' },
     ...(user?.role === 'admin' || user?.role === 'manager' ? [{ path: '/wms/worker-productivity', icon: Users, labelKey: 'wmsWorkerProductivity' }] : []),
     { path: '/wms/customer-portal', icon: Globe2, labelKey: 'wmsCustomerPortal' },
+    { path: '/wms/3pl-tenants', icon: Building2, labelKey: 'wms3PLTenants' },
+    { path: '/wms/billing', icon: Receipt, labelKey: 'wmsBilling' },
+    { path: '/wms/ecommerce', icon: ShoppingCart, labelKey: 'wmsEcommerce' },
+    { path: '/wms/temperature-zones', icon: Thermometer, labelKey: 'wmsTemperatureZones' },
+    { path: '/wms/mes', icon: Factory, labelKey: 'wmsMES' },
     { path: '/wms/alerts', icon: AlertTriangle, labelKey: 'wmsAlerts' },
   ];
 
