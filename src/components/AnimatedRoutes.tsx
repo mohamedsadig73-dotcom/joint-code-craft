@@ -40,7 +40,8 @@ const WMSShipments = lazy(() => import('@/pages/WMS/WMSShipments'));
 const WMSRMA = lazy(() => import('@/pages/WMS/WMSRMA'));
 const WMSCrossDock = lazy(() => import('@/pages/WMS/WMSCrossDock'));
 const WMSSerialNumbers = lazy(() => import('@/pages/WMS/WMSSerialNumbers'));
-
+const WMSAdvancedReports = lazy(() => import('@/pages/WMS/WMSAdvancedReports'));
+const WMSWorkerProductivity = lazy(() => import('@/pages/WMS/WMSWorkerProductivity'));
 // Enhanced Loading component
 const PageLoader = () => (
   <div className="min-h-screen flex flex-col items-center justify-center gap-4" role="status" aria-label="Loading">
@@ -357,6 +358,26 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <WMSSerialNumbers />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/advanced-reports"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WMSAdvancedReports />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/worker-productivity"
+            element={
+              <ProtectedRoute requiredRole="manager">
+                <PageTransition>
+                  <WMSWorkerProductivity />
                 </PageTransition>
               </ProtectedRoute>
             }
