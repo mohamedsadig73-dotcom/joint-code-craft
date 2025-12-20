@@ -336,7 +336,7 @@ export default function Dashboard() {
                 {t('welcome')}, {user?.username}!
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2" data-tour="create-declaration">
               <CreateDeclarationDialog 
                 onSuccess={loadDeclarations}
                 open={createDialogOpen}
@@ -346,7 +346,9 @@ export default function Dashboard() {
           </div>
 
           {/* Compact Stats Bar */}
-          <DashboardStats stats={stats} loading={loading} />
+          <div data-tour="dashboard-stats">
+            <DashboardStats stats={stats} loading={loading} />
+          </div>
 
           {/* Smart Nudge */}
           {activeNudge && (
