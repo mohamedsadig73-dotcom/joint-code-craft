@@ -654,6 +654,71 @@ export type Database = {
           },
         ]
       }
+      wms_3pl_tenants: {
+        Row: {
+          address: string | null
+          billing_cycle: string | null
+          contact_person: string | null
+          contract_end: string | null
+          contract_start: string | null
+          created_at: string | null
+          created_by: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          phone: string | null
+          storage_allocation: number | null
+          tenant_code: string
+          tenant_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          billing_cycle?: string | null
+          contact_person?: string | null
+          contract_end?: string | null
+          contract_start?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          phone?: string | null
+          storage_allocation?: number | null
+          tenant_code: string
+          tenant_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          billing_cycle?: string | null
+          contact_person?: string | null
+          contract_end?: string | null
+          contract_start?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          phone?: string | null
+          storage_allocation?: number | null
+          tenant_code?: string
+          tenant_name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_3pl_tenants_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wms_cross_dock: {
         Row: {
           completed_date: string | null
@@ -881,6 +946,128 @@ export type Database = {
           },
         ]
       }
+      wms_ecommerce_orders: {
+        Row: {
+          created_at: string | null
+          customer_email: string | null
+          customer_name: string | null
+          external_order_id: string
+          id: string
+          order_date: string | null
+          order_number: string | null
+          outbound_order_id: string | null
+          platform_id: string | null
+          shipping_address: string | null
+          status: string | null
+          sync_status: string | null
+          total_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          external_order_id: string
+          id?: string
+          order_date?: string | null
+          order_number?: string | null
+          outbound_order_id?: string | null
+          platform_id?: string | null
+          shipping_address?: string | null
+          status?: string | null
+          sync_status?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          external_order_id?: string
+          id?: string
+          order_date?: string | null
+          order_number?: string | null
+          outbound_order_id?: string | null
+          platform_id?: string | null
+          shipping_address?: string | null
+          status?: string | null
+          sync_status?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_ecommerce_orders_outbound_order_id_fkey"
+            columns: ["outbound_order_id"]
+            isOneToOne: false
+            referencedRelation: "wms_outbound_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_ecommerce_orders_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "wms_ecommerce_platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wms_ecommerce_platforms: {
+        Row: {
+          api_url: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          is_connected: boolean | null
+          last_sync_at: string | null
+          orders_pending: number | null
+          platform_name: string
+          platform_type: string
+          settings: Json | null
+          sync_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_connected?: boolean | null
+          last_sync_at?: string | null
+          orders_pending?: number | null
+          platform_name: string
+          platform_type: string
+          settings?: Json | null
+          sync_status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_connected?: boolean | null
+          last_sync_at?: string | null
+          orders_pending?: number | null
+          platform_name?: string
+          platform_type?: string
+          settings?: Json | null
+          sync_status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_ecommerce_platforms_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wms_inbound_lines: {
         Row: {
           created_at: string | null
@@ -1087,6 +1274,110 @@ export type Database = {
           },
         ]
       }
+      wms_invoice_lines: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          invoice_id: string
+          quantity: number | null
+          total_price: number | null
+          unit_price: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          invoice_id: string
+          quantity?: number | null
+          total_price?: number | null
+          unit_price?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number | null
+          total_price?: number | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_invoice_lines_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "wms_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wms_invoices: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          customer_name: string | null
+          due_date: string | null
+          id: string
+          invoice_date: string
+          invoice_number: string
+          notes: string | null
+          status: string | null
+          subtotal: number | null
+          tax_amount: number | null
+          tenant_id: string | null
+          total_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          customer_name?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          notes?: string | null
+          status?: string | null
+          subtotal?: number | null
+          tax_amount?: number | null
+          tenant_id?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          customer_name?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          notes?: string | null
+          status?: string | null
+          subtotal?: number | null
+          tax_amount?: number | null
+          tenant_id?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_invoices_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "wms_3pl_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wms_locations: {
         Row: {
           aisle: string | null
@@ -1140,6 +1431,81 @@ export type Database = {
           zone?: string
         }
         Relationships: []
+      }
+      wms_mes_work_orders: {
+        Row: {
+          completed_date: string | null
+          created_at: string | null
+          created_by: string | null
+          due_date: string | null
+          id: string
+          notes: string | null
+          priority: string | null
+          product_id: string | null
+          production_line: string | null
+          quantity_completed: number | null
+          quantity_in_progress: number | null
+          quantity_ordered: number
+          quantity_rejected: number | null
+          start_date: string | null
+          status: string | null
+          updated_at: string | null
+          work_order_number: string
+        }
+        Insert: {
+          completed_date?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          product_id?: string | null
+          production_line?: string | null
+          quantity_completed?: number | null
+          quantity_in_progress?: number | null
+          quantity_ordered: number
+          quantity_rejected?: number | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          work_order_number: string
+        }
+        Update: {
+          completed_date?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          product_id?: string | null
+          production_line?: string | null
+          quantity_completed?: number | null
+          quantity_in_progress?: number | null
+          quantity_ordered?: number
+          quantity_rejected?: number | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          work_order_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_mes_work_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_mes_work_orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "wms_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wms_outbound_lines: {
         Row: {
@@ -1667,6 +2033,109 @@ export type Database = {
           },
         ]
       }
+      wms_temperature_logs: {
+        Row: {
+          humidity: number | null
+          id: string
+          recorded_at: string | null
+          status: string | null
+          temperature: number
+          zone_id: string
+        }
+        Insert: {
+          humidity?: number | null
+          id?: string
+          recorded_at?: string | null
+          status?: string | null
+          temperature: number
+          zone_id: string
+        }
+        Update: {
+          humidity?: number | null
+          id?: string
+          recorded_at?: string | null
+          status?: string | null
+          temperature?: number
+          zone_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_temperature_logs_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "wms_temperature_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wms_temperature_zones: {
+        Row: {
+          created_at: string | null
+          current_humidity: number | null
+          current_temp: number | null
+          humidity_max: number | null
+          humidity_min: number | null
+          id: string
+          is_active: boolean | null
+          last_reading_at: string | null
+          location_id: string | null
+          notes: string | null
+          sensor_id: string | null
+          status: string | null
+          target_temp_max: number | null
+          target_temp_min: number | null
+          updated_at: string | null
+          zone_code: string
+          zone_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_humidity?: number | null
+          current_temp?: number | null
+          humidity_max?: number | null
+          humidity_min?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_reading_at?: string | null
+          location_id?: string | null
+          notes?: string | null
+          sensor_id?: string | null
+          status?: string | null
+          target_temp_max?: number | null
+          target_temp_min?: number | null
+          updated_at?: string | null
+          zone_code: string
+          zone_name: string
+        }
+        Update: {
+          created_at?: string | null
+          current_humidity?: number | null
+          current_temp?: number | null
+          humidity_max?: number | null
+          humidity_min?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_reading_at?: string | null
+          location_id?: string | null
+          notes?: string | null
+          sensor_id?: string | null
+          status?: string | null
+          target_temp_max?: number | null
+          target_temp_min?: number | null
+          updated_at?: string | null
+          zone_code?: string
+          zone_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_temperature_zones_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "wms_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wms_transactions: {
         Row: {
           created_at: string | null
@@ -1747,6 +2216,73 @@ export type Database = {
           },
         ]
       }
+      wms_wip_items: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          location_id: string | null
+          notes: string | null
+          product_id: string | null
+          quantity: number
+          stage: string | null
+          started_at: string | null
+          status: string | null
+          updated_at: string | null
+          work_order_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          location_id?: string | null
+          notes?: string | null
+          product_id?: string | null
+          quantity: number
+          stage?: string | null
+          started_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          work_order_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          location_id?: string | null
+          notes?: string | null
+          product_id?: string | null
+          quantity?: number
+          stage?: string | null
+          started_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wms_wip_items_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "wms_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_wip_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "wms_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wms_wip_items_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "wms_mes_work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1766,11 +2302,13 @@ export type Database = {
       }
       generate_archive_number: { Args: never; Returns: string }
       generate_cycle_count_number: { Args: never; Returns: string }
+      generate_invoice_number: { Args: never; Returns: string }
       generate_maintenance_schedule: {
         Args: { _item_id: string; _year: number }
         Returns: undefined
       }
       generate_wms_order_number: { Args: { prefix: string }; Returns: string }
+      generate_work_order_number: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
