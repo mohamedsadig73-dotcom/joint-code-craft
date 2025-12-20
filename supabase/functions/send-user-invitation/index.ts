@@ -157,9 +157,15 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Rate Limiting Check
+    // Create service role client for admin operations
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // Rate Limiting Check - Use service role client to bypass RLS
     const rateLimitResult = await checkRateLimit(
-      supabaseClient,
+      supabaseAdmin,  // Use service role client for rate limiting
       user.id,
       'send-user-invitation',
       10, // 10 requests
@@ -205,12 +211,6 @@ const handler = async (req: Request): Promise<Response> => {
     const { email, role, invitedBy } = validationResult.data;
 
     console.log(`Processing invitation for role: ${role}`);
-
-    // Create service role client for admin operations
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
 
     // Create user with temporary password
     const tempPassword = crypto.randomUUID();
