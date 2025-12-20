@@ -294,6 +294,10 @@ const translations = {
     filterDeleted: 'Filter deleted',
     filterApplied: 'Filter applied',
     enterFilterName: 'Please enter a filter name',
+    exportSuccess: 'Report exported successfully',
+    changedDeclarationStatus: 'changed declaration status',
+    userLabel: 'User',
+    switchLanguage: 'Switch Language',
     
     // Navigation
     home: 'Home',
@@ -840,6 +844,10 @@ const translations = {
     filterDeleted: 'تم حذف الفلتر',
     filterApplied: 'تم تطبيق الفلتر',
     enterFilterName: 'يرجى إدخال اسم الفلتر',
+    exportSuccess: 'تم تصدير التقرير بنجاح',
+    changedDeclarationStatus: 'قام بتغيير حالة الإقرار',
+    userLabel: 'مستخدم',
+    switchLanguage: 'تبديل اللغة',
     
     // Navigation
     home: 'الرئيسية',

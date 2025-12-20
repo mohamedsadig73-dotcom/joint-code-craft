@@ -191,15 +191,16 @@ export function Navigation() {
             {/* Theme Toggle */}
             <ThemeToggleSimple />
 
-            {/* Language Toggle */}
+            {/* Language Toggle - More Prominent */}
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={toggleLanguage}
-              className="gap-2"
+              className="gap-2 bg-primary/10 hover:bg-primary/20 border-primary/30"
+              title={t('switchLanguage')}
             >
-              <Globe className="w-4 h-4" />
-              {language === 'en' ? 'العربية' : 'English'}
+              <Globe className="w-4 h-4 text-primary" />
+              <span className="font-medium">{language === 'en' ? 'العربية' : 'English'}</span>
             </Button>
 
             {/* Notifications */}
