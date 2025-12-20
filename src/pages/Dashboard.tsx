@@ -240,7 +240,7 @@ export default function Dashboard() {
 
       toast({ 
         title: t('success'), 
-        description: language === 'ar' ? 'تم استرجاع الإقرار بنجاح' : 'Declaration restored successfully' 
+        description: t('declarationRestored')
       });
     } catch (error: any) {
       toast({ title: t('error'), description: error.message, variant: 'destructive' });
@@ -248,18 +248,14 @@ export default function Dashboard() {
   };
 
   const handlePermanentDelete = async (id: string) => {
-    const confirmMsg = language === 'ar' 
-      ? '⚠️ تحذير: سيتم حذف الإقرار نهائياً ولا يمكن استرجاعه. هل أنت متأكد؟'
-      : '⚠️ Warning: This declaration will be permanently deleted and cannot be recovered. Are you sure?';
-    
-    if (!window.confirm(confirmMsg)) return;
+    if (!window.confirm(t('permanentDeleteWarning'))) return;
 
     try {
       const { error } = await supabase.from('declarations').delete().eq('id', id);
       if (error) throw error;
       toast({ 
         title: t('success'), 
-        description: language === 'ar' ? 'تم حذف الإقرار نهائياً' : 'Declaration permanently deleted' 
+        description: t('declarationPermanentlyDeleted')
       });
     } catch (error: any) {
       toast({ title: t('error'), description: error.message, variant: 'destructive' });

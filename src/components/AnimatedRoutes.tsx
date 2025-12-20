@@ -29,7 +29,7 @@ const PageLoader = () => (
       <div className="absolute inset-0 rounded-full bg-secondary/20 animate-ping" />
       <Loader2 className="h-12 w-12 text-secondary animate-spin" />
     </div>
-    <p className="text-muted-foreground text-sm animate-pulse">جاري التحميل...</p>
+    <p className="text-muted-foreground text-sm animate-pulse">Loading...</p>
   </div>
 );
 
