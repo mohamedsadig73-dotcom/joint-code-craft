@@ -50,7 +50,9 @@ interface Product {
   weight: number | null;
   min_stock_level: number | null;
   requires_lot_tracking: boolean;
+  requires_serial_tracking: boolean;
   requires_expiry_tracking: boolean;
+  picking_strategy: string | null;
   is_active: boolean;
   created_at: string;
 }
@@ -62,6 +64,12 @@ const unitOptions = [
   { value: 'pallet', label: { ar: 'منصة نقالة', en: 'Pallet' } },
   { value: 'liter', label: { ar: 'لتر', en: 'Liter' } },
   { value: 'meter', label: { ar: 'متر', en: 'Meter' } },
+];
+
+const pickingStrategyOptions = [
+  { value: 'FIFO', label: { ar: 'FIFO (الأول دخولاً أولاً خروجاً)', en: 'FIFO (First In, First Out)' } },
+  { value: 'FEFO', label: { ar: 'FEFO (الأول انتهاءً أولاً خروجاً)', en: 'FEFO (First Expired, First Out)' } },
+  { value: 'LIFO', label: { ar: 'LIFO (الأخير دخولاً أولاً خروجاً)', en: 'LIFO (Last In, First Out)' } },
 ];
 
 export default function WMSProducts() {
@@ -89,7 +97,9 @@ export default function WMSProducts() {
     weight: '',
     min_stock_level: '',
     requires_lot_tracking: false,
+    requires_serial_tracking: false,
     requires_expiry_tracking: false,
+    picking_strategy: 'FIFO',
     is_active: true,
   });
 
@@ -140,7 +150,9 @@ export default function WMSProducts() {
         weight: formData.weight ? parseFloat(formData.weight) : null,
         min_stock_level: formData.min_stock_level ? parseFloat(formData.min_stock_level) : null,
         requires_lot_tracking: formData.requires_lot_tracking,
+        requires_serial_tracking: formData.requires_serial_tracking,
         requires_expiry_tracking: formData.requires_expiry_tracking,
+        picking_strategy: formData.picking_strategy,
         is_active: formData.is_active,
         created_by: user?.id,
       };
@@ -219,7 +231,9 @@ export default function WMSProducts() {
       weight: '',
       min_stock_level: '',
       requires_lot_tracking: false,
+      requires_serial_tracking: false,
       requires_expiry_tracking: false,
+      picking_strategy: 'FIFO',
       is_active: true,
     });
     setEditingProduct(null);
@@ -238,7 +252,9 @@ export default function WMSProducts() {
       weight: product.weight?.toString() || '',
       min_stock_level: product.min_stock_level?.toString() || '',
       requires_lot_tracking: product.requires_lot_tracking,
+      requires_serial_tracking: product.requires_serial_tracking,
       requires_expiry_tracking: product.requires_expiry_tracking,
+      picking_strategy: product.picking_strategy || 'FIFO',
       is_active: product.is_active,
     });
     setIsDialogOpen(true);
@@ -385,6 +401,25 @@ export default function WMSProducts() {
                     />
                   </div>
 
+                  <div className="space-y-2">
+                    <Label>{language === 'ar' ? 'استراتيجية الانتقاء' : 'Picking Strategy'}</Label>
+                    <Select
+                      value={formData.picking_strategy}
+                      onValueChange={(value) => setFormData({ ...formData, picking_strategy: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pickingStrategyOptions.map((strategy) => (
+                          <SelectItem key={strategy.value} value={strategy.value}>
+                            {strategy.label[language]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="md:col-span-2 space-y-4">
                     <div className="flex items-center gap-2">
                       <Checkbox
@@ -394,6 +429,17 @@ export default function WMSProducts() {
                       />
                       <Label htmlFor="lot_tracking">
                         {language === 'ar' ? 'يتطلب تتبع الدفعات (Lot)' : 'Requires Lot Tracking'}
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="serial_tracking"
+                        checked={formData.requires_serial_tracking}
+                        onCheckedChange={(checked) => setFormData({ ...formData, requires_serial_tracking: !!checked })}
+                      />
+                      <Label htmlFor="serial_tracking">
+                        {language === 'ar' ? 'يتطلب تتبع الأرقام التسلسلية' : 'Requires Serial Tracking'}
                       </Label>
                     </div>
 

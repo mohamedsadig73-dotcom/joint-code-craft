@@ -25,7 +25,11 @@ import {
   ClipboardList,
   Truck,
   ChevronDown,
-  AlertTriangle
+  AlertTriangle,
+  RotateCcw,
+  ArrowRightLeft,
+  Hash,
+  Ship
 } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -145,6 +149,10 @@ export function Navigation() {
     { path: '/wms/suppliers', icon: Truck, labelKey: 'wmsSuppliers' },
     { path: '/wms/transactions', icon: ClipboardList, labelKey: 'wmsTransactions' },
     { path: '/wms/cycle-count', icon: BarChart3, labelKey: 'wmsCycleCount' },
+    { path: '/wms/shipments', icon: Ship, labelKey: 'wmsShipments' },
+    { path: '/wms/rma', icon: RotateCcw, labelKey: 'wmsRMA' },
+    { path: '/wms/cross-dock', icon: ArrowRightLeft, labelKey: 'wmsCrossDock' },
+    { path: '/wms/serial-numbers', icon: Hash, labelKey: 'wmsSerialNumbers' },
     { path: '/wms/reports', icon: BarChart3, labelKey: 'wmsReports' },
     { path: '/wms/alerts', icon: AlertTriangle, labelKey: 'wmsAlerts' },
   ];
