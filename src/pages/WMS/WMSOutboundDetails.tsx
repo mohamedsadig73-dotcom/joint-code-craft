@@ -315,12 +315,48 @@ const WMSOutboundDetails: React.FC = () => {
       return;
     }
 
-    // Update all lines with shipped quantity
+    // Update all lines with shipped quantity and deduct from inventory
     for (const line of lines) {
       await supabase
         .from('wms_outbound_lines')
         .update({ shipped_quantity: line.packed_quantity, status: 'shipped' })
         .eq('id', line.id);
+
+      // Deduct from inventory
+      if (line.location_id) {
+        const { data: inventory } = await supabase
+          .from('wms_inventory')
+          .select('id, quantity, available_quantity')
+          .eq('product_id', line.product_id)
+          .eq('location_id', line.location_id)
+          .maybeSingle();
+
+        if (inventory) {
+          const newQty = Math.max(0, inventory.quantity - (line.packed_quantity || 0));
+          await supabase
+            .from('wms_inventory')
+            .update({ 
+              quantity: newQty,
+              available_quantity: newQty
+            })
+            .eq('id', inventory.id);
+        }
+
+        // Record transaction
+        await supabase
+          .from('wms_transactions')
+          .insert({
+            transaction_type: 'ship',
+            product_id: line.product_id,
+            from_location_id: line.location_id,
+            quantity: line.packed_quantity || 0,
+            lot_number: line.lot_number,
+            reference_type: 'outbound_order',
+            reference_id: id,
+            performed_by: user?.id,
+            reason: `Shipped for outbound order ${order?.order_number}`
+          });
+      }
     }
 
     const { error } = await supabase
@@ -331,7 +367,7 @@ const WMSOutboundDetails: React.FC = () => {
     if (!error) {
       toast({
         title: language === 'ar' ? 'تم الشحن' : 'Shipped',
-        description: language === 'ar' ? 'تم شحن الأمر بنجاح' : 'Order shipped successfully'
+        description: language === 'ar' ? 'تم شحن الأمر وتحديث المخزون' : 'Order shipped and inventory updated'
       });
       loadOrder();
       loadLines();
