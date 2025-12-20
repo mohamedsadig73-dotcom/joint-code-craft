@@ -47,12 +47,12 @@ const App = () => (
         <Sonner />
         <RegisterSW />
         <BrowserRouter>
-          <AuthProvider>
-            <LanguageProvider>
+          <LanguageProvider>
+            <AuthProvider>
               <AppRoutes />
               <PWAInstallPrompt />
-            </LanguageProvider>
-          </AuthProvider>
+            </AuthProvider>
+          </LanguageProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
