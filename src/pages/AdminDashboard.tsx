@@ -102,7 +102,7 @@ export default function AdminDashboard() {
       const recentActivities = activities.map(a => ({
         id: a.id,
         type: 'status_change',
-        message: `${(a.profiles as any)?.username || 'مستخدم'} قام بتغيير حالة الإقرار ${a.declaration_id} من "${statusLabels[a.old_status || ''] || 'جديد'}" إلى "${statusLabels[a.new_status] || a.new_status}"`,
+        message: `${(a.profiles as any)?.username || t('userLabel')} ${t('changedDeclarationStatus')} ${a.declaration_id}`,
         timestamp: a.changed_at,
       }));
 
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
+        title: t('error'),
         description: error.message,
       });
     } finally {
@@ -127,9 +127,9 @@ export default function AdminDashboard() {
   };
 
   const roleData = [
-    { name: 'مدير النظام', value: stats.adminCount, color: CHART_COLORS.admin },
-    { name: 'مدير فرعي', value: stats.managerCount, color: CHART_COLORS.manager },
-    { name: 'مستخدم', value: stats.userCount, color: CHART_COLORS.user },
+    { name: t('systemAdmins'), value: stats.adminCount, color: CHART_COLORS.admin },
+    { name: t('managers'), value: stats.managerCount, color: CHART_COLORS.manager },
+    { name: t('regularUser'), value: stats.userCount, color: CHART_COLORS.user },
   ];
 
   const statusColorMap: Record<string, string> = {
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
       <div className="min-h-screen">
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">جاري التحميل...</div>
+          <div className="text-center">{t('loading')}</div>
         </div>
       </div>
     );
