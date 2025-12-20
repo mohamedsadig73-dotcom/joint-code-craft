@@ -456,6 +456,30 @@ const translations = {
     lastMonth: 'Last Month',
     lastYear: 'Last Year',
     custom: 'Custom Range',
+    
+    // Onboarding
+    onboardingDashboardTitle: 'Dashboard Overview',
+    onboardingDashboardDesc: 'Get a comprehensive view of all your declarations and system statistics at a glance.',
+    onboardingDeclarationsTitle: 'Manage Declarations',
+    onboardingDeclarationsDesc: 'Create, track, and manage all your declarations with an intuitive workflow.',
+    onboardingReportsTitle: 'Reports & Analytics',
+    onboardingReportsDesc: 'Generate detailed reports and gain insights from your declaration data.',
+    onboardingMaintenanceTitle: 'Maintenance System',
+    onboardingMaintenanceDesc: 'Schedule and track maintenance tasks to keep everything running smoothly.',
+    onboardingNotificationsTitle: 'Stay Notified',
+    onboardingNotificationsDesc: 'Receive real-time notifications about important updates and changes.',
+    onboardingSkip: 'Skip',
+    onboardingNext: 'Next',
+    onboardingPrevious: 'Previous',
+    onboardingComplete: 'Get Started',
+    
+    // 404 Page
+    pageNotFound: 'Page Not Found',
+    pageNotFoundDesc: 'Oops! The page you are looking for does not exist.',
+    returnToHome: 'Return to Home',
+    
+    // Change Status
+    changeStatus: 'Change Status',
   },
   ar: {
     // Navigation
@@ -904,6 +928,30 @@ const translations = {
     lastMonth: 'الشهر الماضي',
     lastYear: 'السنة الماضية',
     custom: 'نطاق مخصص',
+    
+    // Onboarding
+    onboardingDashboardTitle: 'نظرة عامة على لوحة التحكم',
+    onboardingDashboardDesc: 'احصل على نظرة شاملة لجميع إقراراتك وإحصائيات النظام في لمحة واحدة.',
+    onboardingDeclarationsTitle: 'إدارة الإقرارات',
+    onboardingDeclarationsDesc: 'أنشئ وتتبع وأدر جميع إقراراتك بسير عمل سلس.',
+    onboardingReportsTitle: 'التقارير والتحليلات',
+    onboardingReportsDesc: 'أنشئ تقارير مفصلة واحصل على رؤى من بيانات إقراراتك.',
+    onboardingMaintenanceTitle: 'نظام الصيانة',
+    onboardingMaintenanceDesc: 'جدول وتتبع مهام الصيانة للحفاظ على سير العمل بسلاسة.',
+    onboardingNotificationsTitle: 'البقاء على اطلاع',
+    onboardingNotificationsDesc: 'استلم إشعارات فورية حول التحديثات والتغييرات المهمة.',
+    onboardingSkip: 'تخطي',
+    onboardingNext: 'التالي',
+    onboardingPrevious: 'السابق',
+    onboardingComplete: 'ابدأ الآن',
+    
+    // 404 Page
+    pageNotFound: 'الصفحة غير موجودة',
+    pageNotFoundDesc: 'عذراً! الصفحة التي تبحث عنها غير موجودة.',
+    returnToHome: 'العودة للرئيسية',
+    
+    // Change Status
+    changeStatus: 'تغيير الحالة',
   },
 };
 
