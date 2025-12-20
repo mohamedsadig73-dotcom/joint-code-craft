@@ -20,6 +20,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useDeclarationsRealtime } from '@/hooks/useRealtimeUpdates';
 import { useSmartNudges } from '@/hooks/useSmartNudges';
 import { usePaginatedDeclarations } from '@/hooks/usePaginatedDeclarations';
+import { useDebounce } from '@/hooks/useDebounce';
 import { Declaration, DeletedDeclaration, DeclarationStats, Profile } from '@/types/declarations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -64,14 +65,17 @@ export default function Dashboard() {
   const [declarationToDelete, setDeclarationToDelete] = useState<Declaration | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
+  // Debounce search query for server-side filtering (300ms delay)
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
   // Server-side paginated declarations for Manage tab
   const paginatedFilters = useMemo(() => ({
-    searchQuery: searchQuery || undefined,
+    searchQuery: debouncedSearchQuery || undefined,
     statusFilter: statusFilter !== 'all' ? statusFilter : undefined,
     senderFilter: senderFilter !== 'all' ? senderFilter : undefined,
     dateFrom,
     dateTo,
-  }), [searchQuery, statusFilter, senderFilter, dateFrom, dateTo]);
+  }), [debouncedSearchQuery, statusFilter, senderFilter, dateFrom, dateTo]);
 
   const {
     declarations: paginatedDeclarations,
