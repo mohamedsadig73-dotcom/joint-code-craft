@@ -1,5 +1,4 @@
 import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,10 +7,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useThemePersistence } from "@/hooks/useThemePersistence";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function ThemeToggle() {
-  const { setTheme, theme } = useTheme();
+  const { setTheme, theme } = useThemePersistence();
   const { t } = useLanguage();
 
   return (
@@ -78,7 +78,7 @@ export function ThemeToggle() {
 
 // Simple toggle button variant
 export function ThemeToggleSimple() {
-  const { setTheme, theme } = useTheme();
+  const { setTheme, theme } = useThemePersistence();
   const { t } = useLanguage();
 
   const toggleTheme = () => {
