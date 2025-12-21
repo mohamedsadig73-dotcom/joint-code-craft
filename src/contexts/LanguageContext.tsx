@@ -573,10 +573,6 @@ const translations = {
     
     // Change Status
     changeStatus: 'Change Status',
-    
-    // Reports & Analytics Tabs (new keys only)
-    exportTab: 'Export',
-    adminStatsTab: 'Admin Stats',
   },
   ar: {
     // Navigation
@@ -1142,10 +1138,6 @@ const translations = {
     
     // Change Status
     changeStatus: 'تغيير الحالة',
-    
-    // Reports & Analytics Tabs (new keys only)
-    exportTab: 'تصدير',
-    adminStatsTab: 'إحصائيات المدير',
   },
 };
 
