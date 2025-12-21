@@ -429,6 +429,139 @@ export type Database = {
           },
         ]
       }
+      leave_requests: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          current_remaining_balance: number
+          days_requested: number
+          department: string
+          deputy_contact: string | null
+          deputy_department: string | null
+          deputy_name: string | null
+          employee_id: string
+          employee_name: string
+          employee_signature_date: string | null
+          end_date_gregorian: string
+          end_date_hijri: string | null
+          expected_remaining_balance: number | null
+          expected_return_date: string
+          hire_date: string
+          hr_approved: boolean | null
+          hr_approved_by: string | null
+          hr_approved_date: string | null
+          hr_notes: string | null
+          id: string
+          job_title: string
+          manager_approved: boolean | null
+          manager_approved_by: string | null
+          manager_approved_date: string | null
+          manager_notes: string | null
+          months_of_service: number | null
+          original_balance: number
+          previously_used_days: number
+          reason: string | null
+          request_status: string | null
+          start_date_gregorian: string
+          start_date_hijri: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          current_remaining_balance: number
+          days_requested: number
+          department: string
+          deputy_contact?: string | null
+          deputy_department?: string | null
+          deputy_name?: string | null
+          employee_id: string
+          employee_name: string
+          employee_signature_date?: string | null
+          end_date_gregorian: string
+          end_date_hijri?: string | null
+          expected_remaining_balance?: number | null
+          expected_return_date: string
+          hire_date: string
+          hr_approved?: boolean | null
+          hr_approved_by?: string | null
+          hr_approved_date?: string | null
+          hr_notes?: string | null
+          id?: string
+          job_title: string
+          manager_approved?: boolean | null
+          manager_approved_by?: string | null
+          manager_approved_date?: string | null
+          manager_notes?: string | null
+          months_of_service?: number | null
+          original_balance?: number
+          previously_used_days?: number
+          reason?: string | null
+          request_status?: string | null
+          start_date_gregorian: string
+          start_date_hijri?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          current_remaining_balance?: number
+          days_requested?: number
+          department?: string
+          deputy_contact?: string | null
+          deputy_department?: string | null
+          deputy_name?: string | null
+          employee_id?: string
+          employee_name?: string
+          employee_signature_date?: string | null
+          end_date_gregorian?: string
+          end_date_hijri?: string | null
+          expected_remaining_balance?: number | null
+          expected_return_date?: string
+          hire_date?: string
+          hr_approved?: boolean | null
+          hr_approved_by?: string | null
+          hr_approved_date?: string | null
+          hr_notes?: string | null
+          id?: string
+          job_title?: string
+          manager_approved?: boolean | null
+          manager_approved_by?: string | null
+          manager_approved_date?: string | null
+          manager_notes?: string | null
+          months_of_service?: number | null
+          original_balance?: number
+          previously_used_days?: number
+          reason?: string | null
+          request_status?: string | null
+          start_date_gregorian?: string
+          start_date_hijri?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_hr_approved_by_fkey"
+            columns: ["hr_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_manager_approved_by_fkey"
+            columns: ["manager_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_assets: {
         Row: {
           active: boolean | null
