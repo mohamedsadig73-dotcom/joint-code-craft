@@ -17,18 +17,18 @@ export default function ResetPassword() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check for valid session from reset link
+    // التحقق من وجود session صالحة من رابط إعادة التعيين
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         toast({
           variant: 'destructive',
           title: t('error'),
-          description: t('invalidResetLink'),
+          description: 'رابط غير صالح أو منتهي الصلاحية',
         });
         navigate('/login');
       }
     });
-  }, [navigate, toast, t]);
+  }, [navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

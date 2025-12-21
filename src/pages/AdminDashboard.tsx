@@ -8,10 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Users, FileText, Activity, TrendingUp, Shield, UserCheck, BarChart3 } from 'lucide-react';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { UserManagementTab } from '@/components/UserManagementTab';
 import { BulkNotificationDialog } from '@/components/BulkNotificationDialog';
 import { toGregorianDateTime } from '@/utils/dateUtils';
-import { ProfessionalPieChart, ProfessionalBarChart } from '@/components/charts/ProfessionalCharts';
 
 interface SystemStats {
   totalUsers: number;
@@ -237,28 +237,74 @@ export default function AdminDashboard() {
 
         {/* الرسوم البيانية */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* توزيع المستخدمين - Professional Chart */}
-          <ProfessionalPieChart
-            data={roleData}
-            title={t('userDistribution')}
-            description={t('rolePercentage')}
-            icon={Users}
-            innerRadius={70}
-            outerRadius={100}
-          />
+          {/* توزيع المستخدمين */}
+          <Card className="glass-card border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                {t('userDistribution')}
+              </CardTitle>
+              <CardDescription>{t('rolePercentage')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={roleData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {roleData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-          {/* توزيع الإقرارات - Professional Bar Chart */}
-          <ProfessionalBarChart
-            data={stats.declarationsByStatus.map(d => ({
-              name: d.label,
-              count: d.count,
-              color: statusColorMap[d.status] || CHART_COLORS.user
-            }))}
-            title={t('declarationDistribution')}
-            description={t('countByStage')}
-            dataKey="count"
-            nameKey="name"
-          />
+          {/* توزيع الإقرارات */}
+          <Card className="glass-card border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                {t('declarationDistribution')}
+              </CardTitle>
+              <CardDescription>{t('countByStage')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.declarationsByStatus}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis 
+                    dataKey="label" 
+                    stroke="hsl(var(--muted-foreground))"
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                    {stats.declarationsByStatus.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={statusColorMap[entry.status] || CHART_COLORS.user} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </div>
 
         {/* آخر النشاطات */}

@@ -21,6 +21,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { MaintenanceMobileCard } from './MaintenanceMobileCard';
 import { formatNumber, formatCurrency, formatDateArabic } from '@/utils/numberFormat';
 
+const FREQUENCIES = Object.entries(frequencyLabels).map(([value, label]) => ({ value, label }));
+
 interface MaintenanceItem {
   id: string;
   name: string;
@@ -82,15 +84,6 @@ export function MaintenanceItems() {
     vendor_id: '',
   });
 
-  // Frequency options with translations
-  const FREQUENCIES = [
-    { value: 'monthly', label: t('monthly') },
-    { value: 'quarterly', label: t('quarterly') },
-    { value: 'semiannual', label: t('semiannual') },
-    { value: 'annual', label: t('annual') },
-    { value: 'ad_hoc', label: t('adHoc') },
-  ];
-
   const loadData = useCallback(async () => {
     try {
       const [itemsRes, assetsRes, vendorsRes] = await Promise.all([
@@ -108,14 +101,14 @@ export function MaintenanceItems() {
       setVendors(vendorsRes.data || []);
     } catch (error: any) {
       toast({
-        title: t('error'),
+        title: 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -138,8 +131,8 @@ export function MaintenanceItems() {
           .update(submitData)
           .eq('id', editingItem.id);
         if (error) throw error;
-        triggerSuccess('success', t('itemUpdatedSuccess'));
-        toast({ title: t('itemUpdatedSuccess') });
+        triggerSuccess('success', 'تم تحديث البند بنجاح');
+        toast({ title: 'تم تحديث البند بنجاح' });
       } else {
         const { data: newItem, error } = await supabase
           .from('maintenance_items')
@@ -149,7 +142,7 @@ export function MaintenanceItems() {
         
         if (error) throw error;
         
-        // Generate annual schedule for new item
+        // توليد الجدول السنوي للبند الجديد
         const currentYear = new Date().getFullYear();
         const { error: scheduleError } = await supabase
           .rpc('generate_maintenance_schedule', {
@@ -158,8 +151,8 @@ export function MaintenanceItems() {
           });
         
         if (scheduleError) throw scheduleError;
-        triggerSuccess('success', t('scheduleGeneratedSuccess'));
-        toast({ title: t('scheduleGeneratedSuccess') });
+        triggerSuccess('success', 'تم إضافة البند وتوليد الجدول السنوي بنجاح');
+        toast({ title: 'تم إضافة البند وتوليد الجدول السنوي بنجاح' });
       }
       
       setDialogOpen(false);
@@ -167,7 +160,7 @@ export function MaintenanceItems() {
       loadData();
     } catch (error: any) {
       toast({
-        title: t('error'),
+        title: 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -175,7 +168,7 @@ export function MaintenanceItems() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm(t('confirmDeleteItem'))) return;
+    if (!window.confirm('هل أنت متأكد من حذف هذا البند؟ سيتم حذف جميع الجداول المرتبطة به.')) return;
     
     try {
       const { error } = await supabase
@@ -184,12 +177,12 @@ export function MaintenanceItems() {
         .eq('id', id);
       
       if (error) throw error;
-      triggerSuccess('success', t('itemDeletedSuccess'));
-      toast({ title: t('itemDeletedSuccess') });
+      triggerSuccess('success', 'تم حذف البند بنجاح');
+      toast({ title: 'تم حذف البند بنجاح' });
       loadData();
     } catch (error: any) {
       toast({
-        title: t('error'),
+        title: 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -238,8 +231,8 @@ export function MaintenanceItems() {
       <SuccessAnimationComponent />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold">{t('maintenanceItemsTitle')}</h2>
-          <p className="text-muted-foreground">{t('maintenanceItemsDesc')}</p>
+          <h2 className="text-2xl font-bold">إدارة بنود الصيانة</h2>
+          <p className="text-muted-foreground">تحديد المهام الدورية والمتطلبات</p>
         </div>
         
         <Dialog open={dialogOpen} onOpenChange={(open) => {
@@ -249,37 +242,37 @@ export function MaintenanceItems() {
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="w-4 h-4" />
-              {t('addNewItem')}
+              إضافة بند جديد
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingItem ? t('editMaintenanceItem') : t('addMaintenanceItemTitle')}
+                {editingItem ? 'تعديل بند الصيانة' : 'إضافة بند صيانة جديد'}
               </DialogTitle>
             </DialogHeader>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2 col-span-2">
-                  <Label htmlFor="name">{t('itemNameLabel')} *</Label>
+                  <Label htmlFor="name">اسم البند *</Label>
                   <Input
                     id="name"
                     required
-                    placeholder={t('itemNamePlaceholder')}
+                    placeholder="مثال: صيانة مكيف الهواء - الطابق الأول"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="asset_id">{t('linkedAsset')}</Label>
+                  <Label htmlFor="asset_id">الأصل المرتبط</Label>
                   <Select value={formData.asset_id || 'none'} onValueChange={(value) => setFormData({ ...formData, asset_id: value === 'none' ? '' : value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t('selectAssetPlaceholder')} />
+                      <SelectValue placeholder="اختر الأصل" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">{t('noAssetOption')}</SelectItem>
+                      <SelectItem value="none">بدون أصل</SelectItem>
                       {assets.map(asset => (
                         <SelectItem key={asset.id} value={asset.id}>
                           {asset.name}
@@ -290,13 +283,13 @@ export function MaintenanceItems() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="vendor_id">{t('executingParty')}</Label>
+                  <Label htmlFor="vendor_id">الجهة المنفذة</Label>
                   <Select value={formData.vendor_id || 'none'} onValueChange={(value) => setFormData({ ...formData, vendor_id: value === 'none' ? '' : value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t('selectVendorPlaceholder')} />
+                      <SelectValue placeholder="اختر المورد" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">{t('noVendorOption')}</SelectItem>
+                      <SelectItem value="none">بدون مورد</SelectItem>
                       {vendors.map(vendor => (
                         <SelectItem key={vendor.id} value={vendor.id}>
                           {vendor.name}
@@ -307,7 +300,7 @@ export function MaintenanceItems() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="frequency">{t('repetition')} *</Label>
+                  <Label htmlFor="frequency">التكرار *</Label>
                   <Select 
                     value={formData.frequency} 
                     onValueChange={(value) => setFormData({ 
@@ -329,7 +322,7 @@ export function MaintenanceItems() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="start_date">{t('startDateLabel')} *</Label>
+                  <Label htmlFor="start_date">تاريخ البداية *</Label>
                   <Input
                     id="start_date"
                     type="date"
@@ -340,7 +333,7 @@ export function MaintenanceItems() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="estimated_cost">{t('estimatedCostLabel')}</Label>
+                  <Label htmlFor="estimated_cost">التكلفة المقدرة</Label>
                   <Input
                     id="estimated_cost"
                     type="number"
@@ -352,7 +345,7 @@ export function MaintenanceItems() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="reminder_days">{t('reminderBeforeDays')}</Label>
+                  <Label htmlFor="reminder_days">التذكير قبل (أيام)</Label>
                   <Input
                     id="reminder_days"
                     type="number"
@@ -363,7 +356,7 @@ export function MaintenanceItems() {
                 </div>
 
                 <div className="space-y-2 col-span-2">
-                  <Label htmlFor="description">{t('descriptionLabel')}</Label>
+                  <Label htmlFor="description">الوصف</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
@@ -373,7 +366,7 @@ export function MaintenanceItems() {
                 </div>
 
                 <div className="space-y-2 col-span-2">
-                  <Label htmlFor="notes">{t('notesLabel')}</Label>
+                  <Label htmlFor="notes">ملاحظات</Label>
                   <Textarea
                     id="notes"
                     value={formData.notes}
@@ -388,16 +381,16 @@ export function MaintenanceItems() {
                     checked={formData.active}
                     onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
                   />
-                  <Label htmlFor="active">{t('activeItem')}</Label>
+                  <Label htmlFor="active">بند نشط</Label>
                 </div>
               </div>
 
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  {t('cancel')}
+                  إلغاء
                 </Button>
                 <Button type="submit">
-                  {editingItem ? t('update') : t('add')}
+                  {editingItem ? 'تحديث' : 'إضافة'}
                 </Button>
               </div>
             </form>
@@ -419,7 +412,7 @@ export function MaintenanceItems() {
               variant="maintenance"
               title={emptyStateMessages.maintenance.title}
               description={emptyStateMessages.maintenance.description}
-              actionLabel={t('addNewItem')}
+              actionLabel={t('addMaintenanceItem') || 'إضافة بند جديد'}
               onAction={() => setDialogOpen(true)}
             />
           ) : (
@@ -441,11 +434,11 @@ export function MaintenanceItems() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('itemName')}</TableHead>
-                <TableHead>{t('frequency')}</TableHead>
-                <TableHead>{t('lastMaintenance')}</TableHead>
-                <TableHead>{t('nextMaintenance')}</TableHead>
-                <TableHead>{t('estimatedCost')}</TableHead>
+                <TableHead>{t('itemName') || 'اسم البند'}</TableHead>
+                <TableHead>{t('frequency') || 'التكرار'}</TableHead>
+                <TableHead>{t('lastMaintenance') || 'آخر صيانة'}</TableHead>
+                <TableHead>{t('nextMaintenance') || 'الصيانة القادمة'}</TableHead>
+                <TableHead>{t('estimatedCost') || 'التكلفة المقدرة'}</TableHead>
                 <TableHead>{t('status')}</TableHead>
                 <TableHead className="text-left">{t('actions')}</TableHead>
               </TableRow>
@@ -460,7 +453,7 @@ export function MaintenanceItems() {
                       variant="maintenance"
                       title={emptyStateMessages.maintenance.title}
                       description={emptyStateMessages.maintenance.description}
-                      actionLabel={t('addNewItem')}
+                      actionLabel={t('addMaintenanceItem') || 'إضافة بند جديد'}
                       onAction={() => setDialogOpen(true)}
                     />
                   </TableCell>
@@ -474,31 +467,37 @@ export function MaintenanceItems() {
                     </TableCell>
                     <TableCell>
                       {item.last_maintenance_date ? (
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          {formatDateArabic(item.last_maintenance_date)}
+                        <div className="flex items-center gap-1 text-sm">
+                          <Calendar className="w-3 h-3" />
+                          {formatDateArabic(item.last_maintenance_date, language)}
                         </div>
-                      ) : '-'}
+                      ) : (
+                        '-'
+                      )}
                     </TableCell>
                     <TableCell>
                       {item.next_maintenance_date ? (
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          {formatDateArabic(item.next_maintenance_date)}
+                        <div className="flex items-center gap-1 text-sm">
+                          <Calendar className="w-3 h-3" />
+                          {formatDateArabic(item.next_maintenance_date, language)}
                         </div>
-                      ) : '-'}
+                      ) : (
+                        '-'
+                      )}
                     </TableCell>
                     <TableCell>
                       {item.estimated_cost ? (
                         <div className="flex items-center gap-1">
-                          <DollarSign className="w-4 h-4 text-muted-foreground" />
-                          {formatCurrency(item.estimated_cost)}
+                          <DollarSign className="w-3 h-3" />
+                          {formatCurrency(item.estimated_cost, language)}
                         </div>
-                      ) : '-'}
+                      ) : (
+                        '-'
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge variant={item.active ? 'default' : 'secondary'}>
-                        {item.active ? t('active') : t('inactive')}
+                        {item.active ? t('active') || 'نشط' : t('inactive') || 'غير نشط'}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -507,6 +506,7 @@ export function MaintenanceItems() {
                           variant="ghost"
                           size="icon"
                           onClick={() => navigate(`/maintenance/item/${item.id}`)}
+                          title={t('viewDetails') || 'عرض التفاصيل'}
                         >
                           <Eye className="w-4 h-4" />
                         </Button>

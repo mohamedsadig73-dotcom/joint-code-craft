@@ -75,7 +75,7 @@ export function RecentDeclarationsTable({
             <EmptyState
               variant="declarations"
               title={t('noDeclarations')}
-              description={t('startCreating')}
+              description={language === 'ar' ? 'لم يتم إنشاء أي إقرارات بعد. ابدأ بإنشاء إقرار جديد.' : 'No declarations created yet. Start by creating a new one.'}
               actionLabel={t('createDeclaration')}
               onAction={onCreateNew}
             />

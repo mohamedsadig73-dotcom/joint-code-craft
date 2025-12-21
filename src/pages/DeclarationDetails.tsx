@@ -71,6 +71,22 @@ const statusColors = {
   rejected: 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30',
 };
 
+const statusLabels = {
+  draft: 'مسودة',
+  pending_warehouse_signature: 'بانتظار توقيع المخزن',
+  warehouse_signed: 'موقّع من المخزن',
+  sent_to_admin_office: 'مُرسل إلى المكتب الإداري',
+  received_by_admin_office: 'مستلم من المكتب الإداري',
+  returned_to_warehouse: 'مُعاد إلى المخزن للأرشفة',
+  archived: 'مؤرشف',
+  rejected: 'مرفوض / يحتاج إلى تصحيح',
+};
+
+const typeLabels = {
+  دخول: 'دخول',
+  خروج: 'خروج',
+};
+
 export default function DeclarationDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -85,26 +101,6 @@ export default function DeclarationDetails() {
   const [archiveFiles, setArchiveFiles] = useState<ArchiveFile[]>([]);
   const [editingArchive, setEditingArchive] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
-
-  // Status labels with translations
-  const getStatusLabel = (status: string) => {
-    const statusMap: Record<string, string> = {
-      draft: t('statusDraft'),
-      pending_warehouse_signature: t('statusPendingWarehouseSignature'),
-      warehouse_signed: t('statusWarehouseSigned'),
-      sent_to_admin_office: t('statusSentToAdminOffice'),
-      received_by_admin_office: t('statusReceivedByAdminOffice'),
-      returned_to_warehouse: t('statusReturnedToWarehouse'),
-      archived: t('statusArchived'),
-      rejected: t('statusRejected'),
-    };
-    return statusMap[status] || status;
-  };
-
-  // Type labels with translations
-  const getTypeLabel = (type: string) => {
-    return type === 'دخول' ? t('entrance') : t('exit');
-  };
 
   useEffect(() => {
     loadAllData();
@@ -146,8 +142,8 @@ export default function DeclarationDetails() {
       if (!declarationResult.data) {
         toast({
           variant: 'destructive',
-          title: t('error'),
-          description: t('declarationNotExist'),
+          title: 'خطأ',
+          description: 'الإقرار غير موجود',
         });
         navigate('/');
         return;
@@ -159,8 +155,8 @@ export default function DeclarationDetails() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: t('error'),
-        description: error.message || t('loadingData'),
+        title: 'خطأ',
+        description: error.message || 'فشل تحميل بيانات الإقرار',
       });
     } finally {
       setLoading(false);
@@ -180,8 +176,8 @@ export default function DeclarationDetails() {
       if (error) throw error;
 
       toast({
-        title: t('success'),
-        description: t('archiveFileUpdated'),
+        title: 'تم بنجاح',
+        description: 'تم تحديث ملف الأرشفة',
       });
 
       await loadAllData();
@@ -189,8 +185,8 @@ export default function DeclarationDetails() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: t('error'),
-        description: error.message || t('archiveFileUpdateFailed'),
+        title: 'خطأ',
+        description: error.message || 'فشل تحديث ملف الأرشفة',
       });
     } finally {
       setUpdating(false);
@@ -210,8 +206,8 @@ export default function DeclarationDetails() {
       if (error) throw error;
 
       toast({
-        title: t('success'),
-        description: t('statusUpdateSuccess'),
+        title: 'تم بنجاح',
+        description: 'تم تحديث حالة الإقرار',
       });
 
       setDeclaration({ ...declaration, status: newStatus });
@@ -219,8 +215,8 @@ export default function DeclarationDetails() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: t('error'),
-        description: error.message || t('statusUpdateError'),
+        title: 'خطأ',
+        description: error.message || 'فشل تحديث الحالة',
       });
     } finally {
       setUpdating(false);
@@ -265,16 +261,16 @@ export default function DeclarationDetails() {
             className="gap-2 mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            {t('backToDashboard')}
+            العودة للوحة التحكم
           </Button>
           
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">{t('declarationDetailsTitle')}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">تفاصيل الإقرار</h1>
               <p className="text-muted-foreground font-mono">{declaration.id}</p>
             </div>
             <Badge className={statusColors[declaration.status]}>
-              {getStatusLabel(declaration.status)}
+              {statusLabels[declaration.status]}
             </Badge>
           </div>
         </div>
@@ -284,11 +280,11 @@ export default function DeclarationDetails() {
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="details" className="gap-2">
               <Info className="w-4 h-4" />
-              {t('detailsTab')}
+              التفاصيل
             </TabsTrigger>
             <TabsTrigger value="timeline" className="gap-2">
               <History className="w-4 h-4" />
-              {t('timelineTab')} ({history.length})
+              المسار ({history.length})
             </TabsTrigger>
           </TabsList>
 
@@ -299,18 +295,18 @@ export default function DeclarationDetails() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  {t('coreInfo')}
+                  المعلومات الأساسية
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="text-sm text-muted-foreground">{t('declarationTypeLabel')}</label>
-                    <p className="text-lg font-medium">{getTypeLabel(declaration.type)}</p>
+                    <label className="text-sm text-muted-foreground">نوع الإقرار</label>
+                    <p className="text-lg font-medium">{typeLabels[declaration.type]}</p>
                   </div>
                   
                   <div>
-                    <label className="text-sm text-muted-foreground">{t('statusLabel')}</label>
+                    <label className="text-sm text-muted-foreground">الحالة</label>
                     {canUpdateStatus ? (
                       <Select
                         value={declaration.status}
@@ -321,25 +317,25 @@ export default function DeclarationDetails() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="draft">{t('statusDraft')}</SelectItem>
-                          <SelectItem value="pending_warehouse_signature">{t('statusPendingWarehouseSignature')}</SelectItem>
-                          <SelectItem value="warehouse_signed">{t('statusWarehouseSigned')}</SelectItem>
-                          <SelectItem value="sent_to_admin_office">{t('statusSentToAdminOffice')}</SelectItem>
-                          <SelectItem value="received_by_admin_office">{t('statusReceivedByAdminOffice')}</SelectItem>
-                          <SelectItem value="returned_to_warehouse">{t('statusReturnedToWarehouse')}</SelectItem>
-                          <SelectItem value="archived">{t('statusArchived')}</SelectItem>
-                          <SelectItem value="rejected">{t('statusRejected')}</SelectItem>
+                          <SelectItem value="draft">مسودة</SelectItem>
+                          <SelectItem value="pending_warehouse_signature">بانتظار توقيع المخزن</SelectItem>
+                          <SelectItem value="warehouse_signed">موقّع من المخزن</SelectItem>
+                          <SelectItem value="sent_to_admin_office">مُرسل إلى المكتب الإداري</SelectItem>
+                          <SelectItem value="received_by_admin_office">مستلم من المكتب الإداري</SelectItem>
+                          <SelectItem value="returned_to_warehouse">مُعاد إلى المخزن للأرشفة</SelectItem>
+                          <SelectItem value="archived">مؤرشف</SelectItem>
+                          <SelectItem value="rejected">مرفوض / يحتاج إلى تصحيح</SelectItem>
                         </SelectContent>
                       </Select>
                     ) : (
-                      <p className="text-lg font-medium">{getStatusLabel(declaration.status)}</p>
+                      <p className="text-lg font-medium">{statusLabels[declaration.status]}</p>
                     )}
                   </div>
 
                   <div>
                     <label className="text-sm text-muted-foreground flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      {t('createdDateLabel')}
+                      تاريخ الإنشاء
                     </label>
                     <p className="text-lg">
                       {toGregorianDateLong(declaration.created_at)}
@@ -349,7 +345,7 @@ export default function DeclarationDetails() {
                   <div>
                     <label className="text-sm text-muted-foreground flex items-center gap-2">
                       <Clock className="w-4 h-4" />
-                      {t('lastUpdateLabel')}
+                      آخر تحديث
                     </label>
                     <p className="text-lg">
                       {toGregorianDateLong(declaration.updated_at)}
@@ -359,7 +355,7 @@ export default function DeclarationDetails() {
                   <div className="md:col-span-2">
                     <Label className="flex items-center gap-2 mb-2">
                       <Archive className="w-4 h-4" />
-                      {t('archiveFileLabel')}
+                      ملف الأرشفة
                     </Label>
                     {canUpdateStatus ? (
                       <div className="flex gap-2">
@@ -369,10 +365,10 @@ export default function DeclarationDetails() {
                           disabled={updating || !editingArchive}
                         >
                           <SelectTrigger className="flex-1">
-                            <SelectValue placeholder={t('selectArchiveFile')} />
+                            <SelectValue placeholder="اختر ملف الأرشفة" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">{t('noArchiveFile')}</SelectItem>
+                            <SelectItem value="none">بدون ملف أرشفة</SelectItem>
                             {archiveFiles.map((file) => (
                               <SelectItem key={file.id} value={file.id}>
                                 {file.archive_number} {file.description ? `- ${file.description}` : ''}
@@ -386,7 +382,7 @@ export default function DeclarationDetails() {
                             variant="outline"
                             disabled={updating}
                           >
-                            {t('editBtn')}
+                            تعديل
                           </Button>
                         ) : (
                           <>
@@ -395,7 +391,7 @@ export default function DeclarationDetails() {
                               disabled={updating}
                             >
                               <Save className="w-4 h-4 me-2" />
-                              {t('saveBtn')}
+                              حفظ
                             </Button>
                             <Button
                               onClick={() => {
@@ -405,7 +401,7 @@ export default function DeclarationDetails() {
                               variant="outline"
                               disabled={updating}
                             >
-                              {t('cancelBtn')}
+                              إلغاء
                             </Button>
                           </>
                         )}
@@ -414,7 +410,7 @@ export default function DeclarationDetails() {
                       <p className="text-lg font-medium">
                         {declaration.archive_file 
                           ? `${declaration.archive_file.archive_number}${declaration.archive_file.description ? ` - ${declaration.archive_file.description}` : ''}`
-                          : t('noArchiveFile')}
+                          : 'لم يتم تحديد ملف أرشفة'}
                       </p>
                     )}
                   </div>
@@ -427,18 +423,18 @@ export default function DeclarationDetails() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="w-5 h-5" />
-                  {t('senderInfo')}
+                  معلومات المرسل
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="text-sm text-muted-foreground">{t('usernameColumn')}</label>
+                    <label className="text-sm text-muted-foreground">اسم المستخدم</label>
                     <p className="text-lg font-medium">{declaration.sender.username}</p>
                   </div>
                   
                   <div>
-                    <label className="text-sm text-muted-foreground">{t('emailColumn')}</label>
+                    <label className="text-sm text-muted-foreground">البريد الإلكتروني</label>
                     <p className="text-lg font-medium">{declaration.sender.email}</p>
                   </div>
                 </div>
@@ -452,13 +448,13 @@ export default function DeclarationDetails() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="w-5 h-5" />
-                  {t('declarationTimeline')}
+                  الخط الزمني للإقرار
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {history.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    {t('noHistoryRecords')}
+                    لا يوجد سجل تغييرات لهذا الإقرار
                   </div>
                 ) : (
                   <div className="relative">
@@ -490,16 +486,16 @@ export default function DeclarationDetails() {
                                       {entry.old_status ? (
                                         <>
                                           <Badge className={statusColors[entry.old_status as keyof typeof statusColors]}>
-                                            {getStatusLabel(entry.old_status)}
+                                            {statusLabels[entry.old_status as keyof typeof statusLabels]}
                                           </Badge>
                                           <span className="text-muted-foreground">←</span>
                                           <Badge className={statusColors[entry.new_status as keyof typeof statusColors]}>
-                                            {getStatusLabel(entry.new_status)}
+                                            {statusLabels[entry.new_status as keyof typeof statusLabels]}
                                           </Badge>
                                         </>
                                       ) : (
                                         <Badge className={statusColors[entry.new_status as keyof typeof statusColors]}>
-                                          {getStatusLabel(entry.new_status)}
+                                          {statusLabels[entry.new_status as keyof typeof statusLabels]}
                                         </Badge>
                                       )}
                                     </div>

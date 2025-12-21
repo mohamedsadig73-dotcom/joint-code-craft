@@ -16,12 +16,9 @@ import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
 import { DeclarationsTable } from '@/components/dashboard/DeclarationsTable';
 import { TrashTable } from '@/components/dashboard/TrashTable';
 import { RecentDeclarationsTable } from '@/components/dashboard/RecentDeclarationsTable';
-import { BulkActionsToolbar } from '@/components/dashboard/BulkActionsToolbar';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useDeclarationsRealtime } from '@/hooks/useRealtimeUpdates';
 import { useSmartNudges } from '@/hooks/useSmartNudges';
-import { usePaginatedDeclarations } from '@/hooks/usePaginatedDeclarations';
-import { useDebounce } from '@/hooks/useDebounce';
 import { Declaration, DeletedDeclaration, DeclarationStats, Profile } from '@/types/declarations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -48,8 +45,10 @@ export default function Dashboard() {
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
+  const [declarations, setDeclarations] = useState<Declaration[]>([]);
   const [deletedDeclarations, setDeletedDeclarations] = useState<DeletedDeclaration[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
   const [loadingTrash, setLoadingTrash] = useState(true);
   const [stats, setStats] = useState<DeclarationStats>({
     total: 0,
@@ -65,36 +64,6 @@ export default function Dashboard() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declarationToDelete, setDeclarationToDelete] = useState<Declaration | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-
-  // Debounce search query for server-side filtering (300ms delay)
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
-
-  // Server-side paginated declarations for Manage tab
-  const paginatedFilters = useMemo(() => ({
-    searchQuery: debouncedSearchQuery || undefined,
-    statusFilter: statusFilter !== 'all' ? statusFilter : undefined,
-    senderFilter: senderFilter !== 'all' ? senderFilter : undefined,
-    dateFrom,
-    dateTo,
-  }), [debouncedSearchQuery, statusFilter, senderFilter, dateFrom, dateTo]);
-
-  const {
-    declarations: paginatedDeclarations,
-    totalCount,
-    currentPage,
-    totalPages,
-    pageSize,
-    loading: paginatedLoading,
-    goToPage,
-    setPageSize,
-    refresh: refreshPaginated,
-  } = usePaginatedDeclarations({
-    pageSize: 20,
-    filters: paginatedFilters,
-  });
-
-  // All declarations for overview and stats (limited to recent)
-  const [allDeclarations, setAllDeclarations] = useState<Declaration[]>([]);
 
   // Smart Nudges
   const completionRate = useMemo(() => {
@@ -128,21 +97,15 @@ export default function Dashboard() {
         .from('declarations')
         .select(`*, sender:profiles!sender_id(username)`)
         .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .limit(100); // For overview and stats
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setAllDeclarations(data || []);
+      setDeclarations(data || []);
       
-      // Calculate stats from all non-paginated data
-      const { count: totalCount } = await supabase
-        .from('declarations')
-        .select('*', { count: 'exact', head: true })
-        .is('deleted_at', null);
-
+      // Calculate stats
       const newStats: DeclarationStats = {
-        total: totalCount || data?.length || 0,
+        total: data?.length || 0,
         draft: data?.filter(d => d.status === 'draft').length || 0,
         pending_warehouse_signature: data?.filter(d => d.status === 'pending_warehouse_signature').length || 0,
         warehouse_signed: data?.filter(d => d.status === 'warehouse_signed').length || 0,
@@ -159,6 +122,8 @@ export default function Dashboard() {
         description: error.message,
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   }, [t]);
 
@@ -275,7 +240,7 @@ export default function Dashboard() {
 
       toast({ 
         title: t('success'), 
-        description: t('declarationRestored')
+        description: language === 'ar' ? 'تم استرجاع الإقرار بنجاح' : 'Declaration restored successfully' 
       });
     } catch (error: any) {
       toast({ title: t('error'), description: error.message, variant: 'destructive' });
@@ -283,21 +248,44 @@ export default function Dashboard() {
   };
 
   const handlePermanentDelete = async (id: string) => {
-    if (!window.confirm(t('permanentDeleteWarning'))) return;
+    const confirmMsg = language === 'ar' 
+      ? '⚠️ تحذير: سيتم حذف الإقرار نهائياً ولا يمكن استرجاعه. هل أنت متأكد؟'
+      : '⚠️ Warning: This declaration will be permanently deleted and cannot be recovered. Are you sure?';
+    
+    if (!window.confirm(confirmMsg)) return;
 
     try {
       const { error } = await supabase.from('declarations').delete().eq('id', id);
       if (error) throw error;
       toast({ 
         title: t('success'), 
-        description: t('declarationPermanentlyDeleted')
+        description: language === 'ar' ? 'تم حذف الإقرار نهائياً' : 'Declaration permanently deleted' 
       });
     } catch (error: any) {
       toast({ title: t('error'), description: error.message, variant: 'destructive' });
     }
   };
 
-  // No longer need client-side filtering - server handles it
+  const filteredDeclarations = useMemo(() => declarations.filter(dec => {
+    const matchesSearch = dec.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         dec.sender?.username?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || dec.status === statusFilter;
+    const matchesSender = senderFilter === 'all' || dec.sender_id === senderFilter;
+    
+    let matchesDate = true;
+    if (dateFrom || dateTo) {
+      const decDate = new Date(dec.created_at);
+      if (dateFrom && dateTo) {
+        matchesDate = decDate >= dateFrom && decDate <= dateTo;
+      } else if (dateFrom) {
+        matchesDate = decDate >= dateFrom;
+      } else if (dateTo) {
+        matchesDate = decDate <= dateTo;
+      }
+    }
+    
+    return matchesSearch && matchesStatus && matchesSender && matchesDate;
+  }), [declarations, searchQuery, statusFilter, senderFilter, dateFrom, dateTo]);
 
   const clearFilters = useCallback(() => {
     setSearchQuery('');
@@ -312,12 +300,12 @@ export default function Dashboard() {
   , [searchQuery, statusFilter, senderFilter, dateFrom, dateTo]);
   
   const toggleSelectAll = useCallback(() => {
-    if (selectedItems.length === paginatedDeclarations.length) {
+    if (selectedItems.length === filteredDeclarations.length) {
       setSelectedItems([]);
     } else {
-      setSelectedItems(paginatedDeclarations.map(d => d.id));
+      setSelectedItems(filteredDeclarations.map(d => d.id));
     }
-  }, [selectedItems.length, paginatedDeclarations]);
+  }, [selectedItems.length, filteredDeclarations]);
 
   const toggleSelectItem = useCallback((id: string) => {
     setSelectedItems(prev =>
@@ -348,7 +336,7 @@ export default function Dashboard() {
                 {t('welcome')}, {user?.username}!
               </p>
             </div>
-            <div className="flex gap-2" data-tour="create-declaration">
+            <div className="flex gap-2">
               <CreateDeclarationDialog 
                 onSuccess={loadDeclarations}
                 open={createDialogOpen}
@@ -358,9 +346,7 @@ export default function Dashboard() {
           </div>
 
           {/* Compact Stats Bar */}
-          <div data-tour="dashboard-stats">
-            <DashboardStats stats={stats} loading={paginatedLoading} />
-          </div>
+          <DashboardStats stats={stats} loading={loading} />
 
           {/* Smart Nudge */}
           {activeNudge && (
@@ -401,14 +387,14 @@ export default function Dashboard() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <RecentDeclarationsTable
-              declarations={allDeclarations}
-              loading={paginatedLoading}
+              declarations={declarations}
+              loading={loading}
               expandedRows={expandedRows}
               onToggleRowExpand={toggleRowExpand}
               onStatusChange={loadDeclarations}
               onCreateNew={() => setCreateDialogOpen(true)}
               onViewAll={() => setActiveTab('manage')}
-              totalCount={allDeclarations.length}
+              totalCount={declarations.length}
             />
           </TabsContent>
 
@@ -429,41 +415,38 @@ export default function Dashboard() {
               profiles={profiles}
               hasActiveFilters={!!hasActiveFilters}
               onClearFilters={clearFilters}
-              filteredCount={paginatedDeclarations.length}
-              totalCount={totalCount}
+              filteredCount={filteredDeclarations.length}
+              totalCount={declarations.length}
             />
 
-            {/* Bulk Actions Toolbar */}
-            <BulkActionsToolbar
-              selectedItems={selectedItems}
-              onClearSelection={() => setSelectedItems([])}
-              onActionComplete={() => {
-                loadDeclarations();
-                refreshPaginated();
-              }}
-            />
+            {/* Bulk Actions */}
+            {selectedItems.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="glass-card border-border/50 p-3 flex items-center gap-3 rounded-lg"
+              >
+                <span className="text-sm font-medium">
+                  {selectedItems.length} {t('selected')}
+                </span>
+              </motion.div>
+            )}
 
             {/* Declarations Table */}
             <DeclarationsTable
-              declarations={paginatedDeclarations}
-              loading={paginatedLoading}
+              declarations={filteredDeclarations}
+              loading={loading}
               selectedItems={selectedItems}
               expandedRows={expandedRows}
               onToggleSelectAll={toggleSelectAll}
               onToggleSelectItem={toggleSelectItem}
               onToggleRowExpand={toggleRowExpand}
               onDelete={handleDelete}
-              onStatusChange={() => { loadDeclarations(); refreshPaginated(); }}
+              onStatusChange={loadDeclarations}
               hasActiveFilters={!!hasActiveFilters}
               onClearFilters={clearFilters}
               onCreateNew={() => setCreateDialogOpen(true)}
-              useServerPagination={true}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              pageSize={pageSize}
-              totalCount={totalCount}
-              onPageChange={goToPage}
-              onPageSizeChange={setPageSize}
             />
           </TabsContent>
 

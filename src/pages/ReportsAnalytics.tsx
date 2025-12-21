@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { format, subDays, startOfDay, endOfDay, startOfMonth, startOfYear } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { 
   Users, FileText, Activity, TrendingUp, Shield, UserCheck, 
   BarChart3, Download, RefreshCw, Clock, CalendarIcon, 
@@ -29,12 +29,6 @@ import { toGregorianDateTime, toGregorianDate } from '@/utils/dateUtils';
 import { exportDeclarationsToExcel } from '@/utils/excelExport';
 import { exportDeclarationsToPDF } from '@/utils/pdfExport';
 import { statusLabels, CHART_COLORS } from '@/constants/statusLabels';
-import { 
-  ProfessionalPieChart, 
-  ProfessionalBarChart, 
-  ProfessionalAreaChart, 
-  ProfessionalActivityChart 
-} from '@/components/charts/ProfessionalCharts';
 
 interface SystemStats {
   totalUsers: number;
@@ -284,51 +278,7 @@ export default function ReportsAnalytics() {
             <p className="text-muted-foreground text-sm">{t('reportsSubtitle')}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {/* Date Range Presets */}
-            <div className="flex flex-wrap gap-1">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => { setDateFrom(subDays(new Date(), 7)); setDateTo(new Date()); }}
-                className="text-xs"
-              >
-                {t('last7Days')}
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => { setDateFrom(subDays(new Date(), 30)); setDateTo(new Date()); }}
-                className="text-xs"
-              >
-                {t('last30Days')}
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => { setDateFrom(subDays(new Date(), 90)); setDateTo(new Date()); }}
-                className="text-xs"
-              >
-                {t('last90Days')}
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => { setDateFrom(startOfMonth(new Date())); setDateTo(new Date()); }}
-                className="text-xs"
-              >
-                {t('thisMonth')}
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => { setDateFrom(startOfYear(new Date())); setDateTo(new Date()); }}
-                className="text-xs"
-              >
-                {t('thisYear')}
-              </Button>
-            </div>
-            
-            {/* Custom Date Range Picker */}
+            {/* Date Range Picker */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className={cn("justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
@@ -404,72 +354,199 @@ export default function ReportsAnalytics() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Status Distribution - Professional Chart */}
-              <ProfessionalPieChart
-                data={stats.declarationsByStatus.map(d => ({
-                  name: d.label,
-                  value: d.count,
-                  color: STATUS_COLORS[d.status] || CHART_COLORS.user
-                }))}
-                title={t('statusDistributionChart')}
-                description={t('statusDistributionDesc')}
-                icon={PieChartIcon}
-              />
+              {/* Status Distribution */}
+              <Card className="glass-card border-border/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChartIcon className="w-5 h-5" />
+                    {t('statusDistributionChart')}
+                  </CardTitle>
+                  <CardDescription>{t('statusDistributionDesc')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {stats.declarationsByStatus.length === 0 ? (
+                    <div className="h-64 flex items-center justify-center">
+                      <p className="text-muted-foreground">{t('noData')}</p>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={280}>
+                      <PieChart>
+                        <Pie
+                          data={stats.declarationsByStatus}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ label, percent }) => `${label}: ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={80}
+                          dataKey="count"
+                        >
+                          {stats.declarationsByStatus.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.status] || CHART_COLORS.user} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
 
-              {/* Type Distribution - Professional Chart */}
-              <ProfessionalPieChart
-                data={typeData}
-                title={t('typeDistributionChart')}
-                description={t('typeDistributionDesc')}
-                icon={BarChart3}
-              />
+              {/* Type Distribution */}
+              <Card className="glass-card border-border/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    {t('typeDistributionChart')}
+                  </CardTitle>
+                  <CardDescription>{t('typeDistributionDesc')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {typeData.length === 0 ? (
+                    <div className="h-64 flex items-center justify-center">
+                      <p className="text-muted-foreground">{t('noData')}</p>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={280}>
+                      <PieChart>
+                        <Pie
+                          data={typeData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={80}
+                          dataKey="value"
+                        >
+                          {typeData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
             </div>
 
-            {/* User Distribution - Professional Chart */}
-            <ProfessionalPieChart
-              data={roleData}
-              title={t('userDistribution')}
-              description={t('rolePercentage')}
-              icon={Users}
-              innerRadius={70}
-              outerRadius={110}
-            />
+            {/* User Distribution */}
+            <Card className="glass-card border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  {t('userDistribution')}
+                </CardTitle>
+                <CardDescription>{t('rolePercentage')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie data={roleData} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} outerRadius={80} dataKey="value">
+                      {roleData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Trends Tab */}
           <TabsContent value="trends" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Monthly Trends - Professional Chart */}
-              <ProfessionalAreaChart
-                data={stats.monthlyTrends}
-                title={t('monthlyTrendChart')}
-                description={t('monthlyTrendDesc')}
-                lines={[
-                  { key: 'دخول', color: CHART_COLORS.entrance },
-                  { key: 'خروج', color: CHART_COLORS.exit }
-                ]}
-              />
+              {/* Monthly Trends */}
+              <Card className="glass-card border-border/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    {t('monthlyTrendChart')}
+                  </CardTitle>
+                  <CardDescription>{t('monthlyTrendDesc')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {stats.monthlyTrends.length === 0 ? (
+                    <div className="h-64 flex items-center justify-center">
+                      <p className="text-muted-foreground">{t('noData')}</p>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={280}>
+                      <AreaChart data={stats.monthlyTrends}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                        <YAxis stroke="hsl(var(--muted-foreground))" />
+                        <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                        <Legend />
+                        <Area type="monotone" dataKey="دخول" stackId="1" stroke={CHART_COLORS.entrance} fill={CHART_COLORS.entrance} fillOpacity={0.6} />
+                        <Area type="monotone" dataKey="خروج" stackId="1" stroke={CHART_COLORS.exit} fill={CHART_COLORS.exit} fillOpacity={0.6} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
 
-              {/* Weekly Activity - Professional Chart */}
-              <ProfessionalActivityChart
-                data={stats.weeklyActivity}
-                title={t('weeklyActivityChart')}
-                description={t('weeklyActivityDesc')}
-              />
+              {/* Weekly Activity */}
+              <Card className="glass-card border-border/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    {t('weeklyActivityChart')}
+                  </CardTitle>
+                  <CardDescription>{t('weeklyActivityDesc')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {stats.weeklyActivity.every(w => w.count === 0) ? (
+                    <div className="h-64 flex items-center justify-center">
+                      <p className="text-muted-foreground">{t('noData')}</p>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={280}>
+                      <BarChart data={stats.weeklyActivity}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" />
+                        <YAxis stroke="hsl(var(--muted-foreground))" />
+                        <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                        <Bar dataKey="count" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
             </div>
 
-            {/* Declaration Status Distribution - Professional Bar Chart */}
-            <ProfessionalBarChart
-              data={stats.declarationsByStatus.map(d => ({
-                name: d.label,
-                count: d.count,
-                color: STATUS_COLORS[d.status]
-              }))}
-              title={t('declarationDistribution')}
-              description={t('countByStage')}
-              dataKey="count"
-              nameKey="name"
-            />
+            {/* Declaration Status Distribution */}
+            <Card className="glass-card border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  {t('declarationDistribution')}
+                </CardTitle>
+                <CardDescription>{t('countByStage')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {stats.declarationsByStatus.length === 0 ? (
+                  <div className="h-64 flex items-center justify-center">
+                    <p className="text-muted-foreground">{t('noData')}</p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={stats.declarationsByStatus}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" />
+                      <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                      <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                        {stats.declarationsByStatus.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.status] || CHART_COLORS.user} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Export Tab */}
@@ -517,7 +594,7 @@ export default function ReportsAnalytics() {
                 {stats.recentActivities.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <p>{t('noRecentActivities')}</p>
-                      <p className="text-sm mt-1">{t('noActivitiesInPeriod')}</p>
+                      <p className="text-sm mt-1">{language === 'ar' ? 'لا توجد نشاطات في الفترة المحددة' : 'No activities in the selected period'}</p>
                     </div>
                   ) : (
                     stats.recentActivities.map((activity) => (

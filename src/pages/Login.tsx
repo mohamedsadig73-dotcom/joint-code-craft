@@ -6,10 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Globe, Lock, Mail, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Globe, Lock, Mail, Loader2, Eye, EyeOff, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { validatePassword } from '@/utils/authValidation';
-import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
+import { validatePassword, getPasswordStrength } from '@/utils/authValidation';
 
 export default function Login() {
   const [isSignup, setIsSignup] = useState(false);
@@ -28,6 +27,11 @@ export default function Login() {
     if (!isSignup || !password) return [];
     return validatePassword(password, t);
   }, [password, isSignup, t]);
+
+  const passwordStrength = useMemo(() => {
+    if (!password) return { score: 0, label: 'none' };
+    return getPasswordStrength(password);
+  }, [password]);
 
   const isPasswordValid = passwordErrors.length === 0 && password.length >= 10;
 
@@ -119,6 +123,15 @@ export default function Login() {
         });
         setLoading(false);
       }
+    }
+  };
+
+  const getStrengthColor = () => {
+    switch (passwordStrength.label) {
+      case 'weak': return 'bg-destructive';
+      case 'medium': return 'bg-warning';
+      case 'strong': return 'bg-green-500';
+      default: return 'bg-muted';
     }
   };
 
@@ -239,8 +252,48 @@ export default function Login() {
               </Button>
             </div>
 
-            {/* Enhanced Password strength indicator for signup */}
-            {isSignup && <PasswordStrengthIndicator password={password} />}
+            {/* Password strength indicator for signup */}
+            {isSignup && password && (
+              <div className="space-y-2" id="password-requirements">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div
+                      key={i}
+                      className={`h-1 flex-1 rounded-full transition-colors ${
+                        i <= passwordStrength.score ? getStrengthColor() : 'bg-muted'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t('passwordStrength')}: {t(passwordStrength.label)}
+                </p>
+                
+                {/* Password requirements checklist */}
+                <ul className="text-xs space-y-1" aria-label={t('passwordRequirements')}>
+                  <li className={`flex items-center gap-1 ${password.length >= 10 ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {password.length >= 10 ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                    {t('passwordMinLength')}
+                  </li>
+                  <li className={`flex items-center gap-1 ${/[A-Z]/.test(password) ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {/[A-Z]/.test(password) ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                    {t('passwordUppercase')}
+                  </li>
+                  <li className={`flex items-center gap-1 ${/[a-z]/.test(password) ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {/[a-z]/.test(password) ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                    {t('passwordLowercase')}
+                  </li>
+                  <li className={`flex items-center gap-1 ${/[0-9]/.test(password) ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {/[0-9]/.test(password) ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                    {t('passwordNumber')}
+                  </li>
+                  <li className={`flex items-center gap-1 ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                    {t('passwordSpecialChar')}
+                  </li>
+                </ul>
+              </div>
+            )}
           </div>
 
           <Button 

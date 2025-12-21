@@ -7,7 +7,7 @@ import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { ThemeToggleSimple } from '@/components/ThemeToggle';
 import { 
   LayoutDashboard, 
-  Warehouse, 
+  FolderOpen, 
   BarChart3, 
   LogOut, 
   User,
@@ -15,33 +15,9 @@ import {
   Shield,
   Download,
   Wrench,
+  FileText,
   History,
-  RefreshCw,
-  Package,
-  MapPin,
-  Boxes,
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  ClipboardList,
-  Truck,
-  ChevronDown,
-  AlertTriangle,
-  RotateCcw,
-  ArrowRightLeft,
-  Hash,
-  Ship,
-  Target,
-  Users,
-  Keyboard,
-  BrainCircuit,
-  Globe2,
-  Building2,
-  Receipt,
-  ShoppingCart,
-  Thermometer,
-  Factory,
-  ShieldCheck,
-  Lock
+  RefreshCw
 } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -51,9 +27,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 
 export function Navigation() {
@@ -151,35 +124,6 @@ export function Navigation() {
     }
   };
 
-  const wmsSubItems = [
-    { path: '/wms', icon: LayoutDashboard, labelKey: 'wmsDashboard' },
-    { path: '/wms/products', icon: Package, labelKey: 'wmsProducts' },
-    { path: '/wms/inventory', icon: Boxes, labelKey: 'wmsInventory' },
-    { path: '/wms/locations', icon: MapPin, labelKey: 'wmsLocations' },
-    { path: '/wms/inbound', icon: ArrowDownToLine, labelKey: 'wmsInbound' },
-    { path: '/wms/outbound', icon: ArrowUpFromLine, labelKey: 'wmsOutbound' },
-    { path: '/wms/suppliers', icon: Truck, labelKey: 'wmsSuppliers' },
-    { path: '/wms/customers', icon: Users, labelKey: 'wmsCustomers' },
-    { path: '/wms/transactions', icon: ClipboardList, labelKey: 'wmsTransactions' },
-    { path: '/wms/cycle-count', icon: BarChart3, labelKey: 'wmsCycleCount' },
-    { path: '/wms/shipments', icon: Ship, labelKey: 'wmsShipments' },
-    { path: '/wms/rma', icon: RotateCcw, labelKey: 'wmsRMA' },
-    { path: '/wms/cross-dock', icon: ArrowRightLeft, labelKey: 'wmsCrossDock' },
-    { path: '/wms/serial-numbers', icon: Hash, labelKey: 'wmsSerialNumbers' },
-    { path: '/wms/reports', icon: BarChart3, labelKey: 'wmsReports' },
-    { path: '/wms/advanced-reports', icon: Target, labelKey: 'wmsAdvancedReports' },
-    { path: '/wms/predictive-analytics', icon: BrainCircuit, labelKey: 'wmsPredictiveAnalytics' },
-    ...(user?.role === 'admin' || user?.role === 'manager' ? [{ path: '/wms/worker-productivity', icon: Users, labelKey: 'wmsWorkerProductivity' }] : []),
-    { path: '/wms/customer-portal', icon: Globe2, labelKey: 'wmsCustomerPortal' },
-    { path: '/wms/3pl-tenants', icon: Building2, labelKey: 'wms3PLTenants' },
-    { path: '/wms/billing', icon: Receipt, labelKey: 'wmsBilling' },
-    { path: '/wms/ecommerce', icon: ShoppingCart, labelKey: 'wmsEcommerce' },
-    { path: '/wms/temperature-zones', icon: Thermometer, labelKey: 'wmsTemperatureZones' },
-    { path: '/wms/mes', icon: Factory, labelKey: 'wmsMES' },
-    { path: '/wms/compliance', icon: ShieldCheck, labelKey: 'wmsCompliance' },
-    { path: '/wms/alerts', icon: AlertTriangle, labelKey: 'wmsAlerts' },
-  ];
-
   const navItems = [
     { path: '/', icon: LayoutDashboard, labelKey: 'declarations' },
     { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
@@ -200,7 +144,7 @@ export function Navigation() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold gradient-text">WMS</h1>
+            <h1 className="text-2xl font-bold gradient-text">DTS</h1>
             <span className="hidden md:block text-sm text-muted-foreground">
               {t('systemTitle')}
             </span>
@@ -208,42 +152,14 @@ export function Navigation() {
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center gap-2">
-            {/* WMS Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant={location.pathname.startsWith('/wms') ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className="gap-2"
-                >
-                  <Warehouse className="w-4 h-4" />
-                  {t('wmsTitle')}
-                  <ChevronDown className="w-3 h-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                {wmsSubItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <DropdownMenuItem key={item.path} onClick={() => navigate(item.path)} className="gap-2 cursor-pointer">
-                      <Icon className="w-4 h-4" />
-                      {t(item.labelKey)}
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             {allNavItems.map((item) => {
               const Icon = item.icon;
-              const isReportsLink = item.path === '/reports-analytics';
               return (
                 <Link key={item.path} to={item.path}>
                   <Button
                     variant={isActive(item.path) ? 'secondary' : 'ghost'}
                     size="sm"
                     className="gap-2"
-                    data-tour={isReportsLink ? 'nav-reports' : undefined}
                   >
                     <Icon className="w-4 h-4" />
                     {t(item.labelKey)}
@@ -287,9 +203,7 @@ export function Navigation() {
             </Button>
 
             {/* Notifications */}
-            <div data-tour="notifications">
-              <NotificationCenter />
-            </div>
+            <NotificationCenter />
 
             {/* User Menu */}
             <DropdownMenu>
@@ -308,10 +222,6 @@ export function Navigation() {
                 <DropdownMenuItem onClick={() => navigate('/profile')}>
                   <User className="w-4 h-4 me-2" />
                   {t('profile')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/security')}>
-                  <Lock className="w-4 h-4 me-2" />
-                  {t('securitySettings')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/install')}>
                   <Download className="w-4 h-4 me-2" />
@@ -334,31 +244,22 @@ export function Navigation() {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden flex justify-around py-2 border-t border-border/50 overflow-x-auto">
-          <Link to="/">
-            <Button variant={isActive('/') ? 'secondary' : 'ghost'} size="sm" className="gap-1 px-2">
-              <LayoutDashboard className="w-4 h-4" />
-              <span className="text-xs">{t('declarations')}</span>
-            </Button>
-          </Link>
-          <Link to="/wms">
-            <Button variant={location.pathname.startsWith('/wms') ? 'secondary' : 'ghost'} size="sm" className="gap-1 px-2">
-              <Warehouse className="w-4 h-4" />
-              <span className="text-xs">{t('wmsTitle')}</span>
-            </Button>
-          </Link>
-          <Link to="/maintenance">
-            <Button variant={isActive('/maintenance') ? 'secondary' : 'ghost'} size="sm" className="gap-1 px-2">
-              <Wrench className="w-4 h-4" />
-              <span className="text-xs">{t('maintenance')}</span>
-            </Button>
-          </Link>
-          <Link to="/reports-analytics">
-            <Button variant={isActive('/reports-analytics') ? 'secondary' : 'ghost'} size="sm" className="gap-1 px-2">
-              <BarChart3 className="w-4 h-4" />
-              <span className="text-xs">{t('reportsTitle')}</span>
-            </Button>
-          </Link>
+        <div className="md:hidden flex justify-around py-2 border-t border-border/50">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link key={item.path} to={item.path}>
+                <Button
+                  variant={isActive(item.path) ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="text-xs">{t(item.labelKey)}</span>
+                </Button>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </nav>

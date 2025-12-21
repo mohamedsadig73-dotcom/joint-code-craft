@@ -13,9 +13,29 @@ import { Separator } from '@/components/ui/separator';
 import { User, Lock, Mail, Shield, Save } from 'lucide-react';
 import { z } from 'zod';
 
+const profileSchema = z.object({
+  username: z.string()
+    .trim()
+    .min(3, 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل')
+    .max(50, 'اسم المستخدم يجب أن يكون أقل من 50 حرف')
+    .regex(/^[a-zA-Z0-9_\u0600-\u06FF\s]+$/, 'اسم المستخدم يحتوي على أحرف غير صالحة'),
+  email: z.string()
+    .trim()
+    .email('البريد الإلكتروني غير صالح')
+    .max(255, 'البريد الإلكتروني يجب أن يكون أقل من 255 حرف'),
+});
+
+const passwordSchema = z.object({
+  newPassword: z.string().min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
+  confirmPassword: z.string(),
+}).refine(data => data.newPassword === data.confirmPassword, {
+  message: 'كلمتا المرور غير متطابقتين',
+  path: ['confirmPassword'],
+});
+
 export default function Profile() {
   const { user } = useAuth();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -25,27 +45,6 @@ export default function Profile() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
-
-  // Dynamic validation schemas based on language
-  const profileSchema = z.object({
-    username: z.string()
-      .trim()
-      .min(3, language === 'ar' ? 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل' : 'Username must be at least 3 characters')
-      .max(50, language === 'ar' ? 'اسم المستخدم يجب أن يكون أقل من 50 حرف' : 'Username must be less than 50 characters')
-      .regex(/^[a-zA-Z0-9_\u0600-\u06FF\s]+$/, language === 'ar' ? 'اسم المستخدم يحتوي على أحرف غير صالحة' : 'Username contains invalid characters'),
-    email: z.string()
-      .trim()
-      .email(language === 'ar' ? 'البريد الإلكتروني غير صالح' : 'Invalid email address')
-      .max(255, language === 'ar' ? 'البريد الإلكتروني يجب أن يكون أقل من 255 حرف' : 'Email must be less than 255 characters'),
-  });
-
-  const passwordSchema = z.object({
-    newPassword: z.string().min(6, language === 'ar' ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters'),
-    confirmPassword: z.string(),
-  }).refine(data => data.newPassword === data.confirmPassword, {
-    message: t('passwordsNotMatch'),
-    path: ['confirmPassword'],
-  });
 
   useEffect(() => {
     if (user) {
@@ -63,8 +62,8 @@ export default function Profile() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: t('profileDataError'),
-        description: error.errors?.[0]?.message || t('invalidData'),
+        title: 'خطأ في البيانات',
+        description: error.errors?.[0]?.message || 'البيانات المدخلة غير صحيحة',
       });
       return;
     }
@@ -84,8 +83,8 @@ export default function Profile() {
         if (existingUsername) {
           toast({
             variant: 'destructive',
-            title: t('error'),
-            description: t('usernameTaken'),
+            title: 'خطأ',
+            description: 'اسم المستخدم مستخدم بالفعل',
           });
           setProfileLoading(false);
           return;
@@ -104,8 +103,8 @@ export default function Profile() {
         if (existingEmail) {
           toast({
             variant: 'destructive',
-            title: t('error'),
-            description: t('emailTaken'),
+            title: 'خطأ',
+            description: 'البريد الإلكتروني مستخدم بالفعل',
           });
           setProfileLoading(false);
           return;
@@ -133,8 +132,8 @@ export default function Profile() {
       }
 
       toast({
-        title: t('success'),
-        description: t('dataUpdated'),
+        title: 'تم التحديث',
+        description: 'تم تحديث بياناتك الشخصية بنجاح',
       });
 
       // Reload to get updated data
@@ -142,8 +141,8 @@ export default function Profile() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: t('error'),
-        description: error.message || t('dataUpdateFailed'),
+        title: 'خطأ',
+        description: error.message || 'فشل تحديث البيانات',
       });
     } finally {
       setProfileLoading(false);
@@ -215,7 +214,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen">
       <Navigation />
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -229,7 +228,7 @@ export default function Profile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="w-5 h-5" />
-              {t('personalData')}
+              البيانات الشخصية
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -238,7 +237,7 @@ export default function Profile() {
                 <div>
                   <Label htmlFor="username" className="flex items-center gap-2">
                     <User className="w-4 h-4" />
-                    {t('usernameLabel')}
+                    اسم المستخدم
                   </Label>
                   <Input
                     id="username"
@@ -253,7 +252,7 @@ export default function Profile() {
                 <div>
                   <Label htmlFor="email" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    {t('emailLabel')}
+                    البريد الإلكتروني
                   </Label>
                   <Input
                     id="email"
@@ -269,7 +268,7 @@ export default function Profile() {
                 <div>
                   <Label className="flex items-center gap-2">
                     <Shield className="w-4 h-4" />
-                    {t('functionalRole')}
+                    الدور الوظيفي
                   </Label>
                   <div className="mt-2">
                     <span
@@ -295,11 +294,11 @@ export default function Profile() {
                   }}
                   disabled={profileLoading}
                 >
-                  {t('resetChanges')}
+                  إعادة تعيين
                 </Button>
                 <Button type="submit" disabled={profileLoading}>
-                  <Save className="w-4 h-4 me-2" />
-                  {profileLoading ? t('saving') : t('saveEdits')}
+                  <Save className="w-4 h-4 mr-2" />
+                  {profileLoading ? 'جاري الحفظ...' : 'حفظ التعديلات'}
                 </Button>
               </div>
             </form>
@@ -311,13 +310,13 @@ export default function Profile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lock className="w-5 h-5" />
-              {t('changePasswordTitle')}
+              تغيير كلمة المرور
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handlePasswordChange} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="newPassword">{t('newPasswordLabel')}</Label>
+                <Label htmlFor="newPassword">كلمة المرور الجديدة</Label>
                 <Input
                   id="newPassword"
                   type="password"
@@ -331,7 +330,7 @@ export default function Profile() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">{t('confirmPasswordLabel')}</Label>
+                <Label htmlFor="confirmPassword">تأكيد كلمة المرور</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -353,10 +352,10 @@ export default function Profile() {
                   onClick={() => navigate('/')}
                   disabled={loading}
                 >
-                  {t('cancel')}
+                  إلغاء
                 </Button>
                 <Button type="submit" disabled={loading}>
-                  {loading ? t('updatingPassword') : t('updatePasswordBtn')}
+                  {loading ? 'جاري التحديث...' : 'تحديث كلمة المرور'}
                 </Button>
               </div>
             </form>

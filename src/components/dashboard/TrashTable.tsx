@@ -58,11 +58,11 @@ export function TrashTable({
             <AlertCircle className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
             <div className="text-sm space-y-1">
               <p className="text-foreground font-medium">
-                {t('trashInfo')}
+                {language === 'ar' ? 'معلومات مهمة عن سلة المحذوفات:' : 'Important information about trash:'}
               </p>
               <ul className="text-muted-foreground space-y-1 mr-4">
-                <li>• {t('trashRestore')}</li>
-                <li>• {t('trashAutoDelete')}</li>
+                <li>• {language === 'ar' ? 'يمكن استرجاع الإقرارات المحذوفة خلال 30 يوم من تاريخ الحذف' : 'Deleted declarations can be restored within 30 days'}</li>
+                <li>• {language === 'ar' ? 'بعد 30 يوم، سيتم حذف الإقرار نهائياً بشكل تلقائي' : 'After 30 days, declarations will be permanently deleted'}</li>
               </ul>
             </div>
           </div>
@@ -78,8 +78,8 @@ export function TrashTable({
                 <TableHead>{t('sender')}</TableHead>
                 <TableHead>{t('archiveNumber')}</TableHead>
                 <TableHead>{t('status')}</TableHead>
-                <TableHead>{t('deletedDate')}</TableHead>
-                <TableHead>{t('daysRemaining')}</TableHead>
+                <TableHead>{language === 'ar' ? 'تاريخ الحذف' : 'Deleted Date'}</TableHead>
+                <TableHead>{language === 'ar' ? 'الأيام المتبقية' : 'Days Remaining'}</TableHead>
                 <TableHead className="text-right">{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -91,8 +91,8 @@ export function TrashTable({
                   <TableCell colSpan={8} className="text-center py-8">
                     <EmptyState
                       variant="trash"
-                      title={t('trashEmpty')}
-                      description={t('noDeletedDeclarations')}
+                      title={language === 'ar' ? 'سلة المحذوفات فارغة' : 'Trash is empty'}
+                      description={language === 'ar' ? 'لا توجد إقرارات محذوفة حالياً' : 'No deleted declarations currently'}
                     />
                   </TableCell>
                 </TableRow>
@@ -140,7 +140,7 @@ export function TrashTable({
                                 size="icon"
                                 className="text-green-600 hover:text-green-700 dark:text-green-400"
                                 onClick={() => onRestore(declaration.id)}
-                                aria-label={t('restore')}
+                                aria-label={language === 'ar' ? 'استرجاع' : 'Restore'}
                               >
                                 <RefreshCw className="w-4 h-4" />
                               </Button>
@@ -150,7 +150,7 @@ export function TrashTable({
                                   size="icon" 
                                   className="text-destructive hover:text-destructive"
                                   onClick={() => onPermanentDelete(declaration.id)}
-                                  aria-label={t('permanentDelete')}
+                                  aria-label={language === 'ar' ? 'حذف نهائي' : 'Permanently delete'}
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>

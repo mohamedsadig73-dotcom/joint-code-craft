@@ -11,7 +11,6 @@ import { RegisterSW } from "@/components/RegisterSW";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Onboarding } from "@/components/Onboarding";
-import { OnboardingTour } from "@/components/OnboardingTour";
 import { OfflineBanner } from "@/components/OfflineIndicator";
 import { AnimatedRoutes } from "@/components/AnimatedRoutes";
 
@@ -33,7 +32,6 @@ function AppRoutes() {
     <>
       {isAuthenticated && <NotificationListener />}
       {isAuthenticated && <Onboarding />}
-      {isAuthenticated && <OnboardingTour />}
       {isAuthenticated && <MobileBottomNav />}
       {isAuthenticated && <OfflineBanner />}
       <AnimatedRoutes />

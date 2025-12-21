@@ -14,10 +14,12 @@ import { Switch } from '@/components/ui/switch';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { SuccessAnimation, useSuccessAnimation } from '@/components/ui/SuccessAnimation';
-import { emptyStateMessages } from '@/constants/statusLabels';
+import { assetTypeLabels, emptyStateMessages } from '@/constants/statusLabels';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AssetMobileCard } from './MaintenanceMobileCard';
+
+const ASSET_TYPES = Object.entries(assetTypeLabels).map(([value, label]) => ({ value, label }));
 
 interface Asset {
   id: string;
@@ -65,17 +67,6 @@ export function AssetsManagement() {
     active: true,
   });
 
-  // Asset types with translations
-  const ASSET_TYPES = [
-    { value: 'electrical', label: t('electrical') },
-    { value: 'plumbing', label: t('plumbing') },
-    { value: 'hvac', label: t('hvac') },
-    { value: 'safety', label: t('safety') },
-    { value: 'equipment', label: t('equipment') },
-    { value: 'building', label: t('building') },
-    { value: 'other', label: t('other') },
-  ];
-
   const loadAssets = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -87,14 +78,14 @@ export function AssetsManagement() {
       setAssets(data || []);
     } catch (error: any) {
       toast({
-        title: t('error'),
+        title: 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     loadAssets();
@@ -109,15 +100,15 @@ export function AssetsManagement() {
           .update(formData)
           .eq('id', editingAsset.id);
         if (error) throw error;
-        triggerSuccess('success', t('assetUpdatedSuccess'));
-        toast({ title: t('assetUpdatedSuccess') });
+        triggerSuccess('success', 'تم تحديث الأصل بنجاح');
+        toast({ title: 'تم تحديث الأصل بنجاح' });
       } else {
         const { error } = await supabase
           .from('maintenance_assets')
           .insert([formData]);
         if (error) throw error;
-        triggerSuccess('success', t('assetAddedSuccess'));
-        toast({ title: t('assetAddedSuccess') });
+        triggerSuccess('success', 'تم إضافة الأصل بنجاح');
+        toast({ title: 'تم إضافة الأصل بنجاح' });
       }
       
       setDialogOpen(false);
@@ -125,7 +116,7 @@ export function AssetsManagement() {
       loadAssets();
     } catch (error: any) {
       toast({
-        title: t('error'),
+        title: 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -133,7 +124,7 @@ export function AssetsManagement() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm(t('confirmDeleteAsset'))) return;
+    if (!window.confirm('هل أنت متأكد من حذف هذا الأصل؟')) return;
     
     try {
       const { error } = await supabase
@@ -142,12 +133,12 @@ export function AssetsManagement() {
         .eq('id', id);
       
       if (error) throw error;
-      triggerSuccess('success', t('assetDeletedSuccess'));
-      toast({ title: t('assetDeletedSuccess') });
+      triggerSuccess('success', 'تم حذف الأصل بنجاح');
+      toast({ title: 'تم حذف الأصل بنجاح' });
       loadAssets();
     } catch (error: any) {
       toast({
-        title: t('error'),
+        title: 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
@@ -196,8 +187,8 @@ export function AssetsManagement() {
       <SuccessAnimationComponent />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold">{t('assetsTitle')}</h2>
-          <p className="text-muted-foreground">{t('assetsDesc')}</p>
+          <h2 className="text-2xl font-bold">إدارة الأصول والمعدات</h2>
+          <p className="text-muted-foreground">تسجيل ومتابعة الأصول والمعدات</p>
         </div>
         
         <Dialog open={dialogOpen} onOpenChange={(open) => {
@@ -207,20 +198,20 @@ export function AssetsManagement() {
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="w-4 h-4" />
-              {t('addNewAsset')}
+              إضافة أصل جديد
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingAsset ? t('editAssetTitle') : t('addAssetTitle')}
+                {editingAsset ? 'تعديل الأصل' : 'إضافة أصل جديد'}
               </DialogTitle>
             </DialogHeader>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">{t('assetNameLabel')} *</Label>
+                  <Label htmlFor="name">اسم الأصل *</Label>
                   <Input
                     id="name"
                     required
@@ -230,7 +221,7 @@ export function AssetsManagement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="code">{t('codeLabel')}</Label>
+                  <Label htmlFor="code">الرمز/الكود</Label>
                   <Input
                     id="code"
                     value={formData.code}
@@ -239,7 +230,7 @@ export function AssetsManagement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="type">{t('typeLabel')} *</Label>
+                  <Label htmlFor="type">النوع *</Label>
                   <Select 
                     value={formData.type} 
                     onValueChange={(value) => setFormData({ 
@@ -261,7 +252,7 @@ export function AssetsManagement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="location">{t('locationLabel')} *</Label>
+                  <Label htmlFor="location">الموقع *</Label>
                   <Input
                     id="location"
                     required
@@ -271,7 +262,7 @@ export function AssetsManagement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="site">{t('siteLabel')}</Label>
+                  <Label htmlFor="site">المنشأة</Label>
                   <Input
                     id="site"
                     value={formData.site}
@@ -280,7 +271,7 @@ export function AssetsManagement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="purchase_date">{t('purchaseDateLabel')}</Label>
+                  <Label htmlFor="purchase_date">تاريخ الشراء</Label>
                   <Input
                     id="purchase_date"
                     type="date"
@@ -290,7 +281,7 @@ export function AssetsManagement() {
                 </div>
 
                 <div className="space-y-2 col-span-2">
-                  <Label htmlFor="warranty_expiry">{t('warrantyExpiryLabel')}</Label>
+                  <Label htmlFor="warranty_expiry">تاريخ انتهاء الضمان</Label>
                   <Input
                     id="warranty_expiry"
                     type="date"
@@ -300,7 +291,7 @@ export function AssetsManagement() {
                 </div>
 
                 <div className="space-y-2 col-span-2">
-                  <Label htmlFor="description">{t('descriptionLabel')}</Label>
+                  <Label htmlFor="description">الوصف</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
@@ -310,7 +301,7 @@ export function AssetsManagement() {
                 </div>
 
                 <div className="space-y-2 col-span-2">
-                  <Label htmlFor="notes">{t('notesLabel')}</Label>
+                  <Label htmlFor="notes">ملاحظات</Label>
                   <Textarea
                     id="notes"
                     value={formData.notes}
@@ -325,16 +316,16 @@ export function AssetsManagement() {
                     checked={formData.active}
                     onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
                   />
-                  <Label htmlFor="active">{t('activeAsset')}</Label>
+                  <Label htmlFor="active">أصل نشط</Label>
                 </div>
               </div>
 
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  {t('cancel')}
+                  إلغاء
                 </Button>
                 <Button type="submit">
-                  {editingAsset ? t('update') : t('add')}
+                  {editingAsset ? 'تحديث' : 'إضافة'}
                 </Button>
               </div>
             </form>
@@ -356,7 +347,7 @@ export function AssetsManagement() {
               variant="maintenance"
               title={emptyStateMessages.assets.title}
               description={emptyStateMessages.assets.description}
-              actionLabel={t('addNewAsset')}
+              actionLabel={t('addAsset') || 'إضافة أصل جديد'}
               onAction={() => setDialogOpen(true)}
             />
           ) : (
@@ -377,11 +368,11 @@ export function AssetsManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('assetName')}</TableHead>
-                <TableHead>{t('code')}</TableHead>
+                <TableHead>{t('assetName') || 'الاسم'}</TableHead>
+                <TableHead>{t('code') || 'الرمز'}</TableHead>
                 <TableHead>{t('type')}</TableHead>
-                <TableHead>{t('location')}</TableHead>
-                <TableHead>{t('site')}</TableHead>
+                <TableHead>{t('location') || 'الموقع'}</TableHead>
+                <TableHead>{t('site') || 'المنشأة'}</TableHead>
                 <TableHead>{t('status')}</TableHead>
                 <TableHead className="text-left">{t('actions')}</TableHead>
               </TableRow>
@@ -396,7 +387,7 @@ export function AssetsManagement() {
                       variant="maintenance"
                       title={emptyStateMessages.assets.title}
                       description={emptyStateMessages.assets.description}
-                      actionLabel={t('addNewAsset')}
+                      actionLabel={t('addAsset') || 'إضافة أصل جديد'}
                       onAction={() => setDialogOpen(true)}
                     />
                   </TableCell>
@@ -413,7 +404,7 @@ export function AssetsManagement() {
                     <TableCell>{asset.site || '-'}</TableCell>
                     <TableCell>
                       <Badge variant={asset.active ? 'default' : 'secondary'}>
-                        {asset.active ? t('active') : t('inactive')}
+                        {asset.active ? t('active') || 'نشط' : t('inactive') || 'غير نشط'}
                       </Badge>
                     </TableCell>
                     <TableCell>
