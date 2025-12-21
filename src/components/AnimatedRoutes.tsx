@@ -20,6 +20,7 @@ const Maintenance = lazy(() => import('@/pages/Maintenance'));
 const MaintenanceItemDetails = lazy(() => import('@/pages/MaintenanceItemDetails'));
 const AuditLogs = lazy(() => import('@/pages/AuditLogs'));
 const InstallApp = lazy(() => import('@/pages/InstallApp'));
+const LeaveRequests = lazy(() => import('@/pages/LeaveRequests'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Enhanced Loading component
@@ -159,6 +160,16 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <MaintenanceItemDetails />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leave-requests"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <LeaveRequests />
                 </PageTransition>
               </ProtectedRoute>
             }
