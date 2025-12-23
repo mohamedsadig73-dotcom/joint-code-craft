@@ -1,12 +1,11 @@
-import { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import { Suspense, lazy, memo } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PageTransition } from '@/components/PageTransition';
 import { Loader2 } from 'lucide-react';
 
-// Lazy load pages
+// Lazy load pages with preload hints for critical pages
 const Landing = lazy(() => import('@/pages/Landing'));
 const Login = lazy(() => import('@/pages/Login'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
@@ -23,25 +22,20 @@ const InstallApp = lazy(() => import('@/pages/InstallApp'));
 const LeaveTracking = lazy(() => import('@/pages/LeaveTracking'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
-// Enhanced Loading component
-const PageLoader = () => (
+// Lightweight Loading component
+const PageLoader = memo(() => (
   <div className="min-h-screen flex flex-col items-center justify-center gap-4" role="status" aria-label="Loading">
-    <div className="relative">
-      <div className="absolute inset-0 rounded-full bg-secondary/20 animate-ping" />
-      <Loader2 className="h-12 w-12 text-secondary animate-spin" />
-    </div>
-    <p className="text-muted-foreground text-sm animate-pulse">جاري التحميل...</p>
+    <Loader2 className="h-10 w-10 text-secondary animate-spin" />
+    <p className="text-muted-foreground text-sm">جاري التحميل...</p>
   </div>
-);
+));
 
 export function AnimatedRoutes() {
-  const location = useLocation();
   const { isAuthenticated, loading } = useAuth();
 
   return (
-    <AnimatePresence mode="wait">
-      <Suspense fallback={<PageLoader />}>
-        <Routes location={location} key={location.pathname}>
+    <Suspense fallback={<PageLoader />}>
+        <Routes>
           <Route
             path="/login"
             element={
@@ -193,7 +187,6 @@ export function AnimatedRoutes() {
             }
           />
         </Routes>
-      </Suspense>
-    </AnimatePresence>
+    </Suspense>
   );
 }

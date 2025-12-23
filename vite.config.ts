@@ -96,9 +96,15 @@ export default defineConfig(({ mode }) => ({
           'supabase': ['@supabase/supabase-js'],
           'pdf-export': ['jspdf', 'jspdf-autotable'],
           'excel-export': ['xlsx'],
+          'date-utils': ['date-fns'],
+          'framer': ['framer-motion'],
         }
       }
     },
     chunkSizeWarningLimit: 1000,
+    // Performance optimizations
+    minify: 'esbuild',
+    target: 'esnext',
+    cssMinify: true,
   }
 }));
