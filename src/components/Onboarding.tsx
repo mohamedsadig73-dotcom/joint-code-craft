@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
@@ -62,7 +61,7 @@ interface OnboardingProps {
   onComplete?: () => void;
 }
 
-export function Onboarding({ forceShow = false, onComplete }: OnboardingProps) {
+export const Onboarding = memo(function Onboarding({ forceShow = false, onComplete }: OnboardingProps) {
   const { t, language } = useLanguage();
   const [isVisible, setIsVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -70,7 +69,6 @@ export function Onboarding({ forceShow = false, onComplete }: OnboardingProps) {
   useEffect(() => {
     const completed = localStorage.getItem(ONBOARDING_KEY);
     if (!completed || forceShow) {
-      // Small delay for better UX
       const timer = setTimeout(() => setIsVisible(true), 500);
       return () => clearTimeout(timer);
     }
@@ -108,132 +106,97 @@ export function Onboarding({ forceShow = false, onComplete }: OnboardingProps) {
   const Icon = currentStepData.icon;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-        >
-          <Card className="glass-card border-border/50 w-full max-w-md p-6 relative overflow-hidden">
-            {/* Background decoration */}
-            <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
-            <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-secondary/10 rounded-full blur-3xl" />
-            
-            {/* Skip button */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="animate-slide-up">
+        <Card className="glass-card border-border/50 w-full max-w-md p-6 relative overflow-hidden">
+          {/* Background decoration */}
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-secondary/10 rounded-full blur-3xl" />
+          
+          {/* Skip button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 end-4 z-10"
+            onClick={handleSkip}
+          >
+            <X className="w-4 h-4" />
+          </Button>
+
+          {/* Progress dots */}
+          <div className="flex justify-center gap-2 mb-6">
+            {steps.map((_, index) => (
+              <div
+                key={index}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentStep 
+                    ? 'w-8 bg-primary' 
+                    : index < currentStep 
+                      ? 'w-2 bg-primary/50' 
+                      : 'w-2 bg-muted'
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Step content */}
+          <div key={currentStep} className="text-center relative z-10 animate-fade-in">
+            <div className="mx-auto mb-6">
+              <div className="inline-flex p-4 rounded-2xl bg-card/50 border border-border/30">
+                <Icon className={`w-12 h-12 ${currentStepData.color}`} />
+              </div>
+            </div>
+
+            <h2 className="text-xl font-bold mb-3">
+              {t(currentStepData.titleKey)}
+            </h2>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+              {t(currentStepData.descriptionKey)}
+            </p>
+          </div>
+
+          {/* Navigation buttons */}
+          <div className="flex items-center justify-between gap-4 relative z-10">
             <Button
               variant="ghost"
-              size="icon"
-              className="absolute top-4 end-4 z-10"
-              onClick={handleSkip}
+              onClick={handlePrev}
+              disabled={currentStep === 0}
+              className="gap-2"
             >
-              <X className="w-4 h-4" />
+              {isRTL ? (
+                <ChevronRight className="w-4 h-4" />
+              ) : (
+                <ChevronLeft className="w-4 h-4" />
+              )}
+              {t('previous')}
             </Button>
 
-            {/* Progress dots */}
-            <div className="flex justify-center gap-2 mb-6">
-              {steps.map((_, index) => (
-                <motion.div
-                  key={index}
-                  className={`h-2 rounded-full transition-all ${
-                    index === currentStep 
-                      ? 'w-8 bg-primary' 
-                      : index < currentStep 
-                        ? 'w-2 bg-primary/50' 
-                        : 'w-2 bg-muted'
-                  }`}
-                  initial={false}
-                  animate={{ 
-                    scale: index === currentStep ? 1 : 0.8 
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Step content */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentStep}
-                initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: isRTL ? 20 : -20 }}
-                transition={{ duration: 0.2 }}
-                className="text-center relative z-10"
-              >
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ 
-                    type: 'spring', 
-                    stiffness: 200, 
-                    damping: 15,
-                    delay: 0.1 
-                  }}
-                  className="mx-auto mb-6"
-                >
-                  <div className={`inline-flex p-4 rounded-2xl bg-card/50 border border-border/30`}>
-                    <Icon className={`w-12 h-12 ${currentStepData.color}`} />
-                  </div>
-                </motion.div>
-
-                <h2 className="text-xl font-bold mb-3">
-                  {t(currentStepData.titleKey)}
-                </h2>
-                <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                  {t(currentStepData.descriptionKey)}
-                </p>
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Navigation buttons */}
-            <div className="flex items-center justify-between gap-4 relative z-10">
-              <Button
-                variant="ghost"
-                onClick={handlePrev}
-                disabled={currentStep === 0}
-                className="gap-2"
-              >
-                {isRTL ? (
-                  <ChevronRight className="w-4 h-4" />
-                ) : (
-                  <ChevronLeft className="w-4 h-4" />
-                )}
-                {t('previous')}
-              </Button>
-
-              <Button
-                onClick={handleNext}
-                className="gap-2"
-              >
-                {currentStep === steps.length - 1 ? (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    {t('getStarted')}
-                  </>
-                ) : (
-                  <>
-                    {t('next')}
-                    {isRTL ? (
-                      <ChevronLeft className="w-4 h-4" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4" />
-                    )}
-                  </>
-                )}
-              </Button>
-            </div>
-          </Card>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+            <Button
+              onClick={handleNext}
+              className="gap-2"
+            >
+              {currentStep === steps.length - 1 ? (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  {t('getStarted')}
+                </>
+              ) : (
+                <>
+                  {t('next')}
+                  {isRTL ? (
+                    <ChevronLeft className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </>
+              )}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    </div>
   );
-}
+});
 
 // Hook to control onboarding
 export function useOnboarding() {

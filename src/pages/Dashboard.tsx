@@ -35,7 +35,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { toGregorianDate, toGregorianDateLong } from '@/utils/dateUtils';
 import { differenceInDays } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
+// Removed framer-motion for performance
 import {
   Select,
   SelectContent,
@@ -383,12 +383,7 @@ export default function Dashboard() {
           {loading ? (
             <CardSkeleton count={4} />
           ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="grid grid-cols-2 md:grid-cols-4 gap-4"
-            >
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in">
               <StatsCard
                 label={t('totalDeclarations')}
                 value={stats.total}
@@ -417,7 +412,7 @@ export default function Dashboard() {
                 color="text-green-600 dark:text-green-400"
                 bgColor="bg-green-500/10"
               />
-            </motion.div>
+            </div>
           )}
 
           {/* Smart Nudge */}
@@ -458,13 +453,7 @@ export default function Dashboard() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            <AnimatePresence mode="wait">
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
+            <div className="animate-fade-in">
                 <Card className="glass-card border-border/50 p-6">
                   <h3 className="text-base font-semibold mb-4">{t('recentDeclarations')}</h3>
                   {loading ? (
@@ -570,8 +559,7 @@ export default function Dashboard() {
                     </>
                   )}
                 </Card>
-              </motion.div>
-            </AnimatePresence>
+            </div>
           </TabsContent>
 
           {/* Manage Tab */}
@@ -660,18 +648,14 @@ export default function Dashboard() {
 
             {/* Bulk Actions */}
             {selectedItems.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
+              <div className="animate-slide-up">
                 <Card className="glass-card border-border/50 p-3 flex items-center gap-3">
                   <span className="text-sm font-medium">
                     {selectedItems.length} {t('selected')}
                   </span>
                   <Button size="sm" variant="outline">{t('bulkActions')}</Button>
                 </Card>
-              </motion.div>
+              </div>
             )}
 
             {/* Mobile Cards View */}
@@ -857,14 +841,7 @@ export default function Dashboard() {
 
           {/* Trash Tab */}
           <TabsContent value="trash" className="space-y-6">
-            <AnimatePresence mode="wait">
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-6"
-              >
+            <div className="animate-fade-in space-y-6">
                 {/* Info Card */}
                 <Card className="glass-card border-border/50 p-4 bg-blue-500/5 border-blue-500/20">
                   <div className="flex items-start gap-3">
@@ -977,8 +954,7 @@ export default function Dashboard() {
                     </TableBody>
                   </Table>
                 </Card>
-              </motion.div>
-            </AnimatePresence>
+            </div>
           </TabsContent>
         </Tabs>
 
