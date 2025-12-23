@@ -122,10 +122,19 @@ const translations = {
     draft: 'Draft',
     pendingWarehouseSignature: 'Awaiting Signature',
     warehouseSigned: 'Signed',
-    sentToAdminOffice: 'Sent to Admin',
+    sentToAdminOffice: 'Sent to Office',
     receivedByAdminOffice: 'Received',
-    returnedToWarehouse: 'Returned',
+    returnedToWarehouse: 'Returned for Modification',
+    returnedForModification: 'Returned for Modification',
     rejected: 'Rejected',
+    pendingSignature: 'Awaiting Signature',
+    signed: 'Signed',
+    sentToOffice: 'Sent to Office',
+    // Dynamic status labels based on declaration type
+    pendingDelivererSignature: 'Awaiting Deliverer Signature',
+    pendingReceiverSignature: 'Awaiting Receiver Signature',
+    signedByDeliverer: 'Signed by Deliverer',
+    signedByReceiver: 'Signed by Receiver',
     
     // Declaration Details
     declarationDetails: 'Declaration Details',
@@ -746,10 +755,19 @@ const translations = {
     draft: 'مسودة',
     pendingWarehouseSignature: 'بانتظار التوقيع',
     warehouseSigned: 'موقّع',
-    sentToAdminOffice: 'مُرسل للإدارة',
+    sentToAdminOffice: 'مرسل إلى المكتب',
     receivedByAdminOffice: 'مستلم',
-    returnedToWarehouse: 'مُعاد',
+    returnedToWarehouse: 'مُعاد للتعديل',
+    returnedForModification: 'مُعاد للتعديل',
     rejected: 'مرفوض',
+    pendingSignature: 'بانتظار التوقيع',
+    signed: 'موقّع',
+    sentToOffice: 'مرسل للمكتب',
+    // Dynamic status labels based on declaration type
+    pendingDelivererSignature: 'بانتظار توقيع المسلم',
+    pendingReceiverSignature: 'بانتظار توقيع المستلم',
+    signedByDeliverer: 'موقّع من المسلم',
+    signedByReceiver: 'موقّع من المستلم',
     
     // Declaration Details
     declarationDetails: 'تفاصيل الإقرار',

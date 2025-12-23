@@ -27,7 +27,7 @@ import { Plus } from 'lucide-react';
 const declarationSchema = z.object({
   number: z.string().trim().min(3, 'رقم الإقرار يجب أن يكون 3 أرقام على الأقل').max(6, 'رقم الإقرار طويل جداً').regex(/^\d+$/, 'يجب أن يحتوي على أرقام فقط'),
   type: z.enum(['دخول', 'خروج'], { required_error: 'يجب اختيار نوع الإقرار' }),
-  status: z.enum(['draft', 'pending_warehouse_signature', 'warehouse_signed', 'sent_to_admin_office', 'received_by_admin_office', 'returned_to_warehouse', 'archived', 'rejected']),
+  status: z.enum(['draft', 'pending_warehouse_signature', 'warehouse_signed', 'sent_to_admin_office', 'returned_to_warehouse', 'archived']),
 });
 
 interface CreateDeclarationDialogProps {
@@ -37,13 +37,33 @@ interface CreateDeclarationDialogProps {
   trigger?: React.ReactNode;
 }
 
+// Dynamic status options based on declaration type
+const getStatusOptions = (type: 'دخول' | 'خروج', t: (key: string) => string) => {
+  const isIncoming = type === 'دخول';
+  
+  return [
+    { value: 'draft', label: t('draft') },
+    { 
+      value: 'pending_warehouse_signature', 
+      label: isIncoming ? t('pendingDelivererSignature') : t('pendingReceiverSignature') 
+    },
+    { 
+      value: 'warehouse_signed', 
+      label: isIncoming ? t('signedByDeliverer') : t('signedByReceiver') 
+    },
+    { value: 'sent_to_admin_office', label: t('sentToAdminOffice') },
+    { value: 'returned_to_warehouse', label: t('returnedForModification') },
+    { value: 'archived', label: t('archived') },
+  ];
+};
+
 export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpenChange, trigger }: CreateDeclarationDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingNextNumber, setLoadingNextNumber] = useState(false);
   const [declarationNumber, setDeclarationNumber] = useState('');
   const [type, setType] = useState<'دخول' | 'خروج'>('دخول');
-  const [status, setStatus] = useState<'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected'>('draft');
+  const [status, setStatus] = useState<'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'returned_to_warehouse' | 'archived'>('draft');
   const { user } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -51,6 +71,9 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
   // Use controlled or internal state
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = onOpenChange || setInternalOpen;
+
+  // Get status options based on type
+  const statusOptions = getStatusOptions(type, t);
 
   // Load next available number when dialog opens or type changes
   useEffect(() => {
@@ -243,21 +266,18 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
             <Label htmlFor="status">{t('initialStatus')}</Label>
             <Select
               value={status}
-              onValueChange={(value: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'received_by_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected') => setStatus(value)}
+              onValueChange={(value: 'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'returned_to_warehouse' | 'archived') => setStatus(value)}
               disabled={loading}
             >
               <SelectTrigger className="glass-card border-border/50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="draft">{t('draft')}</SelectItem>
-                <SelectItem value="pending_warehouse_signature">{t('pendingWarehouseSignature')}</SelectItem>
-                <SelectItem value="warehouse_signed">{t('warehouseSigned')}</SelectItem>
-                <SelectItem value="sent_to_admin_office">{t('sentToAdminOffice')}</SelectItem>
-                <SelectItem value="received_by_admin_office">{t('receivedByAdminOffice')}</SelectItem>
-                <SelectItem value="returned_to_warehouse">{t('returnedToWarehouse')}</SelectItem>
-                <SelectItem value="archived">{t('archived')}</SelectItem>
-                <SelectItem value="rejected">{t('rejected')}</SelectItem>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
