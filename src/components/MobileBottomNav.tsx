@@ -1,5 +1,5 @@
+import { memo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { LayoutDashboard, BarChart3, Wrench, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -17,7 +17,7 @@ const navItems: NavItem[] = [
   { path: '/profile', icon: User, labelKey: 'profile' },
 ];
 
-export function MobileBottomNav() {
+export const MobileBottomNav = memo(function MobileBottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -28,12 +28,7 @@ export function MobileBottomNav() {
   };
 
   return (
-    <motion.nav
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card/95 backdrop-blur-lg border-t border-border/50 safe-area-bottom"
-    >
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card/95 backdrop-blur-lg border-t border-border/50 safe-area-bottom animate-slide-up">
       <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const active = isActive(item.path);
@@ -44,27 +39,19 @@ export function MobileBottomNav() {
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
-                'relative flex flex-col items-center justify-center flex-1 h-full py-2 transition-colors',
+                'relative flex flex-col items-center justify-center flex-1 h-full py-2 transition-all duration-200',
                 active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               )}
             >
               {active && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute inset-x-2 top-1 h-1 bg-primary rounded-full"
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                />
+                <div className="absolute inset-x-2 top-1 h-1 bg-primary rounded-full" />
               )}
-              <motion.div
-                initial={false}
-                animate={{ 
-                  scale: active ? 1.1 : 1,
-                  y: active ? -2 : 0
-                }}
-                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              >
+              <div className={cn(
+                'transition-transform duration-200',
+                active && 'scale-110 -translate-y-0.5'
+              )}>
                 <Icon className="w-5 h-5" />
-              </motion.div>
+              </div>
               <span className={cn(
                 'text-xs mt-1 font-medium transition-opacity',
                 active ? 'opacity-100' : 'opacity-70'
@@ -75,6 +62,6 @@ export function MobileBottomNav() {
           );
         })}
       </div>
-    </motion.nav>
+    </nav>
   );
-}
+});

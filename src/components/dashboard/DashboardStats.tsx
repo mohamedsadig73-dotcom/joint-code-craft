@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { memo } from 'react';
 import { FileText, AlertCircle, CheckCircle, Archive } from 'lucide-react';
 import { StatsCard } from '@/components/ui/StatsCard';
 import { CardSkeleton } from '@/components/ui/TableSkeleton';
@@ -10,7 +10,7 @@ interface DashboardStatsProps {
   loading: boolean;
 }
 
-export function DashboardStats({ stats, loading }: DashboardStatsProps) {
+export const DashboardStats = memo(function DashboardStats({ stats, loading }: DashboardStatsProps) {
   const { t } = useLanguage();
 
   if (loading) {
@@ -18,12 +18,7 @@ export function DashboardStats({ stats, loading }: DashboardStatsProps) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
-    >
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 animate-fade-in">
       <StatsCard
         label={t('totalDeclarations')}
         value={stats.total}
@@ -52,6 +47,6 @@ export function DashboardStats({ stats, loading }: DashboardStatsProps) {
         color="text-green-600 dark:text-green-400"
         bgColor="bg-green-500/10"
       />
-    </motion.div>
+    </div>
   );
-}
+});
