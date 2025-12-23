@@ -127,7 +127,7 @@ export function Navigation() {
   const navItems = [
     { path: '/', icon: LayoutDashboard, labelKey: 'declarations' },
     { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
-    { path: '/leave-requests', icon: FileText, labelKey: 'leaveRequests' },
+    { path: '/leave-tracking', icon: FileText, labelKey: 'leaveTracking' },
     { path: '/reports-analytics', icon: BarChart3, labelKey: 'reportsTitle' },
   ];
 

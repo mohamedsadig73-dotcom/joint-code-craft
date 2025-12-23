@@ -562,6 +562,92 @@ export type Database = {
           },
         ]
       }
+      leave_tracking: {
+        Row: {
+          actual_return_date: string | null
+          contract_type: string
+          created_at: string
+          created_by: string | null
+          current_leave_end: string | null
+          current_leave_start: string | null
+          department: string
+          employee_id: string
+          employee_name: string
+          entitled_days: number
+          expected_return_date: string | null
+          hire_date: string
+          id: string
+          job_title: string
+          last_leave_end: string | null
+          last_leave_start: string | null
+          next_leave_due: string | null
+          notes: string | null
+          remaining_balance: number | null
+          travel_date: string | null
+          travel_destination: string | null
+          updated_at: string
+          used_days: number
+        }
+        Insert: {
+          actual_return_date?: string | null
+          contract_type: string
+          created_at?: string
+          created_by?: string | null
+          current_leave_end?: string | null
+          current_leave_start?: string | null
+          department: string
+          employee_id: string
+          employee_name: string
+          entitled_days?: number
+          expected_return_date?: string | null
+          hire_date: string
+          id?: string
+          job_title: string
+          last_leave_end?: string | null
+          last_leave_start?: string | null
+          next_leave_due?: string | null
+          notes?: string | null
+          remaining_balance?: number | null
+          travel_date?: string | null
+          travel_destination?: string | null
+          updated_at?: string
+          used_days?: number
+        }
+        Update: {
+          actual_return_date?: string | null
+          contract_type?: string
+          created_at?: string
+          created_by?: string | null
+          current_leave_end?: string | null
+          current_leave_start?: string | null
+          department?: string
+          employee_id?: string
+          employee_name?: string
+          entitled_days?: number
+          expected_return_date?: string | null
+          hire_date?: string
+          id?: string
+          job_title?: string
+          last_leave_end?: string | null
+          last_leave_start?: string | null
+          next_leave_due?: string | null
+          notes?: string | null
+          remaining_balance?: number | null
+          travel_date?: string | null
+          travel_destination?: string | null
+          updated_at?: string
+          used_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_tracking_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_assets: {
         Row: {
           active: boolean | null
