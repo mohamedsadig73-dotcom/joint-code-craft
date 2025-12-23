@@ -25,9 +25,9 @@ export const statusLabels: Record<string, string> = {
   draft: 'مسودة',
   pending_warehouse_signature: 'بانتظار التوقيع',
   warehouse_signed: 'موقّع',
-  sent_to_admin_office: 'مُرسل',
+  sent_to_admin_office: 'مرسل إلى المكتب',
   received_by_admin_office: 'مستلم',
-  returned_to_warehouse: 'مُعاد',
+  returned_to_warehouse: 'مُعاد للتعديل',
   archived: 'مؤرشف',
   rejected: 'مرفوض',
 };
@@ -37,9 +37,9 @@ export const statusLabelsEn: Record<string, string> = {
   draft: 'Draft',
   pending_warehouse_signature: 'Awaiting Signature',
   warehouse_signed: 'Signed',
-  sent_to_admin_office: 'Sent to Admin',
+  sent_to_admin_office: 'Sent to Office',
   received_by_admin_office: 'Received',
-  returned_to_warehouse: 'Returned',
+  returned_to_warehouse: 'Returned for Modification',
   archived: 'Archived',
   rejected: 'Rejected',
 };
