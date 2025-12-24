@@ -357,8 +357,10 @@ export default function Dashboard() {
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   }, []);
+  const isRTL = language === 'ar';
+  
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -367,8 +369,8 @@ export default function Dashboard() {
 
         {/* Header with Stats */}
         <div className="mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
+          <div className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+            <div className={isRTL ? 'text-right' : 'text-left'}>
               <h1 className="text-2xl md:text-3xl font-bold gradient-text">{t('systemTitle')}</h1>
               <p className="text-muted-foreground text-sm">
                 {t('welcome')}, {user?.username}!
