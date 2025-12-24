@@ -139,12 +139,14 @@ export function Navigation() {
       ]
     : navItems;
 
+  const isRTL = language === 'ar';
+
   return (
-    <nav className="glass-card border-b border-border/50 sticky top-0 z-50 backdrop-blur-md">
+    <nav className="glass-card border-b border-border/50 sticky top-0 z-50 backdrop-blur-md" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className={`flex justify-between items-center h-16 ${isRTL ? 'flex-row-reverse' : ''}`}>
           {/* Logo */}
-          <div className="flex items-center gap-4">
+          <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <h1 className="text-2xl font-bold gradient-text">DTS</h1>
             <span className="hidden md:block text-sm text-muted-foreground">
               {t('systemTitle')}
@@ -152,7 +154,7 @@ export function Navigation() {
           </div>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className={`hidden md:flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
             {allNavItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -160,7 +162,7 @@ export function Navigation() {
                   <Button
                     variant={isActive(item.path) ? 'secondary' : 'ghost'}
                     size="sm"
-                    className="gap-2"
+                    className={`gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
                   >
                     <Icon className="w-4 h-4" />
                     {t(item.labelKey)}
@@ -171,7 +173,7 @@ export function Navigation() {
           </div>
 
           {/* Right Side Actions */}
-          <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
             {/* Offline Indicator */}
             <OfflineIndicator />
             
@@ -245,7 +247,7 @@ export function Navigation() {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden flex justify-around py-2 border-t border-border/50">
+        <div className={`md:hidden flex justify-around py-2 border-t border-border/50 ${isRTL ? 'flex-row-reverse' : ''}`}>
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -253,7 +255,7 @@ export function Navigation() {
                 <Button
                   variant={isActive(item.path) ? 'secondary' : 'ghost'}
                   size="sm"
-                  className="gap-2"
+                  className={`gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
                 >
                   <Icon className="w-4 h-4" />
                   <span className="text-xs">{t(item.labelKey)}</span>

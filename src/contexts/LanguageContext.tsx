@@ -1302,15 +1302,41 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return translations[language][key as keyof typeof translations['en']] || key;
   };
 
-  // Set initial HTML attributes
+  // Set initial HTML attributes - centralized RTL handling
   useEffect(() => {
-    document.documentElement.lang = language;
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    const isRTL = language === 'ar';
+    const htmlElement = document.documentElement;
+    const bodyElement = document.body;
+    
+    // Set direction on html and body
+    htmlElement.lang = language;
+    htmlElement.dir = isRTL ? 'rtl' : 'ltr';
+    bodyElement.dir = isRTL ? 'rtl' : 'ltr';
+    
+    // Add/remove RTL class for CSS targeting
+    if (isRTL) {
+      htmlElement.classList.add('rtl');
+      htmlElement.classList.remove('ltr');
+      bodyElement.style.fontFamily = "'IBM Plex Sans Arabic', 'Inter', system-ui, sans-serif";
+      bodyElement.style.textAlign = 'right';
+    } else {
+      htmlElement.classList.add('ltr');
+      htmlElement.classList.remove('rtl');
+      bodyElement.style.fontFamily = "'Inter', system-ui, sans-serif";
+      bodyElement.style.textAlign = 'left';
+    }
   }, [language]);
 
   return (
     <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
-      <div dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <div 
+        dir={language === 'ar' ? 'rtl' : 'ltr'} 
+        className={language === 'ar' ? 'rtl font-arabic' : 'ltr font-inter'}
+        style={{ 
+          direction: language === 'ar' ? 'rtl' : 'ltr',
+          textAlign: language === 'ar' ? 'right' : 'left'
+        }}
+      >
         {children}
       </div>
     </LanguageContext.Provider>
