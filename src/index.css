@@ -342,21 +342,19 @@
     font-family: 'Inter', system-ui, sans-serif !important;
   }
   
-  /* RTL Flex Direction - Automatic reversal */
-  [dir="rtl"] .flex-row,
-  .rtl .flex-row {
-    flex-direction: row-reverse;
-  }
+  /* RTL Flex Direction - Only for specific elements, not global */
+  /* REMOVED: Global flex reversal was causing double-reversal issues */
   
-  [dir="rtl"] .flex:not(.flex-col):not(.flex-col-reverse),
-  .rtl .flex:not(.flex-col):not(.flex-col-reverse) {
-    flex-direction: row-reverse;
-  }
-  
-  /* Prevent double-reversal for explicitly set directions */
+  /* Prevent reversal for navigation and other LTR elements */
   [dir="rtl"] .ltr-flex,
   .rtl .ltr-flex {
     flex-direction: row !important;
+  }
+  
+  /* Force RTL flex for specific elements */
+  [dir="rtl"] .rtl-flex,
+  .rtl .rtl-flex {
+    flex-direction: row-reverse !important;
   }
   
   /* RTL Margins and Paddings */
@@ -383,23 +381,12 @@
     text-align: left;
   }
   
-  /* RTL Icons with Text - Keep icon order logical */
-  [dir="rtl"] .gap-2 > svg:first-child,
-  .rtl .gap-2 > svg:first-child {
-    order: 1;
-  }
+  /* RTL Icons with Text - REMOVED: was causing issues with button icons */
   
-  [dir="rtl"] .gap-2 > span,
-  .rtl .gap-2 > span {
-    order: 0;
-  }
+  /* RTL Navigation - Keep navigation in LTR order */
+  /* Navigation bar should stay LTR (logo left, user right) regardless of language */
   
-  /* RTL Navigation and Tabs */
-  [dir="rtl"] nav,
-  .rtl nav {
-    direction: rtl;
-  }
-  
+  /* RTL Tabs - Reverse tab order for RTL */
   [dir="rtl"] [role="tablist"],
   .rtl [role="tablist"] {
     flex-direction: row-reverse;
