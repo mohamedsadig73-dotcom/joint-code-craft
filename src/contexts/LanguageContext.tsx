@@ -1317,12 +1317,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     if (isRTL) {
       htmlElement.classList.add('rtl');
       htmlElement.classList.remove('ltr');
-      bodyElement.style.fontFamily = "'IBM Plex Sans Arabic', 'Inter', system-ui, sans-serif";
       bodyElement.style.textAlign = 'right';
     } else {
       htmlElement.classList.add('ltr');
       htmlElement.classList.remove('rtl');
-      bodyElement.style.fontFamily = "'Inter', system-ui, sans-serif";
       bodyElement.style.textAlign = 'left';
     }
   }, [language]);
