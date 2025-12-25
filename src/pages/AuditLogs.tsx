@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { TableSkeleton, CardSkeleton } from '@/components/ui/TableSkeleton';
 import { VirtualizedList } from '@/components/VirtualizedList';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { formatDateTime } from '@/utils/dateUtils';
 import { 
   auditActionLabels, 
   auditActionColors, 
@@ -267,13 +268,7 @@ export default function AuditLogs() {
                   filteredLogs.map((log) => (
                     <TableRow key={log.id}>
                       <TableCell className="font-mono text-sm">
-                        {new Date(log.created_at).toLocaleString('ar-SA', {
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        {formatDateTime(log.created_at)}
                       </TableCell>
                       <TableCell>
                         <div>

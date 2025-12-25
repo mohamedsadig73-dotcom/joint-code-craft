@@ -8,6 +8,7 @@ import { TableSkeleton, CardSkeleton } from '@/components/ui/TableSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { maintenanceStatusLabels, maintenanceStatusColors, emptyStateMessages } from '@/constants/statusLabels';
 import { useMaintenanceRealtime } from '@/hooks/useRealtimeUpdates';
+import { formatDate } from '@/utils/dateUtils';
 
 interface DashboardStats {
   totalItems: number;
@@ -180,7 +181,7 @@ export function MaintenanceDashboard() {
                 <TableRow key={task.id}>
                   <TableCell className="font-medium">{task.item_name}</TableCell>
                   <TableCell>
-                    {new Date(task.scheduled_date).toLocaleDateString('ar-SA')}
+                    {formatDate(task.scheduled_date)}
                   </TableCell>
                   <TableCell>
                     <Badge 

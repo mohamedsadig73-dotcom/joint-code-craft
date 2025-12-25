@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from '@/hooks/use-toast';
 import { Upload, FileText, Image, Download, Trash2, Eye, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { formatDate } from '@/utils/dateUtils';
 
 interface Attachment {
   id: string;
@@ -224,7 +225,7 @@ export function AttachmentsManager({ scheduleId }: AttachmentsManagerProps) {
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>{formatFileSize(attachment.file_size)}</span>
                     <span>•</span>
-                    <span>{new Date(attachment.uploaded_at).toLocaleDateString('ar-SA')}</span>
+                    <span>{formatDate(attachment.uploaded_at)}</span>
                   </div>
                 </div>
               </div>
