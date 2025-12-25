@@ -1,5 +1,6 @@
 import { exportDeclarationsToPDF } from './pdfExport';
 import { exportDeclarationsToExcel } from './excelExport';
+import { formatDate } from './dateUtils';
 
 export interface MaintenanceReportData {
   id: string;
@@ -47,9 +48,7 @@ export const exportMaintenanceToPDF = (
     type: item.item_name,
     sender: `${MONTHS[item.month - 1]} ${item.year}`,
     status: STATUS_MAP[item.status] || item.status,
-    created_at: item.executed_date 
-      ? new Date(item.executed_date).toLocaleDateString('ar-SA')
-      : new Date(item.scheduled_date).toLocaleDateString('ar-SA'),
+    created_at: formatDate(item.executed_date || item.scheduled_date),
   }));
 
   const doc = exportDeclarationsToPDF(exportData, title);
@@ -88,9 +87,7 @@ export const exportMaintenanceToExcel = (
     type: item.item_name,
     sender: `${MONTHS[item.month - 1]} ${item.year}`,
     status: STATUS_MAP[item.status] || item.status,
-    created_at: item.executed_date 
-      ? new Date(item.executed_date).toLocaleDateString('ar-SA')
-      : new Date(item.scheduled_date).toLocaleDateString('ar-SA'),
+    created_at: formatDate(item.executed_date || item.scheduled_date),
   }));
 
   return exportDeclarationsToExcel(exportData, `${fileName}_${year}`);

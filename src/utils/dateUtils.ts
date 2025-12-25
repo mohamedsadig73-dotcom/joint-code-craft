@@ -1,83 +1,112 @@
 /**
- * تنسيق التاريخ الميلادي بشكل مختصر (Gregorian Calendar)
+ * ==============================================
+ * Date Formatting Utilities
+ * ==============================================
+ * 
+ * Standard Format: DD/MM/YYYY (e.g., 07/03/2025)
+ * 
+ * This file contains all date formatting functions.
+ * All dates in the application MUST use these functions
+ * to ensure consistent formatting.
+ * 
+ * DO NOT use other date formatting methods elsewhere!
+ * ==============================================
  */
-export const toGregorianDate = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+/**
+ * تنسيق التاريخ بصيغة موحدة DD/MM/YYYY
+ * Standard date format: DD/MM/YYYY (e.g., 07/03/2025)
+ */
+export const formatDate = (date: Date | string | null | undefined): string => {
+  if (!date) return '-';
   
   try {
-    // Use ar-EG locale with Gregorian calendar to get Arabic numerals with Gregorian dates
-    const formatter = new Intl.DateTimeFormat('ar-EG-u-ca-gregory', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
     
-    return formatter.format(dateObj);
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    // Fallback to simple format
+    if (isNaN(dateObj.getTime())) return '-';
+    
     const day = dateObj.getDate().toString().padStart(2, '0');
     const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
     const year = dateObj.getFullYear();
+    
     return `${day}/${month}/${year}`;
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return '-';
   }
 };
 
 /**
- * تنسيق التاريخ الميلادي مع الوقت (Gregorian Calendar)
+ * تنسيق التاريخ الميلادي بشكل مختصر (Gregorian Calendar)
+ * @deprecated Use formatDate() instead for consistent DD/MM/YYYY format
  */
-export const toGregorianDateTime = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
+export const toGregorianDate = (date: Date | string): string => {
+  return formatDate(date);
+};
+
+/**
+ * تنسيق التاريخ مع الوقت DD/MM/YYYY - HH:MM
+ * Standard datetime format: DD/MM/YYYY - HH:MM (e.g., 07/03/2025 - 14:30)
+ */
+export const formatDateTime = (date: Date | string | null | undefined): string => {
+  if (!date) return '-';
   
   try {
-    const dateFormatter = new Intl.DateTimeFormat('ar-EG-u-ca-gregory', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
     
-    const timeFormatter = new Intl.DateTimeFormat('ar-EG', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    if (isNaN(dateObj.getTime())) return '-';
     
-    const gregorianDate = dateFormatter.format(dateObj);
-    const time = timeFormatter.format(dateObj);
-    
-    return `${gregorianDate} - ${time}`;
-  } catch (error) {
-    console.error('Error formatting datetime:', error);
     const day = dateObj.getDate().toString().padStart(2, '0');
     const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
     const year = dateObj.getFullYear();
     const hours = dateObj.getHours().toString().padStart(2, '0');
     const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+    
     return `${day}/${month}/${year} - ${hours}:${minutes}`;
+  } catch (error) {
+    console.error('Error formatting datetime:', error);
+    return '-';
+  }
+};
+
+/**
+ * تنسيق التاريخ الميلادي مع الوقت (Gregorian Calendar)
+ * @deprecated Use formatDateTime() instead for consistent format
+ */
+export const toGregorianDateTime = (date: Date | string): string => {
+  return formatDateTime(date);
+};
+
+/**
+ * تنسيق التاريخ بشكل مفصل (DD اسم_الشهر YYYY)
+ * Long date format: DD Month YYYY (e.g., 07 مارس 2025)
+ */
+export const formatDateLong = (date: Date | string | null | undefined): string => {
+  if (!date) return '-';
+  
+  try {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    if (isNaN(dateObj.getTime())) return '-';
+    
+    const day = dateObj.getDate().toString().padStart(2, '0');
+    const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    const month = months[dateObj.getMonth()];
+    const year = dateObj.getFullYear();
+    
+    return `${day} ${month} ${year}`;
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return '-';
   }
 };
 
 /**
  * تنسيق التاريخ الميلادي بشكل مفصل (Gregorian Calendar)
+ * @deprecated Use formatDateLong() instead for consistent format
  */
 export const toGregorianDateLong = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  try {
-    const formatter = new Intl.DateTimeFormat('ar-EG-u-ca-gregory', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-    
-    return formatter.format(dateObj);
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    const day = dateObj.getDate();
-    const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-    const month = months[dateObj.getMonth()];
-    const year = dateObj.getFullYear();
-    return `${day} ${month} ${year}`;
-  }
+  return formatDateLong(date);
 };
 
 /**
