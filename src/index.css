@@ -148,13 +148,40 @@
     @apply border-border;
   }
 
+  /* ==============================================
+     IBM Plex Sans Arabic - Typography System
+     ==============================================
+     Primary font for Arabic-first design
+     Weights: 300 (Light), 400 (Regular), 500 (Medium), 600 (SemiBold), 700 (Bold)
+     
+     Usage Guide:
+     - Page titles (h1): font-weight: 700
+     - Section headers (h2): font-weight: 600
+     - Body text, tables: font-weight: 400
+     - Buttons, stats: font-weight: 500
+     - Labels, hints: font-weight: 400
+     ============================================== */
+
+  html {
+    font-family: 'IBM Plex Sans Arabic', 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
     @apply bg-background text-foreground;
     min-height: 100vh;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: inherit;
     font-size: var(--text-sm);
-    line-height: 1.5;
+    font-weight: 400;
+    line-height: 1.7;
+    letter-spacing: 0.01em;
     transition: background-color 0.3s ease, color 0.3s ease;
+    /* Prevent word breaking issues in Arabic */
+    word-break: normal;
+    overflow-wrap: break-word;
+    hyphens: none;
   }
   
   /* Dark mode gradient background */
@@ -168,19 +195,84 @@
     background: linear-gradient(135deg, hsl(210 40% 98% / 1) 0%, hsl(210 40% 96% / 1) 50%, hsl(210 40% 94% / 1) 100%);
   }
   
+  /* Heading Typography - Professional Arabic hierarchy */
   h1 {
     font-size: var(--text-lg);
     font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
   }
   
   h2 {
     font-size: var(--text-base);
     font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: 0;
   }
   
   h3, h4 {
     font-size: var(--text-sm);
     font-weight: 600;
+    line-height: 1.5;
+  }
+
+  h5, h6 {
+    font-size: var(--text-xs);
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  
+  /* Paragraph and body text */
+  p {
+    line-height: 1.7;
+    letter-spacing: 0.01em;
+  }
+  
+  /* Labels and form helpers */
+  label {
+    font-weight: 400;
+    font-size: var(--text-sm);
+    line-height: 1.5;
+  }
+  
+  /* Buttons - Medium weight for action emphasis */
+  button {
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  
+  /* Tables */
+  table {
+    font-weight: 400;
+  }
+  
+  th {
+    font-weight: 600;
+  }
+  
+  /* Input fields */
+  input, textarea, select {
+    font-family: inherit;
+    font-weight: 400;
+  }
+  
+  /* Numbers and statistics - slightly heavier */
+  .stat-value, .stat-number {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  
+  .glass-card {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--glass-border));
+  }
+  
+  .gradient-text {
+    background: linear-gradient(45deg, hsl(var(--secondary)), hsl(40 100% 65%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   
   .glass-card {

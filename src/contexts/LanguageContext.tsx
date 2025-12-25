@@ -1329,7 +1329,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
       <div 
         dir={language === 'ar' ? 'rtl' : 'ltr'} 
-        className={language === 'ar' ? 'rtl font-arabic' : 'ltr font-inter'}
+        className="font-sans"
         style={{ 
           direction: language === 'ar' ? 'rtl' : 'ltr',
           textAlign: language === 'ar' ? 'right' : 'left'
