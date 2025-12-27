@@ -3,6 +3,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { formatDate } from '@/utils/dateUtils';
 import { format, addYears, differenceInDays, isAfter, isBefore, isWithinInterval, addDays } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -112,6 +114,7 @@ const calculateNextLeaveDue = (lastLeaveEnd: string | null, contractType: 'emplo
 const LeaveTracking = () => {
   const { t, language } = useLanguage();
   const { user } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<LeaveTracking | null>(null);
@@ -208,11 +211,11 @@ const LeaveTracking = () => {
       queryClient.invalidateQueries({ queryKey: ['leave-tracking'] });
       setIsDialogOpen(false);
       resetForm();
-      toast.success(editingRecord ? t('recordUpdated') : t('recordCreated'));
+      toast({ title: t('success'), description: editingRecord ? t('recordUpdated') : t('recordCreated') });
     },
     onError: (error) => {
       console.error('Error saving record:', error);
-      toast.error(t('saveFailed'));
+      toast({ title: t('error'), description: t('saveFailed'), variant: 'destructive' });
     },
   });
 
@@ -227,10 +230,10 @@ const LeaveTracking = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leave-tracking'] });
-      toast.success(t('recordDeleted'));
+      toast({ title: t('success'), description: t('recordDeleted') });
     },
     onError: () => {
-      toast.error(t('deleteFailed'));
+      toast({ title: t('error'), description: t('deleteFailed'), variant: 'destructive' });
     },
   });
 
@@ -285,7 +288,7 @@ const LeaveTracking = () => {
     e.preventDefault();
     if (!formData.employee_name || !formData.employee_id || !formData.department || 
         !formData.job_title || !formData.hire_date) {
-      toast.error(t('fillAllFields'));
+      toast({ title: t('error'), description: t('fillAllFields'), variant: 'destructive' });
       return;
     }
     saveMutation.mutate(formData);
@@ -351,11 +354,11 @@ const LeaveTracking = () => {
   // Export handlers
   const handleExportAll = () => {
     if (records.length === 0) {
-      toast.error(t('noData'));
+      toast({ title: t('error'), description: t('noData'), variant: 'destructive' });
       return;
     }
     exportLeaveTrackingToExcel(records, language);
-    toast.success(t('exportSuccess'));
+    toast({ title: t('success'), description: t('exportSuccess') });
   };
 
   const handleExportUpcoming = () => {
@@ -366,21 +369,21 @@ const LeaveTracking = () => {
       return differenceInDays(nextLeave, today) <= 90 && differenceInDays(nextLeave, today) >= 0;
     });
     if (upcomingRecords.length === 0) {
-      toast.error(t('noData'));
+      toast({ title: t('error'), description: t('noData'), variant: 'destructive' });
       return;
     }
     exportUpcomingLeavesReport(upcomingRecords, language);
-    toast.success(t('exportSuccess'));
+    toast({ title: t('success'), description: t('exportSuccess') });
   };
 
   const handleExportOverdue = () => {
     const overdueRecords = records.filter(r => calculateStatus(r) === 'overdue_return');
     if (overdueRecords.length === 0) {
-      toast.error(t('noData'));
+      toast({ title: t('error'), description: t('noData'), variant: 'destructive' });
       return;
     }
     exportOverdueReturnsReport(overdueRecords, language);
-    toast.success(t('exportSuccess'));
+    toast({ title: t('success'), description: t('exportSuccess') });
   };
 
   // Date picker component
@@ -418,14 +421,15 @@ const LeaveTracking = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navigation />
       <PageTransition>
-        <main className="container mx-auto px-4 py-8 mt-16">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Breadcrumbs />
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">{t('leaveTracking')}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold gradient-text">{t('leaveTracking')}</h1>
               <p className="text-muted-foreground mt-1">{t('leaveTrackingSubtitle')}</p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -828,12 +832,12 @@ const LeaveTracking = () => {
                             <TableCell>{getStatusBadge(status)}</TableCell>
                             <TableCell>
                               {record.last_leave_end 
-                                ? format(new Date(record.last_leave_end), 'dd/MM/yyyy')
+                                ? formatDate(record.last_leave_end)
                                 : '-'}
                             </TableCell>
                             <TableCell>
                               {record.next_leave_due 
-                                ? format(new Date(record.next_leave_due), 'dd/MM/yyyy')
+                                ? formatDate(record.next_leave_due)
                                 : '-'}
                             </TableCell>
                             <TableCell>
@@ -846,12 +850,12 @@ const LeaveTracking = () => {
                             </TableCell>
                             <TableCell>
                               {record.travel_date 
-                                ? format(new Date(record.travel_date), 'dd/MM/yyyy')
+                                ? formatDate(record.travel_date)
                                 : '-'}
                             </TableCell>
                             <TableCell>
                               {record.expected_return_date 
-                                ? format(new Date(record.expected_return_date), 'dd/MM/yyyy')
+                                ? formatDate(record.expected_return_date)
                                 : '-'}
                             </TableCell>
                             <TableCell>

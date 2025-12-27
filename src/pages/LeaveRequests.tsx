@@ -3,6 +3,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from 'sonner';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { formatDate } from '@/utils/dateUtils';
 import { format, differenceInDays, addDays } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -64,10 +66,10 @@ interface LeaveRequest {
 const LeaveRequests = () => {
   const { t, language } = useLanguage();
   const { user } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const isRTL = language === 'ar';
-
   // Form state
   const [formData, setFormData] = useState({
     employee_name: '',
@@ -136,11 +138,11 @@ const LeaveRequests = () => {
       queryClient.invalidateQueries({ queryKey: ['leave-requests'] });
       setIsDialogOpen(false);
       resetForm();
-      toast.success(t('leaveRequestCreated'));
+      toast({ title: t('success'), description: t('leaveRequestCreated') });
     },
     onError: (error) => {
       console.error('Error creating leave request:', error);
-      toast.error(t('leaveRequestCreationFailed'));
+      toast({ title: t('error'), description: t('leaveRequestCreationFailed'), variant: 'destructive' });
     },
   });
 
@@ -167,7 +169,7 @@ const LeaveRequests = () => {
     e.preventDefault();
     if (!formData.employee_name || !formData.employee_id || !formData.department || 
         !formData.job_title || !formData.hire_date || !formData.start_date || !formData.end_date) {
-      toast.error(t('fillAllFields'));
+      toast({ title: t('error'), description: t('fillAllFields'), variant: 'destructive' });
       return;
     }
     createMutation.mutate(formData);
@@ -190,11 +192,11 @@ const LeaveRequests = () => {
 
   const handleExportExcel = () => {
     if (leaveRequests.length === 0) {
-      toast.error(t('noData'));
+      toast({ title: t('error'), description: t('noData'), variant: 'destructive' });
       return;
     }
     exportLeaveRequestsToExcel(leaveRequests, language);
-    toast.success(t('exportSuccess'));
+    toast({ title: t('success'), description: t('exportSuccess') });
   };
 
   // Calculate days requested when dates change
@@ -205,14 +207,15 @@ const LeaveRequests = () => {
   const expectedRemainingBalance = formData.original_balance - formData.previously_used_days - daysRequested;
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navigation />
       <PageTransition>
-        <main className="container mx-auto px-4 py-8 mt-16">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Breadcrumbs />
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">{t('leaveRequests')}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold gradient-text">{t('leaveRequests')}</h1>
               <p className="text-muted-foreground mt-1">{t('leaveRequestsSubtitle')}</p>
             </div>
             <div className="flex gap-2">
@@ -564,14 +567,14 @@ const LeaveRequests = () => {
                           <TableCell className="font-medium">{request.employee_name}</TableCell>
                           <TableCell>{request.employee_id}</TableCell>
                           <TableCell>{request.department}</TableCell>
-                          <TableCell>{format(new Date(request.start_date_gregorian), 'yyyy-MM-dd')}</TableCell>
-                          <TableCell>{format(new Date(request.end_date_gregorian), 'yyyy-MM-dd')}</TableCell>
+                          <TableCell>{formatDate(request.start_date_gregorian)}</TableCell>
+                          <TableCell>{formatDate(request.end_date_gregorian)}</TableCell>
                           <TableCell className="font-semibold">{request.days_requested}</TableCell>
                           <TableCell className={cn("font-semibold", request.expected_remaining_balance < 5 ? "text-destructive" : "text-green-600")}>
                             {request.expected_remaining_balance}
                           </TableCell>
                           <TableCell>{getStatusBadge(request.request_status)}</TableCell>
-                          <TableCell>{format(new Date(request.created_at), 'yyyy-MM-dd')}</TableCell>
+                          <TableCell>{formatDate(request.created_at)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
