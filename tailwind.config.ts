@@ -15,9 +15,10 @@ export default {
     extend: {
       fontFamily: {
         // IBM Plex Sans Arabic as primary font for Arabic-first design
-        sans: ['"IBM Plex Sans Arabic"', 'Inter', 'system-ui', 'sans-serif'],
-        arabic: ['"IBM Plex Sans Arabic"', 'system-ui', 'sans-serif'],
-        inter: ['Inter', '"IBM Plex Sans Arabic"', 'system-ui', 'sans-serif'],
+        // Fallback: IBM Plex Sans > Arial > sans-serif
+        sans: ['"IBM Plex Sans Arabic"', '"IBM Plex Sans"', 'Arial', 'sans-serif'],
+        arabic: ['"IBM Plex Sans Arabic"', '"IBM Plex Sans"', 'Arial', 'sans-serif'],
+        latin: ['"IBM Plex Sans"', '"IBM Plex Sans Arabic"', 'Arial', 'sans-serif'],
       },
       fontSize: {
         // Optimized for Arabic readability
