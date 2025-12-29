@@ -345,7 +345,7 @@ export default function DeclarationDetails() {
                   <div>
                     <label className="text-sm text-muted-foreground flex items-center gap-2">
                       <Clock className="w-4 h-4" />
-                      آخر تحديث
+                      {t('lastUpdated')}
                     </label>
                     <p className="text-lg">
                       {toGregorianDateLong(declaration.updated_at)}
@@ -355,7 +355,7 @@ export default function DeclarationDetails() {
                   <div className="md:col-span-2">
                     <Label className="flex items-center gap-2 mb-2">
                       <Archive className="w-4 h-4" />
-                      ملف الأرشفة
+                      {t('archiveFile')}
                     </Label>
                     {canUpdateStatus ? (
                       <div className="flex gap-2">
@@ -365,10 +365,10 @@ export default function DeclarationDetails() {
                           disabled={updating || !editingArchive}
                         >
                           <SelectTrigger className="flex-1">
-                            <SelectValue placeholder="اختر ملف الأرشفة" />
+                            <SelectValue placeholder={t('selectArchiveFile')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">بدون ملف أرشفة</SelectItem>
+                            <SelectItem value="none">{t('noArchiveFile')}</SelectItem>
                             {archiveFiles.map((file) => (
                               <SelectItem key={file.id} value={file.id}>
                                 {file.archive_number} {file.description ? `- ${file.description}` : ''}
@@ -382,7 +382,7 @@ export default function DeclarationDetails() {
                             variant="outline"
                             disabled={updating}
                           >
-                            تعديل
+                            {t('editButton')}
                           </Button>
                         ) : (
                           <>
@@ -391,7 +391,7 @@ export default function DeclarationDetails() {
                               disabled={updating}
                             >
                               <Save className="w-4 h-4 me-2" />
-                              حفظ
+                              {t('saveButton')}
                             </Button>
                             <Button
                               onClick={() => {
@@ -401,7 +401,7 @@ export default function DeclarationDetails() {
                               variant="outline"
                               disabled={updating}
                             >
-                              إلغاء
+                              {t('cancel')}
                             </Button>
                           </>
                         )}
@@ -410,7 +410,7 @@ export default function DeclarationDetails() {
                       <p className="text-lg font-medium">
                         {declaration.archive_file 
                           ? `${declaration.archive_file.archive_number}${declaration.archive_file.description ? ` - ${declaration.archive_file.description}` : ''}`
-                          : 'لم يتم تحديد ملف أرشفة'}
+                          : t('archiveFileNotSet')}
                       </p>
                     )}
                   </div>
@@ -423,18 +423,18 @@ export default function DeclarationDetails() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="w-5 h-5" />
-                  معلومات المرسل
+                  {t('senderInfo')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="text-sm text-muted-foreground">اسم المستخدم</label>
+                    <label className="text-sm text-muted-foreground">{t('usernameLabel')}</label>
                     <p className="text-lg font-medium">{declaration.sender.username}</p>
                   </div>
                   
                   <div>
-                    <label className="text-sm text-muted-foreground">البريد الإلكتروني</label>
+                    <label className="text-sm text-muted-foreground">{t('emailLabel')}</label>
                     <p className="text-lg font-medium">{declaration.sender.email}</p>
                   </div>
                 </div>
@@ -448,13 +448,13 @@ export default function DeclarationDetails() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="w-5 h-5" />
-                  الخط الزمني للإقرار
+                  {t('declarationTimeline')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {history.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    لا يوجد سجل تغييرات لهذا الإقرار
+                    {t('noTimelineHistory')}
                   </div>
                 ) : (
                   <div className="relative">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -33,6 +34,7 @@ interface User {
 
 export function BulkNotificationDialog() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -66,8 +68,8 @@ export function BulkNotificationDialog() {
       console.error('Error loading users:', error);
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: 'فشل تحميل قائمة المستخدمين',
+        title: t('error'),
+        description: t('failedToLoadUsers'),
       });
     }
   };
@@ -97,8 +99,8 @@ export function BulkNotificationDialog() {
     if (selectedUsers.length === 0) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: 'يجب اختيار مستخدم واحد على الأقل',
+        title: t('error'),
+        description: t('selectUsersRequired'),
       });
       return;
     }
@@ -106,8 +108,8 @@ export function BulkNotificationDialog() {
     if (!formData.title.trim() || !formData.message.trim()) {
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: 'يجب ملء جميع الحقول المطلوبة',
+        title: t('error'),
+        description: t('fillRequiredFields'),
       });
       return;
     }
@@ -132,8 +134,8 @@ export function BulkNotificationDialog() {
       if (error) throw error;
 
       toast({
-        title: 'تم بنجاح',
-        description: `تم إرسال ${selectedUsers.length} إشعار بنجاح`,
+        title: t('success'),
+        description: `${selectedUsers.length} ${t('notificationsSent')}`,
       });
 
       // Reset form
@@ -150,8 +152,8 @@ export function BulkNotificationDialog() {
       console.error('Error sending notifications:', error);
       toast({
         variant: 'destructive',
-        title: 'خطأ',
-        description: 'فشل إرسال الإشعارات',
+        title: t('error'),
+        description: t('notificationsFailed'),
       });
     } finally {
       setLoading(false);
@@ -168,37 +170,37 @@ export function BulkNotificationDialog() {
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Bell className="w-4 h-4" />
-          إرسال إشعار جماعي
+          {t('sendBulkNotification')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>إرسال إشعار جماعي</DialogTitle>
+          <DialogTitle>{t('sendBulkNotification')}</DialogTitle>
           <DialogDescription>
-            اختر المستخدمين وأرسل إشعار لهم جميعاً
+            {t('chooseUsersAndSend')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto flex-1">
             <div className="space-y-2">
-              <Label htmlFor="title">عنوان الإشعار *</Label>
+              <Label htmlFor="title">{t('notificationTitle')} *</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="أدخل عنوان الإشعار"
+                placeholder={t('enterNotificationTitle')}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="message">نص الإشعار *</Label>
+              <Label htmlFor="message">{t('notificationMessage')} *</Label>
               <Textarea
                 id="message"
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                placeholder="أدخل نص الإشعار"
+                placeholder={t('enterNotificationMessage')}
                 rows={4}
                 required
               />
@@ -206,7 +208,7 @@ export function BulkNotificationDialog() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="type">نوع الإشعار</Label>
+                <Label htmlFor="type">{t('notificationType')}</Label>
                 <Select
                   value={formData.type}
                   onValueChange={(value: any) => setFormData({ ...formData, type: value })}
@@ -215,28 +217,28 @@ export function BulkNotificationDialog() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="info">معلومة</SelectItem>
-                    <SelectItem value="success">نجاح</SelectItem>
-                    <SelectItem value="warning">تحذير</SelectItem>
-                    <SelectItem value="error">خطأ</SelectItem>
+                    <SelectItem value="info">{t('notificationInfo')}</SelectItem>
+                    <SelectItem value="success">{t('notificationSuccess')}</SelectItem>
+                    <SelectItem value="warning">{t('notificationWarning')}</SelectItem>
+                    <SelectItem value="error">{t('notificationError')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="declarationId">رقم الإقرار (اختياري)</Label>
+                <Label htmlFor="declarationId">{t('relatedDeclarationId')}</Label>
                 <Input
                   id="declarationId"
                   value={formData.declarationId}
                   onChange={(e) => setFormData({ ...formData, declarationId: e.target.value })}
-                  placeholder="رقم الإقرار المرتبط"
+                  placeholder={t('declarationNumber')}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>المستخدمون المستهدفون ({selectedUsers.length})</Label>
+                <Label>{t('targetUsers')} ({selectedUsers.length})</Label>
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="select-all"
@@ -244,7 +246,7 @@ export function BulkNotificationDialog() {
                     onCheckedChange={handleSelectAll}
                   />
                   <Label htmlFor="select-all" className="cursor-pointer">
-                    تحديد الكل
+                    {t('selectAllUsers')}
                   </Label>
                 </div>
               </div>
@@ -281,11 +283,11 @@ export function BulkNotificationDialog() {
               onClick={() => setOpen(false)}
               disabled={loading}
             >
-              إلغاء
+              {t('cancel')}
             </Button>
             <Button type="submit" disabled={loading} className="gap-2">
               <Send className="w-4 h-4" />
-              {loading ? 'جاري الإرسال...' : 'إرسال الإشعارات'}
+              {loading ? t('sendingNotifications') : t('sendNotifications')}
             </Button>
           </div>
         </form>
