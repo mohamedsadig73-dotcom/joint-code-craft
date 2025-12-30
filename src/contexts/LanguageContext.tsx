@@ -445,6 +445,12 @@ const translations = {
     address: 'Address',
     purchaseDate: 'Purchase Date',
     warrantyExpiry: 'Warranty Expiry',
+    generateSchedule: 'Generate Schedule',
+    maintenanceItem: 'Maintenance Item',
+    noMaintenanceItems: 'No maintenance items',
+    updateMaintenanceStatus: 'Update Maintenance Status',
+    executionDate: 'Execution Date',
+    actualCost: 'Actual Cost',
     
     // Offline Mode
     offline: 'Offline',
@@ -1162,6 +1168,12 @@ const translations = {
     noAsset: 'بدون أصل',
     noVendor: 'بدون مورد',
     address: 'العنوان',
+    generateSchedule: 'توليد الجدول',
+    maintenanceItem: 'بند الصيانة',
+    noMaintenanceItems: 'لا توجد بنود صيانة',
+    updateMaintenanceStatus: 'تحديث حالة الصيانة',
+    executionDate: 'تاريخ التنفيذ',
+    actualCost: 'التكلفة الفعلية',
     purchaseDate: 'تاريخ الشراء',
     warrantyExpiry: 'انتهاء الضمان',
     

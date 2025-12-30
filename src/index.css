@@ -525,17 +525,20 @@
   
   /* =============================================
      RTL SUPPORT - Comprehensive Right-to-Left Layout
+     Master RTL Implementation for Arabic Interface
      ============================================= */
   
-  /* RTL Base Styles */
+  /* ==== 1️⃣ GLOBAL DIRECTION ==== */
   html[dir="rtl"],
-  html.rtl {
+  html.rtl,
+  [dir="rtl"] {
     direction: rtl;
     text-align: right;
   }
   
   html[dir="ltr"],
-  html.ltr {
+  html.ltr,
+  [dir="ltr"] {
     direction: ltr;
     text-align: left;
   }
@@ -572,63 +575,107 @@
     letter-spacing: normal;
   }
   
-  /* RTL Flex Direction - Only for specific elements, not global */
-  /* REMOVED: Global flex reversal was causing double-reversal issues */
+  /* ==== 2️⃣ LOGICAL CSS PROPERTIES ==== */
+  /* Use margin-inline-start/end instead of left/right */
   
-  /* Prevent reversal for navigation and other LTR elements */
-  [dir="rtl"] .ltr-flex,
-  .rtl .ltr-flex {
-    flex-direction: row !important;
-  }
-  
-  /* Force RTL flex for specific elements */
-  [dir="rtl"] .rtl-flex,
-  .rtl .rtl-flex {
-    flex-direction: row-reverse !important;
-  }
-  
-  /* RTL Margins and Paddings */
+  /* RTL Margins - Logical properties */
   [dir="rtl"] .ml-auto,
   .rtl .ml-auto {
     margin-left: unset;
-    margin-right: auto;
+    margin-inline-end: auto;
   }
   
   [dir="rtl"] .mr-auto,
   .rtl .mr-auto {
     margin-right: unset;
-    margin-left: auto;
+    margin-inline-start: auto;
   }
   
-  /* RTL Text Alignment */
+  [dir="rtl"] .ml-2,
+  .rtl .ml-2 {
+    margin-left: unset;
+    margin-inline-end: 0.5rem;
+  }
+  
+  [dir="rtl"] .mr-2,
+  .rtl .mr-2 {
+    margin-right: unset;
+    margin-inline-start: 0.5rem;
+  }
+  
+  [dir="rtl"] .ml-3,
+  .rtl .ml-3 {
+    margin-left: unset;
+    margin-inline-end: 0.75rem;
+  }
+  
+  [dir="rtl"] .mr-3,
+  .rtl .mr-3 {
+    margin-right: unset;
+    margin-inline-start: 0.75rem;
+  }
+  
+  [dir="rtl"] .ml-4,
+  .rtl .ml-4 {
+    margin-left: unset;
+    margin-inline-end: 1rem;
+  }
+  
+  [dir="rtl"] .mr-4,
+  .rtl .mr-4 {
+    margin-right: unset;
+    margin-inline-start: 1rem;
+  }
+  
+  /* RTL Paddings - Logical properties */
+  [dir="rtl"] .pl-2,
+  .rtl .pl-2 {
+    padding-left: unset;
+    padding-inline-end: 0.5rem;
+  }
+  
+  [dir="rtl"] .pr-2,
+  .rtl .pr-2 {
+    padding-right: unset;
+    padding-inline-start: 0.5rem;
+  }
+  
+  [dir="rtl"] .pl-4,
+  .rtl .pl-4 {
+    padding-left: unset;
+    padding-inline-end: 1rem;
+  }
+  
+  [dir="rtl"] .pr-4,
+  .rtl .pr-4 {
+    padding-right: unset;
+    padding-inline-start: 1rem;
+  }
+  
+  /* RTL Text Alignment - Logical */
   [dir="rtl"] .text-left,
   .rtl .text-left {
-    text-align: right;
+    text-align: start;
   }
   
   [dir="rtl"] .text-right,
   .rtl .text-right {
-    text-align: left;
+    text-align: end;
   }
   
-  /* RTL Icons with Text - REMOVED: was causing issues with button icons */
-  
-  /* RTL Navigation - Keep navigation in LTR order */
-  /* Navigation bar should stay LTR (logo left, user right) regardless of language */
-  
-  /* RTL Tabs - Reverse tab order for RTL */
+  /* ==== 3️⃣ TABS & MENUS RTL ==== */
+  /* Tabs should flow RTL in Arabic */
   [dir="rtl"] [role="tablist"],
   .rtl [role="tablist"] {
     flex-direction: row-reverse;
   }
   
-  /* RTL Breadcrumbs */
-  [dir="rtl"] nav[aria-label="Breadcrumb"] ol,
-  .rtl nav[aria-label="Breadcrumb"] ol {
-    flex-direction: row-reverse;
+  [dir="rtl"] [role="tablist"] > *,
+  .rtl [role="tablist"] > * {
+    /* Each tab trigger inherits RTL direction */
   }
   
-  /* RTL Dropdowns */
+  /* Menu items RTL */
   [dir="rtl"] [role="menu"],
   .rtl [role="menu"],
   [dir="rtl"] [data-radix-menu-content],
@@ -641,7 +688,14 @@
     flex-direction: row-reverse;
   }
   
-  /* RTL Tables */
+  /* RTL Breadcrumbs */
+  [dir="rtl"] nav[aria-label="Breadcrumb"] ol,
+  .rtl nav[aria-label="Breadcrumb"] ol {
+    flex-direction: row-reverse;
+  }
+  
+  /* ==== 4️⃣ TABLES RTL - CRITICAL FIXES ==== */
+  /* Table direction and scroll support */
   [dir="rtl"] table,
   .rtl table {
     direction: rtl;
@@ -654,28 +708,148 @@
     text-align: right;
   }
   
+  /* RTL table - first column (name/item) should be on the right */
+  [dir="rtl"] table th:first-child,
+  [dir="rtl"] table td:first-child,
+  .rtl table th:first-child,
+  .rtl table td:first-child {
+    text-align: right;
+  }
+  
+  /* RTL Table Scrolling - CRITICAL FIX */
+  [dir="rtl"] .overflow-x-auto,
+  .rtl .overflow-x-auto {
+    direction: rtl;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scroll-behavior: smooth;
+  }
+  
+  /* Ensure table inside scrollable container has proper direction */
+  [dir="rtl"] .overflow-x-auto > table,
+  .rtl .overflow-x-auto > table {
+    direction: rtl;
+    min-width: max-content;
+  }
+  
+  /* RTL scrollbar styling */
+  [dir="rtl"] .overflow-x-auto::-webkit-scrollbar,
+  .rtl .overflow-x-auto::-webkit-scrollbar {
+    height: 8px;
+    direction: ltr;
+  }
+  
+  [dir="rtl"] .overflow-x-auto::-webkit-scrollbar-track,
+  .rtl .overflow-x-auto::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+  
+  [dir="rtl"] .overflow-x-auto::-webkit-scrollbar-thumb,
+  .rtl .overflow-x-auto::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.5);
+    border-radius: 4px;
+  }
+  
+  [dir="rtl"] .overflow-x-auto::-webkit-scrollbar-thumb:hover,
+  .rtl .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.7);
+  }
+  
+  /* Sticky column in RTL tables */
+  [dir="rtl"] .sticky.right-0,
+  .rtl .sticky.right-0 {
+    right: 0;
+    left: unset;
+  }
+  
+  [dir="rtl"] .sticky.left-0,
+  .rtl .sticky.left-0 {
+    left: unset;
+    right: 0;
+  }
+  
   /* RTL Table Actions - Keep on left side for RTL */
   [dir="rtl"] td:last-child .flex,
   .rtl td:last-child .flex {
     justify-content: flex-start;
   }
   
-  /* RTL Select/Dropdown Triggers */
-  [dir="rtl"] [data-radix-select-trigger],
-  .rtl [data-radix-select-trigger],
-  [dir="rtl"] button[role="combobox"],
-  .rtl button[role="combobox"] {
+  /* ==== 5️⃣ ICONS & ARROWS RTL ==== */
+  /* Flip directional icons in RTL */
+  [dir="rtl"] .rtl-flip,
+  .rtl .rtl-flip {
+    transform: scaleX(-1);
+  }
+  
+  /* Icons that should flip: arrows, chevrons */
+  [dir="rtl"] [data-lucide="chevron-right"],
+  [dir="rtl"] [data-lucide="chevron-left"],
+  [dir="rtl"] [data-lucide="arrow-right"],
+  [dir="rtl"] [data-lucide="arrow-left"],
+  [dir="rtl"] .icon-directional,
+  .rtl [data-lucide="chevron-right"],
+  .rtl [data-lucide="chevron-left"],
+  .rtl [data-lucide="arrow-right"],
+  .rtl [data-lucide="arrow-left"],
+  .rtl .icon-directional {
+    transform: scaleX(-1);
+  }
+  
+  /* Dropdown/expand icons should flip */
+  [dir="rtl"] .dropdown-icon,
+  .rtl .dropdown-icon {
+    transform: scaleX(-1);
+  }
+  
+  /* Select arrow should be on the left in RTL */
+  [dir="rtl"] [data-radix-select-trigger] svg,
+  .rtl [data-radix-select-trigger] svg {
+    order: -1;
+    margin-inline-start: 0;
+    margin-inline-end: 0.5rem;
+  }
+  
+  /* ==== 6️⃣ BUTTONS RTL ==== */
+  /* Primary buttons position on the right in RTL */
+  [dir="rtl"] .flex.justify-end,
+  .rtl .flex.justify-end {
+    justify-content: flex-start;
+  }
+  
+  [dir="rtl"] .flex.justify-start,
+  .rtl .flex.justify-start {
+    justify-content: flex-end;
+  }
+  
+  /* Button groups - reverse order in RTL */
+  [dir="rtl"] .button-group,
+  .rtl .button-group,
+  [dir="rtl"] .flex.gap-2:has(button),
+  .rtl .flex.gap-2:has(button),
+  [dir="rtl"] .flex.gap-3:has(button),
+  .rtl .flex.gap-3:has(button) {
     flex-direction: row-reverse;
-    text-align: right;
   }
   
-  /* RTL Select Content */
-  [dir="rtl"] [data-radix-select-content],
-  .rtl [data-radix-select-content] {
-    text-align: right;
+  /* Buttons with icons - keep proper order */
+  [dir="rtl"] button .gap-2,
+  .rtl button .gap-2,
+  [dir="rtl"] button.gap-2,
+  .rtl button.gap-2 {
+    flex-direction: row-reverse;
   }
   
-  /* RTL Inputs */
+  /* ==== 7️⃣ FORMS & MODALS RTL ==== */
+  /* Labels alignment */
+  [dir="rtl"] label,
+  .rtl label {
+    text-align: right;
+    display: block;
+  }
+  
+  /* Inputs direction */
   [dir="rtl"] input,
   [dir="rtl"] textarea,
   .rtl input,
@@ -684,36 +858,76 @@
     direction: rtl;
   }
   
-  /* RTL Numbers - Keep LTR for readability */
+  /* Select/Dropdown Triggers RTL */
+  [dir="rtl"] [data-radix-select-trigger],
+  .rtl [data-radix-select-trigger],
+  [dir="rtl"] button[role="combobox"],
+  .rtl button[role="combobox"] {
+    flex-direction: row-reverse;
+    text-align: right;
+  }
+  
+  /* Select Content RTL */
+  [dir="rtl"] [data-radix-select-content],
+  .rtl [data-radix-select-content] {
+    text-align: right;
+  }
+  
+  /* Dialog RTL */
+  [dir="rtl"] [role="dialog"],
+  .rtl [role="dialog"] {
+    text-align: right;
+  }
+  
+  [dir="rtl"] [role="dialog"] .flex.justify-end,
+  .rtl [role="dialog"] .flex.justify-end {
+    flex-direction: row-reverse;
+  }
+  
+  /* ==== 8️⃣ NUMBERS & DATES RTL ==== */
+  /* Keep numbers LTR for readability */
   [dir="rtl"] .font-mono,
   .rtl .font-mono,
   [dir="rtl"] input[type="number"],
   .rtl input[type="number"],
   [dir="rtl"] input[type="tel"],
-  .rtl input[type="tel"] {
+  .rtl input[type="tel"],
+  [dir="rtl"] input[type="date"],
+  .rtl input[type="date"],
+  [dir="rtl"] .tabular-nums,
+  .rtl .tabular-nums {
     direction: ltr;
     text-align: right;
   }
   
-  /* RTL Pagination */
-  [dir="rtl"] nav[aria-label*="pagination"],
-  .rtl nav[aria-label*="pagination"] {
+  /* Date/time inputs */
+  [dir="rtl"] input[type="date"],
+  [dir="rtl"] input[type="time"],
+  [dir="rtl"] input[type="datetime-local"],
+  .rtl input[type="date"],
+  .rtl input[type="time"],
+  .rtl input[type="datetime-local"] {
+    direction: ltr;
+    text-align: right;
+  }
+  
+  /* Bidi isolation for mixed content */
+  [dir="rtl"] .bidi-isolate,
+  .rtl .bidi-isolate {
+    unicode-bidi: isolate;
+  }
+  
+  /* ==== 9️⃣ BADGES & STATUS RTL ==== */
+  /* Badge with icon - icon before text in RTL */
+  [dir="rtl"] .badge .flex,
+  .rtl .badge .flex,
+  [dir="rtl"] [data-badge] .flex,
+  .rtl [data-badge] .flex {
     flex-direction: row-reverse;
+    gap: 0.25rem;
   }
   
-  /* RTL Stats Cards Grid */
-  [dir="rtl"] .grid,
-  .rtl .grid {
-    direction: rtl;
-  }
-  
-  /* RTL Buttons with Icons */
-  [dir="rtl"] button .gap-2,
-  .rtl button .gap-2 {
-    flex-direction: row-reverse;
-  }
-  
-  /* RTL Badge positioning */
+  /* Badge positioning */
   [dir="rtl"] .absolute.right-0,
   .rtl .absolute.right-0 {
     right: unset;
@@ -726,10 +940,23 @@
     right: 0;
   }
   
-  /* RTL Dialog and Sheet */
-  [dir="rtl"] [role="dialog"],
-  .rtl [role="dialog"] {
-    text-align: right;
+  [dir="rtl"] .absolute.-top-2.-end-2,
+  .rtl .absolute.-top-2.-end-2 {
+    inset-inline-end: -0.5rem;
+  }
+  
+  /* ==== 🔟 ADDITIONAL RTL UTILITIES ==== */
+  
+  /* RTL Stats Cards Grid */
+  [dir="rtl"] .grid,
+  .rtl .grid {
+    direction: rtl;
+  }
+  
+  /* RTL Pagination */
+  [dir="rtl"] nav[aria-label*="pagination"],
+  .rtl nav[aria-label*="pagination"] {
+    flex-direction: row-reverse;
   }
   
   /* RTL Sidebar */
@@ -755,15 +982,21 @@
     --tw-translate-x: 100%;
   }
   
-  /* RTL Border Radius */
+  /* RTL Border Radius - Logical */
   [dir="rtl"] .rounded-l,
   .rtl .rounded-l {
-    border-radius: 0 var(--radius) var(--radius) 0;
+    border-start-start-radius: var(--radius);
+    border-end-start-radius: var(--radius);
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
   }
   
   [dir="rtl"] .rounded-r,
   .rtl .rounded-r {
-    border-radius: var(--radius) 0 0 var(--radius);
+    border-start-end-radius: var(--radius);
+    border-end-end-radius: var(--radius);
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
   }
   
   /* Preserve LTR for specific elements */
@@ -776,5 +1009,16 @@
   .force-rtl {
     direction: rtl !important;
     text-align: right !important;
+  }
+  
+  /* No reversal - prevent double reversal */
+  .no-rtl-reverse {
+    flex-direction: row !important;
+  }
+  
+  /* Explicit RTL flex reversal */
+  [dir="rtl"] .rtl-reverse,
+  .rtl .rtl-reverse {
+    flex-direction: row-reverse !important;
   }
 }
