@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -16,9 +17,14 @@ import { EmptyState } from '@/components/EmptyState';
 import { SuccessAnimation, useSuccessAnimation } from '@/components/ui/SuccessAnimation';
 import { maintenanceStatusLabels, emptyStateMessages } from '@/constants/statusLabels';
 
-const MONTHS = [
+const MONTHS_AR = [
   'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
   'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+];
+
+const MONTHS_EN = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
 const STATUS_COLORS = {
@@ -47,6 +53,10 @@ interface MaintenanceItem {
 }
 
 export function AnnualSchedule() {
+  const { t, language } = useLanguage();
+  const isRTL = language === 'ar';
+  const MONTHS = isRTL ? MONTHS_AR : MONTHS_EN;
+  
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [items, setItems] = useState<MaintenanceItem[]>([]);
@@ -280,15 +290,15 @@ export function AnnualSchedule() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <SuccessAnimationComponent />
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold">الجدول السنوي للصيانة</h2>
-          <p className="text-muted-foreground">متابعة تنفيذ الصيانة الدورية</p>
+      <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+        <div className={isRTL ? 'text-right' : 'text-left'}>
+          <h2 className="text-2xl font-bold">{t('annualSchedule')}</h2>
+          <p className="text-muted-foreground">{t('maintenanceSubtitle')}</p>
         </div>
         
-        <div className="flex gap-3">
+        <div className={`flex gap-3 no-rtl-reverse ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Select value={selectedYear.toString()} onValueChange={(val) => setSelectedYear(parseInt(val))}>
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -302,49 +312,58 @@ export function AnnualSchedule() {
             </SelectContent>
           </Select>
           
-          <Button onClick={generateScheduleForYear} variant="outline">
-            <Calendar className="w-4 h-4 ml-2" />
-            توليد الجدول
+          <Button onClick={generateScheduleForYear} variant="outline" className="gap-2">
+            <Calendar className={`w-4 h-4 ${isRTL ? 'ml-0 mr-2' : 'mr-0 ml-2'}`} />
+            {t('generateSchedule') || 'توليد الجدول'}
           </Button>
           
-          <Button onClick={handleExportPDF} variant="outline">
-            <Download className="w-4 h-4 ml-2" />
+          <Button onClick={handleExportPDF} variant="outline" className="gap-2">
+            <Download className={`w-4 h-4 ${isRTL ? 'ml-0 mr-2' : 'mr-0 ml-2'}`} />
             PDF
           </Button>
           
-          <Button onClick={handleExportExcel} variant="outline">
-            <FileSpreadsheet className="w-4 h-4 ml-2" />
+          <Button onClick={handleExportExcel} variant="outline" className="gap-2">
+            <FileSpreadsheet className={`w-4 h-4 ${isRTL ? 'ml-0 mr-2' : 'mr-0 ml-2'}`} />
             Excel
           </Button>
         </div>
       </div>
 
-      <div className="flex gap-4 flex-wrap">
+      <div className={`flex gap-4 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
         {Object.entries(STATUS_COLORS).map(([status, config]) => {
           const Icon = config.icon;
           return (
-            <div key={status} className="flex items-center gap-2">
+            <div key={status} className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className={`w-4 h-4 rounded ${config.bg}`} />
               <span className="text-sm">
-                {status === 'pending' && 'مطلوب'}
-                {status === 'done' && 'تم'}
-                {status === 'not_required' && 'غير مطلوب'}
-                {status === 'overdue' && 'متأخر'}
+                {status === 'pending' && (isRTL ? 'مطلوب' : 'Required')}
+                {status === 'done' && (isRTL ? 'تم' : 'Done')}
+                {status === 'not_required' && (isRTL ? 'غير مطلوب' : 'Not Required')}
+                {status === 'overdue' && (isRTL ? 'متأخر' : 'Overdue')}
               </span>
             </div>
           );
         })}
       </div>
 
-      <div className="border rounded-lg overflow-x-auto">
-        <table className="w-full">
+      <div 
+        className="border rounded-lg overflow-x-auto"
+        style={{ 
+          direction: isRTL ? 'rtl' : 'ltr',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch'
+        }}
+      >
+        <table className="w-full" style={{ direction: isRTL ? 'rtl' : 'ltr', minWidth: 'max-content' }}>
           <thead>
             <tr className="border-b bg-muted/50">
-              <th className="p-4 text-right font-semibold sticky right-0 bg-muted/50 min-w-[200px]">
-                بند الصيانة
+              <th 
+                className={`p-4 font-semibold min-w-[200px] sticky bg-muted/50 z-10 ${isRTL ? 'right-0 text-right' : 'left-0 text-left'}`}
+              >
+                {t('maintenanceItem') || (isRTL ? 'بند الصيانة' : 'Maintenance Item')}
               </th>
               {MONTHS.map((month, idx) => (
-                <th key={idx} className="p-4 text-center font-semibold min-w-[100px]">
+                <th key={idx} className="p-4 text-center font-semibold min-w-[100px] whitespace-nowrap">
                   {month}
                 </th>
               ))}
@@ -354,19 +373,19 @@ export function AnnualSchedule() {
             {loading ? (
               <tr>
                 <td colSpan={13} className="text-center py-8">
-                  جاري التحميل...
+                  {t('loading')}
                 </td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
                 <td colSpan={13} className="text-center py-8">
-                  لا توجد بنود صيانة
+                  {t('noMaintenanceItems') || (isRTL ? 'لا توجد بنود صيانة' : 'No maintenance items')}
                 </td>
               </tr>
             ) : (
               items.map((item) => (
                 <tr key={item.id} className="border-b hover:bg-muted/30">
-                  <td className="p-4 font-medium sticky right-0 bg-background">
+                  <td className={`p-4 font-medium sticky bg-background z-10 ${isRTL ? 'right-0 text-right' : 'left-0 text-left'}`}>
                     {item.name}
                   </td>
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
@@ -392,14 +411,14 @@ export function AnnualSchedule() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle>تحديث حالة الصيانة</DialogTitle>
+            <DialogTitle>{t('updateMaintenanceStatus') || (isRTL ? 'تحديث حالة الصيانة' : 'Update Maintenance Status')}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>الحالة</Label>
+              <Label>{t('status')}</Label>
               <Select 
                 value={updateData.status} 
                 onValueChange={(val) => setUpdateData({ 
@@ -411,10 +430,10 @@ export function AnnualSchedule() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">مطلوب</SelectItem>
-                  <SelectItem value="done">تم</SelectItem>
-                  <SelectItem value="not_required">غير مطلوب</SelectItem>
-                  <SelectItem value="overdue">متأخر</SelectItem>
+                  <SelectItem value="pending">{isRTL ? 'مطلوب' : 'Required'}</SelectItem>
+                  <SelectItem value="done">{isRTL ? 'تم' : 'Done'}</SelectItem>
+                  <SelectItem value="not_required">{isRTL ? 'غير مطلوب' : 'Not Required'}</SelectItem>
+                  <SelectItem value="overdue">{isRTL ? 'متأخر' : 'Overdue'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -422,7 +441,7 @@ export function AnnualSchedule() {
             {updateData.status === 'done' && (
               <>
                 <div className="space-y-2">
-                  <Label>تاريخ التنفيذ</Label>
+                  <Label>{t('executionDate') || (isRTL ? 'تاريخ التنفيذ' : 'Execution Date')}</Label>
                   <Input
                     type="date"
                     value={updateData.executed_date}
@@ -431,7 +450,7 @@ export function AnnualSchedule() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>التكلفة الفعلية</Label>
+                  <Label>{t('actualCost') || (isRTL ? 'التكلفة الفعلية' : 'Actual Cost')}</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -443,7 +462,7 @@ export function AnnualSchedule() {
             )}
 
             <div className="space-y-2">
-              <Label>ملاحظات</Label>
+              <Label>{t('notes')}</Label>
               <Textarea
                 value={updateData.notes}
                 onChange={(e) => setUpdateData({ ...updateData, notes: e.target.value })}
@@ -457,12 +476,12 @@ export function AnnualSchedule() {
               </div>
             )}
 
-            <div className="flex justify-end gap-2">
+            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse justify-start' : 'justify-end'}`}>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                إلغاء
+                {t('cancel')}
               </Button>
               <Button onClick={handleUpdate}>
-                حفظ
+                {t('save')}
               </Button>
             </div>
           </div>
