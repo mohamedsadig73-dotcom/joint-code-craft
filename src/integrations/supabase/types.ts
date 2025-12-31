@@ -148,6 +148,33 @@ export type Database = {
           },
         ]
       }
+      cost_centers: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          name_ar: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          name_ar: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          name_ar?: string
+        }
+        Relationships: []
+      }
       declaration_deletion_log: {
         Row: {
           archive_number: string | null
@@ -944,6 +971,84 @@ export type Database = {
             columns: ["declaration_id"]
             isOneToOne: false
             referencedRelation: "declarations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      petty_cash_expenses: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          cost_center: string
+          created_at: string
+          created_by: string | null
+          description: string
+          expense_date: string
+          id: string
+          invoice_number: string | null
+          item_name: string | null
+          notes: string | null
+          quantity: number
+          recipient: string | null
+          status: string
+          total_amount: number | null
+          unit_price: number
+          updated_at: string
+          vendor_name: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cost_center: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          expense_date?: string
+          id?: string
+          invoice_number?: string | null
+          item_name?: string | null
+          notes?: string | null
+          quantity?: number
+          recipient?: string | null
+          status?: string
+          total_amount?: number | null
+          unit_price: number
+          updated_at?: string
+          vendor_name: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cost_center?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          expense_date?: string
+          id?: string
+          invoice_number?: string | null
+          item_name?: string | null
+          notes?: string | null
+          quantity?: number
+          recipient?: string | null
+          status?: string
+          total_amount?: number | null
+          unit_price?: number
+          updated_at?: string
+          vendor_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petty_cash_expenses_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petty_cash_expenses_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
