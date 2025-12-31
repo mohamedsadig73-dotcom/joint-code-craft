@@ -20,6 +20,7 @@ const MaintenanceItemDetails = lazy(() => import('@/pages/MaintenanceItemDetails
 const AuditLogs = lazy(() => import('@/pages/AuditLogs'));
 const InstallApp = lazy(() => import('@/pages/InstallApp'));
 const LeaveTracking = lazy(() => import('@/pages/LeaveTracking'));
+const PettyCash = lazy(() => import('@/pages/PettyCash'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -164,6 +165,16 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <LeaveTracking />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/petty-cash"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <PettyCash />
                 </PageTransition>
               </ProtectedRoute>
             }
