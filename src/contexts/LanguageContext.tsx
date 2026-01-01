@@ -548,11 +548,17 @@ const translations = {
     optionalField: 'Optional',
     
     // Notifications
+    notifications: 'Notifications',
     newNotification: 'New Notification',
+    markRead: 'Mark as Read',
     markAsRead: 'Mark as Read',
+    markAllRead: 'Mark All as Read',
     markAllAsRead: 'Mark All as Read',
+    allNotificationsRead: 'All notifications marked as read',
+    notificationDeleted: 'Notification deleted',
     clearAll: 'Clear All',
     noNotifications: 'No notifications',
+    updateFailed: 'Update failed',
     
     // Time
     today: 'Today',
@@ -1320,11 +1326,17 @@ const translations = {
     optionalField: 'اختياري',
     
     // Notifications
+    notifications: 'الإشعارات',
     newNotification: 'إشعار جديد',
+    markRead: 'تحديد كمقروء',
     markAsRead: 'تحديد كمقروء',
+    markAllRead: 'تحديد الكل كمقروء',
     markAllAsRead: 'تحديد الكل كمقروء',
+    allNotificationsRead: 'تم تحديد جميع الإشعارات كمقروءة',
+    notificationDeleted: 'تم حذف الإشعار',
     clearAll: 'مسح الكل',
     noNotifications: 'لا توجد إشعارات',
+    updateFailed: 'فشل التحديث',
     
     // Time
     today: 'اليوم',

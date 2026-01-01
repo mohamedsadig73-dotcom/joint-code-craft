@@ -17,7 +17,8 @@ import {
   Wrench,
   FileText,
   History,
-  RefreshCw
+  RefreshCw,
+  Wallet
 } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -127,6 +128,7 @@ export function Navigation() {
   const navItems = [
     { path: '/', icon: LayoutDashboard, labelKey: 'declarations' },
     { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
+    { path: '/petty-cash', icon: Wallet, labelKey: 'pettyCash' },
     { path: '/leave-tracking', icon: FileText, labelKey: 'leaveTracking' },
     { path: '/reports-analytics', icon: BarChart3, labelKey: 'reportsTitle' },
   ];
