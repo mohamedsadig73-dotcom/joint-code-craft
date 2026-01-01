@@ -849,13 +849,36 @@
     display: block;
   }
   
-  /* Inputs direction */
-  [dir="rtl"] input,
+  /* Inputs direction - RTL text inputs */
+  [dir="rtl"] input:not([type="number"]):not([type="tel"]):not([type="date"]):not([type="time"]):not([type="email"]),
   [dir="rtl"] textarea,
-  .rtl input,
+  .rtl input:not([type="number"]):not([type="tel"]):not([type="date"]):not([type="time"]):not([type="email"]),
   .rtl textarea {
+    text-align: right !important;
+    direction: rtl !important;
+    unicode-bidi: plaintext;
+  }
+  
+  /* Email inputs should be LTR */
+  [dir="rtl"] input[type="email"],
+  .rtl input[type="email"] {
+    direction: ltr;
+    text-align: left;
+  }
+  
+  /* Placeholder text alignment */
+  [dir="rtl"] input::placeholder,
+  [dir="rtl"] textarea::placeholder,
+  .rtl input::placeholder,
+  .rtl textarea::placeholder {
     text-align: right;
-    direction: rtl;
+  }
+  
+  /* Search inputs */
+  [dir="rtl"] input[type="search"],
+  .rtl input[type="search"] {
+    text-align: right !important;
+    direction: rtl !important;
   }
   
   /* Select/Dropdown Triggers RTL */
@@ -864,6 +887,12 @@
   [dir="rtl"] button[role="combobox"],
   .rtl button[role="combobox"] {
     flex-direction: row-reverse;
+    text-align: right;
+  }
+  
+  /* Select Content RTL */
+  [dir="rtl"] [data-radix-select-content],
+  .rtl [data-radix-select-content] {
     text-align: right;
   }
   
