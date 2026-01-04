@@ -5,11 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatNumber } from '@/utils/numberFormat';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CostCenter {
   id: string;
@@ -44,6 +48,8 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
   const isRTL = language === 'ar';
   const [loading, setLoading] = useState(false);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
+  const [vendors, setVendors] = useState<string[]>([]);
+  const [vendorOpen, setVendorOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     expense_date: new Date().toISOString().split('T')[0],
@@ -60,6 +66,7 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
 
   useEffect(() => {
     loadCostCenters();
+    loadVendors();
   }, []);
 
   useEffect(() => {
@@ -104,6 +111,22 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
       setCostCenters(data || []);
     } catch (error) {
       console.error('Error loading cost centers:', error);
+    }
+  };
+
+  const loadVendors = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('petty_cash_expenses')
+        .select('vendor_name')
+        .order('vendor_name');
+
+      if (error) throw error;
+      // Get unique vendor names
+      const uniqueVendors = [...new Set(data?.map(e => e.vendor_name) || [])];
+      setVendors(uniqueVendors);
+    } catch (error) {
+      console.error('Error loading vendors:', error);
     }
   };
 
@@ -188,12 +211,55 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
             {/* Vendor */}
             <div className="space-y-2">
               <Label>{t('vendor')} *</Label>
-              <Input
-                value={formData.vendor_name}
-                onChange={(e) => setFormData({ ...formData, vendor_name: e.target.value })}
-                placeholder={t('vendorPlaceholder')}
-                required
-              />
+              <Popover open={vendorOpen} onOpenChange={setVendorOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={vendorOpen}
+                    className="w-full justify-between"
+                  >
+                    {formData.vendor_name || t('vendorPlaceholder')}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput 
+                      placeholder={t('searchOrAddVendor') || 'بحث أو إضافة مورد...'} 
+                      value={formData.vendor_name}
+                      onValueChange={(value) => setFormData({ ...formData, vendor_name: value })}
+                    />
+                    <CommandList>
+                      <CommandEmpty>
+                        <div className="p-2 text-sm text-muted-foreground">
+                          {t('newVendor') || 'مورد جديد'}: {formData.vendor_name}
+                        </div>
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {vendors.map((vendor) => (
+                          <CommandItem
+                            key={vendor}
+                            value={vendor}
+                            onSelect={() => {
+                              setFormData({ ...formData, vendor_name: vendor });
+                              setVendorOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData.vendor_name === vendor ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {vendor}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Cost Center */}
@@ -278,7 +344,7 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
             <div className="space-y-2 md:col-span-2">
               <Label>{t('total')}</Label>
               <div className="p-3 bg-muted rounded-lg text-lg font-bold">
-                {formatNumber(totalAmount)} {t('currency')}
+                {formatNumber(totalAmount)} ريال
               </div>
             </div>
 
