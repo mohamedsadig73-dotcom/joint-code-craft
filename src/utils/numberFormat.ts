@@ -4,19 +4,18 @@ export function toArabicNumerals(num: number | string): string {
   return String(num).replace(/[0-9]/g, (digit) => arabicNumerals[parseInt(digit)]);
 }
 
-// Format number based on language
-export function formatNumber(num: number | string, language: 'ar' | 'en' = 'ar'): string {
-  if (language === 'ar') {
-    return toArabicNumerals(num);
-  }
-  return String(num);
+// Format number with thousands separator - always use Western numerals (123)
+export function formatNumber(num: number | string, _language: 'ar' | 'en' = 'ar'): string {
+  const numValue = typeof num === 'string' ? parseFloat(num) : num;
+  if (isNaN(numValue)) return '0';
+  return numValue.toLocaleString('en-US');
 }
 
-// Format currency
+// Format currency - always use "ريال" for Arabic
 export function formatCurrency(amount: number, language: 'ar' | 'en' = 'ar'): string {
-  const formatted = amount.toFixed(2);
+  const formatted = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   if (language === 'ar') {
-    return toArabicNumerals(formatted) + ' ر.س';
+    return formatted + ' ريال';
   }
   return formatted + ' SAR';
 }
