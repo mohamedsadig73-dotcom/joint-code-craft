@@ -97,17 +97,19 @@ export function PettyCashDashboard() {
     );
   }
 
+  const currencyLabel = language === 'ar' ? 'ريال' : 'SAR';
+  
   const statCards = [
     {
       title: t('totalExpenses'),
-      value: `${formatNumber(stats?.totalExpenses || 0)} ${t('currency')}`,
+      value: `${formatNumber(stats?.totalExpenses || 0)} ${currencyLabel}`,
       icon: Wallet,
       color: 'text-primary',
       bgColor: 'bg-primary/10'
     },
     {
       title: t('monthlyExpenses'),
-      value: `${formatNumber(stats?.monthlyExpenses || 0)} ${t('currency')}`,
+      value: `${formatNumber(stats?.monthlyExpenses || 0)} ${currencyLabel}`,
       icon: TrendingUp,
       color: 'text-blue-500',
       bgColor: 'bg-blue-500/10'
