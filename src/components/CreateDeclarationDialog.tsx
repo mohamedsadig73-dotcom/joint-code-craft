@@ -64,6 +64,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
   const [declarationNumber, setDeclarationNumber] = useState('');
   const [type, setType] = useState<'دخول' | 'خروج'>('دخول');
   const [status, setStatus] = useState<'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'returned_to_warehouse' | 'archived'>('draft');
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const { user } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -75,24 +76,27 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
   // Get status options based on type
   const statusOptions = getStatusOptions(type, t);
 
-  // Load next available number when dialog opens or type changes
+  // Available years (current year and previous 2 years)
+  const currentYear = new Date().getFullYear();
+  const availableYears = [currentYear, currentYear - 1, currentYear - 2];
+
+  // Load next available number when dialog opens or type/year changes
   useEffect(() => {
     if (open) {
       loadNextNumber();
     }
-  }, [open, type]);
+  }, [open, type, selectedYear]);
 
   const loadNextNumber = async () => {
     setLoadingNextNumber(true);
     try {
-      const currentYear = new Date().getFullYear();
       const prefix = type === 'دخول' ? 'IN' : 'OUT';
       
-      // Get all declarations for current year with the specific type prefix
+      // Get all declarations for selected year with the specific type prefix
       const { data, error } = await supabase
         .from('declarations')
         .select('id')
-        .ilike('id', `${prefix}-${currentYear}-%`)
+        .ilike('id', `${prefix}-${selectedYear}-%`)
         .is('deleted_at', null)
         .order('id', { ascending: false })
         .limit(1);
@@ -145,10 +149,9 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
       return;
     }
 
-    // Generate full ID with type-based prefix and current year
-    const currentYear = new Date().getFullYear();
+    // Generate full ID with type-based prefix and selected year
     const prefix = type === 'دخول' ? 'IN' : 'OUT';
-    const fullId = `${prefix}-${currentYear}-${declarationNumber.padStart(4, '0')}`;
+    const fullId = `${prefix}-${selectedYear}-${declarationNumber.padStart(4, '0')}`;
 
     setLoading(true);
 
@@ -240,9 +243,29 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
               {loadingNextNumber ? (
                 'جاري جلب الرقم التالي...'
               ) : (
-                <>الرقم النهائي: {type === 'دخول' ? 'IN' : 'OUT'}-{new Date().getFullYear()}-{declarationNumber.padStart(4, '0')}</>
+                <>الرقم النهائي: {type === 'دخول' ? 'IN' : 'OUT'}-{selectedYear}-{declarationNumber.padStart(4, '0')}</>
               )}
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="year">{t('year') || 'السنة'}</Label>
+            <Select
+              value={selectedYear.toString()}
+              onValueChange={(value) => setSelectedYear(parseInt(value))}
+              disabled={loading}
+            >
+              <SelectTrigger className="glass-card border-border/50">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {availableYears.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
