@@ -826,19 +826,24 @@
   /* Button groups - reverse order in RTL */
   [dir="rtl"] .button-group,
   .rtl .button-group,
-  [dir="rtl"] .flex.gap-2:has(button),
-  .rtl .flex.gap-2:has(button),
-  [dir="rtl"] .flex.gap-3:has(button),
-  .rtl .flex.gap-3:has(button) {
+  [dir="rtl"] .flex.gap-2:has(button):not(.ltr-flex),
+  .rtl .flex.gap-2:has(button):not(.ltr-flex),
+  [dir="rtl"] .flex.gap-3:has(button):not(.ltr-flex),
+  .rtl .flex.gap-3:has(button):not(.ltr-flex) {
     flex-direction: row-reverse;
   }
   
   /* Buttons with icons - keep proper order */
-  [dir="rtl"] button .gap-2,
-  .rtl button .gap-2,
-  [dir="rtl"] button.gap-2,
-  .rtl button.gap-2 {
+  [dir="rtl"] button .gap-2:not(.ltr-flex),
+  .rtl button .gap-2:not(.ltr-flex),
+  [dir="rtl"] button.gap-2:not(.ltr-flex),
+  .rtl button.gap-2:not(.ltr-flex) {
     flex-direction: row-reverse;
+  }
+  
+  /* LTR Flex - keeps flex items in LTR order even in RTL mode */
+  .ltr-flex {
+    flex-direction: row !important;
   }
   
   /* ==== 7️⃣ FORMS & MODALS RTL ==== */

@@ -125,6 +125,7 @@ export function Navigation() {
     }
   };
 
+  // Navigation items ordered: Declarations -> Maintenance -> Petty Cash -> Leave Tracking -> Reports -> Admin
   const navItems = [
     { path: '/', icon: LayoutDashboard, labelKey: 'declarations' },
     { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
@@ -133,7 +134,7 @@ export function Navigation() {
     { path: '/reports-analytics', icon: BarChart3, labelKey: 'reportsTitle' },
   ];
 
-  // Add admin dashboard link for admins only
+  // Add admin dashboard link for admins only - at the end (left side in RTL)
   const allNavItems = user?.role === 'admin' 
     ? [
         ...navItems, 
