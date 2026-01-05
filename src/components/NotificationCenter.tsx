@@ -38,7 +38,7 @@ export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
 
   const loadNotifications = useCallback(async () => {
-    if (!user) return;
+    if (!user?.id) return;
     
     try {
       let query = supabase
@@ -47,7 +47,7 @@ export function NotificationCenter() {
 
       // If user is not admin or manager, filter by user_id
       if (user?.role !== 'admin' && user?.role !== 'manager') {
-        query = query.eq('user_id', user?.id);
+        query = query.eq('user_id', user.id);
       }
 
       const { data, error } = await query
@@ -63,13 +63,13 @@ export function NotificationCenter() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.id, user?.role]);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       loadNotifications();
     }
-  }, [user, loadNotifications]);
+  }, [user?.id, loadNotifications]);
 
   const markAsRead = async (notificationId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
