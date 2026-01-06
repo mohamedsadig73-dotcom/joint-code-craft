@@ -200,6 +200,7 @@ const translations = {
     fillAllFields: 'Please complete all required fields',
     userCreationFailed: 'User creation failed. Please try again.',
     permissionsDeleted: 'Permissions removed successfully',
+    userDeleted: 'User deleted successfully',
     
     // Dashboard Specific
     dashboardSubtitle: 'Track and manage all your declarations in one place',
@@ -978,6 +979,7 @@ const translations = {
     fillAllFields: 'يرجى ملء جميع الحقول المطلوبة',
     userCreationFailed: 'فشل إنشاء المستخدم. يرجى المحاولة مرة أخرى.',
     permissionsDeleted: 'تم إزالة الصلاحيات بنجاح',
+    userDeleted: 'تم حذف المستخدم بنجاح',
     
     // Dashboard Specific
     dashboardSubtitle: 'تتبع وإدارة جميع إقراراتك في مكان واحد',

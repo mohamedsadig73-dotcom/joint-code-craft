@@ -245,27 +245,47 @@ export function UserManagementTab() {
     if (!userToDelete) return;
 
     try {
+      // First delete user roles
       const { error: roleError } = await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', userToDelete);
 
-      if (roleError) throw roleError;
+      if (roleError) {
+        console.error('Error deleting user roles:', roleError);
+        throw roleError;
+      }
+
+      // Then delete the profile (this will cascade due to RLS)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userToDelete);
+
+      if (profileError) {
+        console.error('Error deleting profile:', profileError);
+        throw profileError;
+      }
+
+      // Update local state immediately
+      setUsers(prev => prev.filter(u => u.id !== userToDelete));
 
       toast({
         title: t('success'),
-        description: t('permissionsDeleted'),
+        description: t('userDeleted'),
       });
 
       setDeleteDialogOpen(false);
       setUserToDelete(null);
-      loadUsers();
     } catch (error: any) {
+      console.error('Error in confirmDeleteUser:', error);
       toast({
         variant: 'destructive',
         title: t('error'),
-        description: error.message,
+        description: error.message || t('deleteFailed'),
       });
+      // Reload users in case of partial success
+      loadUsers();
     }
   };
 
