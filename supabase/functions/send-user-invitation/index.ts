@@ -11,11 +11,26 @@ const invitationSchema = z.object({
   invitedBy: z.string().trim().min(1).max(100)
 });
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+// Allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  Deno.env.get("ALLOWED_ORIGIN") ?? "https://lovable.dev",
+  "http://localhost:5173",
+  "http://localhost:8080",
+  "https://lovable.dev",
+];
+
+function getCorsHeaders(request: Request): Record<string, string> {
+  const origin = request.headers.get("origin");
+  const allowedOrigin = origin && ALLOWED_ORIGINS.some(allowed => 
+    origin === allowed || origin.endsWith('.lovable.app') || origin.endsWith('.lovable.dev')
+  ) ? origin : ALLOWED_ORIGINS[0];
+  
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Credentials": "true",
+  };
+}
 
 interface InvitationRequest {
   email: string;
@@ -96,6 +111,8 @@ async function checkRateLimit(
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  const corsHeaders = getCorsHeaders(req);
+
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -343,7 +360,17 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in send-user-invitation function:", error);
+    // Log detailed error server-side for debugging
+    console.error("[Internal] Send invitation error:", {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
+    
+    const corsHeaders = getCorsHeaders(req);
+    
+    // Return safe generic message to client
     return new Response(
       JSON.stringify({
         error: "فشل إرسال الدعوة",
