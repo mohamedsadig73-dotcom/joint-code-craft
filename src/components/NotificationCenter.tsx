@@ -37,39 +37,51 @@ export function NotificationCenter() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
 
-  const loadNotifications = useCallback(async () => {
-    if (!user?.id) return;
-    
-    try {
-      let query = supabase
-        .from('notifications')
-        .select('*');
-
-      // If user is not admin or manager, filter by user_id
-      if (user?.role !== 'admin' && user?.role !== 'manager') {
-        query = query.eq('user_id', user.id);
-      }
-
-      const { data, error } = await query
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-
-      setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.read).length || 0);
-    } catch (error: any) {
-      console.error('Error loading notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id, user?.role]);
+  // Store user id and role in refs to avoid dependency issues
+  const userId = user?.id;
+  const userRole = user?.role;
 
   useEffect(() => {
-    if (user?.id) {
-      loadNotifications();
-    }
-  }, [user?.id, loadNotifications]);
+    if (!userId) return;
+    
+    let isMounted = true;
+    
+    const loadNotifications = async () => {
+      try {
+        let query = supabase
+          .from('notifications')
+          .select('*');
+
+        // If user is not admin or manager, filter by user_id
+        if (userRole !== 'admin' && userRole !== 'manager') {
+          query = query.eq('user_id', userId);
+        }
+
+        const { data, error } = await query
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (error) throw error;
+
+        if (isMounted) {
+          setNotifications(data || []);
+          setUnreadCount(data?.filter(n => !n.read).length || 0);
+        }
+      } catch (error: any) {
+        console.error('Error loading notifications:', error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+    
+    loadNotifications();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [userId, userRole]);
 
   const markAsRead = async (notificationId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
