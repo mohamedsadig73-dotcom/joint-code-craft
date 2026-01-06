@@ -10,6 +10,10 @@ interface StatsCardProps {
   bgColor?: string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  trend?: {
+    value: number;
+    isPositive: boolean;
+  };
 }
 
 export function StatsCard({
@@ -20,25 +24,42 @@ export function StatsCard({
   bgColor = 'bg-primary/10',
   size = 'md',
   className,
+  trend,
 }: StatsCardProps) {
   const sizeClasses = {
-    sm: { padding: 'p-3', icon: 'w-4 h-4', iconWrapper: 'p-1.5', value: 'text-xl', label: 'text-xs' },
-    md: { padding: 'p-4', icon: 'w-5 h-5', iconWrapper: 'p-2', value: 'text-2xl', label: 'text-xs' },
-    lg: { padding: 'p-6', icon: 'w-6 h-6', iconWrapper: 'p-3', value: 'text-3xl', label: 'text-sm' },
+    sm: { padding: 'p-3 sm:p-4', icon: 'w-4 h-4', iconWrapper: 'p-2', value: 'text-xl sm:text-2xl', label: 'text-xs' },
+    md: { padding: 'p-4 sm:p-5', icon: 'w-5 h-5', iconWrapper: 'p-2.5', value: 'text-2xl sm:text-3xl', label: 'text-xs sm:text-sm' },
+    lg: { padding: 'p-5 sm:p-6', icon: 'w-6 h-6', iconWrapper: 'p-3', value: 'text-3xl sm:text-4xl', label: 'text-sm' },
   };
 
   const sizes = sizeClasses[size];
 
   return (
-    <Card className={cn('glass-card border-border/50', sizes.padding, className)}>
-      <div className="flex items-center gap-3">
-        <div className={cn('rounded-lg', bgColor, sizes.iconWrapper)}>
-          <Icon className={cn(sizes.icon, color)} />
+    <Card className={cn(
+      'glass-card border-border/50 group hover:border-secondary/30 transition-all duration-300',
+      sizes.padding, 
+      className
+    )}>
+      <div className="flex items-center gap-3 sm:gap-4">
+        <div className={cn(
+          'rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg', 
+          bgColor, 
+          sizes.iconWrapper
+        )}>
+          <Icon className={cn(sizes.icon, color, 'transition-transform duration-300')} />
         </div>
-        <div>
-          <div className={cn('font-bold', sizes.value)}>{value}</div>
-          <div className={cn('text-muted-foreground', sizes.label)}>{label}</div>
+        <div className="flex-1 min-w-0">
+          <div className={cn('font-bold tabular-nums tracking-tight', sizes.value)}>{value}</div>
+          <div className={cn('text-muted-foreground truncate', sizes.label)}>{label}</div>
         </div>
+        {trend && (
+          <div className={cn(
+            'text-xs font-semibold px-2 py-1 rounded-full',
+            trend.isPositive ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'
+          )}>
+            {trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%
+          </div>
+        )}
       </div>
     </Card>
   );
