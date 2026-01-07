@@ -263,7 +263,7 @@ export default function ReportsAnalytics() {
   }
 
   return (
-    <div className="min-h-screen" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen">
       <Navigation />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Breadcrumbs />
@@ -271,7 +271,7 @@ export default function ReportsAnalytics() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
-            <div className={cn("flex items-center gap-3 mb-2", language === 'ar' && "flex-row-reverse justify-end")}>
+            <div className="flex items-center gap-3 mb-2">
               <BarChart3 className="w-8 h-8 text-primary" />
               <h1 className="text-2xl md:text-3xl font-bold gradient-text">{t('reportsTitle')}</h1>
             </div>
@@ -357,7 +357,7 @@ export default function ReportsAnalytics() {
               {/* Status Distribution */}
               <Card className="glass-card border-border/50">
                 <CardHeader>
-                  <CardTitle className={cn("flex items-center gap-2", language === 'ar' && "flex-row-reverse justify-end")}>
+                  <CardTitle className="flex items-center gap-2">
                     <PieChartIcon className="w-5 h-5" />
                     {t('statusDistributionChart')}
                   </CardTitle>
@@ -395,7 +395,7 @@ export default function ReportsAnalytics() {
               {/* Type Distribution */}
               <Card className="glass-card border-border/50">
                 <CardHeader>
-                  <CardTitle className={cn("flex items-center gap-2", language === 'ar' && "flex-row-reverse justify-end")}>
+                  <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="w-5 h-5" />
                     {t('typeDistributionChart')}
                   </CardTitle>
@@ -434,7 +434,7 @@ export default function ReportsAnalytics() {
             {/* User Distribution */}
             <Card className="glass-card border-border/50">
               <CardHeader>
-                <CardTitle className={cn("flex items-center gap-2", language === 'ar' && "flex-row-reverse justify-end")}>
+                <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5" />
                   {t('userDistribution')}
                 </CardTitle>
@@ -460,7 +460,7 @@ export default function ReportsAnalytics() {
               {/* Monthly Trends */}
               <Card className="glass-card border-border/50">
                 <CardHeader>
-                  <CardTitle className={cn("flex items-center gap-2", language === 'ar' && "flex-row-reverse justify-end")}>
+                  <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="w-5 h-5" />
                     {t('monthlyTrendChart')}
                   </CardTitle>
@@ -473,22 +473,12 @@ export default function ReportsAnalytics() {
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height={280}>
-                      <AreaChart 
-                        data={stats.monthlyTrends}
-                        margin={language === 'ar' ? { right: 30, left: 10 } : { left: 30, right: 10 }}
-                      >
+                      <AreaChart data={stats.monthlyTrends}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis 
-                          dataKey="month" 
-                          stroke="hsl(var(--muted-foreground))" 
-                          reversed={language === 'ar'} 
-                        />
-                        <YAxis 
-                          stroke="hsl(var(--muted-foreground))" 
-                          orientation={language === 'ar' ? 'right' : 'left'} 
-                        />
-                        <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', direction: language === 'ar' ? 'rtl' : 'ltr' }} />
-                        <Legend align={language === 'ar' ? 'right' : 'center'} />
+                        <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                        <YAxis stroke="hsl(var(--muted-foreground))" />
+                        <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                        <Legend />
                         <Area type="monotone" dataKey="دخول" stackId="1" stroke={CHART_COLORS.entrance} fill={CHART_COLORS.entrance} fillOpacity={0.6} />
                         <Area type="monotone" dataKey="خروج" stackId="1" stroke={CHART_COLORS.exit} fill={CHART_COLORS.exit} fillOpacity={0.6} />
                       </AreaChart>
@@ -500,7 +490,7 @@ export default function ReportsAnalytics() {
               {/* Weekly Activity */}
               <Card className="glass-card border-border/50">
                 <CardHeader>
-                  <CardTitle className={cn("flex items-center gap-2", language === 'ar' && "flex-row-reverse justify-end")}>
+                  <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="w-5 h-5" />
                     {t('weeklyActivityChart')}
                   </CardTitle>
@@ -513,14 +503,11 @@ export default function ReportsAnalytics() {
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height={280}>
-                      <BarChart 
-                        data={language === 'ar' ? [...stats.weeklyActivity].reverse() : stats.weeklyActivity}
-                        margin={language === 'ar' ? { right: 30, left: 10 } : { left: 30, right: 10 }}
-                      >
+                      <BarChart data={stats.weeklyActivity}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" reversed={language === 'ar'} />
-                        <YAxis stroke="hsl(var(--muted-foreground))" orientation={language === 'ar' ? 'right' : 'left'} />
-                        <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', direction: language === 'ar' ? 'rtl' : 'ltr' }} />
+                        <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" />
+                        <YAxis stroke="hsl(var(--muted-foreground))" />
+                        <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
                         <Bar dataKey="count" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
@@ -532,7 +519,7 @@ export default function ReportsAnalytics() {
             {/* Declaration Status Distribution */}
             <Card className="glass-card border-border/50">
               <CardHeader>
-                <CardTitle className={cn("flex items-center gap-2", language === 'ar' && "flex-row-reverse justify-end")}>
+                <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5" />
                   {t('declarationDistribution')}
                 </CardTitle>
@@ -545,14 +532,11 @@ export default function ReportsAnalytics() {
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart 
-                      data={stats.declarationsByStatus}
-                      margin={language === 'ar' ? { right: 30, left: 10 } : { left: 30, right: 10 }}
-                    >
+                    <BarChart data={stats.declarationsByStatus}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} reversed={language === 'ar'} />
-                      <YAxis stroke="hsl(var(--muted-foreground))" orientation={language === 'ar' ? 'right' : 'left'} />
-                      <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', direction: language === 'ar' ? 'rtl' : 'ltr' }} />
+                      <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" />
+                      <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
                       <Bar dataKey="count" radius={[8, 8, 0, 0]}>
                         {stats.declarationsByStatus.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.status] || CHART_COLORS.user} />
@@ -569,7 +553,7 @@ export default function ReportsAnalytics() {
           <TabsContent value="export" className="space-y-6">
             <Card className="glass-card border-border/50">
               <CardHeader>
-                <CardTitle className={cn("flex items-center gap-2", language === 'ar' && "flex-row-reverse justify-end")}>
+                <CardTitle className="flex items-center gap-2">
                   <Download className="w-5 h-5" />
                   {t('exportOptions')}
                 </CardTitle>
@@ -581,12 +565,12 @@ export default function ReportsAnalytics() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className={cn("flex flex-wrap gap-4", language === 'ar' && "flex-row-reverse")}>
-                  <Button onClick={handleExportExcel} disabled={exporting} size="lg" variant="outline" className={cn("gap-2", language === 'ar' && "flex-row-reverse")}>
+                <div className="flex flex-wrap gap-4">
+                  <Button onClick={handleExportExcel} disabled={exporting} size="lg" variant="outline" className="gap-2">
                     <Download className="w-5 h-5" />
                     {t('exportExcel')}
                   </Button>
-                  <Button onClick={handleExportPDF} disabled={exporting} size="lg" className={cn("gap-2", language === 'ar' && "flex-row-reverse")}>
+                  <Button onClick={handleExportPDF} disabled={exporting} size="lg" className="gap-2">
                     <Download className="w-5 h-5" />
                     {t('exportPDF')}
                   </Button>
@@ -599,7 +583,7 @@ export default function ReportsAnalytics() {
           <TabsContent value="admin" className="space-y-6">
             <Card className="glass-card border-border/50">
               <CardHeader>
-                <CardTitle className={cn("flex items-center gap-2", language === 'ar' && "flex-row-reverse justify-end")}>
+                <CardTitle className="flex items-center gap-2">
                   <Activity className="w-5 h-5" />
                   {t('recentActivities')}
                 </CardTitle>

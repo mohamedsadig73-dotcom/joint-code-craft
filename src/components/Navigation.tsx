@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { ThemeToggleSimple } from '@/components/ThemeToggle';
-import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
   FolderOpen, 
@@ -146,11 +145,11 @@ export function Navigation() {
   const isRTL = language === 'ar';
 
   return (
-    <nav className="glass-card border-b border-border/50 sticky top-0 z-50 backdrop-blur-md" dir={isRTL ? 'rtl' : 'ltr'}>
+    <nav className="glass-card border-b border-border/50 sticky top-0 z-50 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 ltr-flex">
             <h1 className="text-2xl font-bold gradient-text">DTS</h1>
             <span className="hidden md:block text-sm text-muted-foreground">
               {t('systemTitle')}
@@ -158,7 +157,7 @@ export function Navigation() {
           </div>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2 ltr-flex">
             {allNavItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -166,7 +165,7 @@ export function Navigation() {
                   <Button
                     variant={isActive(item.path) ? 'secondary' : 'ghost'}
                     size="sm"
-                    className={cn("gap-2 transition-all duration-200", isRTL && "flex-row-reverse")}
+                    className="gap-2 ltr-flex"
                   >
                     <Icon className="w-4 h-4" />
                     {t(item.labelKey)}
@@ -177,7 +176,7 @@ export function Navigation() {
           </div>
 
           {/* Right Side Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 ltr-flex">
             {/* Offline Indicator */}
             <OfflineIndicator />
             
@@ -187,7 +186,7 @@ export function Navigation() {
               size="sm"
               onClick={handleForceUpdate}
               disabled={isUpdating}
-              className={cn("gap-2", isRTL && "flex-row-reverse")}
+              className="gap-2"
               title={t('checkingUpdates')}
             >
               <RefreshCw className={`w-4 h-4 ${isUpdating ? 'animate-spin' : ''}`} />
@@ -202,7 +201,7 @@ export function Navigation() {
               variant="outline"
               size="sm"
               onClick={toggleLanguage}
-              className={cn("gap-2 bg-primary/10 hover:bg-primary/20 border-primary/30", isRTL && "flex-row-reverse")}
+              className="gap-2 bg-primary/10 hover:bg-primary/20 border-primary/30"
               title={t('switchLanguage')}
             >
               <Globe className="w-4 h-4 text-primary" />
@@ -213,35 +212,35 @@ export function Navigation() {
             <NotificationCenter />
 
             {/* User Menu */}
-            <DropdownMenu dir={isRTL ? 'rtl' : 'ltr'}>
+            <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className={cn("gap-2", isRTL && "flex-row-reverse")}>
+                <Button variant="ghost" className="gap-2">
                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                     <User className="w-5 h-5" />
                   </div>
-                  <div className={cn("hidden md:block", isRTL ? "text-right" : "text-left")}>
+                  <div className="hidden md:block text-left">
                     <p className="text-sm font-medium">{user?.username}</p>
                     <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-48">
-                <DropdownMenuItem onClick={() => navigate('/profile')} className={cn(isRTL && "flex-row-reverse")}>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
                   <User className="w-4 h-4 me-2" />
                   {t('profile')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/install')} className={cn(isRTL && "flex-row-reverse")}>
+                <DropdownMenuItem onClick={() => navigate('/install')}>
                   <Download className="w-4 h-4 me-2" />
                   {t('installApp')}
                 </DropdownMenuItem>
                 {user?.role === 'admin' && (
-                  <DropdownMenuItem onClick={() => navigate('/audit-logs')} className={cn(isRTL && "flex-row-reverse")}>
+                  <DropdownMenuItem onClick={() => navigate('/audit-logs')}>
                     <History className="w-4 h-4 me-2" />
                     {t('auditLog')}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className={cn("text-destructive", isRTL && "flex-row-reverse")}>
+                <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                   <LogOut className="w-4 h-4 me-2" />
                   {t('logout')}
                 </DropdownMenuItem>
@@ -251,7 +250,7 @@ export function Navigation() {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden flex justify-around py-2 border-t border-border/50">
+        <div className="md:hidden flex justify-around py-2 border-t border-border/50 ltr-flex">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -259,10 +258,10 @@ export function Navigation() {
                 <Button
                   variant={isActive(item.path) ? 'secondary' : 'ghost'}
                   size="sm"
-                  className={cn("gap-1.5 flex-col h-auto py-2 min-w-[60px]", isRTL && "flex-col-reverse")}
+                  className="gap-2 ltr-flex"
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="text-[10px] font-medium">{t(item.labelKey)}</span>
+                  <Icon className="w-4 h-4" />
+                  <span className="text-xs">{t(item.labelKey)}</span>
                 </Button>
               </Link>
             );

@@ -113,25 +113,12 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart 
-                    data={data.typeDistribution} 
-                    layout="vertical" 
-                    role="img" 
-                    aria-label={t('typeDistributionChart')}
-                    margin={isRTL ? { right: 60, left: 20 } : { left: 60, right: 20 }}
-                  >
+                  <BarChart data={data.typeDistribution} layout="vertical" role="img" aria-label={t('typeDistributionChart')}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" reversed={isRTL} />
-                    <YAxis 
-                      type="category" 
-                      dataKey="type" 
-                      stroke="hsl(var(--muted-foreground))" 
-                      width={60} 
-                      orientation={isRTL ? 'right' : 'left'}
-                      tick={{ textAnchor: isRTL ? 'start' : 'end' }}
-                    />
+                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+                    <YAxis type="category" dataKey="type" stroke="hsl(var(--muted-foreground))" width={60} />
                     <Tooltip contentStyle={tooltipStyle as React.CSSProperties} />
-                    <Bar dataKey="count" radius={isRTL ? [8, 0, 0, 8] : [0, 8, 8, 0]}>
+                    <Bar dataKey="count" radius={[0, 8, 8, 0]}>
                       {data.typeDistribution.map((entry, index) => (
                         <Cell 
                           key={`cell-${index}`} 
@@ -162,14 +149,10 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
-                <BarChart 
-                  data={isRTL ? [...data.weeklyActivity].reverse() : data.weeklyActivity} 
-                  role="img" 
-                  aria-label={t('weeklyActivityChart')}
-                >
+                <BarChart data={data.weeklyActivity} role="img" aria-label={t('weeklyActivityChart')}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" reversed={isRTL} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" orientation={isRTL ? 'right' : 'left'} />
+                  <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={tooltipStyle as React.CSSProperties} />
                   <Bar dataKey="count" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
                 </BarChart>
@@ -199,12 +182,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={350}>
-                <ComposedChart 
-                  data={data.monthlyTrend} 
-                  role="img" 
-                  aria-label={t('monthlyTrendChart')}
-                  margin={isRTL ? { right: 30, left: 20 } : { left: 30, right: 20 }}
-                >
+                <ComposedChart data={data.monthlyTrend} role="img" aria-label={t('monthlyTrendChart')}>
                   <defs>
                     <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
@@ -212,10 +190,10 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" reversed={isRTL} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" orientation={isRTL ? 'right' : 'left'} />
+                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={tooltipStyle as React.CSSProperties} />
-                  <Legend align={isRTL ? 'right' : 'center'} />
+                  <Legend />
                   <Area
                     type="monotone"
                     dataKey="total"
@@ -256,12 +234,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
-                <AreaChart 
-                  data={data.hourlyDistribution} 
-                  role="img" 
-                  aria-label={t('timeDistributionChart')}
-                  margin={isRTL ? { right: 30, left: 20 } : { left: 30, right: 20 }}
-                >
+                <AreaChart data={data.hourlyDistribution} role="img" aria-label={t('timeDistributionChart')}>
                   <defs>
                     <linearGradient id="colorHourly" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4}/>
@@ -269,8 +242,8 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="hour" stroke="hsl(var(--muted-foreground))" reversed={isRTL} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" orientation={isRTL ? 'right' : 'left'} />
+                  <XAxis dataKey="hour" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={tooltipStyle as React.CSSProperties} />
                   <Area
                     type="monotone"
