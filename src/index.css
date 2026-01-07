@@ -719,7 +719,9 @@
   
   /* RTL Table Scrolling - CRITICAL FIX */
   [dir="rtl"] .overflow-x-auto,
-  .rtl .overflow-x-auto {
+  [dir="rtl"] .overflow-auto,
+  .rtl .overflow-x-auto,
+  .rtl .overflow-auto {
     direction: rtl;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
@@ -729,32 +731,101 @@
   
   /* Ensure table inside scrollable container has proper direction */
   [dir="rtl"] .overflow-x-auto > table,
-  .rtl .overflow-x-auto > table {
+  [dir="rtl"] .overflow-auto > table,
+  .rtl .overflow-x-auto > table,
+  .rtl .overflow-auto > table {
     direction: rtl;
     min-width: max-content;
   }
   
+  /* ========== TABLE COLUMN RESIZE RTL FIX ========== */
+  /* Critical: Enable resize cursor on table headers in RTL */
+  [dir="rtl"] th,
+  .rtl th {
+    position: relative;
+  }
+  
+  /* Resize handle for RTL - on the LEFT edge of each column */
+  [dir="rtl"] th::before,
+  .rtl th::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    cursor: col-resize;
+    background: transparent;
+    z-index: 10;
+    transition: background-color 0.15s ease;
+  }
+  
+  [dir="rtl"] th:hover::before,
+  .rtl th:hover::before {
+    background: hsl(var(--primary) / 0.3);
+  }
+  
+  /* First column doesn't need resize on the right side in RTL */
+  [dir="rtl"] th:first-child::before,
+  .rtl th:first-child::before {
+    display: none;
+  }
+  
+  /* LTR resize handle - on the RIGHT edge */
+  [dir="ltr"] th::after,
+  html:not([dir="rtl"]) th::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    cursor: col-resize;
+    background: transparent;
+    z-index: 10;
+    transition: background-color 0.15s ease;
+  }
+  
+  [dir="ltr"] th:hover::after,
+  html:not([dir="rtl"]) th:hover::after {
+    background: hsl(var(--primary) / 0.3);
+  }
+  
+  /* Last column doesn't need resize handle in LTR */
+  [dir="ltr"] th:last-child::after,
+  html:not([dir="rtl"]) th:last-child::after {
+    display: none;
+  }
+  
   /* RTL scrollbar styling */
   [dir="rtl"] .overflow-x-auto::-webkit-scrollbar,
-  .rtl .overflow-x-auto::-webkit-scrollbar {
+  [dir="rtl"] .overflow-auto::-webkit-scrollbar,
+  .rtl .overflow-x-auto::-webkit-scrollbar,
+  .rtl .overflow-auto::-webkit-scrollbar {
     height: 8px;
     direction: ltr;
   }
   
   [dir="rtl"] .overflow-x-auto::-webkit-scrollbar-track,
-  .rtl .overflow-x-auto::-webkit-scrollbar-track {
+  [dir="rtl"] .overflow-auto::-webkit-scrollbar-track,
+  .rtl .overflow-x-auto::-webkit-scrollbar-track,
+  .rtl .overflow-auto::-webkit-scrollbar-track {
     background: hsl(var(--muted));
     border-radius: 4px;
   }
   
   [dir="rtl"] .overflow-x-auto::-webkit-scrollbar-thumb,
-  .rtl .overflow-x-auto::-webkit-scrollbar-thumb {
+  [dir="rtl"] .overflow-auto::-webkit-scrollbar-thumb,
+  .rtl .overflow-x-auto::-webkit-scrollbar-thumb,
+  .rtl .overflow-auto::-webkit-scrollbar-thumb {
     background: hsl(var(--muted-foreground) / 0.5);
     border-radius: 4px;
   }
   
   [dir="rtl"] .overflow-x-auto::-webkit-scrollbar-thumb:hover,
-  .rtl .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  [dir="rtl"] .overflow-auto::-webkit-scrollbar-thumb:hover,
+  .rtl .overflow-x-auto::-webkit-scrollbar-thumb:hover,
+  .rtl .overflow-auto::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground) / 0.7);
   }
   

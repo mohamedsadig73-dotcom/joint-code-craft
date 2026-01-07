@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, Wrench, User } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Wrench, User, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -11,9 +11,10 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { path: '/', icon: LayoutDashboard, labelKey: 'dashboard' },
-  { path: '/reports', icon: BarChart3, labelKey: 'reports' },
+  { path: '/', icon: LayoutDashboard, labelKey: 'declarations' },
   { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
+  { path: '/petty-cash', icon: Wallet, labelKey: 'pettyCash' },
+  { path: '/reports-analytics', icon: BarChart3, labelKey: 'reports' },
   { path: '/profile', icon: User, labelKey: 'profile' },
 ];
 
@@ -29,8 +30,11 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card/95 backdrop-blur-lg border-t border-border/50 safe-area-bottom animate-slide-up">
-      <div className="flex items-center justify-around h-16 px-2">
+    <nav 
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card/95 backdrop-blur-lg border-t border-border/50 safe-area-bottom animate-slide-up"
+      dir={isRTL ? 'rtl' : 'ltr'}
+    >
+      <div className="flex items-center justify-around h-16 px-1">
         {navItems.map((item) => {
           const active = isActive(item.path);
           const Icon = item.icon;
@@ -41,8 +45,11 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
               onClick={() => navigate(item.path)}
               className={cn(
                 'relative flex flex-col items-center justify-center flex-1 h-full py-2 transition-all duration-200',
+                // Minimum touch target size of 44px
+                'min-w-[44px] min-h-[44px]',
                 active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               )}
+              aria-label={t(item.labelKey)}
             >
               {active && (
                 <div className="absolute inset-x-2 top-1 h-1 bg-primary rounded-full" />
@@ -54,7 +61,7 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
                 <Icon className="w-5 h-5" />
               </div>
               <span className={cn(
-                'text-xs mt-1 font-medium transition-opacity',
+                'text-[10px] mt-1 font-medium transition-opacity truncate max-w-full px-1',
                 active ? 'opacity-100' : 'opacity-70'
               )}>
                 {t(item.labelKey)}

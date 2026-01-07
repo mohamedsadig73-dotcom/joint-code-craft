@@ -15,6 +15,35 @@ export const statusTranslationKeys: Record<string, string> = {
   rejected: 'rejected',
 };
 
+// Dynamic status translation keys based on declaration type
+export const getDynamicStatusTranslationKey = (dbStatus: string, declarationType?: 'entrance' | 'exit'): string => {
+  // For entrance declarations
+  if (declarationType === 'entrance') {
+    switch (dbStatus) {
+      case 'pending_warehouse_signature':
+        return 'pendingDelivererSignature'; // بانتظار توقيع المسلم
+      case 'warehouse_signed':
+        return 'signedByDeliverer'; // موقّع من المسلم
+      default:
+        return statusTranslationKeys[dbStatus] || dbStatus;
+    }
+  }
+  
+  // For exit declarations
+  if (declarationType === 'exit') {
+    switch (dbStatus) {
+      case 'pending_warehouse_signature':
+        return 'pendingReceiverSignature'; // بانتظار توقيع المستلم
+      case 'warehouse_signed':
+        return 'signedByReceiver'; // موقّع من المستلم
+      default:
+        return statusTranslationKeys[dbStatus] || dbStatus;
+    }
+  }
+  
+  return statusTranslationKeys[dbStatus] || dbStatus;
+};
+
 // Helper function to get status translation key
 export const getStatusTranslationKey = (dbStatus: string): string => {
   return statusTranslationKeys[dbStatus] || dbStatus;
@@ -25,7 +54,7 @@ export const statusLabels: Record<string, string> = {
   draft: 'مسودة',
   pending_warehouse_signature: 'بانتظار التوقيع',
   warehouse_signed: 'موقّع',
-  sent_to_admin_office: 'مرسل إلى المكتب',
+  sent_to_admin_office: 'مرسل إلى المكتب الإداري',
   received_by_admin_office: 'مستلم',
   returned_to_warehouse: 'مُعاد للتعديل',
   archived: 'مؤرشف',
@@ -37,23 +66,54 @@ export const statusLabelsEn: Record<string, string> = {
   draft: 'Draft',
   pending_warehouse_signature: 'Awaiting Signature',
   warehouse_signed: 'Signed',
-  sent_to_admin_office: 'Sent to Office',
+  sent_to_admin_office: 'Sent to Admin Office',
   received_by_admin_office: 'Received',
   returned_to_warehouse: 'Returned for Modification',
   archived: 'Archived',
   rejected: 'Rejected',
 };
 
-// Status colors for badges
+// Dynamic status labels based on declaration type (Arabic)
+export const getDynamicStatusLabel = (status: string, type?: 'entrance' | 'exit', isArabic = true): string => {
+  const labels = isArabic ? {
+    // Entrance (دخول) - Deliverer signs
+    entrance: {
+      pending_warehouse_signature: 'بانتظار توقيع المُسلِّم',
+      warehouse_signed: 'موقّع من المُسلِّم',
+    },
+    // Exit (خروج) - Receiver signs
+    exit: {
+      pending_warehouse_signature: 'بانتظار توقيع المُستلِم',
+      warehouse_signed: 'موقّع من المُستلِم',
+    },
+  } : {
+    entrance: {
+      pending_warehouse_signature: 'Awaiting Deliverer Signature',
+      warehouse_signed: 'Signed by Deliverer',
+    },
+    exit: {
+      pending_warehouse_signature: 'Awaiting Receiver Signature',
+      warehouse_signed: 'Signed by Receiver',
+    },
+  };
+  
+  if (type && labels[type]?.[status]) {
+    return labels[type][status];
+  }
+  
+  return isArabic ? (statusLabels[status] || status) : (statusLabelsEn[status] || status);
+};
+
+// Status colors for badges - Enhanced visibility
 export const statusColors: Record<string, string> = {
-  draft: 'bg-muted/20 text-muted-foreground border-muted/30',
-  pending_warehouse_signature: 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30',
-  warehouse_signed: 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30',
-  sent_to_admin_office: 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30',
-  received_by_admin_office: 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/30',
-  returned_to_warehouse: 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30',
-  archived: 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30',
-  rejected: 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30',
+  draft: 'bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/40',
+  pending_warehouse_signature: 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40',
+  warehouse_signed: 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/40',
+  sent_to_admin_office: 'bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-500/40',
+  received_by_admin_office: 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/40',
+  returned_to_warehouse: 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/40',
+  archived: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40',
+  rejected: 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/40',
 };
 
 // Maintenance status translation keys

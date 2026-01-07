@@ -16,14 +16,30 @@ interface AnalyticsChartsProps {
   activeTab: string;
 }
 
-const tooltipStyle = {
-  backgroundColor: 'hsl(var(--background))',
+// Enhanced tooltip style for better readability
+const getTooltipStyle = (isRTL: boolean): React.CSSProperties => ({
+  backgroundColor: 'hsl(var(--card))',
   border: '1px solid hsl(var(--border))',
   borderRadius: '12px',
-};
+  boxShadow: '0 10px 25px -5px hsl(var(--background) / 0.5)',
+  padding: '12px 16px',
+  fontFamily: isRTL ? 'IBM Plex Sans Arabic, sans-serif' : 'IBM Plex Sans, sans-serif',
+  direction: isRTL ? 'rtl' : 'ltr',
+  textAlign: isRTL ? 'right' : 'left',
+});
+
+// Axis style configuration
+const getAxisStyle = () => ({
+  stroke: 'hsl(var(--muted-foreground))',
+  fontSize: 12,
+  fontFamily: 'IBM Plex Sans Arabic, IBM Plex Sans, sans-serif',
+});
 
 export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isRTL = language === 'ar';
+  const tooltipStyle = getTooltipStyle(isRTL);
+  const axisStyle = getAxisStyle();
 
   if (activeTab === 'overview') {
     return (
@@ -52,16 +68,29 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
                       cy="50%"
                       innerRadius={60}
                       outerRadius={100}
-                      paddingAngle={2}
+                      paddingAngle={3}
                       dataKey="count"
                       label={({ label, percent }) => `${label}: ${(percent * 100).toFixed(0)}%`}
-                      labelLine={false}
+                      labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
                     >
                       {data.statusDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.color}
+                          stroke="hsl(var(--background))"
+                          strokeWidth={2}
+                        />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={tooltipStyle} />
+                    <Tooltip 
+                      contentStyle={tooltipStyle as React.CSSProperties}
+                      formatter={(value: number, name: string) => [value, name]}
+                    />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36}
+                      formatter={(value) => <span style={{ color: 'hsl(var(--foreground))' }}>{value}</span>}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -88,7 +117,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
                     <YAxis type="category" dataKey="type" stroke="hsl(var(--muted-foreground))" width={60} />
-                    <Tooltip contentStyle={tooltipStyle} />
+                    <Tooltip contentStyle={tooltipStyle as React.CSSProperties} />
                     <Bar dataKey="count" radius={[0, 8, 8, 0]}>
                       {data.typeDistribution.map((entry, index) => (
                         <Cell 
@@ -124,7 +153,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={tooltipStyle} />
+                  <Tooltip contentStyle={tooltipStyle as React.CSSProperties} />
                   <Bar dataKey="count" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -163,7 +192,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={tooltipStyle} />
+                  <Tooltip contentStyle={tooltipStyle as React.CSSProperties} />
                   <Legend />
                   <Area
                     type="monotone"
@@ -215,7 +244,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="hour" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={tooltipStyle} />
+                  <Tooltip contentStyle={tooltipStyle as React.CSSProperties} />
                   <Area
                     type="monotone"
                     dataKey="count"
@@ -273,7 +302,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
                     verticalAlign="middle"
                     align="right"
                   />
-                  <Tooltip contentStyle={tooltipStyle} />
+                  <Tooltip contentStyle={tooltipStyle as React.CSSProperties} />
                 </RadialBarChart>
               </ResponsiveContainer>
             </CardContent>
