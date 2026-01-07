@@ -1,18 +1,38 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto">
-      <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />
-    </div>
-  ),
+  ({ className, ...props }, ref) => {
+    const { language } = useLanguage();
+    const isRTL = language === 'ar';
+    
+    return (
+      <div 
+        className="relative w-full overflow-auto" 
+        dir={isRTL ? 'rtl' : 'ltr'}
+      >
+        <table 
+          ref={ref} 
+          className={cn("w-full caption-bottom text-sm", className)} 
+          dir={isRTL ? 'rtl' : 'ltr'}
+          {...props} 
+        />
+      </div>
+    );
+  },
 );
 Table.displayName = "Table";
 
 const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
-  ({ className, ...props }, ref) => <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />,
+  ({ className, ...props }, ref) => (
+    <thead 
+      ref={ref} 
+      className={cn("[&_tr]:border-b bg-muted/20", className)} 
+      {...props} 
+    />
+  ),
 );
 TableHeader.displayName = "TableHeader";
 
@@ -50,9 +70,10 @@ const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<
       ref={ref}
       className={cn(
         "h-12 px-4 align-middle font-semibold text-foreground/80 bg-muted/30",
-        // RTL Support: Use start/end instead of left/right
-        "text-start rtl:text-right ltr:text-left",
+        "text-start whitespace-nowrap",
         "[&:has([role=checkbox])]:pe-0",
+        // RTL resize cursor support
+        "relative",
         className,
       )}
       {...props}
@@ -67,8 +88,7 @@ const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<
       ref={ref} 
       className={cn(
         "p-4 align-middle",
-        // RTL Support: Use logical properties
-        "text-start rtl:text-right ltr:text-left",
+        "text-start",
         "[&:has([role=checkbox])]:pe-0",
         className
       )} 
