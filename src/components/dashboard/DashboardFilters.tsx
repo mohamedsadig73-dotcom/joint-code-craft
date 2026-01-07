@@ -16,6 +16,7 @@ import { toGregorianDateLong } from '@/utils/dateUtils';
 import { statusLabels } from '@/constants/statusLabels';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Profile } from '@/types/declarations';
+import { useMemo } from 'react';
 
 interface DashboardFiltersProps {
   searchQuery: string;
@@ -52,10 +53,11 @@ export function DashboardFilters({
   filteredCount,
   totalCount,
 }: DashboardFiltersProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isRTL = language === 'ar';
 
   return (
-    <Card className="glass-card border-border/50 p-4 sticky top-20 z-40 backdrop-blur-md">
+    <Card className="glass-card border-border/50 p-4 sticky top-20 z-40 backdrop-blur-md" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex flex-col md:flex-row gap-4">
         {/* Search */}
         <div className="flex-1 relative">
