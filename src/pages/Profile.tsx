@@ -214,13 +214,13 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-24 md:pb-8">
       <Navigation />
       
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">{t('myProfile')}</h1>
-          <p className="text-muted-foreground">{t('profileSubtitle')}</p>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        <div className="mb-4 md:mb-8">
+          <h1 className="text-xl md:text-3xl font-bold mb-1 md:mb-2">{t('myProfile')}</h1>
+          <p className="text-muted-foreground text-sm">{t('profileSubtitle')}</p>
         </div>
 
         {/* Profile Information */}
@@ -233,9 +233,9 @@ export default function Profile() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleProfileUpdate} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div>
-                  <Label htmlFor="username" className="flex items-center gap-2">
+                  <Label htmlFor="username" className="flex items-center gap-2 text-sm">
                     <User className="w-4 h-4" />
                     اسم المستخدم
                   </Label>

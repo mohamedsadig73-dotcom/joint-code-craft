@@ -263,17 +263,17 @@ export default function ReportsAnalytics() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-24 md:pb-8">
       <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <Breadcrumbs />
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 mb-4 md:mb-6">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <BarChart3 className="w-8 h-8 text-primary" />
-              <h1 className="text-2xl md:text-3xl font-bold gradient-text">{t('reportsTitle')}</h1>
+            <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+              <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+              <h1 className="text-xl md:text-3xl font-bold gradient-text">{t('reportsTitle')}</h1>
             </div>
             <p className="text-muted-foreground text-sm">{t('reportsSubtitle')}</p>
           </div>
@@ -320,14 +320,14 @@ export default function ReportsAnalytics() {
           </div>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 mb-6">
-          <StatsCard label={t('totalUsers')} value={stats.totalUsers} icon={Users} color="text-primary" bgColor="bg-primary/10" />
-          <StatsCard label={t('systemAdmins')} value={stats.adminCount} icon={Shield} color="text-destructive" bgColor="bg-destructive/10" />
-          <StatsCard label={t('managers')} value={stats.managerCount} icon={UserCheck} color="text-chart-2" bgColor="bg-chart-2/10" />
-          <StatsCard label={t('totalDeclarations')} value={stats.totalDeclarations} icon={FileText} color="text-chart-1" bgColor="bg-chart-1/10" />
-          <StatsCard label={t('completionRate')} value={`${stats.completionRate}%`} icon={TrendingUp} color="text-green-600 dark:text-green-400" bgColor="bg-green-500/10" />
-          <StatsCard label={t('avgProcessingTime')} value={`${stats.averageProcessingTime}`} icon={Clock} color="text-orange-600 dark:text-orange-400" bgColor="bg-orange-500/10" />
+        {/* KPI Cards - 2 columns on mobile */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-4 mb-4 md:mb-6">
+          <StatsCard label={t('totalUsers')} value={stats.totalUsers} icon={Users} color="text-primary" bgColor="bg-primary/10" size="sm" />
+          <StatsCard label={t('systemAdmins')} value={stats.adminCount} icon={Shield} color="text-destructive" bgColor="bg-destructive/10" size="sm" />
+          <StatsCard label={t('managers')} value={stats.managerCount} icon={UserCheck} color="text-chart-2" bgColor="bg-chart-2/10" size="sm" />
+          <StatsCard label={t('totalDeclarations')} value={stats.totalDeclarations} icon={FileText} color="text-chart-1" bgColor="bg-chart-1/10" size="sm" />
+          <StatsCard label={t('completionRate')} value={`${stats.completionRate}%`} icon={TrendingUp} color="text-green-600 dark:text-green-400" bgColor="bg-green-500/10" size="sm" />
+          <StatsCard label={t('avgProcessingTime')} value={`${stats.averageProcessingTime}`} icon={Clock} color="text-orange-600 dark:text-orange-400" bgColor="bg-orange-500/10" size="sm" />
         </div>
 
         {/* Tabs */}

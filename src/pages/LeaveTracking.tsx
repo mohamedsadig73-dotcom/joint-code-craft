@@ -421,16 +421,16 @@ const LeaveTracking = () => {
   );
 
   return (
-    <div className="min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen pb-24 md:pb-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navigation />
       <PageTransition>
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           <Breadcrumbs />
           {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4 mb-4 md:mb-8">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold gradient-text">{t('leaveTracking')}</h1>
-              <p className="text-muted-foreground mt-1">{t('leaveTrackingSubtitle')}</p>
+              <h1 className="text-xl md:text-3xl font-bold gradient-text">{t('leaveTracking')}</h1>
+              <p className="text-muted-foreground text-sm mt-1">{t('leaveTrackingSubtitle')}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Popover>

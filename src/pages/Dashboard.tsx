@@ -360,18 +360,18 @@ export default function Dashboard() {
   const isRTL = language === 'ar';
   
   return (
-    <div className="min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen pb-24 md:pb-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navigation />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         {/* Breadcrumbs */}
         <Breadcrumbs />
 
         {/* Header with Stats */}
-        <div className="mb-6">
-          <div className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+        <div className="mb-4 md:mb-6">
+          <div className={`flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 mb-4 md:mb-6 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
             <div className={isRTL ? 'text-right' : 'text-left'}>
-              <h1 className="text-2xl md:text-3xl font-bold gradient-text">{t('systemTitle')}</h1>
+              <h1 className="text-xl md:text-3xl font-bold gradient-text">{t('systemTitle')}</h1>
               <p className="text-muted-foreground text-sm">
                 {t('welcome')}, {user?.username}!
               </p>
@@ -389,13 +389,14 @@ export default function Dashboard() {
           {loading ? (
             <CardSkeleton count={4} />
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 animate-fade-in">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3 animate-fade-in">
               <StatsCard
                 label={t('totalDeclarations')}
                 value={stats.total}
                 icon={FileText}
                 color="text-primary"
                 bgColor="bg-primary/10"
+                size="sm"
               />
               <StatsCard
                 label={t('draft')}
@@ -403,6 +404,7 @@ export default function Dashboard() {
                 icon={FileEdit}
                 color="text-muted-foreground"
                 bgColor="bg-muted/10"
+                size="sm"
               />
               <StatsCard
                 label={t('pendingSignature')}
@@ -410,6 +412,7 @@ export default function Dashboard() {
                 icon={Clock}
                 color="text-yellow-600 dark:text-yellow-400"
                 bgColor="bg-yellow-500/10"
+                size="sm"
               />
               <StatsCard
                 label={t('signed')}
@@ -417,6 +420,7 @@ export default function Dashboard() {
                 icon={CheckCircle}
                 color="text-blue-600 dark:text-blue-400"
                 bgColor="bg-blue-500/10"
+                size="sm"
               />
               <StatsCard
                 label={t('sentToOffice')}
@@ -424,6 +428,7 @@ export default function Dashboard() {
                 icon={Send}
                 color="text-purple-600 dark:text-purple-400"
                 bgColor="bg-purple-500/10"
+                size="sm"
               />
               <StatsCard
                 label={t('returnedForModification')}
@@ -431,6 +436,7 @@ export default function Dashboard() {
                 icon={RotateCcw}
                 color="text-orange-600 dark:text-orange-400"
                 bgColor="bg-orange-500/10"
+                size="sm"
               />
               <StatsCard
                 label={t('archived')}
@@ -438,6 +444,7 @@ export default function Dashboard() {
                 icon={Archive}
                 color="text-green-600 dark:text-green-400"
                 bgColor="bg-green-500/10"
+                size="sm"
               />
             </div>
           )}

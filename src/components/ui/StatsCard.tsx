@@ -27,9 +27,9 @@ export function StatsCard({
   trend,
 }: StatsCardProps) {
   const sizeClasses = {
-    sm: { padding: 'p-3 sm:p-4', icon: 'w-4 h-4', iconWrapper: 'p-2', value: 'text-xl sm:text-2xl', label: 'text-xs' },
-    md: { padding: 'p-4 sm:p-5', icon: 'w-5 h-5', iconWrapper: 'p-2.5', value: 'text-2xl sm:text-3xl', label: 'text-xs sm:text-sm' },
-    lg: { padding: 'p-5 sm:p-6', icon: 'w-6 h-6', iconWrapper: 'p-3', value: 'text-3xl sm:text-4xl', label: 'text-sm' },
+    sm: { padding: 'p-2.5 sm:p-4', icon: 'w-4 h-4', iconWrapper: 'p-1.5 sm:p-2', value: 'text-lg sm:text-2xl', label: 'text-[10px] sm:text-xs leading-tight' },
+    md: { padding: 'p-3 sm:p-5', icon: 'w-4 h-4 sm:w-5 sm:h-5', iconWrapper: 'p-2 sm:p-2.5', value: 'text-xl sm:text-3xl', label: 'text-[10px] sm:text-sm leading-tight' },
+    lg: { padding: 'p-4 sm:p-6', icon: 'w-5 h-5 sm:w-6 sm:h-6', iconWrapper: 'p-2.5 sm:p-3', value: 'text-2xl sm:text-4xl', label: 'text-xs sm:text-sm' },
   };
 
   const sizes = sizeClasses[size];
@@ -40,17 +40,17 @@ export function StatsCard({
       sizes.padding, 
       className
     )}>
-      <div className="flex items-center gap-3 sm:gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <div className={cn(
-          'rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg', 
+          'rounded-lg sm:rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg flex-shrink-0', 
           bgColor, 
           sizes.iconWrapper
         )}>
           <Icon className={cn(sizes.icon, color, 'transition-transform duration-300')} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className={cn('font-bold tabular-nums tracking-tight', sizes.value)}>{value}</div>
-          <div className={cn('text-muted-foreground truncate', sizes.label)}>{label}</div>
+          <div className={cn('font-bold tabular-nums tracking-tight leading-none', sizes.value)}>{value}</div>
+          <div className={cn('text-muted-foreground truncate mt-0.5', sizes.label)}>{label}</div>
         </div>
         {trend && (
           <div className={cn(
