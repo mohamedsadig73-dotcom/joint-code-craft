@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, BarChart3, Wrench, User, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavItem {
   path: string;
@@ -31,42 +32,80 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card/95 backdrop-blur-lg border-t border-border/50 safe-area-bottom animate-slide-up"
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
       dir={isRTL ? 'rtl' : 'ltr'}
     >
-      <div className="flex items-center justify-around h-16 px-1">
-        {navItems.map((item) => {
+      {/* Gradient blur background */}
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-background/80 backdrop-blur-xl border-t border-border/30" />
+      
+      {/* Safe area padding for iOS */}
+      <div className="relative flex items-center justify-around h-18 px-2 pb-safe">
+        {navItems.map((item, index) => {
           const active = isActive(item.path);
           const Icon = item.icon;
           
           return (
-            <button
+            <motion.button
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
-                'relative flex flex-col items-center justify-center flex-1 h-full py-2 transition-all duration-200',
-                // Minimum touch target size of 44px
-                'min-w-[44px] min-h-[44px]',
-                active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                'relative flex flex-col items-center justify-center flex-1 h-full py-3',
+                'min-w-[48px] min-h-[48px]',
+                'transition-colors duration-200',
+                'active:scale-95',
+                active ? 'text-primary' : 'text-muted-foreground'
               )}
               aria-label={t(item.labelKey)}
+              whileTap={{ scale: 0.92 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
             >
-              {active && (
-                <div className="absolute inset-x-2 top-1 h-1 bg-primary rounded-full" />
-              )}
-              <div className={cn(
-                'transition-transform duration-200',
-                active && 'scale-110 -translate-y-0.5'
-              )}>
-                <Icon className="w-5 h-5" />
-              </div>
-              <span className={cn(
-                'text-[10px] mt-1 font-medium transition-opacity truncate max-w-full px-1',
-                active ? 'opacity-100' : 'opacity-70'
-              )}>
+              {/* Active indicator pill */}
+              <AnimatePresence>
+                {active && (
+                  <motion.div 
+                    className="absolute top-1 w-8 h-1 bg-primary rounded-full shadow-lg shadow-primary/30"
+                    layoutId="activeTab"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  />
+                )}
+              </AnimatePresence>
+              
+              {/* Icon container */}
+              <motion.div 
+                className={cn(
+                  'flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300',
+                  active && 'bg-primary/10'
+                )}
+                animate={{ 
+                  scale: active ? 1.05 : 1,
+                  y: active ? -2 : 0
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              >
+                <Icon className={cn(
+                  'transition-all duration-200',
+                  active ? 'w-6 h-6' : 'w-5 h-5'
+                )} />
+              </motion.div>
+              
+              {/* Label */}
+              <motion.span 
+                className={cn(
+                  'text-[10px] font-medium mt-0.5 truncate max-w-full px-1',
+                  active ? 'text-primary' : 'text-muted-foreground/70'
+                )}
+                animate={{ 
+                  opacity: active ? 1 : 0.7
+                }}
+              >
                 {t(item.labelKey)}
-              </span>
-            </button>
+              </motion.span>
+            </motion.button>
           );
         })}
       </div>
