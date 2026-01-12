@@ -16,45 +16,48 @@ export default function PettyCash() {
   const isRTL = language === 'ar';
 
   return (
-    <div className="min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen pb-24 md:pb-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navigation />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <Breadcrumbs />
         
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <Wallet className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl md:text-3xl font-bold gradient-text">
+        {/* Header Section - Compact on mobile */}
+        <div className="mb-4 md:mb-8">
+          <div className={`flex items-center gap-2 md:gap-3 mb-1 md:mb-2`}>
+            <Wallet className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+            <h1 className="text-xl md:text-3xl font-bold gradient-text">
               {t('pettyCashTitle')}
             </h1>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {t('pettyCashSubtitle')}
           </p>
         </div>
 
         <Card className="glass-card border-border/50">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
-            <TabsList className={`grid w-full grid-cols-2 md:grid-cols-4 mb-6 h-auto gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <TabsTrigger value="dashboard" className="gap-2 py-2">
-                <TrendingUp className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('overview')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="expenses" className="gap-2 py-2">
-                <FileText className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('expenses')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="reports" className="gap-2 py-2">
-                <FileText className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('reports')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="gap-2 py-2">
-                <Settings className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('costCenters')}</span>
-              </TabsTrigger>
-            </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="p-3 md:p-6">
+            {/* Scrollable tabs on mobile */}
+            <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 mb-4 md:mb-6">
+              <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-4 h-auto gap-1 md:gap-2">
+                <TabsTrigger value="dashboard" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
+                  <TrendingUp className="w-4 h-4" />
+                  <span className="text-xs md:text-sm">{t('overview')}</span>
+                </TabsTrigger>
+                <TabsTrigger value="expenses" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
+                  <FileText className="w-4 h-4" />
+                  <span className="text-xs md:text-sm">{t('expenses')}</span>
+                </TabsTrigger>
+                <TabsTrigger value="reports" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
+                  <FileText className="w-4 h-4" />
+                  <span className="text-xs md:text-sm">{t('reports')}</span>
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
+                  <Settings className="w-4 h-4" />
+                  <span className="text-xs md:text-sm">{t('costCenters')}</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="dashboard">
               <PettyCashDashboard />

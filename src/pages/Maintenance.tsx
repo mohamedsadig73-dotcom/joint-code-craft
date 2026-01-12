@@ -15,50 +15,55 @@ export default function Maintenance() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const { t, language } = useLanguage();
 
+  const isRTL = language === 'ar';
+
   return (
-    <div className="min-h-screen" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen pb-24 md:pb-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navigation />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <Breadcrumbs />
         
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Wrench className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl md:text-3xl font-bold gradient-text">
+        {/* Welcome Section - Compact on mobile */}
+        <div className="mb-4 md:mb-8">
+          <div className={`flex items-center gap-2 md:gap-3 mb-1 md:mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Wrench className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+            <h1 className="text-xl md:text-3xl font-bold gradient-text">
               {t('maintenanceTitle')}
             </h1>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {t('maintenanceSubtitle')}
           </p>
         </div>
 
         <Card className="glass-card border-border/50">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="p-6">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6 h-auto gap-2">
-              <TabsTrigger value="dashboard" className="gap-2 py-2">
-                <LayoutDashboard className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('maintenanceDashboard')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="schedule" className="gap-2 py-2">
-                <Calendar className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('annualSchedule')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="items" className="gap-2 py-2">
-                <Wrench className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('maintenanceItems')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="assets" className="gap-2 py-2">
-                <Building2 className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('assets')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="vendors" className="gap-2 py-2">
-                <Package className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('vendors')}</span>
-              </TabsTrigger>
-            </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="p-3 md:p-6">
+            {/* Scrollable tabs on mobile */}
+            <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 mb-4 md:mb-6">
+              <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-5 h-auto gap-1 md:gap-2">
+                <TabsTrigger value="dashboard" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="text-xs md:text-sm">{t('maintenanceDashboard')}</span>
+                </TabsTrigger>
+                <TabsTrigger value="schedule" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-xs md:text-sm">{t('annualSchedule')}</span>
+                </TabsTrigger>
+                <TabsTrigger value="items" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
+                  <Wrench className="w-4 h-4" />
+                  <span className="text-xs md:text-sm">{t('maintenanceItems')}</span>
+                </TabsTrigger>
+                <TabsTrigger value="assets" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
+                  <Building2 className="w-4 h-4" />
+                  <span className="text-xs md:text-sm">{t('assets')}</span>
+                </TabsTrigger>
+                <TabsTrigger value="vendors" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
+                  <Package className="w-4 h-4" />
+                  <span className="text-xs md:text-sm">{t('vendors')}</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="dashboard">
               <MaintenanceDashboard />
