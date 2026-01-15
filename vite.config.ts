@@ -94,7 +94,6 @@ export default defineConfig(({ mode }) => ({
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
           'chart-vendor': ['recharts', 'echarts', 'echarts-for-react'],
           'supabase': ['@supabase/supabase-js'],
-          'pdf-export': ['jspdf', 'jspdf-autotable'],
           'excel-export': ['xlsx'],
           'date-utils': ['date-fns'],
           'framer': ['framer-motion'],
