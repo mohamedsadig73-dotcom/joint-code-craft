@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { Calendar, Check, X, Clock, AlertCircle, Download, FileSpreadsheet } from 'lucide-react';
-import { exportMaintenanceToPDF, exportMaintenanceToExcel, MaintenanceReportData } from '@/utils/maintenanceReports';
+import { exportMaintenanceToExcel, MaintenanceReportData } from '@/utils/maintenanceReports';
+import { exportMaintenanceToPDFSecure } from '@/utils/pdfExportSecure';
 import { AttachmentsManager } from './AttachmentsManager';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
 import { EmptyState } from '@/components/EmptyState';
@@ -229,7 +230,7 @@ export function AnnualSchedule() {
         notes: item.notes,
       }));
 
-      exportMaintenanceToPDF(reportData, selectedYear, `تقرير الصيانة الدورية - ${selectedYear}`);
+      await exportMaintenanceToPDFSecure(reportData, selectedYear, `Maintenance Report - ${selectedYear}`);
       toast({ title: 'تم تصدير التقرير بنجاح' });
     } catch (error: any) {
       toast({
