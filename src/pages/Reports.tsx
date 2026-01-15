@@ -14,7 +14,7 @@ import { Users, FileText, Activity, TrendingUp, Shield, UserCheck, BarChart3, Do
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { toGregorianDateTime, toGregorianDate } from '@/utils/dateUtils';
 import { exportDeclarationsToExcel } from '@/utils/excelExport';
-import { exportDeclarationsToPDF } from '@/utils/pdfExport';
+import { exportDeclarationsToPDFSecure } from '@/utils/pdfExportSecure';
 interface SystemStats {
   totalUsers: number;
   adminCount: number;
@@ -129,9 +129,8 @@ export default function Reports() {
       const { data, error } = await supabase.from('declarations').select(`*, sender:profiles!sender_id(username)`).is('deleted_at', null).order('created_at', { ascending: false });
       if (error) throw error;
       const formattedData = (data || []).map(d => ({ id: d.id, type: d.type, sender: d.sender?.username || t('unknown'), status: statusLabels[d.status] || d.status, created_at: toGregorianDate(d.created_at) }));
-      const reportTitle = language === 'ar' ? 'تقرير الإقرارات' : 'Declarations Report';
-      const doc = exportDeclarationsToPDF(formattedData, reportTitle);
-      doc.save(`${language === 'ar' ? 'تقرير_الإقرارات' : 'Declarations_Report'}_${new Date().toISOString().split('T')[0]}.pdf`);
+      const reportTitle = language === 'ar' ? 'Declarations Report' : 'Declarations Report';
+      await exportDeclarationsToPDFSecure(formattedData, reportTitle);
       toast({ title: t('success'), description: t('exportSuccess') });
     } catch (error: any) { toast({ variant: 'destructive', title: t('error'), description: error.message }); }
     finally { setExporting(false); }

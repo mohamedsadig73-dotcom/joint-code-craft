@@ -27,7 +27,7 @@ import {
 } from 'recharts';
 import { toGregorianDateTime, toGregorianDate } from '@/utils/dateUtils';
 import { exportDeclarationsToExcel } from '@/utils/excelExport';
-import { exportDeclarationsToPDF } from '@/utils/pdfExport';
+import { exportDeclarationsToPDFSecure } from '@/utils/pdfExportSecure';
 import { statusLabels, CHART_COLORS } from '@/constants/statusLabels';
 
 interface SystemStats {
@@ -224,9 +224,8 @@ export default function ReportsAnalytics() {
         id: d.id, type: d.type, sender: d.sender?.username || t('unknown'), 
         status: statusLabels[d.status] || d.status, created_at: toGregorianDate(d.created_at) 
       }));
-      const reportTitle = language === 'ar' ? 'تقرير الإقرارات' : 'Declarations Report';
-      const doc = exportDeclarationsToPDF(formattedData, reportTitle);
-      doc.save(`${language === 'ar' ? 'تقرير_الإقرارات' : 'Declarations_Report'}_${new Date().toISOString().split('T')[0]}.pdf`);
+      const reportTitle = 'Declarations Report';
+      await exportDeclarationsToPDFSecure(formattedData, reportTitle);
       toast({ title: t('success'), description: t('exportSuccess') });
     } catch (error: any) { toast({ variant: 'destructive', title: t('error'), description: error.message }); }
     finally { setExporting(false); }
