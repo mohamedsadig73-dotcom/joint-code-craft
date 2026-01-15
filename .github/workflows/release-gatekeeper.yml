@@ -1,0 +1,58 @@
+name: Release Gatekeeper
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  security-quality-check:
+    runs-on: ubuntu-latest
+    name: Security & Quality Gate
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Run ESLint
+        run: npm run lint
+        continue-on-error: false
+
+      - name: 📝 TypeScript Type Check
+        run: npx tsc --noEmit
+        continue-on-error: false
+
+      - name: 🛡️ Security Audit (High/Critical)
+        run: |
+          echo "🔒 Running security audit..."
+          npm audit --audit-level=high --omit=dev || {
+            echo "❌ Critical/High vulnerabilities found!"
+            echo "Please fix security issues before merging."
+            exit 1
+          }
+          echo "✅ No critical security issues found"
+
+      - name: 🏗️ Build Check
+        run: npm run build
+        env:
+          CI: true
+
+      - name: ✅ All Checks Passed
+        run: |
+          echo "🎉 All quality gates passed!"
+          echo "✅ Lint: OK"
+          echo "✅ TypeScript: OK"
+          echo "✅ Security: OK"
+          echo "✅ Build: OK"
+          echo ""
+          echo "🚀 Ready for merge/deploy"
