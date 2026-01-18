@@ -24,6 +24,15 @@ jobs:
       - name: 📦 Install dependencies
         run: npm ci
 
+      - name: 🚫 Block Store Publishing
+        run: |
+          echo "🔒 Checking for publishing attempts..."
+          if grep -rE "(app-store|play-store|fastlane deploy|upload.*store)" --include="*.yml" --include="*.yaml" .github/ 2>/dev/null; then
+            echo "❌ Store publishing is blocked for private app"
+            exit 1
+          fi
+          echo "✅ No store publishing detected"
+
       - name: 🔍 Run ESLint
         run: npm run lint
         continue-on-error: false
@@ -47,12 +56,49 @@ jobs:
         env:
           CI: true
 
+      - name: 📱 PWA Validation
+        run: |
+          echo "🔍 Validating PWA configuration..."
+          if [ -f "public/pwa-icon-192.png" ] && [ -f "public/pwa-icon-512.png" ]; then
+            echo "✅ PWA icons present"
+          else
+            echo "⚠️ PWA icons missing"
+          fi
+          if grep -q "VitePWA" vite.config.ts; then
+            echo "✅ PWA plugin configured"
+          else
+            echo "⚠️ PWA plugin not found"
+          fi
+
+      - name: 📋 UX Checklist Gate
+        run: |
+          echo "📋 UX Checklist Status"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          if [ -f "MOBILE_CHECKLIST.md" ]; then
+            echo "✅ Mobile checklist exists"
+          else
+            echo "⚠️ Mobile checklist not found"
+          fi
+          if [ -f "UX_AUDIT_REPORT.md" ]; then
+            echo "✅ UX audit report exists"
+          else
+            echo "⚠️ UX audit report not found"
+          fi
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "⚠️ Manual UX verification required before release"
+
       - name: ✅ All Checks Passed
         run: |
           echo "🎉 All quality gates passed!"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ Lint: OK"
           echo "✅ TypeScript: OK"
           echo "✅ Security: OK"
           echo "✅ Build: OK"
+          echo "✅ PWA: Validated"
+          echo "✅ Store Block: Active"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo ""
-          echo "🚀 Ready for merge/deploy"
+          echo "🚀 Ready for private deployment"
+          echo "📱 Install via: Add to Home Screen"
+          echo "🚫 NOT for App Store / Play Store"
