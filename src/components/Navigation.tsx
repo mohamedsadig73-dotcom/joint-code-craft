@@ -175,58 +175,57 @@ export function Navigation() {
             })}
           </div>
 
-          {/* Right Side Actions */}
-          <div className="flex items-center gap-2 md:gap-3 ltr-flex">
+          {/* Right Side Actions - Simplified */}
+          <div className="flex items-center gap-1 md:gap-2 ltr-flex">
             {/* Offline Indicator - Hidden on mobile */}
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
               <OfflineIndicator />
             </div>
-            
-            {/* Force Update Button - Hidden on mobile */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleForceUpdate}
-              disabled={isUpdating}
-              className="gap-2 hidden md:flex"
-              title={t('checkingUpdates')}
-            >
-              <RefreshCw className={`w-4 h-4 ${isUpdating ? 'animate-spin' : ''}`} />
-              <span className="hidden md:inline">{t('forceUpdate')}</span>
-            </Button>
 
             {/* Theme Toggle */}
             <ThemeToggleSimple />
 
-            {/* Language Toggle - Compact on mobile */}
+            {/* Language Toggle - Icon only on mobile */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleLanguage}
+              className="md:hidden"
+              title={t('switchLanguage')}
+            >
+              <Globe className="w-4 h-4" />
+            </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={toggleLanguage}
-              className="gap-1 md:gap-2 bg-primary/10 hover:bg-primary/20 border-primary/30 px-2 md:px-3"
+              className="hidden md:flex gap-2 bg-primary/10 hover:bg-primary/20 border-primary/30"
               title={t('switchLanguage')}
             >
               <Globe className="w-4 h-4 text-primary" />
-              <span className="font-medium text-xs md:text-sm">{language === 'en' ? 'العربية' : 'English'}</span>
+              <span className="font-medium text-sm">{language === 'en' ? 'العربية' : 'EN'}</span>
             </Button>
 
             {/* Notifications */}
             <NotificationCenter />
 
-            {/* User Menu */}
+            {/* User Menu - Consolidated */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="gap-2">
+                <Button variant="ghost" size="icon" className="md:px-3 md:w-auto">
                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                    <User className="w-5 h-5" />
+                    <User className="w-4 h-4" />
                   </div>
-                  <div className="hidden md:block text-left">
-                    <p className="text-sm font-medium">{user?.username}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
-                  </div>
+                  <span className="hidden md:block ms-2 text-sm font-medium max-w-[100px] truncate">
+                    {user?.username}
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5 text-sm font-medium border-b mb-1">
+                  <p>{user?.username}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+                </div>
                 <DropdownMenuItem onClick={() => navigate('/profile')}>
                   <User className="w-4 h-4 me-2" />
                   {t('profile')}
@@ -234,6 +233,10 @@ export function Navigation() {
                 <DropdownMenuItem onClick={() => navigate('/install')}>
                   <Download className="w-4 h-4 me-2" />
                   {t('installApp')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleForceUpdate} disabled={isUpdating}>
+                  <RefreshCw className={`w-4 h-4 me-2 ${isUpdating ? 'animate-spin' : ''}`} />
+                  {t('forceUpdate')}
                 </DropdownMenuItem>
                 {user?.role === 'admin' && (
                   <DropdownMenuItem onClick={() => navigate('/audit-logs')}>
