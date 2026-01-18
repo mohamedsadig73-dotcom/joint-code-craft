@@ -34,13 +34,8 @@ export function ProtectedRoute({
     // انتظار تحميل بيانات المستخدم
     if (loading) return;
 
-    // التحقق من تسجيل الدخول
+    // التحقق من تسجيل الدخول - بدون toast مزعج
     if (!isAuthenticated || !user) {
-      toast({
-        variant: 'destructive',
-        title: 'غير مصرح',
-        description: 'يجب تسجيل الدخول للوصول إلى هذه الصفحة',
-      });
       navigate('/login', { replace: true });
       return;
     }
