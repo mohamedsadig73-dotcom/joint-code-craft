@@ -1,0 +1,158 @@
+/* Label Printing CSS - Print Media Queries */
+
+/* Hide everything except print content when printing */
+@media print {
+  /* Hide all non-print elements */
+  body > *:not(.print-container) {
+    display: none !important;
+  }
+
+  /* Reset body styles for printing */
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Print container should be visible */
+  .print-container {
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    background: white !important;
+  }
+
+  .print-content {
+    display: block !important;
+    background: white !important;
+  }
+
+  /* No page margins for thermal printers */
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
+  /* Thermal 58mm */
+  .print-thermal-58 {
+    width: 58mm !important;
+  }
+
+  @page thermal-58 {
+    size: 58mm auto;
+    margin: 0;
+  }
+
+  .print-thermal-58 {
+    page: thermal-58;
+  }
+
+  /* Thermal 80mm */
+  .print-thermal-80 {
+    width: 80mm !important;
+  }
+
+  @page thermal-80 {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  .print-thermal-80 {
+    page: thermal-80;
+  }
+
+  /* A4 Sheet */
+  .print-a4 {
+    width: 210mm !important;
+    min-height: 297mm !important;
+  }
+
+  @page a4 {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  .print-a4 {
+    page: a4;
+  }
+
+  /* Ensure barcode prints correctly */
+  svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Force black text */
+  * {
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Keep borders visible */
+  .border-black {
+    border-color: black !important;
+  }
+
+  /* Page break control */
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  .no-page-break {
+    page-break-inside: avoid;
+  }
+
+  /* Hide print dialog elements */
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Preview styles (non-print) */
+.label-preview-container {
+  background: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.label-preview-thermal {
+  transform: scale(1);
+  transform-origin: center;
+}
+
+.label-preview-a4 {
+  transform: scale(0.5);
+  transform-origin: top center;
+}
+
+/* Label common styles */
+.label-content {
+  font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', Arial, sans-serif;
+  background: white;
+  color: black;
+}
+
+/* Barcode container */
+.barcode-container {
+  background: white;
+  padding: 4px;
+}
+
+/* QR Code container */
+.qrcode-container {
+  background: white;
+  padding: 4px;
+}
