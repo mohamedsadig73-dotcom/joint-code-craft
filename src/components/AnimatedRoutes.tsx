@@ -18,6 +18,7 @@ const DeclarationDetails = lazy(() => import('@/pages/DeclarationDetails'));
 const Maintenance = lazy(() => import('@/pages/Maintenance'));
 const MaintenanceItemDetails = lazy(() => import('@/pages/MaintenanceItemDetails'));
 const AuditLogs = lazy(() => import('@/pages/AuditLogs'));
+const ManagerDashboard = lazy(() => import('@/pages/ManagerDashboard'));
 const InstallApp = lazy(() => import('@/pages/InstallApp'));
 const LeaveTracking = lazy(() => import('@/pages/LeaveTracking'));
 const PettyCash = lazy(() => import('@/pages/PettyCash'));
@@ -185,6 +186,16 @@ export function AnimatedRoutes() {
               <ProtectedRoute requiredRole="admin">
                 <PageTransition>
                   <AuditLogs />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/manager-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                <PageTransition>
+                  <ManagerDashboard />
                 </PageTransition>
               </ProtectedRoute>
             }
