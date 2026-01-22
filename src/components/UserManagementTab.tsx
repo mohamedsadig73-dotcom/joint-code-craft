@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -41,7 +41,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Users, RefreshCw, UserPlus, Trash2, Info, Mail } from 'lucide-react';
+import { Users, RefreshCw, UserPlus, Trash2, Info, Mail, AlertTriangle } from 'lucide-react';
 import { toGregorianDate } from '@/utils/dateUtils';
 
 interface UserWithRole {
@@ -241,8 +241,33 @@ export function UserManagementTab() {
     }
   };
 
+  // Check if current user can delete (admin only)
+  const canDeleteUser = useCallback((targetUserId: string) => {
+    // Only admin can delete users
+    if (user?.role !== 'admin') return false;
+    // Cannot delete yourself
+    if (targetUserId === user?.id) return false;
+    return true;
+  }, [user]);
+
+  // Get user to delete details for confirmation
+  const userToDeleteDetails = users.find(u => u.id === userToDelete);
+
   const confirmDeleteUser = async () => {
     if (!userToDelete) return;
+
+    // Double check permissions
+    if (!canDeleteUser(userToDelete)) {
+      toast({
+        variant: 'destructive',
+        title: t('error'),
+        description: user?.id === userToDelete 
+          ? 'لا يمكنك حذف حسابك الخاص' 
+          : 'غير مصرح لك بحذف المستخدمين',
+      });
+      setDeleteDialogOpen(false);
+      return;
+    }
 
     try {
       // First delete user roles
@@ -253,10 +278,10 @@ export function UserManagementTab() {
 
       if (roleError) {
         console.error('Error deleting user roles:', roleError);
-        throw roleError;
+        // Continue anyway - role might not exist
       }
 
-      // Then delete the profile (this will cascade due to RLS)
+      // Then delete the profile
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
@@ -279,10 +304,19 @@ export function UserManagementTab() {
       setUserToDelete(null);
     } catch (error: any) {
       console.error('Error in confirmDeleteUser:', error);
+      
+      // Handle specific error codes
+      let errorMessage = error.message || t('deleteFailed');
+      if (error.code === '23503') {
+        errorMessage = 'لا يمكن حذف المستخدم لوجود بيانات مرتبطة به';
+      } else if (error.code === '42501') {
+        errorMessage = 'غير مصرح لك بحذف هذا المستخدم';
+      }
+      
       toast({
         variant: 'destructive',
         title: t('error'),
-        description: error.message || t('deleteFailed'),
+        description: errorMessage,
       });
       // Reload users in case of partial success
       loadUsers();
@@ -485,18 +519,22 @@ export function UserManagementTab() {
                     {toGregorianDate(userData.created_at)}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setUserToDelete(userData.id);
-                        setDeleteDialogOpen(true);
-                      }}
-                      disabled={userData.id === user?.id}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {user?.role === 'admin' && userData.id !== user?.id ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setUserToDelete(userData.id);
+                          setDeleteDialogOpen(true);
+                        }}
+                        className="text-destructive hover:text-destructive"
+                        title={t('deleteUser')}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    ) : userData.id === user?.id ? (
+                      <span className="text-xs text-muted-foreground">{t('you')}</span>
+                    ) : null}
                   </TableCell>
                 </TableRow>
               ))}
@@ -505,19 +543,48 @@ export function UserManagementTab() {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation Dialog - Enhanced */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('deleteRoleWarning')}
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              {t('confirmDeleteUser')}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <p>{t('deleteUserWarning')}</p>
+              
+              {userToDeleteDetails && (
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-right">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">{t('username')}:</span>
+                    <span>{userToDeleteDetails.username}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">{t('email')}:</span>
+                    <span className="text-sm">{userToDeleteDetails.email}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">{t('role')}:</span>
+                    <Badge className={rolePermissions[userToDeleteDetails.role].color}>
+                      {t(rolePermissions[userToDeleteDetails.role].labelKey)}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+              
+              <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 text-sm text-destructive">
+                ⚠️ هذا الإجراء لا يمكن التراجع عنه. سيتم حذف جميع بيانات المستخدم نهائياً.
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteUser} className="bg-destructive">
-              {t('deletePermissions')}
+            <AlertDialogAction 
+              onClick={confirmDeleteUser} 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t('deleteUser')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -10,11 +10,19 @@ import { EmptyState } from '@/components/EmptyState';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay, startOfYear, endOfYear, getYear } from 'date-fns';
 import { 
   Users, FileText, Activity, TrendingUp, Shield, UserCheck, 
   BarChart3, Download, RefreshCw, Clock, CalendarIcon, 
@@ -64,9 +72,45 @@ export default function ReportsAnalytics() {
   const [exporting, setExporting] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   
-  // Date range state
-  const [dateFrom, setDateFrom] = useState<Date>(subDays(new Date(), 30));
-  const [dateTo, setDateTo] = useState<Date>(new Date());
+  // Year selector state - default to current year
+  const currentYear = getYear(new Date());
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  
+  // Date range state - linked to selected year
+  const [dateFrom, setDateFrom] = useState<Date>(startOfYear(new Date(selectedYear, 0, 1)));
+  const [dateTo, setDateTo] = useState<Date>(endOfYear(new Date(selectedYear, 0, 1)));
+  
+  // Generate available years (last 5 years + current)
+  const availableYears = useMemo(() => {
+    const years = [];
+    for (let y = currentYear; y >= currentYear - 5; y--) {
+      years.push(y);
+    }
+    return years;
+  }, [currentYear]);
+  
+  // Handle year change
+  const handleYearChange = useCallback((year: string) => {
+    const yearNum = parseInt(year);
+    setSelectedYear(yearNum);
+    setDateFrom(startOfYear(new Date(yearNum, 0, 1)));
+    setDateTo(endOfYear(new Date(yearNum, 0, 1)));
+    // Save to localStorage
+    localStorage.setItem('reports_selected_year', year);
+  }, []);
+  
+  // Load saved year from localStorage on mount
+  useEffect(() => {
+    const savedYear = localStorage.getItem('reports_selected_year');
+    if (savedYear) {
+      const yearNum = parseInt(savedYear);
+      if (yearNum >= currentYear - 5 && yearNum <= currentYear) {
+        setSelectedYear(yearNum);
+        setDateFrom(startOfYear(new Date(yearNum, 0, 1)));
+        setDateTo(endOfYear(new Date(yearNum, 0, 1)));
+      }
+    }
+  }, [currentYear]);
   
   const [stats, setStats] = useState<SystemStats>({
     totalUsers: 0, adminCount: 0, managerCount: 0, userCount: 0, totalDeclarations: 0,
@@ -277,12 +321,27 @@ export default function ReportsAnalytics() {
             <p className="text-muted-foreground text-sm">{t('reportsSubtitle')}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {/* Date Range Picker */}
+            {/* Year Selector - Primary filter */}
+            <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
+              <SelectTrigger className="w-[120px]">
+                <CalendarIcon className="me-2 h-4 w-4" />
+                <SelectValue placeholder={t('selectYear')} />
+              </SelectTrigger>
+              <SelectContent>
+                {availableYears.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {/* Custom Date Range (optional fine-tuning) */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
-                  <CalendarIcon className="me-2 h-4 w-4" />
-                  {format(dateFrom, "PPP")}
+                <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal text-xs", !dateFrom && "text-muted-foreground")}>
+                  <CalendarIcon className="me-1 h-3 w-3" />
+                  {format(dateFrom, "dd/MM")}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -295,11 +354,12 @@ export default function ReportsAnalytics() {
                 />
               </PopoverContent>
             </Popover>
+            <span className="text-muted-foreground self-center">—</span>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("justify-start text-left font-normal", !dateTo && "text-muted-foreground")}>
-                  <CalendarIcon className="me-2 h-4 w-4" />
-                  {format(dateTo, "PPP")}
+                <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal text-xs", !dateTo && "text-muted-foreground")}>
+                  <CalendarIcon className="me-1 h-3 w-3" />
+                  {format(dateTo, "dd/MM")}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -312,11 +372,23 @@ export default function ReportsAnalytics() {
                 />
               </PopoverContent>
             </Popover>
-            <Button variant="outline" onClick={loadSystemStats} disabled={loading} aria-label={t('refresh')}>
-              <RefreshCw className={`w-4 h-4 me-2 ${loading ? 'animate-spin' : ''}`} />
-              {t('refresh')}
+            
+            <Button variant="outline" size="sm" onClick={loadSystemStats} disabled={loading} aria-label={t('refresh')}>
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
+        </div>
+
+        {/* Selected Year Indicator */}
+        <div className="flex items-center gap-2 mb-4">
+          <Badge variant="outline" className="text-sm">
+            {language === 'ar' ? `عرض بيانات سنة ${selectedYear}` : `Showing data for ${selectedYear}`}
+          </Badge>
+          {stats.totalDeclarations === 0 && !loading && (
+            <Badge variant="secondary" className="text-sm">
+              {language === 'ar' ? 'لا توجد بيانات لهذه الفترة' : 'No data for this period'}
+            </Badge>
+          )}
         </div>
 
         {/* KPI Cards - 2 columns on mobile */}
