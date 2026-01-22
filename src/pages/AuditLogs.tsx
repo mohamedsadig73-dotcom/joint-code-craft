@@ -7,20 +7,25 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { FileText, Shield, RefreshCw, Search } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { FileText, Shield, RefreshCw, Search, Download, FileSpreadsheet, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { EmptyState } from '@/components/EmptyState';
 import { TableSkeleton, CardSkeleton } from '@/components/ui/TableSkeleton';
 import { VirtualizedList } from '@/components/VirtualizedList';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { formatDateTime } from '@/utils/dateUtils';
+import { formatDateTime, formatDate } from '@/utils/dateUtils';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { ar } from 'date-fns/locale';
 import { 
   auditActionLabels, 
   auditActionColors, 
   tableLabels,
   emptyStateMessages 
 } from '@/constants/statusLabels';
+import { exportAuditLogsToExcel, exportAuditLogsToPDF, AuditLogExport } from '@/utils/auditExport';
 interface AuditLog {
   id: string;
   user_id: string;
@@ -41,9 +46,13 @@ export default function AuditLogs() {
   const isMobile = useIsMobile();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState<'excel' | 'pdf' | null>(null);
   const [filterAction, setFilterAction] = useState<string>('all');
   const [filterTable, setFilterTable] = useState<string>('all');
+  const [filterUser, setFilterUser] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(startOfMonth(new Date()));
+  const [dateTo, setDateTo] = useState<Date | undefined>(endOfMonth(new Date()));
 
   const loadLogs = useCallback(async () => {
     try {
@@ -98,16 +107,82 @@ export default function AuditLogs() {
     return tableLabels[tableName] || tableName;
   };
 
+  // Get unique users for filter
+  const uniqueUsers = useMemo(() => {
+    const users = new Map<string, { username: string; email: string }>();
+    logs.forEach(log => {
+      if (log.profiles && !users.has(log.user_id)) {
+        users.set(log.user_id, { username: log.profiles.username, email: log.profiles.email });
+      }
+    });
+    return Array.from(users.entries()).map(([id, data]) => ({ id, ...data }));
+  }, [logs]);
+
   const filteredLogs = useMemo(() => logs.filter(log => {
     const matchesAction = filterAction === 'all' || log.action === filterAction;
     const matchesTable = filterTable === 'all' || log.table_name === filterTable;
+    const matchesUser = filterUser === 'all' || log.user_id === filterUser;
     const matchesSearch = searchTerm === '' || 
       log.record_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.profiles?.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.profiles?.email.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesAction && matchesTable && matchesSearch;
-  }), [logs, filterAction, filterTable, searchTerm]);
+    // Date filtering
+    const logDate = new Date(log.created_at);
+    const matchesDateFrom = !dateFrom || logDate >= dateFrom;
+    const matchesDateTo = !dateTo || logDate <= new Date(dateTo.setHours(23, 59, 59, 999));
+    
+    return matchesAction && matchesTable && matchesUser && matchesSearch && matchesDateFrom && matchesDateTo;
+  }), [logs, filterAction, filterTable, filterUser, searchTerm, dateFrom, dateTo]);
+
+  // Export functions
+  const handleExportExcel = useCallback(async () => {
+    try {
+      setExporting('excel');
+      const exportData: AuditLogExport[] = filteredLogs.map(log => ({
+        id: log.id,
+        user_id: log.user_id,
+        action: log.action,
+        table_name: log.table_name,
+        record_id: log.record_id,
+        created_at: log.created_at,
+        profiles: log.profiles,
+      }));
+      
+      exportAuditLogsToExcel(exportData, 'audit_logs');
+      toast({ title: 'تم التصدير', description: 'تم تصدير السجلات إلى Excel بنجاح' });
+    } catch (error: any) {
+      toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
+    } finally {
+      setExporting(null);
+    }
+  }, [filteredLogs]);
+
+  const handleExportPDF = useCallback(async () => {
+    try {
+      setExporting('pdf');
+      const exportData: AuditLogExport[] = filteredLogs.map(log => ({
+        id: log.id,
+        user_id: log.user_id,
+        action: log.action,
+        table_name: log.table_name,
+        record_id: log.record_id,
+        created_at: log.created_at,
+        profiles: log.profiles,
+      }));
+      
+      const dateRange = dateFrom && dateTo 
+        ? `${formatDate(dateFrom)} - ${formatDate(dateTo)}`
+        : new Date().toLocaleDateString('ar-SA');
+      
+      await exportAuditLogsToPDF(exportData, 'سجل التدقيق', dateRange);
+      toast({ title: 'تم التصدير', description: 'تم تصدير السجلات إلى PDF بنجاح' });
+    } catch (error: any) {
+      toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
+    } finally {
+      setExporting(null);
+    }
+  }, [filteredLogs, dateFrom, dateTo]);
   if (user?.role !== 'admin') {
     return (
       <div className="min-h-screen">
@@ -192,48 +267,137 @@ export default function AuditLogs() {
 
         {/* Filters */}
         <Card className="glass-card border-border/50 p-6 mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="بحث بالمعرف أو المستخدم..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pr-10"
-                />
+          <div className="flex flex-col gap-4">
+            {/* Row 1: Search + Export buttons */}
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+              <div className="flex-1 w-full md:max-w-md">
+                <div className="relative">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="بحث بالمعرف أو المستخدم..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pr-10"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <Button 
+                  variant="outline" 
+                  onClick={handleExportExcel} 
+                  disabled={exporting !== null || filteredLogs.length === 0}
+                >
+                  {exporting === 'excel' ? (
+                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                  ) : (
+                    <FileSpreadsheet className="w-4 h-4 ml-2" />
+                  )}
+                  تصدير Excel
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleExportPDF} 
+                  disabled={exporting !== null || filteredLogs.length === 0}
+                >
+                  {exporting === 'pdf' ? (
+                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 ml-2" />
+                  )}
+                  تصدير PDF
+                </Button>
+                <Button variant="outline" onClick={loadLogs} disabled={loading}>
+                  <RefreshCw className={`w-4 h-4 ml-2 ${loading ? 'animate-spin' : ''}`} />
+                  تحديث
+                </Button>
               </div>
             </div>
-            <Select value={filterAction} onValueChange={setFilterAction}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="نوع العملية" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">جميع العمليات</SelectItem>
-                <SelectItem value="CREATE">إنشاء</SelectItem>
-                <SelectItem value="UPDATE">تحديث</SelectItem>
-                <SelectItem value="DELETE">حذف</SelectItem>
-                <SelectItem value="ASSIGN_ROLE">تعيين دور</SelectItem>
-                <SelectItem value="UPDATE_ROLE">تحديث دور</SelectItem>
-                <SelectItem value="REMOVE_ROLE">إزالة دور</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterTable} onValueChange={setFilterTable}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="الجدول" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">جميع الجداول</SelectItem>
-                <SelectItem value="declarations">الإقرارات</SelectItem>
-                <SelectItem value="user_roles">أدوار المستخدمين</SelectItem>
-                <SelectItem value="maintenance_items">بنود الصيانة</SelectItem>
-                <SelectItem value="maintenance_schedule">جدول الصيانة</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={loadLogs}>
-              <RefreshCw className="w-4 h-4 ml-2" />
-              تحديث
-            </Button>
+            
+            {/* Row 2: Filters */}
+            <div className="flex flex-col md:flex-row gap-4">
+              <Select value={filterAction} onValueChange={setFilterAction}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectValue placeholder="نوع العملية" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع العمليات</SelectItem>
+                  <SelectItem value="CREATE">إنشاء</SelectItem>
+                  <SelectItem value="UPDATE">تحديث</SelectItem>
+                  <SelectItem value="DELETE">حذف</SelectItem>
+                  <SelectItem value="ASSIGN_ROLE">تعيين دور</SelectItem>
+                  <SelectItem value="UPDATE_ROLE">تحديث دور</SelectItem>
+                  <SelectItem value="REMOVE_ROLE">إزالة دور</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={filterTable} onValueChange={setFilterTable}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectValue placeholder="الجدول" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الجداول</SelectItem>
+                  <SelectItem value="declarations">الإقرارات</SelectItem>
+                  <SelectItem value="user_roles">أدوار المستخدمين</SelectItem>
+                  <SelectItem value="maintenance_items">بنود الصيانة</SelectItem>
+                  <SelectItem value="maintenance_schedule">جدول الصيانة</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={filterUser} onValueChange={setFilterUser}>
+                <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectValue placeholder="المستخدم" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع المستخدمين</SelectItem>
+                  {uniqueUsers.map(u => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.username}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full md:w-[160px] justify-start text-right">
+                    <CalendarIcon className="w-4 h-4 ml-2" />
+                    {dateFrom ? format(dateFrom, 'dd/MM/yyyy') : 'من تاريخ'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateFrom}
+                    onSelect={setDateFrom}
+                    locale={ar}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full md:w-[160px] justify-start text-right">
+                    <CalendarIcon className="w-4 h-4 ml-2" />
+                    {dateTo ? format(dateTo, 'dd/MM/yyyy') : 'إلى تاريخ'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateTo}
+                    onSelect={setDateTo}
+                    locale={ar}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            {/* Results count */}
+            <div className="text-sm text-muted-foreground">
+              عرض {filteredLogs.length} من {logs.length} سجل
+            </div>
           </div>
         </Card>
 
