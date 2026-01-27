@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -134,13 +135,22 @@ export function Navigation() {
     { path: '/reports-analytics', icon: BarChart3, labelKey: 'reportsTitle' },
   ];
 
-  // Add admin dashboard link for admins only - at the end (left side in RTL)
-  const allNavItems = user?.role === 'admin' 
-    ? [
-        ...navItems, 
-        { path: '/admin', icon: Shield, labelKey: 'adminDashboard' }
-      ]
-    : navItems;
+  // Role-based navigation items
+  const allNavItems = useMemo(() => {
+    const items = [...navItems];
+    
+    // Add Manager Dashboard for managers and admins
+    if (user?.role === 'manager' || user?.role === 'admin') {
+      items.push({ path: '/manager-dashboard', icon: BarChart3, labelKey: 'managerDashboard' });
+    }
+    
+    // Add Admin Dashboard for admins only
+    if (user?.role === 'admin') {
+      items.push({ path: '/admin', icon: Shield, labelKey: 'adminDashboard' });
+    }
+    
+    return items;
+  }, [user?.role]);
 
   const isRTL = language === 'ar';
 

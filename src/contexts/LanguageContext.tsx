@@ -20,6 +20,7 @@ const translations = {
     changePassword: 'Change Password',
     users: 'Users',
     adminDashboard: 'Admin Panel',
+    managerDashboard: 'Manager Dashboard',
     
     // Login
     welcomeBack: 'Welcome Back',
@@ -799,6 +800,7 @@ const translations = {
     changePassword: 'تغيير كلمة المرور',
     users: 'المستخدمون',
     adminDashboard: 'لوحة المدير',
+    managerDashboard: 'لوحة تحكم المدير',
     
     // Login
     welcomeBack: 'مرحباً بعودتك',
