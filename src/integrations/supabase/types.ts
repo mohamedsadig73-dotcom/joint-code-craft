@@ -1061,6 +1061,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          is_active: boolean
           phone: string | null
           theme_preference: string | null
           updated_at: string
@@ -1073,6 +1074,7 @@ export type Database = {
           created_at?: string
           email: string
           id: string
+          is_active?: boolean
           phone?: string | null
           theme_preference?: string | null
           updated_at?: string
@@ -1085,6 +1087,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          is_active?: boolean
           phone?: string | null
           theme_preference?: string | null
           updated_at?: string
@@ -2869,6 +2872,10 @@ export type Database = {
     Functions: {
       check_admin_office_notifications: { Args: never; Returns: undefined }
       check_maintenance_notifications: { Args: never; Returns: undefined }
+      check_user_has_linked_data: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       cleanup_old_deleted_declarations: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       create_maintenance_notification: {
@@ -2879,6 +2886,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      deactivate_user: { Args: { target_user_id: string }; Returns: boolean }
       generate_archive_number: { Args: never; Returns: string }
       generate_cycle_count_number: { Args: never; Returns: string }
       generate_invoice_number: { Args: never; Returns: string }
@@ -2892,6 +2900,7 @@ export type Database = {
       }
       generate_wms_order_number: { Args: { prefix: string }; Returns: string }
       generate_work_order_number: { Args: never; Returns: string }
+      hard_delete_user: { Args: { target_user_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2918,6 +2927,7 @@ export type Database = {
         }
         Returns: string
       }
+      reactivate_user: { Args: { target_user_id: string }; Returns: boolean }
       verify_code: {
         Args: { _code: string; _type?: string; _user_id: string }
         Returns: boolean
