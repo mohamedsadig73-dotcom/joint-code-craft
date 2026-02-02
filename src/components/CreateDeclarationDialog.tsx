@@ -112,10 +112,11 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
         nextNumber = lastNumber + 1;
       }
 
-      setDeclarationNumber(nextNumber.toString());
+      // Auto-pad to 4 digits
+      setDeclarationNumber(nextNumber.toString().padStart(4, '0'));
     } catch (error) {
       console.error('Error loading next number:', error);
-      setDeclarationNumber('1');
+      setDeclarationNumber('0001');
     } finally {
       setLoadingNextNumber(false);
     }
@@ -223,11 +224,22 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
                 id="number"
                 type="text"
                 value={declarationNumber}
-                onChange={(e) => setDeclarationNumber(e.target.value)}
-                placeholder="006"
+                onChange={(e) => {
+                  // Only allow numeric input
+                  const value = e.target.value.replace(/\D/g, '');
+                  setDeclarationNumber(value);
+                }}
+                onBlur={() => {
+                  // Auto-pad to 4 digits when user leaves the field
+                  if (declarationNumber && declarationNumber.length > 0) {
+                    setDeclarationNumber(declarationNumber.padStart(4, '0'));
+                  }
+                }}
+                placeholder="0006"
                 required
                 disabled={loading || loadingNextNumber}
-                className="glass-card border-border/50 flex-1"
+                className="glass-card border-border/50 flex-1 font-mono"
+                maxLength={6}
               />
               <Button
                 type="button"
