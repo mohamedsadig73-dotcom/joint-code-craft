@@ -48,6 +48,9 @@ export default function Dashboard() {
     hasOverdueItems,
     loadDeclarations,
     loadDeletedDeclarations,
+    selectedYear,
+    setSelectedYear,
+    availableYears,
   } = useDashboardData();
   
   // UI State
@@ -236,8 +239,13 @@ export default function Dashboard() {
 
         {/* Stats */}
         <div className="mb-4 md:mb-6">
-          <DashboardStats stats={stats} loading={loading} />
-          
+          <DashboardStats 
+            stats={stats} 
+            loading={loading} 
+            selectedYear={selectedYear}
+            onYearChange={setSelectedYear}
+            availableYears={availableYears}
+          />
           {/* Smart Nudge */}
           {activeNudge && (
             <SmartNudge
