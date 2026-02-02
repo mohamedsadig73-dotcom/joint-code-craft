@@ -5,8 +5,13 @@ import { toast } from '@/hooks/use-toast';
 import { Declaration, DeletedDeclaration, DeclarationStats, Profile } from '@/types/declarations';
 import { useDeclarationsRealtime } from '@/hooks/useRealtimeUpdates';
 
+const currentYear = new Date().getFullYear();
+
 export function useDashboardData() {
   const { t } = useLanguage();
+  
+  // Year filter state - default to current year
+  const [selectedYear, setSelectedYear] = useState<number | 'all'>(currentYear);
   
   // State
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
@@ -28,11 +33,20 @@ export function useDashboardData() {
 
   const loadDeclarations = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('declarations')
         .select(`*, sender:profiles!sender_id(username)`)
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
+
+      // Apply year filter
+      if (selectedYear !== 'all') {
+        const startOfYear = `${selectedYear}-01-01T00:00:00.000Z`;
+        const endOfYear = `${selectedYear}-12-31T23:59:59.999Z`;
+        query = query.gte('created_at', startOfYear).lte('created_at', endOfYear);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -60,16 +74,25 @@ export function useDashboardData() {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [t, selectedYear]);
 
   const loadDeletedDeclarations = useCallback(async () => {
     try {
       setLoadingTrash(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('declarations')
         .select(`*, sender:profiles!sender_id(username)`)
         .not('deleted_at', 'is', null)
         .order('deleted_at', { ascending: false });
+
+      // Apply year filter
+      if (selectedYear !== 'all') {
+        const startOfYear = `${selectedYear}-01-01T00:00:00.000Z`;
+        const endOfYear = `${selectedYear}-12-31T23:59:59.999Z`;
+        query = query.gte('created_at', startOfYear).lte('created_at', endOfYear);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setDeletedDeclarations((data || []) as DeletedDeclaration[]);
@@ -78,7 +101,7 @@ export function useDashboardData() {
     } finally {
       setLoadingTrash(false);
     }
-  }, []);
+  }, [selectedYear]);
 
   const loadProfiles = useCallback(async () => {
     try {
@@ -116,6 +139,16 @@ export function useDashboardData() {
     return stats.pending_warehouse_signature > 0 || stats.returned_to_warehouse > 0;
   }, [stats]);
 
+  // Available years for dropdown
+  const availableYears = useMemo(() => {
+    const years: (number | 'all')[] = [];
+    for (let y = currentYear; y >= 2025; y--) {
+      years.push(y);
+    }
+    years.push('all');
+    return years;
+  }, []);
+
   return {
     declarations,
     deletedDeclarations,
@@ -127,5 +160,8 @@ export function useDashboardData() {
     hasOverdueItems,
     loadDeclarations,
     loadDeletedDeclarations,
+    selectedYear,
+    setSelectedYear,
+    availableYears,
   };
 }
