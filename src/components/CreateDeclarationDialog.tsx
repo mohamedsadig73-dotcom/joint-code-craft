@@ -242,8 +242,10 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
             <p className="text-xs text-muted-foreground">
               {loadingNextNumber ? (
                 'جاري جلب الرقم التالي...'
+              ) : declarationNumber ? (
+                <>الرقم النهائي: <span className="font-mono font-medium text-foreground">{type === 'دخول' ? 'IN' : 'OUT'}-{selectedYear}-{declarationNumber.padStart(4, '0')}</span></>
               ) : (
-                <>الرقم النهائي: {type === 'دخول' ? 'IN' : 'OUT'}-{selectedYear}-{declarationNumber.padStart(4, '0')}</>
+                <>أدخل رقم الإقرار</>
               )}
             </p>
           </div>
