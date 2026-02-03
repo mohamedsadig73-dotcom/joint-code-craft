@@ -988,6 +988,7 @@ export type Database = {
           invoice_number: string | null
           item_name: string | null
           notes: string | null
+          period_id: string | null
           quantity: number
           recipient: string | null
           status: string
@@ -1008,6 +1009,7 @@ export type Database = {
           invoice_number?: string | null
           item_name?: string | null
           notes?: string | null
+          period_id?: string | null
           quantity?: number
           recipient?: string | null
           status?: string
@@ -1028,6 +1030,7 @@ export type Database = {
           invoice_number?: string | null
           item_name?: string | null
           notes?: string | null
+          period_id?: string | null
           quantity?: number
           recipient?: string | null
           status?: string
@@ -1047,6 +1050,101 @@ export type Database = {
           {
             foreignKeyName: "petty_cash_expenses_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petty_cash_expenses_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "petty_cash_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      petty_cash_periods: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          budget_limit: number
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          current_balance: number
+          expenses_count: number
+          id: string
+          location: string
+          notes: string | null
+          opened_at: string
+          opened_by: string | null
+          opening_balance: number
+          period_number: string
+          responsible_person: string
+          status: Database["public"]["Enums"]["petty_cash_status"]
+          total_expenses: number
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          budget_limit?: number
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          current_balance?: number
+          expenses_count?: number
+          id?: string
+          location: string
+          notes?: string | null
+          opened_at?: string
+          opened_by?: string | null
+          opening_balance?: number
+          period_number: string
+          responsible_person: string
+          status?: Database["public"]["Enums"]["petty_cash_status"]
+          total_expenses?: number
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          budget_limit?: number
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          current_balance?: number
+          expenses_count?: number
+          id?: string
+          location?: string
+          notes?: string | null
+          opened_at?: string
+          opened_by?: string | null
+          opening_balance?: number
+          period_number?: string
+          responsible_person?: string
+          status?: Database["public"]["Enums"]["petty_cash_status"]
+          total_expenses?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petty_cash_periods_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petty_cash_periods_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petty_cash_periods_opened_by_fkey"
+            columns: ["opened_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -2894,6 +2992,7 @@ export type Database = {
         Args: { _item_id: string; _year: number }
         Returns: undefined
       }
+      generate_petty_cash_period_number: { Args: never; Returns: string }
       generate_verification_code: {
         Args: { _type?: string; _user_id: string }
         Returns: string
@@ -2960,6 +3059,7 @@ export type Database = {
         | "annual"
         | "ad_hoc"
       maintenance_status: "pending" | "done" | "not_required" | "overdue"
+      petty_cash_status: "open" | "closed" | "pending_approval" | "rejected"
       wms_order_status:
         | "draft"
         | "pending"
@@ -3132,6 +3232,7 @@ export const Constants = {
         "ad_hoc",
       ],
       maintenance_status: ["pending", "done", "not_required", "overdue"],
+      petty_cash_status: ["open", "closed", "pending_approval", "rejected"],
       wms_order_status: [
         "draft",
         "pending",
