@@ -4,14 +4,15 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Wallet, Plus, FileText, TrendingUp, Settings } from 'lucide-react';
+import { Wallet, FileText, TrendingUp, Settings, FolderOpen } from 'lucide-react';
 import { PettyCashDashboard } from '@/components/petty-cash/PettyCashDashboard';
 import { PettyCashList } from '@/components/petty-cash/PettyCashList';
 import { PettyCashReports } from '@/components/petty-cash/PettyCashReports';
 import { CostCentersManagement } from '@/components/petty-cash/CostCentersManagement';
+import { PettyCashPeriodsManagement } from '@/components/petty-cash/PettyCashPeriodsManagement';
 
 export default function PettyCash() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('periods');
   const { t, language } = useLanguage();
   const isRTL = language === 'ar';
 
@@ -39,7 +40,11 @@ export default function PettyCash() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="p-3 md:p-6">
             {/* Scrollable tabs on mobile */}
             <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 mb-4 md:mb-6">
-              <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-4 h-auto gap-1 md:gap-2">
+              <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-5 h-auto gap-1 md:gap-2">
+                <TabsTrigger value="periods" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
+                  <FolderOpen className="w-4 h-4" />
+                  <span className="text-xs md:text-sm">{t('pettyCashPeriods')}</span>
+                </TabsTrigger>
                 <TabsTrigger value="dashboard" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
                   <TrendingUp className="w-4 h-4" />
                   <span className="text-xs md:text-sm">{t('overview')}</span>
@@ -58,6 +63,10 @@ export default function PettyCash() {
                 </TabsTrigger>
               </TabsList>
             </div>
+
+            <TabsContent value="periods">
+              <PettyCashPeriodsManagement />
+            </TabsContent>
 
             <TabsContent value="dashboard">
               <PettyCashDashboard />

@@ -7,18 +7,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatNumber } from '@/utils/numberFormat';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CostCenter {
   id: string;
   name: string;
   name_ar: string;
+}
+
+interface OpenPeriod {
+  id: string;
+  period_number: string;
+  current_balance: number;
 }
 
 interface Expense {
@@ -33,6 +40,7 @@ interface Expense {
   item_name: string | null;
   recipient: string | null;
   notes: string | null;
+  period_id?: string | null;
 }
 
 interface AddExpenseDialogProps {
@@ -50,6 +58,8 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [vendors, setVendors] = useState<string[]>([]);
   const [vendorOpen, setVendorOpen] = useState(false);
+  const [openPeriod, setOpenPeriod] = useState<OpenPeriod | null>(null);
+  const [loadingPeriod, setLoadingPeriod] = useState(true);
 
   const [formData, setFormData] = useState({
     expense_date: new Date().toISOString().split('T')[0],
@@ -67,6 +77,7 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
   useEffect(() => {
     loadCostCenters();
     loadVendors();
+    loadOpenPeriod();
   }, []);
 
   useEffect(() => {
@@ -98,6 +109,25 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
       });
     }
   }, [expense, open]);
+
+  const loadOpenPeriod = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('petty_cash_periods')
+        .select('id, period_number, current_balance')
+        .eq('status', 'open')
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      setOpenPeriod(data as OpenPeriod | null);
+    } catch (error) {
+      console.error('Error loading open period:', error);
+      setOpenPeriod(null);
+    } finally {
+      setLoadingPeriod(false);
+    }
+  };
 
   const loadCostCenters = async () => {
     try {
@@ -132,6 +162,13 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if there's an open period (only for new expenses)
+    if (!expense && !openPeriod) {
+      toast.error(t('noOpenPeriodError'));
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -146,7 +183,8 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
         item_name: formData.item_name || null,
         recipient: formData.recipient || null,
         notes: formData.notes || null,
-        created_by: user?.id
+        created_by: user?.id,
+        period_id: openPeriod?.id || expense?.period_id || null
       };
 
       if (expense) {
@@ -185,8 +223,32 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
           <DialogTitle>{expense ? t('editExpense') : t('addExpense')}</DialogTitle>
         </DialogHeader>
 
+        {/* Period Info / Warning */}
+        {!expense && (
+          loadingPeriod ? (
+            <div className="h-12 bg-muted animate-pulse rounded-lg" />
+          ) : openPeriod ? (
+            <Alert className="border-green-500/50 bg-green-500/10">
+              <Check className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-700 dark:text-green-400">
+                {t('expenseWillBeAddedToPeriod')}: <strong>{openPeriod.period_number}</strong>
+                <span className="mx-2">|</span>
+                {t('remainingBalance')}: <strong>{formatNumber(openPeriod.current_balance)} {t('currency')}</strong>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {t('noOpenPeriodWarning')}
+              </AlertDescription>
+            </Alert>
+          )
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             {/* Date */}
             <div className="space-y-2">
               <Label>{t('date')} *</Label>
