@@ -14,8 +14,8 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
-      registerType: 'prompt', // Changed to prompt for better control
-      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      registerType: 'autoUpdate', // Auto update for seamless updates
+      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png', 'sw-cleanup.js'],
       manifest: {
         name: 'نظام تتبع الإقرارات - DTS',
         short_name: 'DTS',
