@@ -1604,7 +1604,7 @@ const translations = {
     pendingApproval: 'بانتظار الاعتماد',
     topCostCenter: 'أعلى مركز تكلفة',
     topVendor: 'أكثر مورد',
-    currency: 'ر.س',
+    currency: 'ريال',
     addExpense: 'إضافة مصروف',
     editExpense: 'تعديل المصروف',
     searchExpenses: 'البحث في المصاريف...',
