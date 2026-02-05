@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { OpenPeriodDialog } from './OpenPeriodDialog';
 import { PeriodDetailsDialog } from './PeriodDetailsDialog';
 import { ClosePeriodDialog } from './ClosePeriodDialog';
+import { EditDispositionDialog } from './EditDispositionDialog';
 
 interface PettyCashPeriod {
   id: string;
@@ -32,6 +33,8 @@ interface PettyCashPeriod {
   opened_at: string;
   closed_at: string | null;
   notes: string | null;
+  balance_disposition: string | null;
+  disposition_amount: number | null;
 }
 
 export function PettyCashPeriodsManagement() {
@@ -45,6 +48,8 @@ export function PettyCashPeriodsManagement() {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [periodToClose, setPeriodToClose] = useState<PettyCashPeriod | null>(null);
+  const [editDispositionOpen, setEditDispositionOpen] = useState(false);
+  const [periodToEdit, setPeriodToEdit] = useState<PettyCashPeriod | null>(null);
 
   useEffect(() => {
     loadPeriods();
@@ -72,6 +77,51 @@ export function PettyCashPeriodsManagement() {
   const handleClosePeriod = (period: PettyCashPeriod) => {
     setPeriodToClose(period);
     setCloseDialogOpen(true);
+  };
+
+  const handleEditDisposition = (period: PettyCashPeriod) => {
+    setPeriodToEdit(period);
+    setEditDispositionOpen(true);
+  };
+
+  const handleReopenPeriod = async (id: string) => {
+    try {
+      // Check if there's already an open period
+      if (hasOpenPeriod) {
+        toast.error(language === 'ar' 
+          ? 'يوجد نثرية مفتوحة حالياً. يجب إغلاقها أولاً.'
+          : 'There is already an open period. Close it first.');
+        return;
+      }
+      
+      const { error } = await supabase
+        .from('petty_cash_periods')
+        .update({
+          status: 'open',
+          closed_at: null,
+          closed_by: null,
+          balance_disposition: null,
+          disposition_amount: null,
+          disposition_reference: null,
+          approved_at: null,
+          approved_by: null
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success(language === 'ar' ? 'تم إعادة فتح النثرية' : 'Period reopened');
+      loadPeriods();
+    } catch (error) {
+      console.error('Error reopening period:', error);
+      toast.error(t('errorOccurred'));
+    }
+  };
+
+  // Check if a period needs disposition (closed/rejected with balance but no disposition)
+  const needsDisposition = (period: PettyCashPeriod) => {
+    return (period.status === 'closed' || period.status === 'rejected' || period.status === 'pending_approval') 
+      && period.current_balance > 0 
+      && !period.balance_disposition;
   };
 
   const handleApprovePeriod = async (id: string) => {
@@ -297,6 +347,32 @@ export function PettyCashPeriodsManagement() {
                           </Button>
                         )}
                         
+                        {/* Edit Disposition for legacy periods */}
+                        {needsDisposition(period) && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleEditDisposition(period)}
+                            className="h-8 w-8 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-100"
+                            title={language === 'ar' ? 'تحديد مصير الرصيد' : 'Set balance disposition'}
+                          >
+                            <AlertCircle className="w-4 h-4" />
+                          </Button>
+                        )}
+
+                        {/* Reopen rejected periods */}
+                        {period.status === 'rejected' && !hasOpenPeriod && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleReopenPeriod(period.id)}
+                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+                            title={language === 'ar' ? 'إعادة فتح' : 'Reopen'}
+                          >
+                            <Unlock className="w-4 h-4" />
+                          </Button>
+                        )}
+                        
                         {period.status === 'pending_approval' && (
                           <>
                             <Button
@@ -352,6 +428,19 @@ export function PettyCashPeriodsManagement() {
             if (!open) setPeriodToClose(null);
           }}
           period={periodToClose}
+          onSuccess={loadPeriods}
+        />
+      )}
+
+      {/* Edit Disposition Dialog for legacy periods */}
+      {periodToEdit && (
+        <EditDispositionDialog
+          open={editDispositionOpen}
+          onOpenChange={(open) => {
+            setEditDispositionOpen(open);
+            if (!open) setPeriodToEdit(null);
+          }}
+          period={periodToEdit}
           onSuccess={loadPeriods}
         />
       )}
