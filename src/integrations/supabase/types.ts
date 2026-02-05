@@ -1067,15 +1067,11 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
-          balance_disposition: string | null
           budget_limit: number
-          carried_from_period_id: string | null
           closed_at: string | null
           closed_by: string | null
           created_at: string
           current_balance: number
-          disposition_amount: number | null
-          disposition_reference: string | null
           expenses_count: number
           id: string
           location: string
@@ -1092,15 +1088,11 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
-          balance_disposition?: string | null
           budget_limit?: number
-          carried_from_period_id?: string | null
           closed_at?: string | null
           closed_by?: string | null
           created_at?: string
           current_balance?: number
-          disposition_amount?: number | null
-          disposition_reference?: string | null
           expenses_count?: number
           id?: string
           location: string
@@ -1117,15 +1109,11 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
-          balance_disposition?: string | null
           budget_limit?: number
-          carried_from_period_id?: string | null
           closed_at?: string | null
           closed_by?: string | null
           created_at?: string
           current_balance?: number
-          disposition_amount?: number | null
-          disposition_reference?: string | null
           expenses_count?: number
           id?: string
           location?: string
@@ -1148,13 +1136,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "petty_cash_periods_carried_from_period_id_fkey"
-            columns: ["carried_from_period_id"]
-            isOneToOne: false
-            referencedRelation: "petty_cash_periods"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "petty_cash_periods_closed_by_fkey"
             columns: ["closed_by"]
             isOneToOne: false
@@ -1166,74 +1147,6 @@ export type Database = {
             columns: ["opened_by"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      petty_cash_transactions: {
-        Row: {
-          amount: number
-          created_at: string | null
-          created_by: string | null
-          from_period_id: string | null
-          id: string
-          notes: string | null
-          period_id: string
-          reference_number: string | null
-          to_period_id: string | null
-          transaction_type: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string | null
-          created_by?: string | null
-          from_period_id?: string | null
-          id?: string
-          notes?: string | null
-          period_id: string
-          reference_number?: string | null
-          to_period_id?: string | null
-          transaction_type: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          created_by?: string | null
-          from_period_id?: string | null
-          id?: string
-          notes?: string | null
-          period_id?: string
-          reference_number?: string | null
-          to_period_id?: string | null
-          transaction_type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "petty_cash_transactions_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "petty_cash_transactions_from_period_id_fkey"
-            columns: ["from_period_id"]
-            isOneToOne: false
-            referencedRelation: "petty_cash_periods"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "petty_cash_transactions_period_id_fkey"
-            columns: ["period_id"]
-            isOneToOne: false
-            referencedRelation: "petty_cash_periods"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "petty_cash_transactions_to_period_id_fkey"
-            columns: ["to_period_id"]
-            isOneToOne: false
-            referencedRelation: "petty_cash_periods"
             referencedColumns: ["id"]
           },
         ]
