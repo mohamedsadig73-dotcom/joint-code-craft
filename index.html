@@ -6,6 +6,11 @@
     <title>نظام إدارة الإقرارات - DMS</title>
     <meta name="description" content="نظام ذكي لإدارة وتتبع الإقرارات بشكل رقمي مع تحديثات فورية وتقارير شاملة" />
     <meta name="author" content="DMS Team" />
+    
+    <!-- Cache Control -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
 
     <!-- Professional Fonts: IBM Plex Sans Arabic + IBM Plex Sans (Fallback) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,6 +42,24 @@
   <body>
     <!-- Force clear old caches on first load -->
     <script src="/sw-cleanup.js"></script>
+    <script>
+      // Version check on load
+      (function() {
+        var currentVersion = '2.3.0';
+        var storedVersion = localStorage.getItem('dts-html-version');
+        if (storedVersion && storedVersion !== currentVersion) {
+          console.log('[DTS] HTML version mismatch, forcing reload...');
+          localStorage.setItem('dts-html-version', currentVersion);
+          if (!sessionStorage.getItem('dts-version-reload')) {
+            sessionStorage.setItem('dts-version-reload', 'true');
+            window.location.reload(true);
+          }
+        } else {
+          localStorage.setItem('dts-html-version', currentVersion);
+        }
+        sessionStorage.removeItem('dts-version-reload');
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
