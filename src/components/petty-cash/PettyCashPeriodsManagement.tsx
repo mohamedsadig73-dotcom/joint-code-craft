@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -16,16 +16,7 @@ import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OpenPeriodDialog } from './OpenPeriodDialog';
 import { PeriodDetailsDialog } from './PeriodDetailsDialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ClosePeriodDialog } from './ClosePeriodDialog';
 
 interface PettyCashPeriod {
   id: string;
@@ -52,7 +43,8 @@ export function PettyCashPeriodsManagement() {
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<PettyCashPeriod | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  const [closeConfirmId, setCloseConfirmId] = useState<string | null>(null);
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
+  const [periodToClose, setPeriodToClose] = useState<PettyCashPeriod | null>(null);
 
   useEffect(() => {
     loadPeriods();
@@ -77,28 +69,9 @@ export function PettyCashPeriodsManagement() {
 
   const hasOpenPeriod = periods.some(p => p.status === 'open');
 
-  const handleClosePeriod = async () => {
-    if (!closeConfirmId) return;
-
-    try {
-      const { error } = await supabase
-        .from('petty_cash_periods')
-        .update({
-          status: 'pending_approval',
-          closed_at: new Date().toISOString(),
-          closed_by: user?.id
-        })
-        .eq('id', closeConfirmId);
-
-      if (error) throw error;
-      toast.success(t('periodClosed'));
-      loadPeriods();
-    } catch (error) {
-      console.error('Error closing period:', error);
-      toast.error(t('errorOccurred'));
-    } finally {
-      setCloseConfirmId(null);
-    }
+  const handleClosePeriod = (period: PettyCashPeriod) => {
+    setPeriodToClose(period);
+    setCloseDialogOpen(true);
   };
 
   const handleApprovePeriod = async (id: string) => {
@@ -317,7 +290,7 @@ export function PettyCashPeriodsManagement() {
                           <Button
                             size="icon"
                             variant="ghost"
-                            onClick={() => setCloseConfirmId(period.id)}
+                            onClick={() => handleClosePeriod(period)}
                             className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-100"
                           >
                             <Lock className="w-4 h-4" />
@@ -370,23 +343,18 @@ export function PettyCashPeriodsManagement() {
         />
       )}
 
-      {/* Close Confirmation */}
-      <AlertDialog open={!!closeConfirmId} onOpenChange={() => setCloseConfirmId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('closePeriodConfirmTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('closePeriodConfirmDescription')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleClosePeriod} className="bg-destructive text-destructive-foreground">
-              {t('closePeriod')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Close Period Dialog */}
+      {periodToClose && (
+        <ClosePeriodDialog
+          open={closeDialogOpen}
+          onOpenChange={(open) => {
+            setCloseDialogOpen(open);
+            if (!open) setPeriodToClose(null);
+          }}
+          period={periodToClose}
+          onSuccess={loadPeriods}
+        />
+      )}
     </div>
   );
 }
