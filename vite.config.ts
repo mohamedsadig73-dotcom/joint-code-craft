@@ -4,11 +4,17 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from 'vite-plugin-pwa';
 
+// Build version for cache busting
+const BUILD_VERSION = Date.now().toString();
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+  },
+  define: {
+    __BUILD_VERSION__: JSON.stringify(BUILD_VERSION),
   },
   plugins: [
     react(),
@@ -51,6 +57,8 @@ export default defineConfig(({ mode }) => ({
         clientsClaim: true,
         // Clean old caches on update
         cleanupOutdatedCaches: true,
+        // Add version to cache names for better invalidation
+        cacheId: `dts-${BUILD_VERSION}`,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -74,7 +82,7 @@ export default defineConfig(({ mode }) => ({
               networkTimeoutSeconds: 10,
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 5
+                maxAgeSeconds: 60 * 2 // Reduced to 2 minutes
               }
             }
           }
@@ -94,6 +102,10 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
+        // Add hash to file names for cache busting
+        entryFileNames: `assets/[name]-[hash]-${BUILD_VERSION}.js`,
+        chunkFileNames: `assets/[name]-[hash]-${BUILD_VERSION}.js`,
+        assetFileNames: `assets/[name]-[hash]-${BUILD_VERSION}.[ext]`,
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
