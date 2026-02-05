@@ -1,11 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { ThemeToggleSimple } from '@/components/ThemeToggle';
+import { ForceUpdateButton } from '@/components/ForceUpdateButton';
 import { 
   LayoutDashboard, 
   FolderOpen, 
@@ -21,7 +22,6 @@ import {
   RefreshCw,
   Wallet
 } from 'lucide-react';
-import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
@@ -30,6 +30,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { forceAppUpdate } from '@/components/ForceUpdateButton';
+
+const APP_VERSION = '2.3.0';
 
 export function Navigation() {
   const location = useLocation();
@@ -48,82 +51,8 @@ export function Navigation() {
 
   const handleForceUpdate = async () => {
     setIsUpdating(true);
-    
-    try {
-      // التحقق من وجود service worker
-      if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.getRegistration();
-        
-        if (registration) {
-          // إجبار التحديث
-          await registration.update();
-          
-          toast({
-            title: t('checkingUpdates'),
-            description: t('checkingUpdates') + '...',
-          });
-          
-          // انتظار التحديث الجديد
-          const waitForUpdate = new Promise<boolean>((resolve) => {
-            const timeout = setTimeout(() => resolve(false), 5000);
-            
-            registration.addEventListener('updatefound', () => {
-              clearTimeout(timeout);
-              const newWorker = registration.installing;
-              
-              if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    resolve(true);
-                  }
-                });
-              }
-            });
-          });
-          
-          const hasUpdate = await waitForUpdate;
-          
-          if (hasUpdate) {
-            toast({
-              title: t('updateAvailable'),
-              description: t('pageWillReload'),
-            });
-            
-            setTimeout(() => {
-              window.location.reload();
-            }, 1000);
-          } else {
-            toast({
-              title: t('noUpdates'),
-              description: t('youUsingLatest'),
-            });
-            setIsUpdating(false);
-          }
-        } else {
-          toast({
-            variant: 'destructive',
-            title: t('error'),
-            description: t('serviceWorkerNotRegistered'),
-          });
-          setIsUpdating(false);
-        }
-      } else {
-        toast({
-          variant: 'destructive',
-          title: t('notSupported'),
-          description: t('browserNotSupport'),
-        });
-        setIsUpdating(false);
-      }
-    } catch (error) {
-      console.error('Error forcing update:', error);
-      toast({
-        variant: 'destructive',
-        title: t('error'),
-        description: t('updateCheckFailed'),
-      });
-      setIsUpdating(false);
-    }
+    toast({ title: t('updateInProgress'), description: t('pageWillReload') });
+    await forceAppUpdate();
   };
 
   // Navigation items ordered: Declarations -> Maintenance -> Petty Cash -> Leave Tracking -> Reports -> Admin
@@ -192,6 +121,11 @@ export function Navigation() {
               <OfflineIndicator />
             </div>
 
+            {/* Force Update Button - Visible prominently */}
+            <div className="hidden md:block">
+              <ForceUpdateButton />
+            </div>
+
             {/* Theme Toggle */}
             <ThemeToggleSimple />
 
@@ -234,7 +168,7 @@ export function Navigation() {
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5 text-sm font-medium border-b mb-1">
                   <p>{user?.username}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{user?.role} • v{APP_VERSION}</p>
                 </div>
                 <DropdownMenuItem onClick={() => navigate('/profile')}>
                   <User className="w-4 h-4 me-2" />
