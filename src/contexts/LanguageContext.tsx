@@ -359,6 +359,10 @@ const translations = {
     browserNotSupport: 'Your browser does not support this feature',
     updateCheckFailed: 'Failed to check for updates',
     forceUpdate: 'Update Now',
+    forceUpdateDescription: 'This will clear all cached data and reload the latest version of the system. Are you sure?',
+    updateInProgress: 'Updating...',
+    updateNow: 'Update Now',
+    currentVersion: 'Current Version',
     
     // Archive Files
     archiveFiles: 'Archive Files',
@@ -1193,6 +1197,10 @@ const translations = {
     browserNotSupport: 'متصفحك لا يدعم هذه الميزة',
     updateCheckFailed: 'فشل التحقق من التحديثات',
     forceUpdate: 'تحديث الآن',
+    forceUpdateDescription: 'سيتم مسح جميع البيانات المؤقتة وإعادة تحميل أحدث نسخة من النظام. هل أنت متأكد؟',
+    updateInProgress: 'جاري التحديث...',
+    updateNow: 'تحديث الآن',
+    currentVersion: 'الإصدار الحالي',
     
     // Archive Files
     archiveFiles: 'ملفات الأرشيف',
