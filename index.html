@@ -43,20 +43,21 @@
     <!-- Force clear old caches on first load -->
     <script src="/sw-cleanup.js"></script>
     <script>
-      // Version check on load - v2.8.0 (SESSION FIX)
+      // Version check on load - v3.0.0 (NO AUTO-REDIRECT)
+      // This script only clears caches, it does NOT redirect
+      // React Router handles all routing
       (function() {
-        var currentVersion = '2.8.0';
-        var versionKey = 'dts-html-version-v6';
+        var currentVersion = '3.0.0';
+        var versionKey = 'dts-html-version-v8';
         var storedVersion = localStorage.getItem(versionKey);
         
-        console.log('[DTS HTML v2.8.0] Current:', currentVersion, 'Stored:', storedVersion);
+        console.log('[DTS HTML v3.0.0] Current:', currentVersion, 'Stored:', storedVersion);
         
         // ALWAYS check and clear SW on every load for this version
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.getRegistrations().then(function(registrations) {
             if (registrations.length > 0) {
               console.log('[DTS HTML] Found', registrations.length, 'SW registrations');
-              // Check if any are outdated
               registrations.forEach(function(reg) {
                 if (reg.waiting) {
                   console.log('[DTS HTML] Activating waiting SW');
@@ -68,19 +69,22 @@
         }
         
         if (storedVersion !== currentVersion) {
-          console.log('[DTS HTML] Version mismatch detected! Forcing update...');
+          console.log('[DTS HTML] Version mismatch detected! Clearing caches...');
           
-          // Clear ALL version markers
+          // Clear version markers
           var keysToRemove = [
-            'dts-html-version', 'dts-html-version-v2', 'dts-app-version',
-            'dts-build-timestamp', 'dts-force-clear-v2', 'dts-force-clear-v3',
-            'dts-last-update-check'
+            'dts-html-version', 'dts-html-version-v2', 'dts-html-version-v3',
+            'dts-html-version-v4', 'dts-html-version-v5', 'dts-html-version-v6',
+            'dts-html-version-v7', 'dts-app-version', 'dts-build-timestamp',
+            'dts-force-clear-v2', 'dts-force-clear-v3', 'dts-force-clear-v4',
+            'dts-force-clear-v5', 'dts-force-clear-v6', 'dts-force-clear-v7',
+            'dts-force-clear-v8', 'dts-last-update-check'
           ];
           keysToRemove.forEach(function(key) { localStorage.removeItem(key); });
           
           localStorage.setItem(versionKey, currentVersion);
           
-          // Force clear caches
+          // Clear caches silently without redirecting
           if ('caches' in window) {
             caches.keys().then(function(names) {
               names.forEach(function(name) { caches.delete(name); });
@@ -88,14 +92,7 @@
             });
           }
           
-          // Force reload if not already reloading
-          if (!sessionStorage.getItem('dts-html-reload-v2')) {
-            sessionStorage.setItem('dts-html-reload-v2', 'true');
-            setTimeout(function() {
-              window.location.replace(window.location.origin + '?_v=' + Date.now());
-            }, 100);
-          }
-        } else {
+          // Mark as updated - NO REDIRECT!
           sessionStorage.removeItem('dts-html-reload-v2');
         }
       })();
