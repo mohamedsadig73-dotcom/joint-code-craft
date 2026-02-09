@@ -1,10 +1,11 @@
-// Force cleanup of old service workers - v2.8.0
+// Force cleanup of old service workers - v3.0.0
+// NO AUTO-REDIRECT - only clears caches, React Router handles routing
 (function() {
   'use strict';
   
-  var APP_VERSION = '2.8.0';
-  var FORCE_CLEAR_KEY = 'dts-force-clear-v7';
-  var CHECK_INTERVAL = 5000;
+  var APP_VERSION = '3.0.0';
+  var FORCE_CLEAR_KEY = 'dts-force-clear-v9';
+  var CHECK_INTERVAL = 10000; // 10 seconds
   
   console.log('[DTS Cleanup v' + APP_VERSION + '] Initializing...');
   
@@ -12,9 +13,9 @@
   var lastClear = localStorage.getItem(FORCE_CLEAR_KEY);
   var needsClear = !lastClear || lastClear !== APP_VERSION;
   
-  // Function to clear all caches and reload
-  function forceCleanAndReload() {
-    console.log('[DTS] Force clean triggered...');
+  // Function to clear all caches WITHOUT redirecting
+  function clearCachesOnly() {
+    console.log('[DTS] Clearing caches...');
     
     // Unregister all service workers
     if ('serviceWorker' in navigator) {
@@ -39,24 +40,28 @@
       }).then(function() {
         console.log('[DTS] All caches cleared');
         localStorage.setItem(FORCE_CLEAR_KEY, APP_VERSION);
-        
-        // Reload with cache busting
-        if (sessionStorage.getItem('dts-cleanup-reload') !== 'true') {
-          sessionStorage.setItem('dts-cleanup-reload', 'true');
-          var reloadUrl = window.location.origin + window.location.pathname + '?v=' + Date.now();
-          window.location.replace(reloadUrl);
-        }
       });
     }
   }
   
-  // Clear on first load if version mismatch
+  // Force update function - clears caches and reloads current page
+  function forceUpdate() {
+    console.log('[DTS] Force update triggered...');
+    clearCachesOnly();
+    
+    // Reload after a short delay to let caches clear
+    setTimeout(function() {
+      // Preserve current path when reloading
+      window.location.reload();
+    }, 500);
+  }
+  
+  // Clear on first load if version mismatch - NO REDIRECT
   if (needsClear) {
     console.log('[DTS] Version mismatch detected, clearing caches...');
-    forceCleanAndReload();
+    clearCachesOnly();
   } else {
     console.log('[DTS] Version ' + APP_VERSION + ' already cleared');
-    sessionStorage.removeItem('dts-cleanup-reload');
   }
   
   // Check for updates when tab becomes visible
@@ -68,19 +73,10 @@
       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({ type: 'CHECK_UPDATE' });
       }
-      
-      // Also try to fetch fresh version
-      fetch('/?check=' + Date.now(), { cache: 'no-store' })
-        .then(function(response) {
-          if (response.ok) {
-            console.log('[DTS] Fresh content available');
-          }
-        })
-        .catch(function() {});
     }
   });
   
-  // Periodic update check (every 10 seconds)
+  // Periodic update check
   setInterval(function() {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({ type: 'CHECK_UPDATE' });
@@ -88,7 +84,7 @@
   }, CHECK_INTERVAL);
   
   // Expose force update function globally
-  window.dtsForceUpdate = forceCleanAndReload;
+  window.dtsForceUpdate = forceUpdate;
   
   console.log('[DTS Cleanup] Ready. Call window.dtsForceUpdate() to force refresh.');
 })();
