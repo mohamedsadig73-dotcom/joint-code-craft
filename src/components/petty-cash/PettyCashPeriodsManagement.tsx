@@ -8,8 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Plus, Lock, Unlock, Eye, Check, X, 
-  Wallet, TrendingDown, AlertCircle, Clock,
-  ArrowRightLeft, Undo2, FileX
+  Wallet, TrendingDown, AlertCircle, Clock
 } from 'lucide-react';
 import { formatNumber } from '@/utils/numberFormat';
 import { formatDate } from '@/utils/dateUtils';
@@ -36,7 +35,6 @@ interface PettyCashPeriod {
   notes: string | null;
   balance_disposition: string | null;
   disposition_amount: number | null;
-  carried_from_period_id: string | null;
 }
 
 export function PettyCashPeriodsManagement() {
@@ -185,46 +183,6 @@ export function PettyCashPeriodsManagement() {
     );
   };
 
-  const getDispositionBadge = (period: PettyCashPeriod) => {
-    if (!period.balance_disposition) return null;
-    
-    const config: Record<string, { icon: typeof ArrowRightLeft; label: string; className: string }> = {
-      carried_forward: {
-        icon: ArrowRightLeft,
-        label: language === 'ar' ? 'مُرحّل' : 'Carried Forward',
-        className: 'bg-blue-500/20 text-blue-700 dark:text-blue-400'
-      },
-      refunded: {
-        icon: Undo2,
-        label: language === 'ar' ? 'مُسترد' : 'Refunded',
-        className: 'bg-purple-500/20 text-purple-700 dark:text-purple-400'
-      },
-      written_off: {
-        icon: FileX,
-        label: language === 'ar' ? 'مُهلك' : 'Written Off',
-        className: 'bg-orange-500/20 text-orange-700 dark:text-orange-400'
-      }
-    };
-    
-    const c = config[period.balance_disposition];
-    if (!c) return null;
-    const Icon = c.icon;
-    
-    return (
-      <div className="flex flex-col gap-1">
-        <Badge className={c.className}>
-          <Icon className="w-3 h-3 mr-1" />
-          {c.label}
-        </Badge>
-        {period.disposition_amount && period.disposition_amount > 0 && (
-          <span className="text-xs text-muted-foreground">
-            {formatNumber(period.disposition_amount)} {t('currency')}
-          </span>
-        )}
-      </div>
-    );
-  };
-
   // Stats
   const openPeriods = periods.filter(p => p.status === 'open').length;
   const totalBudget = periods.filter(p => p.status === 'open').reduce((sum, p) => sum + p.opening_balance, 0);
@@ -342,7 +300,6 @@ export function PettyCashPeriodsManagement() {
                 <TableHead className={isRTL ? 'text-right' : 'text-left'}>{t('remainingBalance')}</TableHead>
                 <TableHead className={isRTL ? 'text-right' : 'text-left'}>{t('expensesCount')}</TableHead>
                 <TableHead className={isRTL ? 'text-right' : 'text-left'}>{t('status')}</TableHead>
-                <TableHead className={isRTL ? 'text-right' : 'text-left'}>{language === 'ar' ? 'تصفية الرصيد' : 'Disposition'}</TableHead>
                 <TableHead className={isRTL ? 'text-right' : 'text-left'}>{t('openedAt')}</TableHead>
                 <TableHead className={isRTL ? 'text-right' : 'text-left'}>{t('actions')}</TableHead>
               </TableRow>
@@ -350,7 +307,7 @@ export function PettyCashPeriodsManagement() {
             <TableBody>
               {periods.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                     {t('noPeriodsFound')}
                   </TableCell>
                 </TableRow>
@@ -367,7 +324,6 @@ export function PettyCashPeriodsManagement() {
                     </TableCell>
                     <TableCell>{period.expenses_count}</TableCell>
                     <TableCell>{getStatusBadge(period.status)}</TableCell>
-                    <TableCell>{getDispositionBadge(period) || <span className="text-muted-foreground text-xs">-</span>}</TableCell>
                     <TableCell>{formatDate(period.opened_at)}</TableCell>
                     <TableCell>
                       <div className={`flex gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
