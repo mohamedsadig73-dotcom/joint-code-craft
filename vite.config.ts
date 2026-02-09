@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
-      registerType: 'autoUpdate', // Auto update for seamless updates
+      registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png', 'sw-cleanup.js'],
       manifest: {
         name: 'نظام تتبع الإقرارات - DTS',
@@ -51,60 +51,20 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        // Only cache essential static assets
-        globPatterns: ['**/*.{ico,png,svg,woff2}'],
-        // CRITICAL: Skip waiting to activate new SW immediately
+        // CRITICAL FIX: Do NOT precache anything - force network for everything
+        globPatterns: [],
         skipWaiting: true,
         clientsClaim: true,
-        // Clean old caches on every update
         cleanupOutdatedCaches: true,
-        // Dynamic cache ID forces refresh
         cacheId: `dts-v4.0.0-${BUILD_VERSION}`,
-        // NetworkFirst for ALL requests - always try network first
-        runtimeCaching: [
-          {
-            // All HTML/JS/CSS - NetworkFirst to always get fresh content
-            urlPattern: /\.(html|js|css)(\?.*)?$/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'app-shell-cache',
-              networkTimeoutSeconds: 5,
-              expiration: {
-                maxEntries: 20,
-                maxAgeSeconds: 60 * 5 // 5 minutes only
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days only
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          },
-          {
-            // Supabase API - always network first
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-            handler: 'NetworkOnly', // Never cache API calls
-            options: {
-              cacheName: 'supabase-api-cache'
-            }
-          }
-        ],
-        // Immediately claim all clients
+        // NO runtime caching - everything goes to network
+        runtimeCaching: [],
+        // No navigate fallback
         navigateFallback: null,
-        // Disable offline page fallback to force network
         navigateFallbackDenylist: [/.*/]
       },
       devOptions: {
-        enabled: false, // Disable in dev to avoid caching issues
+        enabled: false,
         type: 'module'
       }
     })
