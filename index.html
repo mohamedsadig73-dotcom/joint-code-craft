@@ -6,13 +6,8 @@
     <title>نظام إدارة الإقرارات - DMS</title>
     <meta name="description" content="نظام ذكي لإدارة وتتبع الإقرارات بشكل رقمي مع تحديثات فورية وتقارير شاملة" />
     <meta name="author" content="DMS Team" />
-    
-    <!-- Cache Control -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
 
-    <!-- Professional Fonts: IBM Plex Sans Arabic + IBM Plex Sans (Fallback) -->
+    <!-- Professional Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -31,72 +26,9 @@
     <meta property="og:description" content="نظام ذكي لإدارة وتتبع الإقرارات" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/pwa-icon-512.png" />
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="نظام إدارة الإقرارات - DMS" />
-    <meta name="twitter:description" content="نظام ذكي لإدارة وتتبع الإقرارات" />
-    <meta name="twitter:image" content="/pwa-icon-512.png" />
   </head>
 
   <body>
-    <!-- Force clear old caches on first load -->
-    <script src="/sw-cleanup.js"></script>
-    <script>
-      // Version check on load - v4.0.0 AGGRESSIVE CACHE CLEAR
-      (function() {
-        var currentVersion = '4.0.0-20260209160000';
-        var versionKey = 'dts-html-version-v10';
-        var storedVersion = localStorage.getItem(versionKey);
-        
-        console.log('[DTS HTML v4.0.0] Current:', currentVersion, 'Stored:', storedVersion);
-        
-        // AGGRESSIVE: Always try to activate waiting SW
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            registrations.forEach(function(reg) {
-              if (reg.waiting) {
-                console.log('[DTS HTML] Activating waiting SW');
-                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-              }
-            });
-          });
-        }
-        
-        if (storedVersion !== currentVersion) {
-          console.log('[DTS HTML] VERSION MISMATCH! Clearing everything...');
-          
-          // Clear ALL dts keys
-          var keysToRemove = [];
-          for (var i = 0; i < localStorage.length; i++) {
-            var key = localStorage.key(i);
-            if (key && (key.startsWith('dts-') || key.includes('version'))) {
-              keysToRemove.push(key);
-            }
-          }
-          keysToRemove.forEach(function(k) { localStorage.removeItem(k); });
-          
-          // Set new version
-          localStorage.setItem(versionKey, currentVersion);
-          
-          // Clear all caches
-          if ('caches' in window) {
-            caches.keys().then(function(names) {
-              names.forEach(function(name) { caches.delete(name); });
-              console.log('[DTS HTML] Cleared', names.length, 'caches');
-            });
-          }
-          
-          // Unregister service workers
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(regs) {
-              regs.forEach(function(r) { r.unregister(); });
-              console.log('[DTS HTML] Unregistered', regs.length, 'service workers');
-            });
-          }
-        }
-      })();
-    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
