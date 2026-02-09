@@ -298,13 +298,13 @@ const LeaveTracking = () => {
   const getStatusBadge = (status: EmployeeStatus) => {
     switch (status) {
       case 'at_work':
-        return <Badge className="bg-green-500/10 text-green-600 border-green-500/30"><CheckCircle2 className="w-3 h-3 mr-1" />{t('atWork')}</Badge>;
+        return <Badge className="bg-green-500/10 text-green-600 border-green-500/30"><CheckCircle2 className="w-3 h-3 me-1" />{t('atWork')}</Badge>;
       case 'on_leave':
-        return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Plane className="w-3 h-3 mr-1" />{t('onLeave')}</Badge>;
+        return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Plane className="w-3 h-3 me-1" />{t('onLeave')}</Badge>;
       case 'overdue_return':
-        return <Badge variant="destructive"><AlertTriangle className="w-3 h-3 mr-1" />{t('overdueReturn')}</Badge>;
+        return <Badge variant="destructive"><AlertTriangle className="w-3 h-3 me-1" />{t('overdueReturn')}</Badge>;
       case 'upcoming_leave':
-        return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/30"><Clock className="w-3 h-3 mr-1" />{t('upcomingLeave')}</Badge>;
+        return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/30"><Clock className="w-3 h-3 me-1" />{t('upcomingLeave')}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -403,7 +403,7 @@ const LeaveTracking = () => {
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !value && "text-muted-foreground")}>
-            <CalendarIcon className="mr-2 h-4 w-4" />
+            <CalendarIcon className="me-2 h-4 w-4" />
             {value ? format(value, "PPP", { locale: isRTL ? ar : enUS }) : t('selectDate')}
           </Button>
         </PopoverTrigger>
@@ -436,7 +436,7 @@ const LeaveTracking = () => {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline">
-                    <Download className="w-4 h-4 mr-2" />
+                    <Download className="w-4 h-4 me-2" />
                     {t('exportExcel')}
                   </Button>
                 </PopoverTrigger>
@@ -457,7 +457,7 @@ const LeaveTracking = () => {
               <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
                 <DialogTrigger asChild>
                   <Button>
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="w-4 h-4 me-2" />
                     {t('addEmployee')}
                   </Button>
                 </DialogTrigger>
@@ -727,19 +727,19 @@ const LeaveTracking = () => {
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder={t('searchEmployee')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
+                      className="ps-10"
                     />
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="w-[160px]">
-                      <Filter className="w-4 h-4 mr-2" />
+                      <Filter className="w-4 h-4 me-2" />
                       <SelectValue placeholder={t('status')} />
                     </SelectTrigger>
                     <SelectContent>

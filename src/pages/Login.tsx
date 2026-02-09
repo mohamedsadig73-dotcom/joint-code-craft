@@ -209,13 +209,13 @@ export default function Login() {
           <div className="space-y-2">
             <Label htmlFor="email">{t('email')}</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+              <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="pl-10 glass-card border-border/50"
+                className="ps-10 glass-card border-border/50"
                 placeholder={t('email')}
                 required
                 maxLength={255}
@@ -227,13 +227,13 @@ export default function Login() {
           <div className="space-y-2">
             <Label htmlFor="password">{t('password')}</Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+              <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 pr-10 glass-card border-border/50"
+                className="ps-10 pe-10 glass-card border-border/50"
                 placeholder={t('password')}
                 required
                 minLength={isSignup ? 10 : 1}
@@ -327,7 +327,7 @@ export default function Login() {
           
           {!isSignup && (
             <button
-              onClick={() => window.location.href = '/forgot-password'}
+              onClick={() => navigate('/forgot-password')}
               className="text-sm text-primary hover:underline"
               disabled={loading}
             >
