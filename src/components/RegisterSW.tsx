@@ -4,8 +4,10 @@ import { RefreshCw, X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // App version - MUST be updated with every deployment
-const APP_VERSION = '2.4.0';
+const APP_VERSION = '2.5.0';
 const BUILD_TIMESTAMP = Date.now();
+// Force update on version mismatch
+const FORCE_UPDATE_KEY = 'dts-force-update-v2.5.0';
 const DEPLOYED_AT = new Date().toISOString();
 
 // Version check API endpoint (for debugging)
@@ -116,28 +118,49 @@ export function RegisterSW() {
     }
   }, [needRefresh, handleUpdate]);
 
-  // Log current version on mount and check for stale versions
+  // Log current version on mount and FORCE update for new versions
   useEffect(() => {
     const versionInfo = getVersionInfo();
     console.log(`[DTS] App Version: ${APP_VERSION} | Build: ${BUILD_TIMESTAMP}`);
     console.log(`[DTS] Version Info:`, JSON.stringify(versionInfo));
     
-    // Store version
+    // Check if this is first time seeing this version
     const storedVersion = localStorage.getItem('dts-app-version');
-    if (storedVersion !== APP_VERSION) {
-      console.log(`[DTS] Version changed: ${storedVersion} -> ${APP_VERSION}`);
-      localStorage.setItem('dts-app-version', APP_VERSION);
-      localStorage.setItem('dts-build-timestamp', String(BUILD_TIMESTAMP));
-    }
+    const forceUpdateDone = localStorage.getItem(FORCE_UPDATE_KEY);
     
-    // Check if we're running a stale version (cached for more than 24 hours)
-    const lastCheck = localStorage.getItem('dts-last-update-check');
-    const now = Date.now();
-    if (lastCheck && (now - parseInt(lastCheck)) > 24 * 60 * 60 * 1000) {
-      console.log('[DTS] Cache may be stale (>24h), prompting update...');
-      setShowUpdateBanner(true);
+    if (storedVersion !== APP_VERSION || !forceUpdateDone) {
+      console.log(`[DTS] Version changed: ${storedVersion} -> ${APP_VERSION}`);
+      
+      // FORCE clear everything for new version
+      if (!forceUpdateDone) {
+        console.log(`[DTS] First time v${APP_VERSION}, forcing complete cache clear...`);
+        
+        // Clear all service workers
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(registration => {
+              registration.unregister();
+              console.log('[DTS] Unregistered SW:', registration.scope);
+            });
+          });
+        }
+        
+        // Clear all caches
+        if ('caches' in window) {
+          caches.keys().then(cacheNames => {
+            cacheNames.forEach(cacheName => {
+              caches.delete(cacheName);
+              console.log('[DTS] Deleted cache:', cacheName);
+            });
+          });
+        }
+        
+        // Mark as done
+        localStorage.setItem(FORCE_UPDATE_KEY, 'true');
+        localStorage.setItem('dts-app-version', APP_VERSION);
+        localStorage.setItem('dts-build-timestamp', String(BUILD_TIMESTAMP));
+      }
     }
-    localStorage.setItem('dts-last-update-check', String(now));
     
     // Listen for visibility changes to check for updates
     const handleVisibilityChange = () => {

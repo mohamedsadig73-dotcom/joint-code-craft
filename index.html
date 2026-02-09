@@ -43,31 +43,60 @@
     <!-- Force clear old caches on first load -->
     <script src="/sw-cleanup.js"></script>
     <script>
-      // Version check on load - v2.4.0
+      // Version check on load - v2.5.0 (AGGRESSIVE UPDATE)
       (function() {
-        var currentVersion = '2.4.0';
-        var versionKey = 'dts-html-version-v2';
+        var currentVersion = '2.5.0';
+        var versionKey = 'dts-html-version-v3';
         var storedVersion = localStorage.getItem(versionKey);
         
-        console.log('[DTS HTML] Current:', currentVersion, 'Stored:', storedVersion);
+        console.log('[DTS HTML v2.5.0] Current:', currentVersion, 'Stored:', storedVersion);
+        
+        // ALWAYS check and clear SW on every load for this version
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            if (registrations.length > 0) {
+              console.log('[DTS HTML] Found', registrations.length, 'SW registrations');
+              // Check if any are outdated
+              registrations.forEach(function(reg) {
+                if (reg.waiting) {
+                  console.log('[DTS HTML] Activating waiting SW');
+                  reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                }
+              });
+            }
+          });
+        }
         
         if (storedVersion !== currentVersion) {
-          console.log('[DTS HTML] Version mismatch, updating...');
+          console.log('[DTS HTML] Version mismatch detected! Forcing update...');
+          
+          // Clear ALL version markers
+          var keysToRemove = [
+            'dts-html-version', 'dts-html-version-v2', 'dts-app-version',
+            'dts-build-timestamp', 'dts-force-clear-v2', 'dts-force-clear-v3',
+            'dts-last-update-check'
+          ];
+          keysToRemove.forEach(function(key) { localStorage.removeItem(key); });
+          
           localStorage.setItem(versionKey, currentVersion);
           
-          // Clear old version markers
-          localStorage.removeItem('dts-html-version');
-          localStorage.removeItem('dts-app-version');
-          localStorage.removeItem('dts-build-timestamp');
+          // Force clear caches
+          if ('caches' in window) {
+            caches.keys().then(function(names) {
+              names.forEach(function(name) { caches.delete(name); });
+              console.log('[DTS HTML] Cleared', names.length, 'caches');
+            });
+          }
           
           // Force reload if not already reloading
-          if (!sessionStorage.getItem('dts-html-reload')) {
-            sessionStorage.setItem('dts-html-reload', 'true');
-            // Use replace to avoid back button issues
-            window.location.replace(window.location.origin + '?v=' + Date.now());
+          if (!sessionStorage.getItem('dts-html-reload-v2')) {
+            sessionStorage.setItem('dts-html-reload-v2', 'true');
+            setTimeout(function() {
+              window.location.replace(window.location.origin + '?_v=' + Date.now());
+            }, 100);
           }
         } else {
-          sessionStorage.removeItem('dts-html-reload');
+          sessionStorage.removeItem('dts-html-reload-v2');
         }
       })();
     </script>
