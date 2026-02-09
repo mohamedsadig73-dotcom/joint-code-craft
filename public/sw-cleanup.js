@@ -1,90 +1,128 @@
-// Force cleanup of old service workers - v3.0.0
-// NO AUTO-REDIRECT - only clears caches, React Router handles routing
+// Force cleanup of old service workers - v4.0.0
+// AGGRESSIVE CACHE CLEARING - Forces complete refresh
 (function() {
   'use strict';
   
-  var APP_VERSION = '3.0.0';
-  var FORCE_CLEAR_KEY = 'dts-force-clear-v9';
-  var CHECK_INTERVAL = 10000; // 10 seconds
+  var APP_VERSION = '4.0.0';
+  var BUILD_TIME = '20260209160000';
+  var FORCE_CLEAR_KEY = 'dts-force-clear-v10';
   
-  console.log('[DTS Cleanup v' + APP_VERSION + '] Initializing...');
+  console.log('[DTS v' + APP_VERSION + '-' + BUILD_TIME + '] Initializing aggressive cleanup...');
   
   // Check if we need to force clear
-  var lastClear = localStorage.getItem(FORCE_CLEAR_KEY);
-  var needsClear = !lastClear || lastClear !== APP_VERSION;
+  var storedVersion = localStorage.getItem(FORCE_CLEAR_KEY);
+  var currentVersionKey = APP_VERSION + '-' + BUILD_TIME;
+  var needsClear = storedVersion !== currentVersionKey;
   
-  // Function to clear all caches WITHOUT redirecting
-  function clearCachesOnly() {
-    console.log('[DTS] Clearing caches...');
+  // AGGRESSIVE: Clear ALL storage and caches
+  function aggressiveClear(callback) {
+    console.log('[DTS] AGGRESSIVE CLEAR: Removing all caches and service workers...');
     
-    // Unregister all service workers
+    var promises = [];
+    
+    // 1. Unregister ALL service workers
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        registrations.forEach(function(registration) {
-          registration.unregister().then(function() {
-            console.log('[DTS] Service Worker unregistered:', registration.scope);
-          });
-        });
-      });
+      promises.push(
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          return Promise.all(registrations.map(function(reg) {
+            console.log('[DTS] Unregistering SW:', reg.scope);
+            return reg.unregister();
+          }));
+        })
+      );
     }
     
-    // Clear all caches
+    // 2. Clear ALL caches
     if ('caches' in window) {
-      caches.keys().then(function(cacheNames) {
-        return Promise.all(
-          cacheNames.map(function(cacheName) {
-            console.log('[DTS] Deleting cache:', cacheName);
-            return caches.delete(cacheName);
-          })
-        );
-      }).then(function() {
-        console.log('[DTS] All caches cleared');
-        localStorage.setItem(FORCE_CLEAR_KEY, APP_VERSION);
-      });
+      promises.push(
+        caches.keys().then(function(cacheNames) {
+          console.log('[DTS] Clearing', cacheNames.length, 'caches');
+          return Promise.all(cacheNames.map(function(name) {
+            return caches.delete(name);
+          }));
+        })
+      );
     }
+    
+    // 3. Clear old localStorage keys
+    var keysToRemove = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var key = localStorage.key(i);
+      if (key && key.startsWith('dts-')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(function(key) {
+      if (key !== FORCE_CLEAR_KEY) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // 4. Clear sessionStorage
+    try {
+      var authKeys = [];
+      for (var j = 0; j < sessionStorage.length; j++) {
+        var sKey = sessionStorage.key(j);
+        if (sKey && sKey.startsWith('dts-')) {
+          authKeys.push(sKey);
+        }
+      }
+      authKeys.forEach(function(k) { sessionStorage.removeItem(k); });
+    } catch(e) {}
+    
+    Promise.all(promises).then(function() {
+      console.log('[DTS] All caches cleared successfully');
+      localStorage.setItem(FORCE_CLEAR_KEY, currentVersionKey);
+      if (callback) callback();
+    }).catch(function(err) {
+      console.error('[DTS] Error clearing caches:', err);
+      localStorage.setItem(FORCE_CLEAR_KEY, currentVersionKey);
+      if (callback) callback();
+    });
   }
   
-  // Force update function - clears caches and reloads current page
+  // Force update function - clears everything and reloads
   function forceUpdate() {
     console.log('[DTS] Force update triggered...');
-    clearCachesOnly();
-    
-    // Reload after a short delay to let caches clear
-    setTimeout(function() {
-      // Preserve current path when reloading
-      window.location.reload();
-    }, 500);
+    aggressiveClear(function() {
+      setTimeout(function() {
+        window.location.reload(true);
+      }, 500);
+    });
   }
   
-  // Clear on first load if version mismatch - NO REDIRECT
+  // On version mismatch, clear and reload ONCE
   if (needsClear) {
-    console.log('[DTS] Version mismatch detected, clearing caches...');
-    clearCachesOnly();
+    console.log('[DTS] VERSION MISMATCH! Stored:', storedVersion, 'Current:', currentVersionKey);
+    aggressiveClear(function() {
+      // Check if we already reloaded to prevent loop
+      var reloadKey = 'dts-reload-' + currentVersionKey;
+      if (!sessionStorage.getItem(reloadKey)) {
+        sessionStorage.setItem(reloadKey, '1');
+        console.log('[DTS] Reloading page with new version...');
+        setTimeout(function() {
+          window.location.reload(true);
+        }, 300);
+      } else {
+        console.log('[DTS] Already reloaded, skipping...');
+      }
+    });
   } else {
-    console.log('[DTS] Version ' + APP_VERSION + ' already cleared');
+    console.log('[DTS] Version ' + currentVersionKey + ' is current');
   }
   
   // Check for updates when tab becomes visible
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible') {
-      console.log('[DTS] Tab visible, checking for updates...');
-      
-      // Check if SW needs update
       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({ type: 'CHECK_UPDATE' });
       }
     }
   });
   
-  // Periodic update check
-  setInterval(function() {
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'CHECK_UPDATE' });
-    }
-  }, CHECK_INTERVAL);
-  
-  // Expose force update function globally
+  // Expose force update globally
   window.dtsForceUpdate = forceUpdate;
+  window.dtsVersion = APP_VERSION + '-' + BUILD_TIME;
   
-  console.log('[DTS Cleanup] Ready. Call window.dtsForceUpdate() to force refresh.');
+  console.log('[DTS] Ready. Version:', window.dtsVersion);
 })();
