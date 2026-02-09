@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
@@ -9,6 +9,8 @@ const currentYear = new Date().getFullYear();
 
 export function useDashboardData() {
   const { t } = useLanguage();
+  const tRef = useRef(t);
+  tRef.current = t;
   
   // Year filter state - default to current year
   const [selectedYear, setSelectedYear] = useState<number | 'all'>(currentYear);
@@ -67,14 +69,14 @@ export function useDashboardData() {
       setStats(newStats);
     } catch (error: any) {
       toast({
-        title: t('error'),
+        title: tRef.current('error'),
         description: error.message,
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  }, [t, selectedYear]);
+  }, [selectedYear]);
 
   const loadDeletedDeclarations = useCallback(async () => {
     try {
@@ -123,11 +125,13 @@ export function useDashboardData() {
     loadProfiles();
   }, [loadDeclarations, loadDeletedDeclarations, loadProfiles]);
 
-  // Realtime updates
-  useDeclarationsRealtime(() => {
+  // Realtime updates - stable callback to prevent re-subscription loops
+  const realtimeCallback = useCallback(() => {
     loadDeclarations();
     loadDeletedDeclarations();
-  });
+  }, [loadDeclarations, loadDeletedDeclarations]);
+  
+  useDeclarationsRealtime(realtimeCallback);
 
   // Smart Nudges data
   const completionRate = useMemo(() => {
