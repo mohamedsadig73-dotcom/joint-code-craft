@@ -1,3 +1,12 @@
+/**
+ * ⚠️ TECH DEBT NOTICE
+ * This file (895 lines) exceeds the recommended 300-line limit.
+ * Planned refactor (post-release):
+ * - Extract: LeaveTable, LeaveStats, LeaveFilters, LeaveForm
+ * - Extract: useLeaveTracking.ts hook for data/logic
+ * - No UI, DB, or logic changes — extraction only
+ * Ticket: TECH-DEBT-002
+ */
 import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';

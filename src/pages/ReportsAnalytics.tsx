@@ -1,3 +1,12 @@
+/**
+ * ⚠️ TECH DEBT NOTICE
+ * This file (689 lines) exceeds the recommended 300-line limit.
+ * Planned refactor (post-release):
+ * - Extract: ReportsHeader, ReportsKPIs, ReportsCharts, ReportsExport
+ * - Extract: useReportsData.ts hook for data/logic
+ * - No UI, DB, or logic changes — extraction only
+ * Ticket: TECH-DEBT-001
+ */
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
