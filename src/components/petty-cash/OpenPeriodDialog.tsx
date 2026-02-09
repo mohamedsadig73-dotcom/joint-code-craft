@@ -34,27 +34,9 @@ export function OpenPeriodDialog({ open, onOpenChange, onSuccess }: OpenPeriodDi
     setLoading(true);
 
     try {
-      // Generate period number locally
-      const now = new Date();
-      const year = now.getFullYear();
-      
-      // Get the latest period to determine the next sequence number
-      const { data: latestPeriod } = await supabase
-        .from('petty_cash_periods')
-        .select('period_number')
-        .ilike('period_number', `PC-${year}-%`)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      let nextSeq = 1;
-      if (latestPeriod?.period_number) {
-        const parts = latestPeriod.period_number.split('-');
-        const lastSeq = parseInt(parts[parts.length - 1], 10);
-        if (!isNaN(lastSeq)) nextSeq = lastSeq + 1;
-      }
-      
-      const periodNumber = `PC-${year}-${String(nextSeq).padStart(4, '0')}`;
+      // Generate period number
+      const { data: periodNumber } = await supabase
+        .rpc('generate_petty_cash_period_number');
 
       const { error } = await supabase
         .from('petty_cash_periods')
