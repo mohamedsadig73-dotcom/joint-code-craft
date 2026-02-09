@@ -1,4 +1,4 @@
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
@@ -6,34 +6,16 @@ import {
   Shield, 
   Clock, 
   BarChart3, 
-  CheckCircle, 
   Users,
   ArrowRight,
   Zap,
   Globe
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/contexts/AuthContext';
 
+// This component is ONLY rendered for unauthenticated users
+// The routing logic in AnimatedRoutes.tsx handles the redirect
 export default function Landing() {
-  const { isAuthenticated, loading } = useAuth();
-
-  // Show loading state while checking authentication
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[hsl(210,100%,20%)] via-[hsl(220,26%,28%)] to-[hsl(217,33%,37%)] flex items-center justify-center">
-        <div className="text-center">
-          <FileText className="w-12 h-12 text-secondary mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If user is logged in, redirect to dashboard immediately
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
 
   const features = [
     {

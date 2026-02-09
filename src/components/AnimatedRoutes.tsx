@@ -76,24 +76,29 @@ export function AnimatedRoutes() {
               </PageTransition>
             }
           />
-          <Route
-            path="/landing"
-            element={
-              <PageTransition>
-                <Landing />
-              </PageTransition>
-            }
-          />
+          {/* Root route - show Dashboard if authenticated, Landing if not */}
           <Route
             path="/"
             element={
-              <ProtectedRoute>
+              loading ? (
+                <PageLoader />
+              ) : isAuthenticated ? (
+                <ProtectedRoute>
+                  <PageTransition>
+                    <Dashboard />
+                  </PageTransition>
+                </ProtectedRoute>
+              ) : (
                 <PageTransition>
-                  <Dashboard />
+                  <Landing />
                 </PageTransition>
-              </ProtectedRoute>
+              )
             }
           />
+          {/* Legacy /landing route - redirect to root */}
+          <Route path="/landing" element={<Navigate to="/" replace />} />
+          {/* Legacy /dashboard route - redirect to root */}
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route
             path="/reports-analytics"
             element={

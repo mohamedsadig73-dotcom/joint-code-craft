@@ -43,13 +43,13 @@
     <!-- Force clear old caches on first load -->
     <script src="/sw-cleanup.js"></script>
     <script>
-      // Version check on load - v2.6.0 (AGGRESSIVE UPDATE)
+      // Version check on load - v2.7.0 (ROUTING FIX)
       (function() {
-        var currentVersion = '2.6.0';
-        var versionKey = 'dts-html-version-v4';
+        var currentVersion = '2.7.0';
+        var versionKey = 'dts-html-version-v5';
         var storedVersion = localStorage.getItem(versionKey);
         
-        console.log('[DTS HTML v2.6.0] Current:', currentVersion, 'Stored:', storedVersion);
+        console.log('[DTS HTML v2.7.0] Current:', currentVersion, 'Stored:', storedVersion);
         
         // ALWAYS check and clear SW on every load for this version
         if ('serviceWorker' in navigator) {
