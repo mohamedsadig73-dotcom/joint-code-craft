@@ -14,8 +14,8 @@
    AlertDialogTitle,
  } from '@/components/ui/alert-dialog';
  
- // Version must match RegisterSW.tsx
- const CURRENT_VERSION = '2.3.0';
+// Version must match RegisterSW.tsx
+const CURRENT_VERSION = '2.4.0';
  
  export function ForceUpdateButton() {
    const { t } = useLanguage();
@@ -51,12 +51,15 @@
          console.log('[DTS] All caches cleared');
        }
  
-       // Step 3: Clear localStorage version markers
-       localStorage.removeItem('dts-app-version');
-       localStorage.removeItem('dts-build-timestamp');
-       localStorage.removeItem('dts-html-version');
-       localStorage.removeItem('dts-force-clear-v2');
-       sessionStorage.clear();
+        // Step 3: Clear ALL localStorage version markers
+        localStorage.removeItem('dts-app-version');
+        localStorage.removeItem('dts-build-timestamp');
+        localStorage.removeItem('dts-html-version');
+        localStorage.removeItem('dts-html-version-v2');
+        localStorage.removeItem('dts-force-clear-v2');
+        localStorage.removeItem('dts-force-clear-v3');
+        localStorage.removeItem('dts-last-update-check');
+        sessionStorage.clear();
  
        toast({
          title: t('updateInProgress'),
@@ -138,12 +141,15 @@
      await Promise.all(cacheNames.map(name => caches.delete(name)));
    }
  
-   // Clear storage
-   localStorage.removeItem('dts-app-version');
-   localStorage.removeItem('dts-build-timestamp');
-   localStorage.removeItem('dts-html-version');
-   localStorage.removeItem('dts-force-clear-v2');
-   sessionStorage.clear();
+  // Clear ALL storage
+  localStorage.removeItem('dts-app-version');
+  localStorage.removeItem('dts-build-timestamp');
+  localStorage.removeItem('dts-html-version');
+  localStorage.removeItem('dts-html-version-v2');
+  localStorage.removeItem('dts-force-clear-v2');
+  localStorage.removeItem('dts-force-clear-v3');
+  localStorage.removeItem('dts-last-update-check');
+  sessionStorage.clear();
  
    // Reload
    window.location.href = window.location.origin + '?_v=' + Date.now();
