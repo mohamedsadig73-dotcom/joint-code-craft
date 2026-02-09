@@ -15,6 +15,7 @@ interface AuthContextType {
   signup: (email: string, password: string, username: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  hasSession: boolean; // Quick check before user profile loads
   loading: boolean;
 }
 
@@ -179,7 +180,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated: !!user, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      signup, 
+      logout, 
+      isAuthenticated: !!user, 
+      hasSession: !!session, 
+      loading 
+    }}>
       {children}
     </AuthContext.Provider>
   );
