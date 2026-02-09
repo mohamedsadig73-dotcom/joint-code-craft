@@ -51,23 +51,38 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        // Skip waiting to activate new SW immediately
+        // Only cache essential static assets
+        globPatterns: ['**/*.{ico,png,svg,woff2}'],
+        // CRITICAL: Skip waiting to activate new SW immediately
         skipWaiting: true,
         clientsClaim: true,
-        // Clean old caches on update
+        // Clean old caches on every update
         cleanupOutdatedCaches: true,
-        // Add version to cache names for better invalidation
-        cacheId: `dts-${BUILD_VERSION}`,
+        // Dynamic cache ID forces refresh
+        cacheId: `dts-v2.5.0-${BUILD_VERSION}`,
+        // NetworkFirst for ALL requests - always try network first
         runtimeCaching: [
           {
+            // All HTML/JS/CSS - NetworkFirst to always get fresh content
+            urlPattern: /\.(html|js|css)(\?.*)?$/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'app-shell-cache',
+              networkTimeoutSeconds: 5,
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 5 // 5 minutes only
+              }
+            }
+          },
+          {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days only
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -75,18 +90,18 @@ export default defineConfig(({ mode }) => ({
             }
           },
           {
+            // Supabase API - always network first
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-            handler: 'NetworkFirst',
+            handler: 'NetworkOnly', // Never cache API calls
             options: {
-              cacheName: 'supabase-api-cache',
-              networkTimeoutSeconds: 10,
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 2 // Reduced to 2 minutes
-              }
+              cacheName: 'supabase-api-cache'
             }
           }
-        ]
+        ],
+        // Immediately claim all clients
+        navigateFallback: null,
+        // Disable offline page fallback to force network
+        navigateFallbackDenylist: [/.*/]
       },
       devOptions: {
         enabled: false, // Disable in dev to avoid caching issues

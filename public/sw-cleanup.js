@@ -1,10 +1,10 @@
-// Force cleanup of old service workers - v2.4.0
+// Force cleanup of old service workers - v2.5.0
 (function() {
   'use strict';
   
-  var APP_VERSION = '2.4.0';
-  var FORCE_CLEAR_KEY = 'dts-force-clear-v3';
-  var CHECK_INTERVAL = 10000; // Check every 10 seconds
+  var APP_VERSION = '2.5.0';
+  var FORCE_CLEAR_KEY = 'dts-force-clear-v4';
+  var CHECK_INTERVAL = 5000; // Check every 5 seconds (more aggressive)
   
   console.log('[DTS Cleanup v' + APP_VERSION + '] Initializing...');
   
