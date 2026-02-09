@@ -13,26 +13,6 @@ import { Separator } from '@/components/ui/separator';
 import { User, Lock, Mail, Shield, Save } from 'lucide-react';
 import { z } from 'zod';
 
-const profileSchema = z.object({
-  username: z.string()
-    .trim()
-    .min(3, 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل')
-    .max(50, 'اسم المستخدم يجب أن يكون أقل من 50 حرف')
-    .regex(/^[a-zA-Z0-9_\u0600-\u06FF\s]+$/, 'اسم المستخدم يحتوي على أحرف غير صالحة'),
-  email: z.string()
-    .trim()
-    .email('البريد الإلكتروني غير صالح')
-    .max(255, 'البريد الإلكتروني يجب أن يكون أقل من 255 حرف'),
-});
-
-const passwordSchema = z.object({
-  newPassword: z.string().min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
-  confirmPassword: z.string(),
-}).refine(data => data.newPassword === data.confirmPassword, {
-  message: 'كلمتا المرور غير متطابقتين',
-  path: ['confirmPassword'],
-});
-
 export default function Profile() {
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -46,6 +26,27 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
 
+  // Dynamic validation schemas using translations
+  const profileSchema = z.object({
+    username: z.string()
+      .trim()
+      .min(3, t('passwordMinLength'))
+      .max(50)
+      .regex(/^[a-zA-Z0-9_\u0600-\u06FF\s]+$/, t('invalidData')),
+    email: z.string()
+      .trim()
+      .email(t('invalidEmail'))
+      .max(255),
+  });
+
+  const passwordSchema = z.object({
+    newPassword: z.string().min(6, t('passwordMinLength')),
+    confirmPassword: z.string(),
+  }).refine(data => data.newPassword === data.confirmPassword, {
+    message: t('passwordMismatch'),
+    path: ['confirmPassword'],
+  });
+
   useEffect(() => {
     if (user) {
       setUsername(user.username || '');
@@ -56,14 +57,13 @@ export default function Profile() {
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate profile data
     try {
       profileSchema.parse({ username, email });
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'خطأ في البيانات',
-        description: error.errors?.[0]?.message || 'البيانات المدخلة غير صحيحة',
+        title: t('dataValidationError'),
+        description: error.errors?.[0]?.message || t('invalidData'),
       });
       return;
     }
@@ -71,7 +71,6 @@ export default function Profile() {
     setProfileLoading(true);
 
     try {
-      // Check if username is already taken by another user
       if (username !== user?.username) {
         const { data: existingUsername } = await supabase
           .from('profiles')
@@ -81,17 +80,12 @@ export default function Profile() {
           .maybeSingle();
 
         if (existingUsername) {
-          toast({
-            variant: 'destructive',
-            title: 'خطأ',
-            description: 'اسم المستخدم مستخدم بالفعل',
-          });
+          toast({ variant: 'destructive', title: t('error'), description: t('usernameAlreadyTaken') });
           setProfileLoading(false);
           return;
         }
       }
 
-      // Check if email is already taken by another user
       if (email !== user?.email) {
         const { data: existingEmail } = await supabase
           .from('profiles')
@@ -101,49 +95,28 @@ export default function Profile() {
           .maybeSingle();
 
         if (existingEmail) {
-          toast({
-            variant: 'destructive',
-            title: 'خطأ',
-            description: 'البريد الإلكتروني مستخدم بالفعل',
-          });
+          toast({ variant: 'destructive', title: t('error'), description: t('emailAlreadyTaken') });
           setProfileLoading(false);
           return;
         }
       }
 
-      // Update profile in database
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({
-          username,
-          email,
-        })
+        .update({ username, email })
         .eq('id', user?.id);
 
       if (profileError) throw profileError;
 
-      // Update email in auth if changed
       if (email !== user?.email) {
-        const { error: authError } = await supabase.auth.updateUser({
-          email: email,
-        });
-
+        const { error: authError } = await supabase.auth.updateUser({ email });
         if (authError) throw authError;
       }
 
-      toast({
-        title: 'تم التحديث',
-        description: 'تم تحديث بياناتك الشخصية بنجاح',
-      });
-
-      // Reload to get updated data
+      toast({ title: t('success'), description: t('profileUpdated') });
       window.location.reload();
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'خطأ',
-        description: error.message || 'فشل تحديث البيانات',
-      });
+      toast({ variant: 'destructive', title: t('error'), description: error.message || t('profileUpdateFailed') });
     } finally {
       setProfileLoading(false);
     }
@@ -152,40 +125,23 @@ export default function Profile() {
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate passwords
     try {
       passwordSchema.parse({ newPassword, confirmPassword });
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: t('error'),
-        description: error.errors?.[0]?.message || t('invalidData'),
-      });
+      toast({ variant: 'destructive', title: t('error'), description: error.errors?.[0]?.message || t('invalidData') });
       return;
     }
 
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-
-      toast({
-        title: t('success'),
-        description: t('passwordChangeSuccess'),
-      });
-
+      toast({ title: t('success'), description: t('passwordChangeSuccess') });
       setNewPassword('');
       setConfirmPassword('');
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: t('error'),
-        description: error.message || t('passwordChangeFailed'),
-      });
+      toast({ variant: 'destructive', title: t('error'), description: error.message || t('passwordChangeFailed') });
     } finally {
       setLoading(false);
     }
@@ -193,23 +149,17 @@ export default function Profile() {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'admin':
-        return 'bg-destructive/20 text-destructive border-destructive/30';
-      case 'manager':
-        return 'bg-warning/20 text-warning border-warning/30';
-      default:
-        return 'bg-primary/20 text-primary border-primary/30';
+      case 'admin': return 'bg-destructive/20 text-destructive border-destructive/30';
+      case 'manager': return 'bg-warning/20 text-warning border-warning/30';
+      default: return 'bg-primary/20 text-primary border-primary/30';
     }
   };
 
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case 'admin':
-        return t('systemAdmin');
-      case 'manager':
-        return t('subManager');
-      default:
-        return t('regularUser');
+      case 'admin': return t('systemAdmin');
+      case 'manager': return t('subManager');
+      default: return t('regularUser');
     }
   };
 
@@ -228,7 +178,7 @@ export default function Profile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="w-5 h-5" />
-              البيانات الشخصية
+              {t('personalData')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -237,7 +187,7 @@ export default function Profile() {
                 <div>
                   <Label htmlFor="username" className="flex items-center gap-2 text-sm">
                     <User className="w-4 h-4" />
-                    اسم المستخدم
+                    {t('usernameLabel')}
                   </Label>
                   <Input
                     id="username"
@@ -252,7 +202,7 @@ export default function Profile() {
                 <div>
                   <Label htmlFor="email" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    البريد الإلكتروني
+                    {t('emailLabel')}
                   </Label>
                   <Input
                     id="email"
@@ -268,7 +218,7 @@ export default function Profile() {
                 <div>
                   <Label className="flex items-center gap-2">
                     <Shield className="w-4 h-4" />
-                    الدور الوظيفي
+                    {t('jobRole')}
                   </Label>
                   <div className="mt-2">
                     <span
@@ -294,11 +244,11 @@ export default function Profile() {
                   }}
                   disabled={profileLoading}
                 >
-                  إعادة تعيين
+                  {t('resetFields')}
                 </Button>
                 <Button type="submit" disabled={profileLoading}>
-                  <Save className="w-4 h-4 mr-2" />
-                  {profileLoading ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+                  <Save className="w-4 h-4 me-2" />
+                  {profileLoading ? t('savingProfile') : t('saveProfile')}
                 </Button>
               </div>
             </form>
@@ -310,13 +260,13 @@ export default function Profile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lock className="w-5 h-5" />
-              تغيير كلمة المرور
+              {t('changePasswordTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handlePasswordChange} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="newPassword">كلمة المرور الجديدة</Label>
+                <Label htmlFor="newPassword">{t('newPasswordLabel')}</Label>
                 <Input
                   id="newPassword"
                   type="password"
@@ -330,7 +280,7 @@ export default function Profile() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">تأكيد كلمة المرور</Label>
+                <Label htmlFor="confirmPassword">{t('confirmPasswordLabel')}</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -352,10 +302,10 @@ export default function Profile() {
                   onClick={() => navigate('/')}
                   disabled={loading}
                 >
-                  إلغاء
+                  {t('cancel')}
                 </Button>
                 <Button type="submit" disabled={loading}>
-                  {loading ? 'جاري التحديث...' : 'تحديث كلمة المرور'}
+                  {loading ? t('savingProfile') : t('updatePassword')}
                 </Button>
               </div>
             </form>
