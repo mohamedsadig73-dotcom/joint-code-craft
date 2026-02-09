@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
@@ -13,8 +13,15 @@ import {
   Globe
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Landing() {
+  const { isAuthenticated, loading } = useAuth();
+
+  // If user is logged in, redirect to dashboard immediately
+  if (!loading && isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
   const features = [
     {
       icon: FileText,
