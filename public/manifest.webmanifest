@@ -1,0 +1,27 @@
+{
+  "name": "نظام تتبع الإقرارات - DTS",
+  "short_name": "DTS",
+  "description": "نظام ذكي لتتبع وإدارة الإقرارات بشكل رقمي مع تحديثات فورية وتقارير شاملة",
+  "theme_color": "#1A1F2C",
+  "background_color": "#0F1117",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "start_url": "/",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
