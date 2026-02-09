@@ -6,7 +6,7 @@ import { PageTransition } from '@/components/PageTransition';
 import { Loader2 } from 'lucide-react';
 
 // Lazy load pages with preload hints for critical pages
-const Landing = lazy(() => import('@/pages/Landing'));
+// Landing page removed - unauthenticated users go directly to login
 const Login = lazy(() => import('@/pages/Login'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
@@ -80,7 +80,7 @@ export function AnimatedRoutes() {
               </PageTransition>
             }
           />
-          {/* Root route - show Dashboard if authenticated, Landing if not */}
+          {/* Root route - show Dashboard if authenticated, redirect to login if not */}
           <Route
             path="/"
             element={
@@ -93,9 +93,7 @@ export function AnimatedRoutes() {
                   </PageTransition>
                 </ProtectedRoute>
               ) : (
-                <PageTransition>
-                  <Landing />
-                </PageTransition>
+                <Navigate to="/login" replace />
               )
             }
           />
