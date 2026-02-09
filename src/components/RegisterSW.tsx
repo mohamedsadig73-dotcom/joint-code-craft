@@ -4,10 +4,10 @@ import { RefreshCw, X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // App version - MUST be updated with every deployment
-const APP_VERSION = '2.5.0';
+const APP_VERSION = '2.6.0';
 const BUILD_TIMESTAMP = Date.now();
 // Force update on version mismatch
-const FORCE_UPDATE_KEY = 'dts-force-update-v2.5.0';
+const FORCE_UPDATE_KEY = 'dts-force-update-v2.6.0';
 const DEPLOYED_AT = new Date().toISOString();
 
 // Version check API endpoint (for debugging)

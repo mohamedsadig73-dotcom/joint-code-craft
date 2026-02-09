@@ -59,7 +59,7 @@ export default defineConfig(({ mode }) => ({
         // Clean old caches on every update
         cleanupOutdatedCaches: true,
         // Dynamic cache ID forces refresh
-        cacheId: `dts-v2.5.0-${BUILD_VERSION}`,
+        cacheId: `dts-v2.6.0-${BUILD_VERSION}`,
         // NetworkFirst for ALL requests - always try network first
         runtimeCaching: [
           {
