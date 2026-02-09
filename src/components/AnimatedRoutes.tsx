@@ -33,11 +33,11 @@ const PageLoader = memo(() => (
 ));
 
 export function AnimatedRoutes() {
-  const { isAuthenticated, hasSession, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
-  // Use hasSession for immediate routing (before user profile loads)
-  // This prevents showing Landing page to authenticated users
-  const shouldShowAuthenticatedContent = hasSession || isAuthenticated;
+  // Only use isAuthenticated (not hasSession) to prevent routing loops
+  // between AnimatedRoutes and ProtectedRoute
+  const shouldShowAuthenticatedContent = isAuthenticated;
 
   return (
     <Suspense fallback={<PageLoader />}>
