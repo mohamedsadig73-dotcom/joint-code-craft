@@ -1,7 +1,10 @@
-// Minimal service worker required for PWA installability
-// No caching - just satisfies the browser's install criteria
-
+// Service Worker v2 - required for PWA installability
+const CACHE_NAME = 'dts-shell-v2';
+const SHELL_FILES = ['/index.html'];
 self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL_FILES))
+  );
   self.skipWaiting();
 });
 
@@ -10,6 +13,10 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network-only strategy - no caching
-  event.respondWith(fetch(event.request));
+  // Network-only - but don't break on navigation failures
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/index.html'))
+    );
+  }
 });
