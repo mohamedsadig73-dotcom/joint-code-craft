@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { motion } from 'framer-motion';
 import {
   TrendingUp, Calendar, Clock, Award, Users, BarChart3, PieChart as PieChartIcon
 } from 'lucide-react';
@@ -158,7 +157,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
             <Card className="glass-card border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -171,9 +170,9 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
                 <RTLEChart option={statusPieOption} style={{ height: '300px' }} />
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
             <Card className="glass-card border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -186,10 +185,10 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
                 <RTLEChart option={typeBarOption} style={{ height: '300px' }} />
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+        <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
           <Card className="glass-card border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -202,7 +201,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
               <RTLEChart option={weeklyBarOption} style={{ height: '250px' }} />
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -210,7 +209,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
   if (activeTab === 'trends') {
     return (
       <div className="space-y-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="animate-fade-in">
           <Card className="glass-card border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -223,9 +222,9 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
               <RTLEChart option={monthlyTrendOption} style={{ height: '350px' }} />
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
           <Card className="glass-card border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -238,7 +237,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
               <RTLEChart option={hourlyAreaOption} style={{ height: '250px' }} />
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -246,7 +245,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
   if (activeTab === 'performance') {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="animate-fade-in">
           <Card className="glass-card border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -259,9 +258,9 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
               <RTLEChart option={performanceGaugeOption} style={{ height: '300px' }} />
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
           <Card className="glass-card border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -289,11 +288,9 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
                         <span className="text-sm text-muted-foreground">{sender.count} {t('declarationCount')}</span>
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={sender.percentage} aria-valuemin={0} aria-valuemax={100}>
-                        <motion.div
-                          className="h-full bg-primary rounded-full"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${sender.percentage}%` }}
-                          transition={{ delay: index * 0.1, duration: 0.5 }}
+                        <div
+                          className="h-full bg-primary rounded-full transition-all duration-500"
+                          style={{ width: `${sender.percentage}%`, transitionDelay: `${index * 100}ms` }}
                         />
                       </div>
                     </div>
@@ -302,7 +299,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
     );
   }

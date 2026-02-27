@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, BarChart3, Wrench, Wallet, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavItem {
   path: string;
@@ -45,70 +44,50 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
           const Icon = item.icon;
           
           return (
-            <motion.button
+            <button
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
                 'relative flex flex-col items-center justify-center flex-1 h-full py-3',
                 'min-w-[48px] min-h-[48px]',
-                'transition-colors duration-200',
+                'transition-all duration-200',
                 'active:scale-95',
+                'animate-fade-in',
                 active ? 'text-primary' : 'text-muted-foreground'
               )}
+              style={{ animationDelay: `${index * 50}ms` }}
               aria-label={t(item.labelKey)}
-              whileTap={{ scale: 0.92 }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
             >
               {/* Active indicator pill */}
-              <AnimatePresence>
-                {active && (
-                  <motion.div 
-                    className="absolute top-1 w-8 h-1 bg-primary rounded-full shadow-lg shadow-primary/30"
-                    layoutId="activeTab"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  />
-                )}
-              </AnimatePresence>
+              {active && (
+                <div className="absolute top-1 w-8 h-1 bg-primary rounded-full shadow-lg shadow-primary/30 animate-fade-in" />
+              )}
               
               {/* Icon container */}
-              <motion.div 
+              <div 
                 className={cn(
                   'flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300',
-                  active && 'bg-primary/10'
+                  active && 'bg-primary/10 -translate-y-0.5 scale-105'
                 )}
-                animate={{ 
-                  scale: active ? 1.05 : 1,
-                  y: active ? -2 : 0
-                }}
-                transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
                 <Icon className={cn(
                   'transition-all duration-200',
                   active ? 'w-6 h-6' : 'w-5 h-5'
                 )} />
-              </motion.div>
+              </div>
               
               {/* Label */}
-              <motion.span 
+              <span 
                 className={cn(
-                  'text-[10px] font-medium mt-0.5 truncate max-w-full px-1',
-                  active ? 'text-primary' : 'text-muted-foreground/70'
+                  'text-[10px] font-medium mt-0.5 truncate max-w-full px-1 transition-opacity duration-200',
+                  active ? 'text-primary opacity-100' : 'text-muted-foreground/70 opacity-70'
                 )}
-                animate={{ 
-                  opacity: active ? 1 : 0.7
-                }}
               >
                 {t(item.labelKey)}
-              </motion.span>
-            </motion.button>
+              </span>
+            </button>
           );
         })}
-        
       </div>
     </nav>
   );
