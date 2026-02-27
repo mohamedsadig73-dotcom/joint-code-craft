@@ -25,12 +25,16 @@ const PettyCash = lazy(() => import('@/pages/PettyCash'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
-const PageLoader = memo(() => (
-  <div className="min-h-screen flex flex-col items-center justify-center gap-4" role="status" aria-label="Loading">
-    <Loader2 className="h-10 w-10 text-secondary animate-spin" />
-    <p className="text-muted-foreground text-sm">جاري التحميل...</p>
-  </div>
-));
+const PageLoader = memo(() => {
+  // Use a simple fallback since this renders before LanguageContext may be available
+  const loadingText = document.documentElement.lang === 'ar' ? 'جاري التحميل...' : 'Loading...';
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4" role="status" aria-label="Loading">
+      <Loader2 className="h-10 w-10 text-secondary animate-spin" />
+      <p className="text-muted-foreground text-sm">{loadingText}</p>
+    </div>
+  );
+});
 
 export function AnimatedRoutes() {
   const { isAuthenticated, loading } = useAuth();
