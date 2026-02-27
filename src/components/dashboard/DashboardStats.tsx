@@ -25,7 +25,7 @@ export const DashboardStats = memo(function DashboardStats({
   const { t, language } = useLanguage();
 
   const yearLabel = selectedYear === 'all' 
-    ? (language === 'ar' ? 'جميع السنوات' : 'All Years')
+    ? t('allYears')
     : selectedYear.toString();
 
   if (loading) {
@@ -39,7 +39,7 @@ export const DashboardStats = memo(function DashboardStats({
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-sm px-3 py-1.5 bg-primary/5 border-primary/20">
             <Calendar className="w-4 h-4 me-2" />
-            {language === 'ar' ? 'إحصائيات' : 'Statistics'}: {yearLabel}
+            {t('statistics')}: {yearLabel}
           </Badge>
         </div>
         
@@ -47,17 +47,14 @@ export const DashboardStats = memo(function DashboardStats({
           value={selectedYear.toString()} 
           onValueChange={(value) => onYearChange(value === 'all' ? 'all' : parseInt(value))}
         >
-          <SelectTrigger className="w-[160px]" aria-label={language === 'ar' ? 'اختر السنة' : 'Select Year'}>
+          <SelectTrigger className="w-[160px]" aria-label={t('selectYear')}>
             <Calendar className="w-4 h-4 me-2" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {availableYears.map((year) => (
               <SelectItem key={year.toString()} value={year.toString()}>
-                {year === 'all' 
-                  ? (language === 'ar' ? 'جميع السنوات' : 'All Years')
-                  : year
-                }
+                {year === 'all' ? t('allYears') : year}
               </SelectItem>
             ))}
           </SelectContent>

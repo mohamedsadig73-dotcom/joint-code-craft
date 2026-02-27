@@ -1,11 +1,9 @@
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, Wrench, Wallet, FileText, RefreshCw } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Wrench, Wallet, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useToast } from '@/hooks/use-toast';
-import { forceAppUpdate } from '@/components/ForceUpdateButton';
 
 interface NavItem {
   path: string;
@@ -26,18 +24,10 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const isRTL = language === 'ar';
-  const { toast } = useToast();
-  const [isUpdating, setIsUpdating] = useState(false);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
-  };
-
-  const handleUpdate = async () => {
-    setIsUpdating(true);
-    toast({ title: t('updateInProgress'), description: t('pageWillReload') });
-    await forceAppUpdate();
   };
 
   return (
@@ -119,23 +109,6 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
           );
         })}
         
-        {/* Force Update Button */}
-        <motion.button
-          onClick={handleUpdate}
-          disabled={isUpdating}
-          className="relative flex flex-col items-center justify-center flex-1 h-full py-3 min-w-[48px] min-h-[48px] text-amber-600 dark:text-amber-400"
-          whileTap={{ scale: 0.92 }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-        >
-          <motion.div className="flex items-center justify-center w-10 h-10 rounded-xl">
-            <RefreshCw className={cn('w-5 h-5', isUpdating && 'animate-spin')} />
-          </motion.div>
-          <span className="text-[10px] font-medium mt-0.5 truncate max-w-full px-1 text-amber-600/70 dark:text-amber-400/70">
-            {t('forceUpdate')}
-          </span>
-        </motion.button>
       </div>
     </nav>
   );

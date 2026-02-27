@@ -68,6 +68,8 @@ const translations = {
     latestSystemChanges: 'Latest system changes and updates',
     noRecentActivities: 'No recent activities to display',
     statistics: 'Statistics',
+    allYears: 'All Years',
+    selectYear: 'Select Year',
     userManagement: 'User Management',
     
     // User Management
@@ -919,6 +921,8 @@ const translations = {
     latestSystemChanges: 'أحدث التغييرات والتحديثات',
     noRecentActivities: 'لا توجد نشاطات حديثة للعرض',
     statistics: 'الإحصائيات',
+    allYears: 'جميع السنوات',
+    selectYear: 'اختر السنة',
     userManagement: 'إدارة المستخدمين',
     
     // User Management
