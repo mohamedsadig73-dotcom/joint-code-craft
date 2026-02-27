@@ -1,56 +1,164 @@
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import {
-  AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  RadialBarChart, RadialBar, ComposedChart
-} from 'recharts';
 import {
   TrendingUp, Calendar, Clock, Award, Users, BarChart3, PieChart as PieChartIcon
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { RTLEChart } from '@/components/charts/RTLEChart';
 import type { AnalyticsData } from '@/hooks/useAnalyticsData';
+import type { EChartsOption } from 'echarts';
 
 interface AnalyticsChartsProps {
   data: AnalyticsData;
   activeTab: string;
 }
 
-// Enhanced tooltip style for better readability
-const getTooltipStyle = (isRTL: boolean): React.CSSProperties => ({
-  backgroundColor: 'hsl(var(--card))',
-  border: '1px solid hsl(var(--border))',
-  borderRadius: '12px',
-  boxShadow: '0 10px 25px -5px hsl(var(--background) / 0.5)',
-  padding: '12px 16px',
-  fontFamily: isRTL ? 'IBM Plex Sans Arabic, sans-serif' : 'IBM Plex Sans, sans-serif',
-  direction: isRTL ? 'rtl' : 'ltr',
-  textAlign: isRTL ? 'right' : 'left',
-});
+const FONT_FAMILY = 'IBM Plex Sans Arabic, IBM Plex Sans, sans-serif';
 
-// Axis style configuration
-const getAxisStyle = () => ({
-  stroke: 'hsl(var(--muted-foreground))',
-  fontSize: 12,
-  fontFamily: 'IBM Plex Sans Arabic, IBM Plex Sans, sans-serif',
-});
+function buildTooltip(isRTL: boolean): EChartsOption['tooltip'] {
+  return {
+    trigger: 'item',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: [12, 16],
+    textStyle: { color: '#fff', fontSize: 13, fontFamily: FONT_FAMILY },
+  };
+}
 
 export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
   const { t, language } = useLanguage();
   const isRTL = language === 'ar';
-  const tooltipStyle = getTooltipStyle(isRTL);
-  const axisStyle = getAxisStyle();
+
+  // ─── Overview Tab Charts ───
+  const statusPieOption = useMemo((): EChartsOption => ({
+    tooltip: {
+      ...buildTooltip(isRTL),
+      trigger: 'item',
+      formatter: (params: any) => {
+        const pct = ((params.value / data.statusDistribution.reduce((s: number, i: any) => s + i.count, 0)) * 100).toFixed(1);
+        return `<div style="direction:${isRTL ? 'rtl' : 'ltr'}; text-align:${isRTL ? 'right' : 'left'}">
+          <b>${params.name}</b><br/>${isRTL ? 'العدد' : 'Count'}: ${params.value}<br/>${isRTL ? 'النسبة' : 'Pct'}: ${pct}%</div>`;
+      },
+    },
+    legend: { bottom: 0, icon: 'circle', itemWidth: 12, itemHeight: 12, textStyle: { fontFamily: FONT_FAMILY, fontSize: 11 } },
+    series: [{
+      type: 'pie', radius: ['40%', '70%'], center: ['50%', '45%'],
+      itemStyle: { borderRadius: 6, borderColor: 'transparent', borderWidth: 2 },
+      label: {
+        show: true, position: 'outside', fontSize: 11, fontFamily: FONT_FAMILY,
+        formatter: (p: any) => `${p.name}\n${((p.value / data.statusDistribution.reduce((s: number, i: any) => s + i.count, 0)) * 100).toFixed(0)}%`,
+        lineHeight: 16,
+      },
+      labelLine: { show: true, length: 15, length2: 10 },
+      emphasis: { itemStyle: { shadowBlur: 15, shadowColor: 'rgba(0,0,0,0.3)' } },
+      data: data.statusDistribution.map(e => ({ name: e.label, value: e.count, itemStyle: { color: e.color } })),
+      animationType: 'scale', animationEasing: 'elasticOut', animationDuration: 800,
+    }],
+  }), [data.statusDistribution, isRTL]);
+
+  const typeBarOption = useMemo((): EChartsOption => ({
+    tooltip: { ...buildTooltip(isRTL), trigger: 'axis' },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'value' },
+    yAxis: { type: 'category', data: data.typeDistribution.map(e => e.type), axisLabel: { fontFamily: FONT_FAMILY } },
+    series: [{
+      type: 'bar', barWidth: '60%',
+      itemStyle: { borderRadius: [0, 8, 8, 0] },
+      data: data.typeDistribution.map(e => ({
+        value: e.count,
+        itemStyle: { color: e.type === 'دخول' ? '#22c55e' : '#ef4444' },
+      })),
+      animationDuration: 800,
+    }],
+  }), [data.typeDistribution, isRTL]);
+
+  const weeklyBarOption = useMemo((): EChartsOption => ({
+    tooltip: { ...buildTooltip(isRTL), trigger: 'axis' },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', data: data.weeklyActivity.map(e => e.day), axisLabel: { fontFamily: FONT_FAMILY } },
+    yAxis: { type: 'value' },
+    series: [{
+      type: 'bar', barWidth: '50%',
+      itemStyle: { borderRadius: [8, 8, 0, 0], color: 'hsl(var(--primary))' },
+      data: data.weeklyActivity.map(e => e.count),
+      animationDuration: 800,
+    }],
+  }), [data.weeklyActivity, isRTL]);
+
+  // ─── Trends Tab Charts ───
+  const monthlyTrendOption = useMemo((): EChartsOption => ({
+    tooltip: { ...buildTooltip(isRTL), trigger: 'axis' },
+    legend: { bottom: 0, textStyle: { fontFamily: FONT_FAMILY, fontSize: 11 } },
+    grid: { left: '3%', right: '4%', bottom: 40, containLabel: true },
+    xAxis: { type: 'category', data: data.monthlyTrend.map(e => e.month), axisLabel: { fontFamily: FONT_FAMILY } },
+    yAxis: { type: 'value' },
+    series: [
+      {
+        name: t('totalLabel'), type: 'line', smooth: true,
+        areaStyle: { opacity: 0.15 },
+        lineStyle: { width: 2 },
+        data: data.monthlyTrend.map(e => e.total),
+        animationDuration: 1000,
+      },
+      {
+        name: t('inboundType'), type: 'bar', stack: 'types',
+        itemStyle: { color: '#22c55e', borderRadius: [4, 4, 0, 0] },
+        data: data.monthlyTrend.map(e => e.دخول),
+      },
+      {
+        name: t('outboundType'), type: 'bar', stack: 'types',
+        itemStyle: { color: '#ef4444', borderRadius: [4, 4, 0, 0] },
+        data: data.monthlyTrend.map(e => e.خروج),
+      },
+      {
+        name: t('completedLabel'), type: 'line', smooth: true,
+        lineStyle: { width: 2, color: '#f59e0b' },
+        itemStyle: { color: '#f59e0b' },
+        symbol: 'circle', symbolSize: 6,
+        data: data.monthlyTrend.map(e => e.completed),
+      },
+    ],
+  }), [data.monthlyTrend, isRTL, t]);
+
+  const hourlyAreaOption = useMemo((): EChartsOption => ({
+    tooltip: { ...buildTooltip(isRTL), trigger: 'axis' },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', data: data.hourlyDistribution.map(e => e.hour), axisLabel: { fontFamily: FONT_FAMILY, fontSize: 10 } },
+    yAxis: { type: 'value' },
+    series: [{
+      name: t('declarationCount'), type: 'line', smooth: true,
+      areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(139,92,246,0.4)' }, { offset: 1, color: 'rgba(139,92,246,0)' }] } },
+      lineStyle: { width: 2, color: '#8b5cf6' },
+      itemStyle: { color: '#8b5cf6' },
+      data: data.hourlyDistribution.map(e => e.count),
+      animationDuration: 1000,
+    }],
+  }), [data.hourlyDistribution, isRTL, t]);
+
+  // ─── Performance Tab Charts ───
+  const performanceGaugeOption = useMemo((): EChartsOption => ({
+    tooltip: { ...buildTooltip(isRTL), trigger: 'item' },
+    legend: { bottom: 0, textStyle: { fontFamily: FONT_FAMILY, fontSize: 11 } },
+    series: [{
+      type: 'pie', radius: ['30%', '55%'], center: ['50%', '45%'],
+      startAngle: 180, endAngle: 360,
+      itemStyle: { borderRadius: 6 },
+      label: { show: true, position: 'outside', fontFamily: FONT_FAMILY, fontSize: 11, formatter: '{b}: {c}%' },
+      data: data.performanceMetrics.map(m => ({
+        name: m.metric, value: m.value, itemStyle: { color: m.fill },
+      })),
+      animationType: 'scale', animationDuration: 800,
+    }],
+  }), [data.performanceMetrics, isRTL]);
 
   if (activeTab === 'overview') {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Status Distribution */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <Card className="glass-card border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -60,49 +168,12 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
                 <CardDescription>{t('statusDistributionDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart role="img" aria-label={t('statusDistributionChart')}>
-                    <Pie
-                      data={data.statusDistribution}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={3}
-                      dataKey="count"
-                      label={({ label, percent }) => `${label}: ${(percent * 100).toFixed(0)}%`}
-                      labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
-                    >
-                      {data.statusDistribution.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={entry.color}
-                          stroke="hsl(var(--background))"
-                          strokeWidth={2}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={tooltipStyle as React.CSSProperties}
-                      formatter={(value: number, name: string) => [value, name]}
-                    />
-                    <Legend 
-                      verticalAlign="bottom" 
-                      height={36}
-                      formatter={(value) => <span style={{ color: 'hsl(var(--foreground))' }}>{value}</span>}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <RTLEChart option={statusPieOption} style={{ height: '300px' }} />
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Type Distribution */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <Card className="glass-card border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -112,33 +183,13 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
                 <CardDescription>{t('typeDistributionDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={data.typeDistribution} layout="vertical" role="img" aria-label={t('typeDistributionChart')}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis type="category" dataKey="type" stroke="hsl(var(--muted-foreground))" width={60} />
-                    <Tooltip contentStyle={tooltipStyle as React.CSSProperties} />
-                    <Bar dataKey="count" radius={[0, 8, 8, 0]}>
-                      {data.typeDistribution.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={entry.type === 'دخول' ? '#22c55e' : '#ef4444'} 
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                <RTLEChart option={typeBarOption} style={{ height: '300px' }} />
               </CardContent>
             </Card>
           </motion.div>
         </div>
 
-        {/* Weekly Activity */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           <Card className="glass-card border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -148,15 +199,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
               <CardDescription>{t('weeklyActivityDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={data.weeklyActivity} role="img" aria-label={t('weeklyActivityChart')}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={tooltipStyle as React.CSSProperties} />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <RTLEChart option={weeklyBarOption} style={{ height: '250px' }} />
             </CardContent>
           </Card>
         </motion.div>
@@ -167,11 +210,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
   if (activeTab === 'trends') {
     return (
       <div className="space-y-6">
-        {/* Monthly Trend Area Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="glass-card border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -181,49 +220,12 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
               <CardDescription>{t('monthlyTrendDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
-                <ComposedChart data={data.monthlyTrend} role="img" aria-label={t('monthlyTrendChart')}>
-                  <defs>
-                    <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={tooltipStyle as React.CSSProperties} />
-                  <Legend />
-                  <Area
-                    type="monotone"
-                    dataKey="total"
-                    name={t('totalLabel')}
-                    stroke="hsl(var(--primary))"
-                    fill="url(#colorTotal)"
-                    strokeWidth={2}
-                  />
-                  <Bar dataKey="دخول" name={t('inboundType')} fill="#22c55e" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="خروج" name={t('outboundType')} fill="#ef4444" radius={[4, 4, 0, 0]} />
-                  <Line
-                    type="monotone"
-                    dataKey="completed"
-                    name={t('completedLabel')}
-                    stroke="#f59e0b"
-                    strokeWidth={2}
-                    dot={{ fill: '#f59e0b', strokeWidth: 2 }}
-                  />
-                </ComposedChart>
-              </ResponsiveContainer>
+              <RTLEChart option={monthlyTrendOption} style={{ height: '350px' }} />
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Hourly Distribution */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <Card className="glass-card border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -233,28 +235,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
               <CardDescription>{t('timeDistributionDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={data.hourlyDistribution} role="img" aria-label={t('timeDistributionChart')}>
-                  <defs>
-                    <linearGradient id="colorHourly" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="hour" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={tooltipStyle as React.CSSProperties} />
-                  <Area
-                    type="monotone"
-                    dataKey="count"
-                    name={t('declarationCount')}
-                    stroke="#8b5cf6"
-                    fill="url(#colorHourly)"
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              <RTLEChart option={hourlyAreaOption} style={{ height: '250px' }} />
             </CardContent>
           </Card>
         </motion.div>
@@ -265,11 +246,7 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
   if (activeTab === 'performance') {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Performance Radial */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="glass-card border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -279,42 +256,12 @@ export function AnalyticsCharts({ data, activeTab }: AnalyticsChartsProps) {
               <CardDescription>{t('performanceIndicatorsDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <RadialBarChart
-                  cx="50%"
-                  cy="50%"
-                  innerRadius="30%"
-                  outerRadius="100%"
-                  data={data.performanceMetrics}
-                  startAngle={180}
-                  endAngle={0}
-                  role="img"
-                  aria-label={t('performanceIndicatorsChart')}
-                >
-                  <RadialBar
-                    label={{ position: 'insideStart', fill: '#fff', fontSize: 12 }}
-                    background
-                    dataKey="value"
-                  />
-                  <Legend
-                    iconSize={10}
-                    layout="vertical"
-                    verticalAlign="middle"
-                    align="right"
-                  />
-                  <Tooltip contentStyle={tooltipStyle as React.CSSProperties} />
-                </RadialBarChart>
-              </ResponsiveContainer>
+              <RTLEChart option={performanceGaugeOption} style={{ height: '300px' }} />
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Top Senders */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <Card className="glass-card border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

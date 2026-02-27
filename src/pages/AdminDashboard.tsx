@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Users, FileText, Activity, TrendingUp, Shield, UserCheck, BarChart3 } from 'lucide-react';
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { RTLEChart } from '@/components/charts/RTLEChart';
+import type { EChartsOption } from 'echarts';
 import { UserManagementTab } from '@/components/UserManagementTab';
 import { BulkNotificationDialog } from '@/components/BulkNotificationDialog';
 import { toGregorianDateTime } from '@/utils/dateUtils';
@@ -143,12 +144,37 @@ export default function AdminDashboard() {
     rejected: CHART_COLORS.rejected,
   };
 
+  const rolePieOption: EChartsOption = {
+    tooltip: { trigger: 'item', backgroundColor: 'rgba(0,0,0,0.85)', borderColor: 'rgba(255,255,255,0.1)', textStyle: { color: '#fff', fontFamily: 'IBM Plex Sans Arabic, sans-serif' } },
+    legend: { bottom: 0, icon: 'circle', textStyle: { fontFamily: 'IBM Plex Sans Arabic, sans-serif', fontSize: 11 } },
+    series: [{
+      type: 'pie', radius: ['35%', '65%'], center: ['50%', '45%'],
+      itemStyle: { borderRadius: 6, borderColor: 'transparent', borderWidth: 2 },
+      label: { show: true, position: 'outside', fontFamily: 'IBM Plex Sans Arabic, sans-serif', fontSize: 11, formatter: '{b}: {d}%' },
+      data: roleData.map(r => ({ name: r.name, value: r.value, itemStyle: { color: r.color } })),
+      animationType: 'scale', animationDuration: 800,
+    }],
+  };
+
+  const statusBarOption: EChartsOption = {
+    tooltip: { trigger: 'axis', backgroundColor: 'rgba(0,0,0,0.85)', borderColor: 'rgba(255,255,255,0.1)', textStyle: { color: '#fff', fontFamily: 'IBM Plex Sans Arabic, sans-serif' } },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', data: stats.declarationsByStatus.map(e => e.label), axisLabel: { fontFamily: 'IBM Plex Sans Arabic, sans-serif', fontSize: 11, rotate: 15 } },
+    yAxis: { type: 'value' },
+    series: [{
+      type: 'bar', barWidth: '50%',
+      itemStyle: { borderRadius: [8, 8, 0, 0] },
+      data: stats.declarationsByStatus.map(e => ({ value: e.count, itemStyle: { color: statusColorMap[e.status] || CHART_COLORS.user } })),
+      animationDuration: 800,
+    }],
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen">
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">جاري التحميل...</div>
+          <div className="text-center">{t('loading')}</div>
         </div>
       </div>
     );
@@ -247,26 +273,7 @@ export default function AdminDashboard() {
               <CardDescription>{t('rolePercentage')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={roleData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {roleData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+              <RTLEChart option={rolePieOption} style={{ height: '300px' }} />
             </CardContent>
           </Card>
 
@@ -280,29 +287,7 @@ export default function AdminDashboard() {
               <CardDescription>{t('countByStage')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={stats.declarationsByStatus}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="label" 
-                    stroke="hsl(var(--muted-foreground))"
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--background))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                    {stats.declarationsByStatus.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={statusColorMap[entry.status] || CHART_COLORS.user} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <RTLEChart option={statusBarOption} style={{ height: '300px' }} />
             </CardContent>
           </Card>
         </div>

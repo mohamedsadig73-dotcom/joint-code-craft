@@ -37,11 +37,8 @@ import {
   BarChart3, Download, RefreshCw, Clock, CalendarIcon, 
   PieChartIcon, LineChart, LayoutGrid
 } from 'lucide-react';
-import { 
-  BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, 
-  CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
-  AreaChart, Area, LineChart as RechartsLineChart, Line 
-} from 'recharts';
+import { RTLEChart } from '@/components/charts/RTLEChart';
+import type { EChartsOption } from 'echarts';
 import { toGregorianDateTime, toGregorianDate } from '@/utils/dateUtils';
 import { exportDeclarationsToExcel } from '@/utils/excelExport';
 import { exportDeclarationsToPDFSecure } from '@/utils/pdfExportSecure';
@@ -294,6 +291,71 @@ export default function ReportsAnalytics() {
     name: d.type, value: d.count, color: d.type === 'دخول' ? CHART_COLORS.entrance : CHART_COLORS.exit 
   })), [stats.declarationsByType]);
 
+  // ─── ECharts Options ───
+  const statusPieOption = useMemo((): EChartsOption => ({
+    tooltip: { trigger: 'item', backgroundColor: 'rgba(0,0,0,0.85)', borderColor: 'rgba(255,255,255,0.1)', textStyle: { color: '#fff', fontFamily: 'IBM Plex Sans Arabic, sans-serif' } },
+    legend: { bottom: 0, icon: 'circle', textStyle: { fontFamily: 'IBM Plex Sans Arabic, sans-serif', fontSize: 11 } },
+    series: [{
+      type: 'pie', radius: ['35%', '65%'], center: ['50%', '45%'],
+      itemStyle: { borderRadius: 6, borderColor: 'transparent', borderWidth: 2 },
+      label: { show: true, position: 'outside', fontFamily: 'IBM Plex Sans Arabic, sans-serif', fontSize: 11, formatter: '{b}: {d}%' },
+      data: stats.declarationsByStatus.map(e => ({ name: e.label, value: e.count, itemStyle: { color: STATUS_COLORS[e.status] || CHART_COLORS.user } })),
+      animationType: 'scale', animationDuration: 800,
+    }],
+  }), [stats.declarationsByStatus]);
+
+  const typePieOption = useMemo((): EChartsOption => ({
+    tooltip: { trigger: 'item', backgroundColor: 'rgba(0,0,0,0.85)', borderColor: 'rgba(255,255,255,0.1)', textStyle: { color: '#fff', fontFamily: 'IBM Plex Sans Arabic, sans-serif' } },
+    legend: { bottom: 0, icon: 'circle', textStyle: { fontFamily: 'IBM Plex Sans Arabic, sans-serif', fontSize: 11 } },
+    series: [{
+      type: 'pie', radius: ['35%', '65%'], center: ['50%', '45%'],
+      itemStyle: { borderRadius: 6, borderColor: 'transparent', borderWidth: 2 },
+      label: { show: true, position: 'outside', fontFamily: 'IBM Plex Sans Arabic, sans-serif', fontSize: 11, formatter: '{b}: {d}%' },
+      data: typeData.map(e => ({ name: e.name, value: e.value, itemStyle: { color: e.color } })),
+      animationType: 'scale', animationDuration: 800,
+    }],
+  }), [typeData]);
+
+  const rolePieOption = useMemo((): EChartsOption => ({
+    tooltip: { trigger: 'item', backgroundColor: 'rgba(0,0,0,0.85)', borderColor: 'rgba(255,255,255,0.1)', textStyle: { color: '#fff', fontFamily: 'IBM Plex Sans Arabic, sans-serif' } },
+    legend: { bottom: 0, icon: 'circle', textStyle: { fontFamily: 'IBM Plex Sans Arabic, sans-serif', fontSize: 11 } },
+    series: [{
+      type: 'pie', radius: ['35%', '65%'], center: ['50%', '45%'],
+      itemStyle: { borderRadius: 6, borderColor: 'transparent', borderWidth: 2 },
+      label: { show: true, position: 'outside', fontFamily: 'IBM Plex Sans Arabic, sans-serif', fontSize: 11, formatter: '{b}: {d}%' },
+      data: roleData.map(r => ({ name: r.name, value: r.value, itemStyle: { color: r.color } })),
+      animationType: 'scale', animationDuration: 800,
+    }],
+  }), [roleData]);
+
+  const monthlyAreaOption = useMemo((): EChartsOption => ({
+    tooltip: { trigger: 'axis', backgroundColor: 'rgba(0,0,0,0.85)', borderColor: 'rgba(255,255,255,0.1)', textStyle: { color: '#fff', fontFamily: 'IBM Plex Sans Arabic, sans-serif' } },
+    legend: { bottom: 0, textStyle: { fontFamily: 'IBM Plex Sans Arabic, sans-serif', fontSize: 11 } },
+    grid: { left: '3%', right: '4%', bottom: 40, containLabel: true },
+    xAxis: { type: 'category', data: stats.monthlyTrends.map(e => e.month), axisLabel: { fontFamily: 'IBM Plex Sans Arabic, sans-serif' } },
+    yAxis: { type: 'value' },
+    series: [
+      { name: t('inboundType'), type: 'line', stack: 'total', smooth: true, areaStyle: { opacity: 0.6, color: CHART_COLORS.entrance }, lineStyle: { color: CHART_COLORS.entrance }, itemStyle: { color: CHART_COLORS.entrance }, data: stats.monthlyTrends.map(e => e.دخول) },
+      { name: t('outboundType'), type: 'line', stack: 'total', smooth: true, areaStyle: { opacity: 0.6, color: CHART_COLORS.exit }, lineStyle: { color: CHART_COLORS.exit }, itemStyle: { color: CHART_COLORS.exit }, data: stats.monthlyTrends.map(e => e.خروج) },
+    ],
+  }), [stats.monthlyTrends, t]);
+
+  const weeklyBarOption = useMemo((): EChartsOption => ({
+    tooltip: { trigger: 'axis', backgroundColor: 'rgba(0,0,0,0.85)', borderColor: 'rgba(255,255,255,0.1)', textStyle: { color: '#fff', fontFamily: 'IBM Plex Sans Arabic, sans-serif' } },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', data: stats.weeklyActivity.map(e => e.day), axisLabel: { fontFamily: 'IBM Plex Sans Arabic, sans-serif' } },
+    yAxis: { type: 'value' },
+    series: [{ type: 'bar', barWidth: '50%', itemStyle: { borderRadius: [8, 8, 0, 0], color: 'hsl(var(--primary))' }, data: stats.weeklyActivity.map(e => e.count), animationDuration: 800 }],
+  }), [stats.weeklyActivity]);
+
+  const statusBarOption = useMemo((): EChartsOption => ({
+    tooltip: { trigger: 'axis', backgroundColor: 'rgba(0,0,0,0.85)', borderColor: 'rgba(255,255,255,0.1)', textStyle: { color: '#fff', fontFamily: 'IBM Plex Sans Arabic, sans-serif' } },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', data: stats.declarationsByStatus.map(e => e.label), axisLabel: { fontFamily: 'IBM Plex Sans Arabic, sans-serif', fontSize: 11, rotate: 15 } },
+    yAxis: { type: 'value' },
+    series: [{ type: 'bar', barWidth: '50%', itemStyle: { borderRadius: [8, 8, 0, 0] }, data: stats.declarationsByStatus.map(e => ({ value: e.count, itemStyle: { color: STATUS_COLORS[e.status] || CHART_COLORS.user } })), animationDuration: 800 }],
+  }), [stats.declarationsByStatus]);
+
   if (loading) {
     return (
       <div className="min-h-screen">
@@ -449,25 +511,7 @@ export default function ReportsAnalytics() {
                       <p className="text-muted-foreground">{t('noData')}</p>
                     </div>
                   ) : (
-                    <ResponsiveContainer width="100%" height={280}>
-                      <PieChart>
-                        <Pie
-                          data={stats.declarationsByStatus}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ label, percent }) => `${label}: ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={80}
-                          dataKey="count"
-                        >
-                          {stats.declarationsByStatus.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.status] || CHART_COLORS.user} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
+                    <RTLEChart option={statusPieOption} style={{ height: '280px' }} />
                   )}
                 </CardContent>
               </Card>
@@ -487,25 +531,7 @@ export default function ReportsAnalytics() {
                       <p className="text-muted-foreground">{t('noData')}</p>
                     </div>
                   ) : (
-                    <ResponsiveContainer width="100%" height={280}>
-                      <PieChart>
-                        <Pie
-                          data={typeData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={80}
-                          dataKey="value"
-                        >
-                          {typeData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
+                    <RTLEChart option={typePieOption} style={{ height: '280px' }} />
                   )}
                 </CardContent>
               </Card>
@@ -521,15 +547,7 @@ export default function ReportsAnalytics() {
                 <CardDescription>{t('rolePercentage')}</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={280}>
-                  <PieChart>
-                    <Pie data={roleData} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} outerRadius={80} dataKey="value">
-                      {roleData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+                <RTLEChart option={rolePieOption} style={{ height: '280px' }} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -552,17 +570,7 @@ export default function ReportsAnalytics() {
                       <p className="text-muted-foreground">{t('noData')}</p>
                     </div>
                   ) : (
-                    <ResponsiveContainer width="100%" height={280}>
-                      <AreaChart data={stats.monthlyTrends}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                        <YAxis stroke="hsl(var(--muted-foreground))" />
-                        <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
-                        <Legend />
-                        <Area type="monotone" dataKey="دخول" stackId="1" stroke={CHART_COLORS.entrance} fill={CHART_COLORS.entrance} fillOpacity={0.6} />
-                        <Area type="monotone" dataKey="خروج" stackId="1" stroke={CHART_COLORS.exit} fill={CHART_COLORS.exit} fillOpacity={0.6} />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    <RTLEChart option={monthlyAreaOption} style={{ height: '280px' }} />
                   )}
                 </CardContent>
               </Card>
@@ -582,15 +590,7 @@ export default function ReportsAnalytics() {
                       <p className="text-muted-foreground">{t('noData')}</p>
                     </div>
                   ) : (
-                    <ResponsiveContainer width="100%" height={280}>
-                      <BarChart data={stats.weeklyActivity}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" />
-                        <YAxis stroke="hsl(var(--muted-foreground))" />
-                        <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
-                        <Bar dataKey="count" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <RTLEChart option={weeklyBarOption} style={{ height: '280px' }} />
                   )}
                 </CardContent>
               </Card>
@@ -611,19 +611,7 @@ export default function ReportsAnalytics() {
                     <p className="text-muted-foreground">{t('noData')}</p>
                   </div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={stats.declarationsByStatus}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
-                      <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                        {stats.declarationsByStatus.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.status] || CHART_COLORS.user} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <RTLEChart option={statusBarOption} style={{ height: '300px' }} />
                 )}
               </CardContent>
             </Card>

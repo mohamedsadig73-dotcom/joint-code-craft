@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
-          'chart-vendor': ['recharts', 'echarts', 'echarts-for-react'],
+          'chart-vendor': ['echarts', 'echarts-for-react'],
           'supabase': ['@supabase/supabase-js'],
           'excel-export': ['xlsx'],
           'date-utils': ['date-fns'],
