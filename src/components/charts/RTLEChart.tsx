@@ -1,7 +1,12 @@
-import { useRef, useEffect } from 'react';
-import * as echarts from 'echarts';
+import { useRef, useEffect, useState } from 'react';
+import type * as echarts from 'echarts';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { CHART_FONT_FAMILY } from './chartTheme';
+
+// Lazy load ECharts
+let echartsModule: typeof import('echarts') | null = null;
+const echartsPromise = import('echarts').then(m => { echartsModule = m; return m; });
 
 interface RTLEChartProps {
   option: echarts.EChartsOption;
@@ -24,16 +29,22 @@ export function RTLEChart({
   const chartInstance = useRef<echarts.ECharts | null>(null);
   const { language } = useLanguage();
   const isRTL = language === 'ar';
+  const [ready, setReady] = useState(!!echartsModule);
 
-  // Detect dark mode
   const isDark = theme === 'dark' || 
     (typeof window !== 'undefined' && document.documentElement.classList.contains('dark'));
 
+  // Load ECharts lazily
   useEffect(() => {
-    if (!chartRef.current) return;
+    if (!echartsModule) {
+      echartsPromise.then(() => setReady(true));
+    }
+  }, []);
 
-    // Initialize chart
-    chartInstance.current = echarts.init(chartRef.current, isDark ? 'dark' : undefined, {
+  useEffect(() => {
+    if (!chartRef.current || !ready || !echartsModule) return;
+
+    chartInstance.current = echartsModule.init(chartRef.current, isDark ? 'dark' : undefined, {
       renderer: 'canvas',
       locale: isRTL ? 'AR' : 'EN'
     });
@@ -42,7 +53,6 @@ export function RTLEChart({
       onInit(chartInstance.current);
     }
 
-    // Handle resize
     const resizeObserver = new ResizeObserver(() => {
       chartInstance.current?.resize();
     });
@@ -52,14 +62,12 @@ export function RTLEChart({
       resizeObserver.disconnect();
       chartInstance.current?.dispose();
     };
-  }, [isDark, isRTL, onInit]);
+  }, [isDark, isRTL, onInit, ready]);
 
   useEffect(() => {
     if (!chartInstance.current) return;
 
-    // Apply RTL transformations to options
     const rtlOption = applyRTLToOption(option, isRTL);
-    
     chartInstance.current.setOption(rtlOption, true);
     
     if (loading) {
@@ -69,7 +77,7 @@ export function RTLEChart({
         textColor: 'hsl(var(--foreground))',
         maskColor: 'hsla(var(--background), 0.8)',
         fontSize: 14,
-        fontFamily: 'IBM Plex Sans Arabic, IBM Plex Sans, sans-serif'
+        fontFamily: CHART_FONT_FAMILY,
       });
     } else {
       chartInstance.current.hideLoading();
@@ -78,13 +86,15 @@ export function RTLEChart({
 
   // Re-initialize on theme change
   useEffect(() => {
+    if (!ready || !echartsModule) return;
+
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.attributeName === 'class') {
           if (chartRef.current && chartInstance.current) {
             chartInstance.current.dispose();
             const newIsDark = document.documentElement.classList.contains('dark');
-            chartInstance.current = echarts.init(chartRef.current, newIsDark ? 'dark' : undefined);
+            chartInstance.current = echartsModule!.init(chartRef.current, newIsDark ? 'dark' : undefined);
             const rtlOption = applyRTLToOption(option, isRTL);
             chartInstance.current.setOption(rtlOption);
           }
@@ -93,9 +103,8 @@ export function RTLEChart({
     });
 
     observer.observe(document.documentElement, { attributes: true });
-
     return () => observer.disconnect();
-  }, [option, isRTL]);
+  }, [option, isRTL, ready]);
 
   return (
     <div 
@@ -107,71 +116,50 @@ export function RTLEChart({
   );
 }
 
-// Helper function to apply RTL transformations to chart options
 function applyRTLToOption(option: echarts.EChartsOption, isRTL: boolean): echarts.EChartsOption {
   if (!isRTL) return option;
 
   const rtlOption = { ...option };
 
-  // Reverse xAxis for RTL
   if (rtlOption.xAxis) {
     const xAxis = Array.isArray(rtlOption.xAxis) ? rtlOption.xAxis : [rtlOption.xAxis];
     rtlOption.xAxis = xAxis.map((axis: any) => ({
       ...axis,
       inverse: true,
-      axisLabel: {
-        ...axis?.axisLabel,
-        fontFamily: 'IBM Plex Sans Arabic, IBM Plex Sans, sans-serif'
-      }
+      axisLabel: { ...axis?.axisLabel, fontFamily: CHART_FONT_FAMILY }
     }));
   }
 
-  // Adjust yAxis position for RTL
   if (rtlOption.yAxis) {
     const yAxis = Array.isArray(rtlOption.yAxis) ? rtlOption.yAxis : [rtlOption.yAxis];
     rtlOption.yAxis = yAxis.map((axis: any) => ({
       ...axis,
       position: axis?.position === 'left' ? 'right' : axis?.position === 'right' ? 'left' : 'right',
-      axisLabel: {
-        ...axis?.axisLabel,
-        fontFamily: 'IBM Plex Sans Arabic, IBM Plex Sans, sans-serif'
-      }
+      axisLabel: { ...axis?.axisLabel, fontFamily: CHART_FONT_FAMILY }
     }));
   }
 
-  // Adjust legend position for RTL
   if (rtlOption.legend) {
     rtlOption.legend = {
       ...rtlOption.legend,
-      right: isRTL ? 'auto' : (rtlOption.legend as any)?.right,
-      left: isRTL ? 20 : (rtlOption.legend as any)?.left,
-      textStyle: {
-        ...(rtlOption.legend as any)?.textStyle,
-        fontFamily: 'IBM Plex Sans Arabic, IBM Plex Sans, sans-serif'
-      }
+      right: 'auto',
+      left: 20,
+      textStyle: { ...(rtlOption.legend as any)?.textStyle, fontFamily: CHART_FONT_FAMILY }
     };
   }
 
-  // Adjust tooltip
   if (rtlOption.tooltip) {
     rtlOption.tooltip = {
       ...rtlOption.tooltip,
-      textStyle: {
-        ...(rtlOption.tooltip as any)?.textStyle,
-        fontFamily: 'IBM Plex Sans Arabic, IBM Plex Sans, sans-serif'
-      }
+      textStyle: { ...(rtlOption.tooltip as any)?.textStyle, fontFamily: CHART_FONT_FAMILY }
     };
   }
 
-  // Adjust title
   if (rtlOption.title) {
     rtlOption.title = {
       ...rtlOption.title,
-      left: isRTL ? 'right' : (rtlOption.title as any)?.left,
-      textStyle: {
-        ...(rtlOption.title as any)?.textStyle,
-        fontFamily: 'IBM Plex Sans Arabic, IBM Plex Sans, sans-serif'
-      }
+      left: 'right',
+      textStyle: { ...(rtlOption.title as any)?.textStyle, fontFamily: CHART_FONT_FAMILY }
     };
   }
 
