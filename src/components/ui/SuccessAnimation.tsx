@@ -1,5 +1,6 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState, useCallback } from 'react';
 import { CheckCircle, AlertCircle, Info, XCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface SuccessAnimationProps {
   show: boolean;
@@ -36,58 +37,43 @@ export function SuccessAnimation({
   onComplete 
 }: SuccessAnimationProps) {
   const Icon = iconMap[type];
+  const [visible, setVisible] = useState(show);
+
+  useEffect(() => {
+    if (show) {
+      setVisible(true);
+    } else {
+      const timer = setTimeout(() => {
+        setVisible(false);
+        onComplete?.();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [show, onComplete]);
+
+  if (!visible) return null;
 
   return (
-    <AnimatePresence onExitComplete={onComplete}>
-      {show && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          transition={{ 
-            type: 'spring',
-            stiffness: 300,
-            damping: 20 
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
-        >
-          <motion.div 
-            className={`flex flex-col items-center gap-3 p-8 rounded-2xl ${bgColorMap[type]} backdrop-blur-sm`}
-            initial={{ y: 20 }}
-            animate={{ y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ 
-                type: 'spring',
-                stiffness: 200,
-                damping: 15,
-                delay: 0.2 
-              }}
-            >
-              <Icon className={`w-16 h-16 ${colorMap[type]}`} />
-            </motion.div>
-            {message && (
-              <motion.p
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-lg font-medium text-foreground"
-              >
-                {message}
-              </motion.p>
-            )}
-          </motion.div>
-        </motion.div>
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex items-center justify-center pointer-events-none transition-opacity duration-300',
+        show ? 'opacity-100' : 'opacity-0'
       )}
-    </AnimatePresence>
+    >
+      <div className={cn(
+        'flex flex-col items-center gap-3 p-8 rounded-2xl backdrop-blur-sm animate-fade-in',
+        bgColorMap[type]
+      )}>
+        <Icon className={cn('w-16 h-16 animate-fade-in', colorMap[type])} />
+        {message && (
+          <p className="text-lg font-medium text-foreground animate-slide-up">
+            {message}
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
-
-// Hook for easy usage
-import { useState, useCallback } from 'react';
 
 export function useSuccessAnimation() {
   const [state, setState] = useState<{
