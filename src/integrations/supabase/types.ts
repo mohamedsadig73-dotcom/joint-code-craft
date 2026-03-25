@@ -1060,6 +1060,53 @@ export type Database = {
         }
         Relationships: []
       }
+      master_employees: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          department: string | null
+          employee_name: string
+          employee_number: string
+          id: string
+          is_active: boolean
+          job_title: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          employee_name: string
+          employee_number: string
+          id?: string
+          is_active?: boolean
+          job_title?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          employee_name?: string
+          employee_number?: string
+          id?: string
+          is_active?: boolean
+          job_title?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_employees_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
