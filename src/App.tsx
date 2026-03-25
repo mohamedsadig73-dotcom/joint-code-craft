@@ -34,6 +34,7 @@ function AppRoutes() {
       {isAuthenticated && <Onboarding />}
       {isAuthenticated && <MobileBottomNav />}
       {isAuthenticated && <OfflineBanner />}
+      {isAuthenticated && <UpdateChecker />}
       <AnimatedRoutes />
     </>
   );

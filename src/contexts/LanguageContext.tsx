@@ -1236,6 +1236,9 @@ const translations = {
     updateInProgress: 'جاري التحديث...',
     updateNow: 'تحديث الآن',
     currentVersion: 'الإصدار الحالي',
+    newDesktopVersionAvailable: 'يوجد إصدار جديد من تطبيق سطح المكتب',
+    downloadUpdate: 'تحميل التحديث',
+    later: 'لاحقاً',
     
     // Archive Files
     archiveFiles: 'ملفات الأرشيف',
