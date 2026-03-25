@@ -20,6 +20,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { HolidayPrintPreview } from '@/components/holiday-attendance/HolidayPrintPreview';
+import { EmployeePickerDialog } from '@/components/holiday-attendance/EmployeePickerDialog';
 
 
 
@@ -72,6 +73,7 @@ export default function HolidayAttendanceDetail() {
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [showPrint, setShowPrint] = useState(false);
+  const [showEmployeePicker, setShowEmployeePicker] = useState(false);
   const [deleteRecordId, setDeleteRecordId] = useState<string | null>(null);
   const [deleteEmployeeId, setDeleteEmployeeId] = useState<string | null>(null);
 
@@ -158,6 +160,22 @@ export default function HolidayAttendanceDetail() {
       toast({ title: t('error'), description: error.message, variant: 'destructive' });
     } finally {
       setDeleteRecordId(null);
+    }
+  };
+
+  const addEmployeesFromPicker = async (pickedEmployees: { employee_number: string; employee_name: string; job_title: string }[]) => {
+    if (isNew || pickedEmployees.length === 0) return;
+    try {
+      const inserts = pickedEmployees.map(e => ({
+        sheet_id: id!, employee_number: e.employee_number, employee_name: e.employee_name,
+        job_title: e.job_title, total_days: 0,
+      }));
+      const { data, error } = await supabase.from('holiday_employees').insert(inserts).select();
+      if (error) throw error;
+      setEmployees(prev => [...prev, ...(data || [])]);
+      toast({ title: t('success'), description: `${pickedEmployees.length} ${t('employeesData')}` });
+    } catch (error: any) {
+      toast({ title: t('error'), description: error.message, variant: 'destructive' });
     }
   };
 
@@ -352,9 +370,14 @@ export default function HolidayAttendanceDetail() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{t('employeesData')}</CardTitle>
                 {isAdmin && (
-                  <Button onClick={addEmployee} size="sm" className="gap-2">
-                    <Plus className="w-4 h-4" />{t('addEmployee')}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setShowEmployeePicker(true)} size="sm" className="gap-2">
+                      <Users className="w-4 h-4" />{t('selectEmployees')}
+                    </Button>
+                    <Button onClick={addEmployee} size="sm" variant="outline" className="gap-2">
+                      <Plus className="w-4 h-4" />{t('addManually')}
+                    </Button>
+                  </div>
                 )}
               </CardHeader>
               <CardContent>
@@ -436,6 +459,12 @@ export default function HolidayAttendanceDetail() {
           <AlertDialogFooter><AlertDialogCancel>{t('cancel')}</AlertDialogCancel><AlertDialogAction onClick={deleteEmployee} className="bg-destructive text-destructive-foreground">{t('delete')}</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <EmployeePickerDialog
+        open={showEmployeePicker}
+        onClose={() => setShowEmployeePicker(false)}
+        onSelect={addEmployeesFromPicker}
+        existingNumbers={employees.map(e => e.employee_number)}
+      />
     </div>
   );
 }
