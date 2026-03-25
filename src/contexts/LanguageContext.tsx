@@ -406,6 +406,8 @@ const translations = {
     saveSheetFirst: 'Please save the sheet first',
     addRecord: 'Add Record',
     workType: 'Work Type',
+    workTypes: 'Work Types',
+    addWorkType: 'Add new work type...',
     workDate: 'Work Date',
     presentEmployees: 'Present Employees',
     enterEmployeeNames: 'Enter employee names...',
