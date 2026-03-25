@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { forceAppUpdate } from '@/components/ForceUpdateButton';
 
-const APP_VERSION = '4.0.0';
+const APP_VERSION = '4.2.0';
 
 export function Navigation() {
   const location = useLocation();

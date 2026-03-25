@@ -3,7 +3,7 @@ import { Download, X, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const LOCAL_VERSION = '4.1.1';
+const LOCAL_VERSION = '4.2.0';
 const CHECK_INTERVAL = 30 * 60 * 1000; // 30 minutes
 const PUBLISHED_URL = 'https://dts-store.lovable.app';
 
