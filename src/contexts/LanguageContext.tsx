@@ -33,9 +33,9 @@ const translations = {
     invalidCredentials: 'Invalid credentials. Please try again.',
     
     // Dashboard
-    systemTitle: 'Declaration Management System',
-    streamlineWorkflow: 'Streamline Your Declaration Workflow',
-    streamlineDesc: 'Transform manual tracking into intelligent digital workflows with real-time status updates, automated approvals, and comprehensive reporting.',
+    systemTitle: 'Warehouse Management System',
+    streamlineWorkflow: 'Streamline Your Warehouse Operations',
+    streamlineDesc: 'Transform manual tracking into intelligent digital workflows with real-time updates, automated approvals, and comprehensive reporting.',
     unsigned: 'Unsigned',
     pending: 'Pending',
     approved: 'Approved',
