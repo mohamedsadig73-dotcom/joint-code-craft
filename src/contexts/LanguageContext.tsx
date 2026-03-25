@@ -878,6 +878,8 @@ const translations = {
     deleteCostCenterConfirmation: 'Are you sure you want to delete this cost center?',
     noCostCentersFound: 'No cost centers found',
     pettyCash: 'Petty Cash',
+    pettyCashShort: 'Petty Cash',
+    leaveShort: 'Leaves',
     
     // Petty Cash Periods
     pettyCashPeriods: 'Cash Periods',
@@ -1783,6 +1785,8 @@ const translations = {
     deleteCostCenterConfirmation: 'هل أنت متأكد من حذف مركز التكلفة هذا؟',
     noCostCentersFound: 'لا توجد مراكز تكلفة',
     pettyCash: 'المصاريف النثرية',
+    pettyCashShort: 'المصاريف',
+    leaveShort: 'الإجازات',
     
     // Petty Cash Periods
     pettyCashPeriods: 'فترات النثرية',

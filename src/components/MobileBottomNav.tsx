@@ -13,8 +13,8 @@ interface NavItem {
 const navItems: NavItem[] = [
   { path: '/', icon: LayoutDashboard, labelKey: 'declarations' },
   { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
-  { path: '/petty-cash', icon: Wallet, labelKey: 'pettyCash' },
-  { path: '/leave-tracking', icon: FileText, labelKey: 'leaveTracking' },
+  { path: '/petty-cash', icon: Wallet, labelKey: 'pettyCashShort' },
+  { path: '/leave-tracking', icon: FileText, labelKey: 'leaveShort' },
   { path: '/reports-analytics', icon: BarChart3, labelKey: 'reports' },
 ];
 
