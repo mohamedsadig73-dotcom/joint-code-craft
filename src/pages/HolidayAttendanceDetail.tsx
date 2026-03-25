@@ -370,9 +370,14 @@ export default function HolidayAttendanceDetail() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{t('employeesData')}</CardTitle>
                 {isAdmin && (
-                  <Button onClick={addEmployee} size="sm" className="gap-2">
-                    <Plus className="w-4 h-4" />{t('addEmployee')}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setShowEmployeePicker(true)} size="sm" className="gap-2">
+                      <Users className="w-4 h-4" />{t('selectEmployees')}
+                    </Button>
+                    <Button onClick={addEmployee} size="sm" variant="outline" className="gap-2">
+                      <Plus className="w-4 h-4" />{t('addManually')}
+                    </Button>
+                  </div>
                 )}
               </CardHeader>
               <CardContent>
