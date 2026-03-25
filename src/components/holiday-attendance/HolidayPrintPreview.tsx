@@ -70,6 +70,7 @@ export function HolidayPrintPreview({ sheet, workRecords, employees, onClose }: 
             <tr className="bg-blue-50">
               <th className="border border-gray-400 p-2 text-center font-bold">المسلسل</th>
               <th className="border border-gray-400 p-2 text-center font-bold">نوع العمل</th>
+              <th className="border border-gray-400 p-2 text-center font-bold">وصف العمل</th>
               <th className="border border-gray-400 p-2 text-center font-bold">تاريخ العمل</th>
               <th className="border border-gray-400 p-2 text-center font-bold">اسم الموظف المتواجد اثناء العمل</th>
             </tr>
@@ -79,6 +80,7 @@ export function HolidayPrintPreview({ sheet, workRecords, employees, onClose }: 
               <tr key={record.serial_number}>
                 <td className="border border-gray-400 p-2 text-center">{record.serial_number}</td>
                 <td className="border border-gray-400 p-2 text-center">{record.work_type}</td>
+                <td className="border border-gray-400 p-2 text-center">{record.notes || '-'}</td>
                 <td className="border border-gray-400 p-2 text-center">{record.work_date}</td>
                 <td className="border border-gray-400 p-2 whitespace-pre-wrap">{record.employee_names}</td>
               </tr>
