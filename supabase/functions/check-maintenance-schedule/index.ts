@@ -22,6 +22,58 @@ function getCorsHeaders(request: Request): Record<string, string> {
   };
 }
 
+// Rate limiting function
+async function checkRateLimit(
+  supabase: any,
+  identifier: string,
+  endpoint: string,
+  maxRequests: number = 5,
+  windowMinutes: number = 15
+): Promise<{ allowed: boolean; remaining: number }> {
+  const windowStart = new Date();
+  windowStart.setMinutes(windowStart.getMinutes() - windowMinutes);
+
+  try {
+    const { data: existing, error: fetchError } = await supabase
+      .from('rate_limit_tracking')
+      .select('*')
+      .eq('identifier', identifier)
+      .eq('endpoint', endpoint)
+      .gte('window_start', windowStart.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (fetchError) {
+      console.error('Rate limit fetch error:', fetchError);
+      return { allowed: true, remaining: maxRequests };
+    }
+
+    if (!existing || existing.length === 0) {
+      await supabase.from('rate_limit_tracking').insert({
+        identifier, endpoint, request_count: 1,
+        window_start: new Date().toISOString()
+      });
+      return { allowed: true, remaining: maxRequests - 1 };
+    }
+
+    const record = existing[0];
+    const currentCount = record.request_count || 0;
+
+    if (currentCount >= maxRequests) {
+      return { allowed: false, remaining: 0 };
+    }
+
+    await supabase.from('rate_limit_tracking')
+      .update({ request_count: currentCount + 1, updated_at: new Date().toISOString() })
+      .eq('id', record.id);
+
+    return { allowed: true, remaining: maxRequests - currentCount - 1 };
+  } catch (err) {
+    console.error('Rate limit error:', err);
+    return { allowed: true, remaining: maxRequests };
+  }
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
@@ -46,6 +98,7 @@ serve(async (req) => {
 
     // Check if it's a service role key (for cron) or user JWT
     const token = authHeader.replace("Bearer ", "");
+    let userId = 'service-role';
     
     // If it's the service role key, allow access (for scheduled jobs)
     if (token === supabaseServiceKey) {
@@ -62,6 +115,8 @@ serve(async (req) => {
           { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+
+      userId = user.id;
 
       // Check if user has admin or manager role
       const { data: roles, error: roleError } = await supabaseAuth
@@ -82,6 +137,24 @@ serve(async (req) => {
     }
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Rate limiting (5 requests per 15 minutes)
+    if (userId !== 'service-role') {
+      const rateLimit = await checkRateLimit(supabase, userId, 'check-maintenance-schedule', 5, 15);
+      if (!rateLimit.allowed) {
+        return new Response(
+          JSON.stringify({ error: "Too many requests", message: "يرجى المحاولة لاحقاً" }),
+          { 
+            status: 429, 
+            headers: { 
+              ...corsHeaders, 
+              "Content-Type": "application/json",
+              "Retry-After": "900"
+            } 
+          }
+        );
+      }
+    }
 
     // استدعاء دالة التحقق من الإشعارات
     const { error } = await supabase.rpc('check_maintenance_notifications');
