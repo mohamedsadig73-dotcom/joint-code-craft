@@ -22,6 +22,8 @@ const ManagerDashboard = lazy(() => import('@/pages/ManagerDashboard'));
 const InstallApp = lazy(() => import('@/pages/InstallApp'));
 const LeaveTracking = lazy(() => import('@/pages/LeaveTracking'));
 const PettyCash = lazy(() => import('@/pages/PettyCash'));
+const HolidayAttendance = lazy(() => import('@/pages/HolidayAttendance'));
+const HolidayAttendanceDetail = lazy(() => import('@/pages/HolidayAttendanceDetail'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -187,6 +189,26 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <PettyCash />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/holiday-attendance"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <HolidayAttendance />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/holiday-attendance/:id"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <HolidayAttendanceDetail />
                 </PageTransition>
               </ProtectedRoute>
             }
