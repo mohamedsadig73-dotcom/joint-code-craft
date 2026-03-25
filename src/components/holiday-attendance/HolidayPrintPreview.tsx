@@ -17,6 +17,7 @@ interface HolidayPrintPreviewProps {
     work_type: string;
     work_date: string;
     employee_names: string;
+    notes?: string;
   }>;
   employees: Array<{
     employee_number: string;
