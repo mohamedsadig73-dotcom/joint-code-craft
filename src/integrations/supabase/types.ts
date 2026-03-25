@@ -456,6 +456,132 @@ export type Database = {
           },
         ]
       }
+      holiday_employees: {
+        Row: {
+          created_at: string
+          employee_name: string
+          employee_number: string
+          id: string
+          job_title: string
+          sheet_id: string
+          total_days: number
+        }
+        Insert: {
+          created_at?: string
+          employee_name: string
+          employee_number: string
+          id?: string
+          job_title: string
+          sheet_id: string
+          total_days?: number
+        }
+        Update: {
+          created_at?: string
+          employee_name?: string
+          employee_number?: string
+          id?: string
+          job_title?: string
+          sheet_id?: string
+          total_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holiday_employees_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "holiday_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      holiday_sheets: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          holiday_name: string
+          id: string
+          month_year: string | null
+          period_end: string
+          period_start: string
+          updated_at: string
+          warehouse_name: string
+          warehouse_number: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          holiday_name: string
+          id?: string
+          month_year?: string | null
+          period_end: string
+          period_start: string
+          updated_at?: string
+          warehouse_name: string
+          warehouse_number: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          holiday_name?: string
+          id?: string
+          month_year?: string | null
+          period_end?: string
+          period_start?: string
+          updated_at?: string
+          warehouse_name?: string
+          warehouse_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holiday_sheets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      holiday_work_records: {
+        Row: {
+          created_at: string
+          employee_names: string | null
+          id: string
+          notes: string | null
+          serial_number: number
+          sheet_id: string
+          work_date: string
+          work_type: string
+        }
+        Insert: {
+          created_at?: string
+          employee_names?: string | null
+          id?: string
+          notes?: string | null
+          serial_number: number
+          sheet_id: string
+          work_date: string
+          work_type: string
+        }
+        Update: {
+          created_at?: string
+          employee_names?: string | null
+          id?: string
+          notes?: string | null
+          serial_number?: number
+          sheet_id?: string
+          work_date?: string
+          work_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holiday_work_records_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "holiday_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_requests: {
         Row: {
           created_at: string
