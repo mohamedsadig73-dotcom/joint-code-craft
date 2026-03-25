@@ -93,7 +93,7 @@ export function Navigation() {
         <div className="flex justify-between items-center h-14 md:h-16">
           {/* Logo */}
           <div className="flex items-center gap-4 ltr-flex">
-            <h1 className="text-2xl font-bold gradient-text">DTS</h1>
+            <h1 className="text-xl font-bold gradient-text">إدارة المخزن</h1>
             <span className="hidden md:block text-sm text-muted-foreground">
               {t('systemTitle')}
             </span>
