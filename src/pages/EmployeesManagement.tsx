@@ -166,13 +166,13 @@ export default function EmployeesManagement() {
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-green-500">{activeCount}</p>
+              <p className="text-2xl font-bold text-primary">{activeCount}</p>
               <p className="text-sm text-muted-foreground">{t('activeEmployees')}</p>
             </CardContent>
           </Card>
           <Card className="col-span-2 sm:col-span-1">
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-orange-500">{employees.length - activeCount}</p>
+              <p className="text-2xl font-bold text-muted-foreground">{employees.length - activeCount}</p>
               <p className="text-sm text-muted-foreground">{t('inactiveEmployees')}</p>
             </CardContent>
           </Card>
