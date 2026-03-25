@@ -681,7 +681,6 @@ const translations = {
     addEmployee: 'Add Employee',
     editEmployee: 'Edit Employee',
     employeesManagement: 'Employees Management',
-    totalEmployees: 'Total Employees',
     activeEmployees: 'Active Employees',
     inactiveEmployees: 'Inactive Employees',
     employeeAdded: 'Employee added successfully',
