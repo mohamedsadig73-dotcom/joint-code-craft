@@ -20,7 +20,8 @@ import {
   FileText,
   History,
   RefreshCw,
-  Wallet
+  Wallet,
+  CalendarDays
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {

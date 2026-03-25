@@ -194,6 +194,26 @@ export function AnimatedRoutes() {
             }
           />
           <Route
+            path="/holiday-attendance"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <HolidayAttendance />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/holiday-attendance/:id"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <HolidayAttendanceDetail />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/audit-logs"
             element={
               <ProtectedRoute requiredRole="admin">

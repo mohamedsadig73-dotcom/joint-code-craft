@@ -424,10 +424,18 @@ export default function HolidayAttendanceDetail() {
         </Tabs>
       </main>
 
-      <DeleteConfirmationDialog open={!!deleteRecordId} onOpenChange={() => setDeleteRecordId(null)} onConfirm={deleteWorkRecord}
-        title={t('deleteRecord')} description={t('deleteRecordConfirm')} />
-      <DeleteConfirmationDialog open={!!deleteEmployeeId} onOpenChange={() => setDeleteEmployeeId(null)} onConfirm={deleteEmployee}
-        title={t('deleteEmployee')} description={t('deleteEmployeeConfirm')} />
+      <AlertDialog open={!!deleteRecordId} onOpenChange={() => setDeleteRecordId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader><AlertDialogTitle>{t('deleteRecord')}</AlertDialogTitle><AlertDialogDescription>{t('deleteRecordConfirm')}</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter><AlertDialogCancel>{t('cancel')}</AlertDialogCancel><AlertDialogAction onClick={deleteWorkRecord} className="bg-destructive text-destructive-foreground">{t('delete')}</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={!!deleteEmployeeId} onOpenChange={() => setDeleteEmployeeId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader><AlertDialogTitle>{t('deleteEmployee')}</AlertDialogTitle><AlertDialogDescription>{t('deleteEmployeeConfirm')}</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter><AlertDialogCancel>{t('cancel')}</AlertDialogCancel><AlertDialogAction onClick={deleteEmployee} className="bg-destructive text-destructive-foreground">{t('delete')}</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
