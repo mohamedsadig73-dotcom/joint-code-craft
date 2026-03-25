@@ -929,7 +929,7 @@ const translations = {
     
     // Login
     welcomeBack: 'مرحباً بعودتك',
-    loginSubtitle: 'سجل الدخول للوصول إلى نظام إدارة الإقرارات',
+    loginSubtitle: 'سجل الدخول للوصول إلى نظام إدارة المخزن',
     username: 'اسم المستخدم',
     password: 'كلمة المرور',
     rememberMe: 'تذكرني',
