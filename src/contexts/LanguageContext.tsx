@@ -1309,6 +1309,8 @@ const translations = {
     saveSheetFirst: 'يرجى حفظ الكشف أولاً',
     addRecord: 'إضافة سجل',
     workType: 'نوع العمل',
+    workTypes: 'أنواع العمل',
+    addWorkType: 'إضافة نوع عمل جديد...',
     workDate: 'تاريخ العمل',
     presentEmployees: 'الموظف المتواجد أثناء العمل',
     enterEmployeeNames: 'أدخل أسماء الموظفين...',
