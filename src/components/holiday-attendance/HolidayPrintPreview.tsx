@@ -115,7 +115,8 @@ export function HolidayPrintPreview({ sheet, workRecords, employees, onClose }: 
       <style>{`
         @media print {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          @page { size: A4; margin: 15mm; }
+          @page { size: A4; margin: 15mm; margin-top: 10mm; margin-bottom: 10mm; }
+          title { display: none; }
         }
       `}</style>
     </div>
