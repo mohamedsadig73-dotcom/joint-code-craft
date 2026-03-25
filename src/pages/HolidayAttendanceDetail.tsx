@@ -25,6 +25,36 @@ import { HolidayPrintPreview } from '@/components/holiday-attendance/HolidayPrin
 import { EmployeePickerDialog } from '@/components/holiday-attendance/EmployeePickerDialog';
 
 
+interface SheetData {
+  id?: string;
+  warehouse_name: string;
+  warehouse_number: string;
+  holiday_name: string;
+  period_start: string;
+  period_end: string;
+  month_year: string;
+}
+
+interface WorkRecord {
+  id?: string;
+  serial_number: number;
+  work_type: string;
+  work_date: string;
+  employee_names: string;
+  notes: string;
+}
+
+interface Employee {
+  id?: string;
+  employee_number: string;
+  employee_name: string;
+  job_title: string;
+  total_days: number;
+}
+
+const DEFAULT_WORK_TYPES = ['دخول أغراض', 'خروج أغراض', 'صيانة'];
+const JOB_TITLES = ['حارس', 'أمين مخزن', 'عامل', 'مشرف'];
+
 function EmployeeMultiSelect({ employees, selectedNames, onChange }: {
   employees: Employee[];
   selectedNames: string;
@@ -68,35 +98,6 @@ function EmployeeMultiSelect({ employees, selectedNames, onChange }: {
   );
 }
 
-interface SheetData {
-  id?: string;
-  warehouse_name: string;
-  warehouse_number: string;
-  holiday_name: string;
-  period_start: string;
-  period_end: string;
-  month_year: string;
-}
-
-interface WorkRecord {
-  id?: string;
-  serial_number: number;
-  work_type: string;
-  work_date: string;
-  employee_names: string;
-  notes: string;
-}
-
-interface Employee {
-  id?: string;
-  employee_number: string;
-  employee_name: string;
-  job_title: string;
-  total_days: number;
-}
-
-const DEFAULT_WORK_TYPES = ['دخول أغراض', 'خروج أغراض', 'صيانة'];
-const JOB_TITLES = ['حارس', 'أمين مخزن', 'عامل', 'مشرف'];
 
 export default function HolidayAttendanceDetail() {
   const { id } = useParams();
