@@ -459,6 +459,12 @@ export default function HolidayAttendanceDetail() {
           <AlertDialogFooter><AlertDialogCancel>{t('cancel')}</AlertDialogCancel><AlertDialogAction onClick={deleteEmployee} className="bg-destructive text-destructive-foreground">{t('delete')}</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <EmployeePickerDialog
+        open={showEmployeePicker}
+        onClose={() => setShowEmployeePicker(false)}
+        onSelect={addEmployeesFromPicker}
+        existingNumbers={employees.map(e => e.employee_number)}
+      />
     </div>
   );
 }
