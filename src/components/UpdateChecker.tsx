@@ -3,7 +3,9 @@ import { Download, X, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const LOCAL_VERSION = '4.2.0';
+declare const __BUILD_VERSION__: string;
+
+const LOCAL_BUILD = __BUILD_VERSION__;
 const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const PUBLISHED_URL = 'https://dts-store.lovable.app';
 
@@ -19,8 +21,9 @@ export function UpdateChecker() {
       });
       if (!res.ok) return;
       const data = await res.json();
-      if (data.version && data.version !== LOCAL_VERSION) {
-        setNewVersion(data.version);
+      // Compare build timestamps - if remote build is newer, show update
+      if (data.build && data.build !== LOCAL_BUILD) {
+        setNewVersion(data.version || data.build);
       }
     } catch {
       // Offline or network error — silently ignore

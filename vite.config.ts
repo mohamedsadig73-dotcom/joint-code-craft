@@ -1,10 +1,29 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import fs from "fs";
 import { componentTagger } from "lovable-tagger";
 
 // Build version for cache busting
 const BUILD_VERSION = Date.now().toString();
+const APP_VERSION = '4.2.0';
+
+// Plugin to auto-update version.json on build
+function versionJsonPlugin() {
+  return {
+    name: 'version-json',
+    writeBundle() {
+      const versionData = JSON.stringify({
+        version: APP_VERSION,
+        build: BUILD_VERSION,
+      }, null, 2);
+      // Write to dist (published output)
+      fs.writeFileSync(path.resolve(__dirname, 'dist', 'version.json'), versionData);
+      // Also update source for reference
+      fs.writeFileSync(path.resolve(__dirname, 'public', 'version.json'), versionData);
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -18,6 +37,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
+    versionJsonPlugin(),
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -27,7 +47,6 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
-        // Add hash to file names for cache busting
         entryFileNames: `assets/[name]-[hash].js`,
         chunkFileNames: `assets/[name]-[hash].js`,
         assetFileNames: `assets/[name]-[hash].[ext]`,
