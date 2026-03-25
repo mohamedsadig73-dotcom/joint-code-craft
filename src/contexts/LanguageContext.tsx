@@ -1313,6 +1313,8 @@ const translations = {
     workType: 'نوع العمل',
     workTypes: 'أنواع العمل',
     addWorkType: 'إضافة نوع عمل جديد...',
+    workDescription: 'وصف العمل',
+    workDescriptionPlaceholder: 'اكتب تفاصيل العمل...',
     workDate: 'تاريخ العمل',
     presentEmployees: 'الموظف المتواجد أثناء العمل',
     enterEmployeeNames: 'أدخل أسماء الموظفين...',
