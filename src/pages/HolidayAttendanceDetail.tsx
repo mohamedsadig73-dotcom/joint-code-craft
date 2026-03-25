@@ -554,9 +554,12 @@ export default function HolidayAttendanceDetail() {
                             ) : emp.job_title}
                           </TableCell>
                           <TableCell>
-                            {isAdmin ? (
-                              <Input type="number" min={0} value={emp.total_days} onChange={e => updateEmployee(emp.id!, 'total_days', parseInt(e.target.value) || 0)} className="w-20" />
-                            ) : emp.total_days}
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center justify-center min-w-[2rem] h-8 rounded-full bg-primary/10 text-primary font-bold text-sm px-2">
+                                {calculatedDays[emp.employee_name] || 0}
+                              </span>
+                              <span className="text-xs text-muted-foreground">{language === 'ar' ? 'يوم' : 'days'}</span>
+                            </div>
                           </TableCell>
                           {isAdmin && (
                             <TableCell>
