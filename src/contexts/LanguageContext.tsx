@@ -1582,7 +1582,6 @@ const translations = {
     addEmployee: 'إضافة موظف',
     editEmployee: 'تعديل موظف',
     employeesManagement: 'إدارة الموظفين',
-    totalEmployees: 'إجمالي الموظفين',
     activeEmployees: 'الموظفين النشطين',
     inactiveEmployees: 'الموظفين غير النشطين',
     employeeAdded: 'تم إضافة الموظف بنجاح',
