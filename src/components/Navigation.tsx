@@ -124,10 +124,6 @@ export function Navigation() {
               <OfflineIndicator />
             </div>
 
-            {/* Force Update Button - Visible prominently */}
-            <div className="hidden md:block">
-              <ForceUpdateButton />
-            </div>
 
             {/* Theme Toggle */}
             <ThemeToggleSimple />
