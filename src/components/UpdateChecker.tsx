@@ -21,8 +21,9 @@ export function UpdateChecker() {
       });
       if (!res.ok) return;
       const data = await res.json();
-      if (data.version && data.version !== LOCAL_VERSION) {
-        setNewVersion(data.version);
+      // Compare build timestamps - if remote build is newer, show update
+      if (data.build && data.build !== LOCAL_BUILD) {
+        setNewVersion(data.version || data.build);
       }
     } catch {
       // Offline or network error — silently ignore
