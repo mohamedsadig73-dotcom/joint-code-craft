@@ -148,6 +148,31 @@ export default function HolidayAttendanceDetail() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // Auto-calculate total work days per employee from work records
+  const calculatedDays = useMemo(() => {
+    const counts: Record<string, number> = {};
+    workRecords.forEach(record => {
+      if (!record.employee_names) return;
+      const names = record.employee_names.split('\n').map(n => n.trim()).filter(Boolean);
+      names.forEach(name => {
+        counts[name] = (counts[name] || 0) + 1;
+      });
+    });
+    return counts;
+  }, [workRecords]);
+
+  // Sync calculated days to DB when they change
+  useEffect(() => {
+    if (employees.length === 0) return;
+    employees.forEach(emp => {
+      const calculated = calculatedDays[emp.employee_name] || 0;
+      if (emp.total_days !== calculated) {
+        supabase.from('holiday_employees').update({ total_days: calculated }).eq('id', emp.id!).then();
+        setEmployees(prev => prev.map(e => e.id === emp.id ? { ...e, total_days: calculated } : e));
+      }
+    });
+  }, [calculatedDays, employees.length]); // intentionally not depending on employees to avoid loops
+
   const handleSaveSheet = async () => {
     if (!sheet.warehouse_name || !sheet.holiday_name || !sheet.period_start || !sheet.period_end) {
       toast({ title: t('error'), description: t('fillRequiredFields'), variant: 'destructive' });
