@@ -52,7 +52,7 @@ interface Employee {
   total_days: number;
 }
 
-const DEFAULT_WORK_TYPES = ['دخول أغراض', 'خروج أغراض', 'صيانة'];
+const DEFAULT_WORK_TYPES = ['دخول أغراض', 'خروج أغراض', 'صيانة', 'حراسة أمنية'];
 const JOB_TITLES = ['حارس', 'أمين مخزن', 'عامل', 'مشرف'];
 
 function EmployeeMultiSelect({ employees, selectedNames, onChange }: {
