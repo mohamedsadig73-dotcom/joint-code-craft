@@ -215,6 +215,16 @@ export function AnimatedRoutes() {
             }
           />
           <Route
+            path="/employees"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <EmployeesManagement />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/audit-logs"
             element={
               <ProtectedRoute requiredRole="admin">

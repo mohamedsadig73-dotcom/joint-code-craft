@@ -63,6 +63,7 @@ export function Navigation() {
     { path: '/petty-cash', icon: Wallet, labelKey: 'pettyCash' },
     { path: '/leave-tracking', icon: FileText, labelKey: 'leaveTracking' },
     { path: '/holiday-attendance', icon: CalendarDays, labelKey: 'holidayAttendance' },
+    { path: '/employees', icon: Users, labelKey: 'employeesManagement' },
     { path: '/reports-analytics', icon: BarChart3, labelKey: 'reportsTitle' },
   ];
 
