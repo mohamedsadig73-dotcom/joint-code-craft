@@ -51,7 +51,7 @@ interface Employee {
   total_days: number;
 }
 
-const WORK_TYPES = ['حراس الأمن', 'أعمال إدارية', 'أعمال تشغيلية'];
+const DEFAULT_WORK_TYPES = ['حراس الأمن', 'أعمال إدارية', 'أعمال تشغيلية'];
 const JOB_TITLES = ['حارس', 'أمين مخزن', 'عامل', 'مشرف'];
 
 export default function HolidayAttendanceDetail() {
