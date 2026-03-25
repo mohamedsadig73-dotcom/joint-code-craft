@@ -51,7 +51,7 @@ interface Employee {
   total_days: number;
 }
 
-const DEFAULT_WORK_TYPES = ['حراس الأمن', 'أعمال إدارية', 'أعمال تشغيلية'];
+const DEFAULT_WORK_TYPES = ['دخول أغراض', 'خروج أغراض', 'صيانة'];
 const JOB_TITLES = ['حارس', 'أمين مخزن', 'عامل', 'مشرف'];
 
 export default function HolidayAttendanceDetail() {
@@ -371,6 +371,7 @@ export default function HolidayAttendanceDetail() {
                       <TableRow>
                         <TableHead className="w-16">{t('serial')}</TableHead>
                         <TableHead>{t('workType')}</TableHead>
+                        <TableHead>{t('workDescription')}</TableHead>
                         <TableHead>{t('workDate')}</TableHead>
                         <TableHead>{t('presentEmployees')}</TableHead>
                         {isAdmin && <TableHead className="w-16">{t('actions')}</TableHead>}
@@ -378,7 +379,7 @@ export default function HolidayAttendanceDetail() {
                     </TableHeader>
                     <TableBody>
                       {workRecords.length === 0 ? (
-                        <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{t('noRecords')}</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">{t('noRecords')}</TableCell></TableRow>
                       ) : workRecords.map(record => (
                         <TableRow key={record.id}>
                           <TableCell className="font-mono">{record.serial_number}</TableCell>
@@ -391,6 +392,12 @@ export default function HolidayAttendanceDetail() {
                                 </SelectContent>
                               </Select>
                             ) : record.work_type}
+                          </TableCell>
+                          <TableCell>
+                            {isAdmin ? (
+                              <Input value={record.notes || ''} onChange={e => updateWorkRecord(record.id!, 'notes', e.target.value)}
+                                placeholder={t('workDescriptionPlaceholder')} className="w-48" />
+                            ) : <span>{record.notes || '-'}</span>}
                           </TableCell>
                           <TableCell>
                             {isAdmin ? (
