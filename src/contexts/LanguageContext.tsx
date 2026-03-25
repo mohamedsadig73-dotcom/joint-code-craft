@@ -1302,7 +1302,6 @@ const translations = {
     enterEmployeeNames: 'أدخل أسماء الموظفين...',
     noRecords: 'لا توجد سجلات بعد',
     totalWorkDays: 'إجمالي أيام العمل',
-    noEmployees: 'لا يوجد موظفين بعد',
     deleteSheet: 'حذف الكشف',
     deleteSheetConfirm: 'هل أنت متأكد من حذف هذا الكشف؟',
     deleteRecord: 'حذف السجل',
@@ -1310,8 +1309,6 @@ const translations = {
     deleteEmployeeConfirm: 'هل أنت متأكد من حذف هذا الموظف؟',
     printPreview: 'معاينة الطباعة',
     serial: 'المسلسل',
-    fillRequiredFields: 'يرجى ملء جميع الحقول المطلوبة',
-    saving: 'جاري الحفظ...',
 
     // Archive Files
     archiveFiles: 'ملفات الأرشيف',
