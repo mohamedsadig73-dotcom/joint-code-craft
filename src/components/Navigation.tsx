@@ -95,8 +95,8 @@ export function Navigation() {
             <h1 className="text-lg font-bold gradient-text whitespace-nowrap">إدارة المخزن</h1>
           </div>
 
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center gap-2 ltr-flex">
+          {/* Navigation Links - Icons with text on large screens, icons only on medium */}
+          <div className="hidden md:flex items-center gap-1 ltr-flex">
             {allNavItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -104,10 +104,11 @@ export function Navigation() {
                   <Button
                     variant={isActive(item.path) ? 'secondary' : 'ghost'}
                     size="sm"
-                    className="gap-2 ltr-flex"
+                    className="gap-1.5 ltr-flex px-2 lg:px-3"
+                    title={t(item.labelKey)}
                   >
-                    <Icon className="w-4 h-4" />
-                    {t(item.labelKey)}
+                    <Icon className="w-4 h-4 shrink-0" />
+                    <span className="hidden xl:inline text-xs">{t(item.labelKey)}</span>
                   </Button>
                 </Link>
               );
