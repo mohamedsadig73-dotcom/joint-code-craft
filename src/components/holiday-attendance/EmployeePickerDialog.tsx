@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { Search, UserPlus } from 'lucide-react';
 
 interface MasterEmployee {
+  id: string;
   employee_number: string;
   employee_name: string;
   job_title: string;
@@ -17,7 +19,7 @@ interface MasterEmployee {
 interface EmployeePickerDialogProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (employees: MasterEmployee[]) => void;
+  onSelect: (employees: { employee_number: string; employee_name: string; job_title: string }[]) => void;
   existingNumbers: string[];
 }
 
@@ -38,34 +40,13 @@ export function EmployeePickerDialog({ open, onClose, onSelect, existingNumbers 
   const loadMasterEmployees = async () => {
     setLoading(true);
     try {
-      const [leaveRes, holidayRes] = await Promise.all([
-        supabase.from('leave_tracking').select('employee_id, employee_name, job_title'),
-        supabase.from('holiday_employees').select('employee_number, employee_name, job_title'),
-      ]);
-
-      const map = new Map<string, MasterEmployee>();
-
-      (leaveRes.data || []).forEach(e => {
-        if (e.employee_id && e.employee_name) {
-          map.set(e.employee_id, {
-            employee_number: e.employee_id,
-            employee_name: e.employee_name,
-            job_title: e.job_title || 'عامل',
-          });
-        }
-      });
-
-      (holidayRes.data || []).forEach(e => {
-        if (e.employee_number && e.employee_name && !map.has(e.employee_number)) {
-          map.set(e.employee_number, {
-            employee_number: e.employee_number,
-            employee_name: e.employee_name,
-            job_title: e.job_title || 'عامل',
-          });
-        }
-      });
-
-      setMasterList(Array.from(map.values()).sort((a, b) => a.employee_name.localeCompare(b.employee_name, 'ar')));
+      const { data, error } = await supabase
+        .from('master_employees')
+        .select('id, employee_number, employee_name, job_title')
+        .eq('is_active', true)
+        .order('employee_name');
+      if (error) throw error;
+      setMasterList(data || []);
     } catch {
       // silent
     } finally {
@@ -84,6 +65,14 @@ export function EmployeePickerDialog({ open, onClose, onSelect, existingNumbers 
       next.has(num) ? next.delete(num) : next.add(num);
       return next;
     });
+  };
+
+  const selectAll = () => {
+    if (selected.size === filtered.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map(e => e.employee_number)));
+    }
   };
 
   const handleConfirm = () => {
@@ -112,6 +101,15 @@ export function EmployeePickerDialog({ open, onClose, onSelect, existingNumbers 
           />
         </div>
 
+        {filtered.length > 0 && (
+          <div className="flex items-center justify-between px-1">
+            <Button variant="ghost" size="sm" onClick={selectAll}>
+              {selected.size === filtered.length ? t('clearFilters') : t('selectAll')}
+            </Button>
+            <Badge variant="secondary">{filtered.length} {t('employeesData')}</Badge>
+          </div>
+        )}
+
         <ScrollArea className="h-[300px] border rounded-md">
           {loading ? (
             <div className="p-4 text-center text-muted-foreground">{t('loading')}</div>
@@ -121,7 +119,7 @@ export function EmployeePickerDialog({ open, onClose, onSelect, existingNumbers 
             <div className="divide-y">
               {filtered.map(emp => (
                 <label
-                  key={emp.employee_number}
+                  key={emp.id}
                   className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer transition-colors"
                 >
                   <Checkbox
@@ -146,8 +144,9 @@ export function EmployeePickerDialog({ open, onClose, onSelect, existingNumbers 
           </span>
           <div className="flex gap-2">
             <Button variant="outline" onClick={onClose}>{t('cancel')}</Button>
-            <Button onClick={handleConfirm} disabled={selected.size === 0}>
-              {t('addSelected')}
+            <Button onClick={handleConfirm} disabled={selected.size === 0} className="gap-2">
+              <UserPlus className="w-4 h-4" />
+              {t('addSelected')} ({selected.size})
             </Button>
           </div>
         </div>
