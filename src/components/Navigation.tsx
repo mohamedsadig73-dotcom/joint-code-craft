@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { ThemeToggleSimple } from '@/components/ThemeToggle';
-import { ForceUpdateButton } from '@/components/ForceUpdateButton';
+import { forceAppUpdate } from '@/components/ForceUpdateButton';
 import { 
   LayoutDashboard, 
   FolderOpen, 
