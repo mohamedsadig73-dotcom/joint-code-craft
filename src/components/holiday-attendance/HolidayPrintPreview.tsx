@@ -101,7 +101,7 @@ export function HolidayPrintPreview({ sheet, workRecords, employees, onClose }: 
                 <td className="border border-gray-400 p-2 text-center font-mono">{emp.employee_number}</td>
                 <td className="border border-gray-400 p-2 text-center font-bold text-blue-700">{emp.employee_name}</td>
                 <td className="border border-gray-400 p-2 text-center">{emp.job_title}</td>
-                <td className="border border-gray-400 p-2 text-center">{emp.total_days} days</td>
+                <td className="border border-gray-400 p-2 text-center">{emp.total_days} يوم</td>
               </tr>
             ))}
           </tbody>

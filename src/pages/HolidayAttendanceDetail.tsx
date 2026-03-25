@@ -292,6 +292,57 @@ export default function HolidayAttendanceDetail() {
                     <Input value={sheet.month_year} onChange={e => setSheet(s => ({...s, month_year: e.target.value}))} placeholder={t('monthYearPlaceholder')} />
                   </div>
                 </div>
+
+                {/* Work Types Management */}
+                {isAdmin && (
+                  <div className="space-y-3 pt-4 border-t">
+                    <Label className="text-base font-semibold">{t('workTypes')}</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {workTypes.map(wt => (
+                        <div key={wt} className="flex items-center gap-1 bg-muted rounded-full px-3 py-1 text-sm">
+                          <span>{wt}</span>
+                          {!DEFAULT_WORK_TYPES.includes(wt) && (
+                            <button
+                              onClick={() => setWorkTypes(prev => prev.filter(t2 => t2 !== wt))}
+                              className="text-destructive hover:text-destructive/80 ms-1"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newWorkType}
+                        onChange={e => setNewWorkType(e.target.value)}
+                        placeholder={t('addWorkType')}
+                        className="max-w-xs"
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && newWorkType.trim()) {
+                            if (!workTypes.includes(newWorkType.trim())) {
+                              setWorkTypes(prev => [...prev, newWorkType.trim()]);
+                            }
+                            setNewWorkType('');
+                          }
+                        }}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (newWorkType.trim() && !workTypes.includes(newWorkType.trim())) {
+                            setWorkTypes(prev => [...prev, newWorkType.trim()]);
+                          }
+                          setNewWorkType('');
+                        }}
+                        disabled={!newWorkType.trim()}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 {isAdmin && (
                   <Button onClick={handleSaveSheet} disabled={saving} className="gap-2">
                     <Save className="w-4 h-4" />
