@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -13,7 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Save, Plus, Trash2, Printer, Users, ClipboardList, Settings } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Save, Plus, Trash2, Printer, Users, ClipboardList, Settings, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -21,7 +23,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { HolidayPrintPreview } from '@/components/holiday-attendance/HolidayPrintPreview';
 import { EmployeePickerDialog } from '@/components/holiday-attendance/EmployeePickerDialog';
-
 
 
 interface SheetData {
@@ -53,6 +54,50 @@ interface Employee {
 
 const DEFAULT_WORK_TYPES = ['دخول أغراض', 'خروج أغراض', 'صيانة'];
 const JOB_TITLES = ['حارس', 'أمين مخزن', 'عامل', 'مشرف'];
+
+function EmployeeMultiSelect({ employees, selectedNames, onChange }: {
+  employees: Employee[];
+  selectedNames: string;
+  onChange: (names: string) => void;
+}) {
+  const currentNames = selectedNames ? selectedNames.split('\n').map(n => n.trim()).filter(Boolean) : [];
+
+  const toggleEmployee = (name: string) => {
+    const updated = currentNames.includes(name)
+      ? currentNames.filter(n => n !== name)
+      : [...currentNames, name];
+    onChange(updated.join('\n'));
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="min-w-[200px] justify-between text-start h-auto min-h-[40px] whitespace-normal">
+          <span className="truncate text-sm">
+            {currentNames.length > 0
+              ? `${currentNames.length} موظف`
+              : 'اختر الموظفين'}
+          </span>
+          <ChevronDown className="w-4 h-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-2 max-h-60 overflow-y-auto" align="start">
+        {employees.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">لا يوجد موظفين - أضف موظفين أولاً</p>
+        ) : employees.map(emp => (
+          <label key={emp.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer">
+            <Checkbox
+              checked={currentNames.includes(emp.employee_name)}
+              onCheckedChange={() => toggleEmployee(emp.employee_name)}
+            />
+            <span className="text-sm">{emp.employee_name}</span>
+          </label>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 
 export default function HolidayAttendanceDetail() {
   const { id } = useParams();
@@ -407,8 +452,11 @@ export default function HolidayAttendanceDetail() {
                           </TableCell>
                           <TableCell>
                             {isAdmin ? (
-                              <Textarea value={record.employee_names} onChange={e => updateWorkRecord(record.id!, 'employee_names', e.target.value)}
-                                placeholder={t('enterEmployeeNames')} className="min-w-[200px] min-h-[60px]" />
+                              <EmployeeMultiSelect
+                                employees={employees}
+                                selectedNames={record.employee_names || ''}
+                                onChange={(names) => updateWorkRecord(record.id!, 'employee_names', names)}
+                              />
                             ) : <span className="whitespace-pre-wrap">{record.employee_names}</span>}
                           </TableCell>
                           {isAdmin && (
