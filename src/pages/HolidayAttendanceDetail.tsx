@@ -416,7 +416,6 @@ export default function HolidayAttendanceDetail() {
                               />
                             ) : <span className="whitespace-pre-wrap">{record.employee_names}</span>}
                           </TableCell>
-                          </TableCell>
                           {isAdmin && (
                             <TableCell>
                               <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setDeleteRecordId(record.id!)}>
