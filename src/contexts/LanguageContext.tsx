@@ -24,7 +24,7 @@ const translations = {
     
     // Login
     welcomeBack: 'Welcome Back',
-    loginSubtitle: 'Sign in to access your declaration management system',
+    loginSubtitle: 'Sign in to access the warehouse management system',
     username: 'Username',
     password: 'Password',
     rememberMe: 'Remember me',
@@ -33,9 +33,9 @@ const translations = {
     invalidCredentials: 'Invalid credentials. Please try again.',
     
     // Dashboard
-    systemTitle: 'Declaration Management System',
-    streamlineWorkflow: 'Streamline Your Declaration Workflow',
-    streamlineDesc: 'Transform manual tracking into intelligent digital workflows with real-time status updates, automated approvals, and comprehensive reporting.',
+    systemTitle: 'Warehouse Management System',
+    streamlineWorkflow: 'Streamline Your Warehouse Operations',
+    streamlineDesc: 'Transform manual tracking into intelligent digital workflows with real-time updates, automated approvals, and comprehensive reporting.',
     unsigned: 'Unsigned',
     pending: 'Pending',
     approved: 'Approved',
@@ -929,7 +929,7 @@ const translations = {
     
     // Login
     welcomeBack: 'مرحباً بعودتك',
-    loginSubtitle: 'سجل الدخول للوصول إلى نظام إدارة الإقرارات',
+    loginSubtitle: 'سجل الدخول للوصول إلى نظام إدارة المخزن',
     username: 'اسم المستخدم',
     password: 'كلمة المرور',
     rememberMe: 'تذكرني',
@@ -938,9 +938,9 @@ const translations = {
     invalidCredentials: 'بيانات غير صحيحة. يرجى المحاولة مرة أخرى.',
     
     // Dashboard
-    systemTitle: 'نظام إدارة الإقرارات',
-    streamlineWorkflow: 'بسّط سير عمل الإقرارات',
-    streamlineDesc: 'حوّل التتبع اليدوي إلى سير عمل رقمي ذكي مع تحديثات الحالة الفورية والموافقات الآلية والتقارير الشاملة.',
+    systemTitle: 'نظام إدارة المخزن',
+    streamlineWorkflow: 'بسّط عمليات إدارة المخزن',
+    streamlineDesc: 'حوّل التتبع اليدوي إلى سير عمل رقمي ذكي مع تحديثات فورية وتقارير شاملة.',
     unsigned: 'غير موقّع',
     pending: 'قيد الانتظار',
     approved: 'موافق عليه',
