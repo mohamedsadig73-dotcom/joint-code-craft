@@ -133,7 +133,7 @@ export default function HolidayAttendanceDetail() {
     try {
       const nextSerial = workRecords.length > 0 ? Math.max(...workRecords.map(r => r.serial_number)) + 1 : 1;
       const { data, error } = await supabase.from('holiday_work_records').insert({
-        sheet_id: id, serial_number: nextSerial, work_type: WORK_TYPES[0], work_date: '', employee_names: '', notes: '',
+        sheet_id: id, serial_number: nextSerial, work_type: workTypes[0], work_date: '', employee_names: '', notes: '',
       }).select().single();
       if (error) throw error;
       setWorkRecords([...workRecords, data]);
