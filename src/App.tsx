@@ -41,7 +41,7 @@ function AppRoutes() {
   );
 }
 
-// App v4.3.1
+// App v4.3.2
 const App = () => (
   <ThemeProvider>
     <QueryClientProvider client={queryClient}>
