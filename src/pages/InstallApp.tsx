@@ -78,10 +78,10 @@ export default function InstallApp() {
         <Card className="border-border/50 mb-6 overflow-hidden">
           <div className="bg-gradient-to-l from-primary/20 to-primary/5 p-6 text-center">
             <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <img src="/pwa-icon-192.png" alt="DTS" className="w-12 h-12 rounded-xl" />
+              <img src="/pwa-icon-192.png" alt="نظام إدارة المخزن" className="w-12 h-12 rounded-xl" />
             </div>
-            <h2 className="text-lg font-bold mb-1">نظام إدارة الإقرارات</h2>
-            <p className="text-sm text-muted-foreground">DMS - الإصدار 4.1</p>
+            <h2 className="text-lg font-bold mb-1">نظام إدارة المخزن</h2>
+            <p className="text-sm text-muted-foreground">الإصدار 4.1</p>
           </div>
         </Card>
 

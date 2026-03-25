@@ -67,7 +67,7 @@ export default function ForgotPassword() {
       {/* Forgot Password Card */}
       <div className="glass-card rounded-2xl p-8 w-full max-w-md relative z-10 shadow-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold gradient-text mb-2">DTS</h1>
+          <h1 className="text-3xl font-bold gradient-text mb-2">نظام إدارة المخزن</h1>
           <h2 className="text-2xl font-bold mb-2">نسيت كلمة المرور؟</h2>
           <p className="text-muted-foreground">
             أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور

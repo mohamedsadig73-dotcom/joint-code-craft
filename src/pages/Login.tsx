@@ -176,7 +176,7 @@ export default function Login() {
         )}
 
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold gradient-text mb-2">DTS</h1>
+          <h1 className="text-3xl font-bold gradient-text mb-2">نظام إدارة المخزن</h1>
           <h2 className="text-2xl font-bold mb-2">
             {isSignup ? t('createAccount') : t('welcomeBack')}
           </h2>
