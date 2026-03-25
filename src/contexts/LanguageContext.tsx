@@ -408,6 +408,8 @@ const translations = {
     workType: 'Work Type',
     workTypes: 'Work Types',
     addWorkType: 'Add new work type...',
+    workDescription: 'Work Description',
+    workDescriptionPlaceholder: 'Describe the work details...',
     workDate: 'Work Date',
     presentEmployees: 'Present Employees',
     enterEmployeeNames: 'Enter employee names...',
