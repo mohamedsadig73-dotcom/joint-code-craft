@@ -99,7 +99,7 @@ export function HolidayPrintPreview({ sheet, workRecords, employees, onClose }: 
             </tr>
           </thead>
           <tbody>
-            {employees.map(emp => (
+            {employees.filter(emp => emp.total_days > 0).map(emp => (
               <tr key={emp.employee_number}>
                 <td className="border border-gray-400 p-2 text-center font-mono">{emp.employee_number}</td>
                 <td className="border border-gray-400 p-2 text-center font-bold text-blue-700">{emp.employee_name}</td>
