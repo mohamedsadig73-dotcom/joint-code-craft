@@ -148,18 +148,39 @@ export default function HolidayAttendanceDetail() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // Auto-calculate total work days per employee from work records
+  // Parse work_date range like "17-23/03/2026" and count working days (exclude Fri & Sat)
+  const countWorkingDays = useCallback((workDate: string): number => {
+    if (!workDate) return 0;
+    try {
+      // Match patterns like "17-23/03/2026" or "17-23/03-2026"
+      const match = workDate.match(/(\d{1,2})\s*[-–]\s*(\d{1,2})\s*[/\-]\s*(\d{1,2})\s*[/\-]\s*(\d{4})/);
+      if (!match) return 1; // fallback: single day
+      const [, startDay, endDay, month, year] = match;
+      let count = 0;
+      for (let d = parseInt(startDay); d <= parseInt(endDay); d++) {
+        const date = new Date(parseInt(year), parseInt(month) - 1, d);
+        const day = date.getDay(); // 0=Sun, 5=Fri, 6=Sat
+        if (day !== 5 && day !== 6) count++;
+      }
+      return count || 1;
+    } catch {
+      return 1;
+    }
+  }, []);
+
+  // Auto-calculate total work days per employee from work records (excluding Fri/Sat)
   const calculatedDays = useMemo(() => {
     const counts: Record<string, number> = {};
     workRecords.forEach(record => {
       if (!record.employee_names) return;
+      const days = countWorkingDays(record.work_date);
       const names = record.employee_names.split('\n').map(n => n.trim()).filter(Boolean);
       names.forEach(name => {
-        counts[name] = (counts[name] || 0) + 1;
+        counts[name] = (counts[name] || 0) + days;
       });
     });
     return counts;
-  }, [workRecords]);
+  }, [workRecords, countWorkingDays]);
 
   // Sync calculated days to DB when they change
   useEffect(() => {
