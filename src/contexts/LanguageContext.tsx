@@ -938,9 +938,9 @@ const translations = {
     invalidCredentials: 'بيانات غير صحيحة. يرجى المحاولة مرة أخرى.',
     
     // Dashboard
-    systemTitle: 'نظام إدارة الإقرارات',
-    streamlineWorkflow: 'بسّط سير عمل الإقرارات',
-    streamlineDesc: 'حوّل التتبع اليدوي إلى سير عمل رقمي ذكي مع تحديثات الحالة الفورية والموافقات الآلية والتقارير الشاملة.',
+    systemTitle: 'نظام إدارة المخزن',
+    streamlineWorkflow: 'بسّط عمليات إدارة المخزن',
+    streamlineDesc: 'حوّل التتبع اليدوي إلى سير عمل رقمي ذكي مع تحديثات فورية وتقارير شاملة.',
     unsigned: 'غير موقّع',
     pending: 'قيد الانتظار',
     approved: 'موافق عليه',
