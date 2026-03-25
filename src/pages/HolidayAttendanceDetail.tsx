@@ -333,7 +333,7 @@ export default function HolidayAttendanceDetail() {
                               <Select value={record.work_type} onValueChange={v => updateWorkRecord(record.id!, 'work_type', v)}>
                                 <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                  {WORK_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                  {workTypes.map(wt => <SelectItem key={wt} value={wt}>{wt}</SelectItem>)}
                                 </SelectContent>
                               </Select>
                             ) : record.work_type}
