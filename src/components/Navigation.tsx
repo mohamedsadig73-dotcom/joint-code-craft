@@ -21,7 +21,8 @@ import {
   History,
   RefreshCw,
   Wallet,
-  CalendarDays
+  CalendarDays,
+  Users
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
