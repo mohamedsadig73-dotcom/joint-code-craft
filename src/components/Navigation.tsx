@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { ThemeToggleSimple } from '@/components/ThemeToggle';
-import { ForceUpdateButton } from '@/components/ForceUpdateButton';
+import { forceAppUpdate } from '@/components/ForceUpdateButton';
 import { 
   LayoutDashboard, 
   FolderOpen, 
@@ -32,7 +32,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { forceAppUpdate } from '@/components/ForceUpdateButton';
 
 const APP_VERSION = '4.2.0';
 
@@ -125,10 +124,6 @@ export function Navigation() {
               <OfflineIndicator />
             </div>
 
-            {/* Force Update Button - Visible prominently */}
-            <div className="hidden md:block">
-              <ForceUpdateButton />
-            </div>
 
             {/* Theme Toggle */}
             <ThemeToggleSimple />
