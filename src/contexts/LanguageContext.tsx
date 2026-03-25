@@ -24,7 +24,7 @@ const translations = {
     
     // Login
     welcomeBack: 'Welcome Back',
-    loginSubtitle: 'Sign in to access your declaration management system',
+    loginSubtitle: 'Sign in to access the warehouse management system',
     username: 'Username',
     password: 'Password',
     rememberMe: 'Remember me',
