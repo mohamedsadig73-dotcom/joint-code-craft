@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const LOCAL_VERSION = '4.2.0';
-const CHECK_INTERVAL = 30 * 60 * 1000; // 30 minutes
+const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const PUBLISHED_URL = 'https://dts-store.lovable.app';
 
 export function UpdateChecker() {
