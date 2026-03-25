@@ -31,7 +31,7 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden print:hidden"
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       {/* Gradient blur background */}
