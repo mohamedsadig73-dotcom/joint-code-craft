@@ -3277,15 +3277,25 @@ export type Database = {
         }
         Returns: string
       }
-      log_failed_login_attempt: {
-        Args: {
-          _email: string
-          _error_message: string
-          _ip_address?: string
-          _user_agent?: string
-        }
-        Returns: string
-      }
+      log_failed_login_attempt:
+        | {
+            Args: {
+              _email: string
+              _error_message: string
+              _ip_address?: string
+              _user_agent?: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _email: string
+              _error_message: string
+              _ip_address?: string
+              _user_agent?: string
+            }
+            Returns: string
+          }
       reactivate_user: { Args: { target_user_id: string }; Returns: boolean }
       verify_code: {
         Args: { _code: string; _type?: string; _user_id: string }

@@ -283,10 +283,19 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error: any) {
-    console.error("[Internal] Send notification error:", error);
+    console.error("[Internal] Send notification error:", {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
     
     return new Response(
-      JSON.stringify({ error: "فشل إرسال الإشعار", message: error.message }),
+      JSON.stringify({ 
+        error: "فشل إرسال الإشعار", 
+        message: "حدث خطأ أثناء إرسال الإشعار. يرجى المحاولة مرة أخرى أو التواصل مع الدعم الفني.",
+        timestamp: new Date().toISOString()
+      }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
