@@ -411,7 +411,6 @@ const translations = {
     enterEmployeeNames: 'Enter employee names...',
     noRecords: 'No records yet',
     totalWorkDays: 'Total Work Days',
-    noEmployees: 'No employees yet',
     deleteSheet: 'Delete Sheet',
     deleteSheetConfirm: 'Are you sure you want to delete this sheet?',
     deleteRecord: 'Delete Record',
@@ -419,8 +418,6 @@ const translations = {
     deleteEmployeeConfirm: 'Are you sure you want to delete this employee?',
     printPreview: 'Print Preview',
     serial: 'Serial',
-    fillRequiredFields: 'Please fill all required fields',
-    saving: 'Saving...',
 
     // Archive Files
     archiveFiles: 'Archive Files',
