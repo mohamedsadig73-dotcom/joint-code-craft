@@ -115,51 +115,33 @@ export function Navigation() {
             })}
           </div>
 
-          {/* Right Side Actions - Simplified */}
-          <div className="flex items-center gap-1 md:gap-2 ltr-flex">
-            {/* Offline Indicator - Hidden on mobile */}
+          {/* Right Side Actions */}
+          <div className="flex items-center gap-1 ltr-flex shrink-0">
             <div className="hidden lg:block">
               <OfflineIndicator />
             </div>
 
-
-            {/* Theme Toggle */}
             <ThemeToggleSimple />
 
-            {/* Language Toggle - Icon only on mobile */}
+            {/* Language Toggle - Icon only */}
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleLanguage}
-              className="md:hidden"
               title={t('switchLanguage')}
             >
               <Globe className="w-4 h-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleLanguage}
-              className="hidden md:flex gap-2 bg-primary/10 hover:bg-primary/20 border-primary/30"
-              title={t('switchLanguage')}
-            >
-              <Globe className="w-4 h-4 text-primary" />
-              <span className="font-medium text-sm">{language === 'en' ? 'العربية' : 'EN'}</span>
-            </Button>
 
-            {/* Notifications */}
             <NotificationCenter />
 
-            {/* User Menu - Consolidated */}
+            {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:px-3 md:w-auto">
+                <Button variant="ghost" size="icon">
                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                     <User className="w-4 h-4" />
                   </div>
-                  <span className="hidden md:block ms-2 text-sm font-medium max-w-[100px] truncate">
-                    {user?.username}
-                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
