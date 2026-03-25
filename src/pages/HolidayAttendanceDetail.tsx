@@ -379,7 +379,7 @@ export default function HolidayAttendanceDetail() {
                     </TableHeader>
                     <TableBody>
                       {workRecords.length === 0 ? (
-                        <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{t('noRecords')}</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">{t('noRecords')}</TableCell></TableRow>
                       ) : workRecords.map(record => (
                         <TableRow key={record.id}>
                           <TableCell className="font-mono">{record.serial_number}</TableCell>
