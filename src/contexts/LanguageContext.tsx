@@ -380,6 +380,9 @@ const translations = {
     updateInProgress: 'Updating...',
     updateNow: 'Update Now',
     currentVersion: 'Current Version',
+    newDesktopVersionAvailable: 'A new version of the desktop app is available',
+    downloadUpdate: 'Download Update',
+    later: 'Later',
     
     // Archive Files
     archiveFiles: 'Archive Files',
