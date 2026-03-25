@@ -20,6 +20,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { HolidayPrintPreview } from '@/components/holiday-attendance/HolidayPrintPreview';
+import { EmployeePickerDialog } from '@/components/holiday-attendance/EmployeePickerDialog';
 
 
 
