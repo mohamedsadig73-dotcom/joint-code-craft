@@ -51,7 +51,7 @@ interface Employee {
   total_days: number;
 }
 
-const WORK_TYPES = ['حراس الأمن', 'أعمال إدارية', 'أعمال تشغيلية'];
+const DEFAULT_WORK_TYPES = ['حراس الأمن', 'أعمال إدارية', 'أعمال تشغيلية'];
 const JOB_TITLES = ['حارس', 'أمين مخزن', 'عامل', 'مشرف'];
 
 export default function HolidayAttendanceDetail() {
@@ -76,6 +76,8 @@ export default function HolidayAttendanceDetail() {
   const [showEmployeePicker, setShowEmployeePicker] = useState(false);
   const [deleteRecordId, setDeleteRecordId] = useState<string | null>(null);
   const [deleteEmployeeId, setDeleteEmployeeId] = useState<string | null>(null);
+  const [workTypes, setWorkTypes] = useState<string[]>(DEFAULT_WORK_TYPES);
+  const [newWorkType, setNewWorkType] = useState('');
 
   const loadData = useCallback(async () => {
     if (isNew) return;
@@ -89,6 +91,9 @@ export default function HolidayAttendanceDetail() {
       setSheet(sheetRes.data);
       setWorkRecords(recordsRes.data || []);
       setEmployees(employeesRes.data || []);
+      // Merge custom work types from existing records
+      const existingTypes = (recordsRes.data || []).map((r: any) => r.work_type).filter(Boolean);
+      setWorkTypes(prev => [...new Set([...prev, ...existingTypes])]);
     } catch (error: any) {
       toast({ title: t('error'), description: error.message, variant: 'destructive' });
     } finally {
@@ -131,7 +136,7 @@ export default function HolidayAttendanceDetail() {
     try {
       const nextSerial = workRecords.length > 0 ? Math.max(...workRecords.map(r => r.serial_number)) + 1 : 1;
       const { data, error } = await supabase.from('holiday_work_records').insert({
-        sheet_id: id, serial_number: nextSerial, work_type: WORK_TYPES[0], work_date: '', employee_names: '', notes: '',
+        sheet_id: id, serial_number: nextSerial, work_type: workTypes[0], work_date: '', employee_names: '', notes: '',
       }).select().single();
       if (error) throw error;
       setWorkRecords([...workRecords, data]);
@@ -287,6 +292,57 @@ export default function HolidayAttendanceDetail() {
                     <Input value={sheet.month_year} onChange={e => setSheet(s => ({...s, month_year: e.target.value}))} placeholder={t('monthYearPlaceholder')} />
                   </div>
                 </div>
+
+                {/* Work Types Management */}
+                {isAdmin && (
+                  <div className="space-y-3 pt-4 border-t">
+                    <Label className="text-base font-semibold">{t('workTypes')}</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {workTypes.map(wt => (
+                        <div key={wt} className="flex items-center gap-1 bg-muted rounded-full px-3 py-1 text-sm">
+                          <span>{wt}</span>
+                          {!DEFAULT_WORK_TYPES.includes(wt) && (
+                            <button
+                              onClick={() => setWorkTypes(prev => prev.filter(t2 => t2 !== wt))}
+                              className="text-destructive hover:text-destructive/80 ms-1"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newWorkType}
+                        onChange={e => setNewWorkType(e.target.value)}
+                        placeholder={t('addWorkType')}
+                        className="max-w-xs"
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && newWorkType.trim()) {
+                            if (!workTypes.includes(newWorkType.trim())) {
+                              setWorkTypes(prev => [...prev, newWorkType.trim()]);
+                            }
+                            setNewWorkType('');
+                          }
+                        }}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (newWorkType.trim() && !workTypes.includes(newWorkType.trim())) {
+                            setWorkTypes(prev => [...prev, newWorkType.trim()]);
+                          }
+                          setNewWorkType('');
+                        }}
+                        disabled={!newWorkType.trim()}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 {isAdmin && (
                   <Button onClick={handleSaveSheet} disabled={saving} className="gap-2">
                     <Save className="w-4 h-4" />
@@ -331,7 +387,7 @@ export default function HolidayAttendanceDetail() {
                               <Select value={record.work_type} onValueChange={v => updateWorkRecord(record.id!, 'work_type', v)}>
                                 <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                  {WORK_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                  {workTypes.map(wt => <SelectItem key={wt} value={wt}>{wt}</SelectItem>)}
                                 </SelectContent>
                               </Select>
                             ) : record.work_type}
