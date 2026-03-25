@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -147,6 +147,31 @@ export default function HolidayAttendanceDetail() {
   }, [id, isNew, t, toast]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Auto-calculate total work days per employee from work records
+  const calculatedDays = useMemo(() => {
+    const counts: Record<string, number> = {};
+    workRecords.forEach(record => {
+      if (!record.employee_names) return;
+      const names = record.employee_names.split('\n').map(n => n.trim()).filter(Boolean);
+      names.forEach(name => {
+        counts[name] = (counts[name] || 0) + 1;
+      });
+    });
+    return counts;
+  }, [workRecords]);
+
+  // Sync calculated days to DB when they change
+  useEffect(() => {
+    if (employees.length === 0) return;
+    employees.forEach(emp => {
+      const calculated = calculatedDays[emp.employee_name] || 0;
+      if (emp.total_days !== calculated) {
+        supabase.from('holiday_employees').update({ total_days: calculated }).eq('id', emp.id!).then();
+        setEmployees(prev => prev.map(e => e.id === emp.id ? { ...e, total_days: calculated } : e));
+      }
+    });
+  }, [calculatedDays, employees.length]); // intentionally not depending on employees to avoid loops
 
   const handleSaveSheet = async () => {
     if (!sheet.warehouse_name || !sheet.holiday_name || !sheet.period_start || !sheet.period_end) {
@@ -529,9 +554,12 @@ export default function HolidayAttendanceDetail() {
                             ) : emp.job_title}
                           </TableCell>
                           <TableCell>
-                            {isAdmin ? (
-                              <Input type="number" min={0} value={emp.total_days} onChange={e => updateEmployee(emp.id!, 'total_days', parseInt(e.target.value) || 0)} className="w-20" />
-                            ) : emp.total_days}
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center justify-center min-w-[2rem] h-8 rounded-full bg-primary/10 text-primary font-bold text-sm px-2">
+                                {calculatedDays[emp.employee_name] || 0}
+                              </span>
+                              <span className="text-xs text-muted-foreground">{language === 'ar' ? 'يوم' : 'days'}</span>
+                            </div>
                           </TableCell>
                           {isAdmin && (
                             <TableCell>
