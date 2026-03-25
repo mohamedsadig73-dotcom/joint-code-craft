@@ -91,15 +91,12 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14 md:h-16">
           {/* Logo */}
-          <div className="flex items-center gap-4 ltr-flex">
-            <h1 className="text-xl font-bold gradient-text">إدارة المخزن</h1>
-            <span className="hidden md:block text-sm text-muted-foreground">
-              {t('systemTitle')}
-            </span>
+          <div className="flex items-center gap-2 ltr-flex shrink-0">
+            <h1 className="text-lg font-bold gradient-text whitespace-nowrap">إدارة المخزن</h1>
           </div>
 
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center gap-2 ltr-flex">
+          {/* Navigation Links - Icons with text on large screens, icons only on medium */}
+          <div className="hidden md:flex items-center gap-1 ltr-flex">
             {allNavItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -107,61 +104,44 @@ export function Navigation() {
                   <Button
                     variant={isActive(item.path) ? 'secondary' : 'ghost'}
                     size="sm"
-                    className="gap-2 ltr-flex"
+                    className="gap-1.5 ltr-flex px-2 lg:px-3"
+                    title={t(item.labelKey)}
                   >
-                    <Icon className="w-4 h-4" />
-                    {t(item.labelKey)}
+                    <Icon className="w-4 h-4 shrink-0" />
+                    <span className="hidden xl:inline text-xs">{t(item.labelKey)}</span>
                   </Button>
                 </Link>
               );
             })}
           </div>
 
-          {/* Right Side Actions - Simplified */}
-          <div className="flex items-center gap-1 md:gap-2 ltr-flex">
-            {/* Offline Indicator - Hidden on mobile */}
+          {/* Right Side Actions */}
+          <div className="flex items-center gap-1 ltr-flex shrink-0">
             <div className="hidden lg:block">
               <OfflineIndicator />
             </div>
 
-
-            {/* Theme Toggle */}
             <ThemeToggleSimple />
 
-            {/* Language Toggle - Icon only on mobile */}
+            {/* Language Toggle - Icon only */}
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleLanguage}
-              className="md:hidden"
               title={t('switchLanguage')}
             >
               <Globe className="w-4 h-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleLanguage}
-              className="hidden md:flex gap-2 bg-primary/10 hover:bg-primary/20 border-primary/30"
-              title={t('switchLanguage')}
-            >
-              <Globe className="w-4 h-4 text-primary" />
-              <span className="font-medium text-sm">{language === 'en' ? 'العربية' : 'EN'}</span>
-            </Button>
 
-            {/* Notifications */}
             <NotificationCenter />
 
-            {/* User Menu - Consolidated */}
+            {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:px-3 md:w-auto">
+                <Button variant="ghost" size="icon">
                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                     <User className="w-4 h-4" />
                   </div>
-                  <span className="hidden md:block ms-2 text-sm font-medium max-w-[100px] truncate">
-                    {user?.username}
-                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
