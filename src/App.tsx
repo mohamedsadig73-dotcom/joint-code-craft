@@ -12,7 +12,8 @@ import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Onboarding } from "@/components/Onboarding";
 import { OfflineBanner } from "@/components/OfflineIndicator";
-import { AnimatedRoutes } from "@/components/AnimatedRoutes";
+import { AnimatedRoutes } from '@/components/AnimatedRoutes';
+import { UpdateChecker } from '@/components/UpdateChecker';
 
 const queryClient = new QueryClient({
   defaultOptions: {
