@@ -409,9 +409,13 @@ export default function HolidayAttendanceDetail() {
                           </TableCell>
                           <TableCell>
                             {isAdmin ? (
-                              <Textarea value={record.employee_names} onChange={e => updateWorkRecord(record.id!, 'employee_names', e.target.value)}
-                                placeholder={t('enterEmployeeNames')} className="min-w-[200px] min-h-[60px]" />
+                              <EmployeeMultiSelect
+                                employees={employees}
+                                selectedNames={record.employee_names || ''}
+                                onChange={(names) => updateWorkRecord(record.id!, 'employee_names', names)}
+                              />
                             ) : <span className="whitespace-pre-wrap">{record.employee_names}</span>}
+                          </TableCell>
                           </TableCell>
                           {isAdmin && (
                             <TableCell>
