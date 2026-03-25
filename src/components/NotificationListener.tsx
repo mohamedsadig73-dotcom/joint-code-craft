@@ -24,7 +24,7 @@ export function NotificationListener() {
 
     let mounted = true;
     let channel: any = null;
-    let retryTimeout: NodeJS.Timeout;
+    let retryTimeout: ReturnType<typeof setTimeout>;
     let retryCount = 0;
     const MAX_RETRIES = 3;
 
