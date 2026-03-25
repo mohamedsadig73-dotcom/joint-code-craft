@@ -76,6 +76,8 @@ export default function HolidayAttendanceDetail() {
   const [showEmployeePicker, setShowEmployeePicker] = useState(false);
   const [deleteRecordId, setDeleteRecordId] = useState<string | null>(null);
   const [deleteEmployeeId, setDeleteEmployeeId] = useState<string | null>(null);
+  const [workTypes, setWorkTypes] = useState<string[]>(DEFAULT_WORK_TYPES);
+  const [newWorkType, setNewWorkType] = useState('');
 
   const loadData = useCallback(async () => {
     if (isNew) return;
