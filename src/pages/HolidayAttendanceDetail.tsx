@@ -371,6 +371,7 @@ export default function HolidayAttendanceDetail() {
                       <TableRow>
                         <TableHead className="w-16">{t('serial')}</TableHead>
                         <TableHead>{t('workType')}</TableHead>
+                        <TableHead>{t('workDescription')}</TableHead>
                         <TableHead>{t('workDate')}</TableHead>
                         <TableHead>{t('presentEmployees')}</TableHead>
                         {isAdmin && <TableHead className="w-16">{t('actions')}</TableHead>}
