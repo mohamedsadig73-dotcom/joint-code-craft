@@ -32,7 +32,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { forceAppUpdate } from '@/components/ForceUpdateButton';
 
 const APP_VERSION = '4.2.0';
 
