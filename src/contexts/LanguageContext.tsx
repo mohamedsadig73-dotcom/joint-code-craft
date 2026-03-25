@@ -878,6 +878,8 @@ const translations = {
     deleteCostCenterConfirmation: 'Are you sure you want to delete this cost center?',
     noCostCentersFound: 'No cost centers found',
     pettyCash: 'Petty Cash',
+    pettyCashShort: 'Petty Cash',
+    leaveShort: 'Leaves',
     
     // Petty Cash Periods
     pettyCashPeriods: 'Cash Periods',
