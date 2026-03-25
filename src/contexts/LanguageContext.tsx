@@ -380,6 +380,9 @@ const translations = {
     updateInProgress: 'Updating...',
     updateNow: 'Update Now',
     currentVersion: 'Current Version',
+    newDesktopVersionAvailable: 'A new version of the desktop app is available',
+    downloadUpdate: 'Download Update',
+    later: 'Later',
     
     // Archive Files
     archiveFiles: 'Archive Files',
@@ -1233,6 +1236,9 @@ const translations = {
     updateInProgress: 'جاري التحديث...',
     updateNow: 'تحديث الآن',
     currentVersion: 'الإصدار الحالي',
+    newDesktopVersionAvailable: 'يوجد إصدار جديد من تطبيق سطح المكتب',
+    downloadUpdate: 'تحميل التحديث',
+    later: 'لاحقاً',
     
     // Archive Files
     archiveFiles: 'ملفات الأرشيف',
