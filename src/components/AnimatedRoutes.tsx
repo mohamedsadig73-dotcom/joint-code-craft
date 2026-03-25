@@ -24,6 +24,7 @@ const LeaveTracking = lazy(() => import('@/pages/LeaveTracking'));
 const PettyCash = lazy(() => import('@/pages/PettyCash'));
 const HolidayAttendance = lazy(() => import('@/pages/HolidayAttendance'));
 const HolidayAttendanceDetail = lazy(() => import('@/pages/HolidayAttendanceDetail'));
+const EmployeesManagement = lazy(() => import('@/pages/EmployeesManagement'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
