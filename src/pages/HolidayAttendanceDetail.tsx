@@ -518,8 +518,10 @@ export default function HolidayAttendanceDetail() {
                           </TableCell>
                           <TableCell>
                             {isAdmin ? (
-                              <Input value={record.work_date} onChange={e => updateWorkRecord(record.id!, 'work_date', e.target.value)}
-                                placeholder="17-23/03/2026" className="w-40" />
+                              <WorkDatePicker
+                                value={record.work_date}
+                                onChange={v => updateWorkRecord(record.id!, 'work_date', v)}
+                              />
                             ) : record.work_date}
                           </TableCell>
                           <TableCell>
