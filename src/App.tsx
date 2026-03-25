@@ -35,13 +35,13 @@ function AppRoutes() {
       {isAuthenticated && <Onboarding />}
       {isAuthenticated && <MobileBottomNav />}
       {isAuthenticated && <OfflineBanner />}
-      {isAuthenticated && <UpdateChecker />}
+      <UpdateChecker />
       <AnimatedRoutes />
     </>
   );
 }
 
-// App v4.2.0
+// App v4.3.1
 const App = () => (
   <ThemeProvider>
     <QueryClientProvider client={queryClient}>

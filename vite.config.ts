@@ -6,7 +6,7 @@ import { componentTagger } from "lovable-tagger";
 
 // Build version for cache busting
 const BUILD_VERSION = Date.now().toString();
-const APP_VERSION = '4.2.0';
+const APP_VERSION = '4.3.1';
 
 // Plugin to auto-update version.json on build
 function versionJsonPlugin() {
@@ -17,9 +17,7 @@ function versionJsonPlugin() {
         version: APP_VERSION,
         build: BUILD_VERSION,
       }, null, 2);
-      // Write to dist (published output)
       fs.writeFileSync(path.resolve(__dirname, 'dist', 'version.json'), versionData);
-      // Also update source for reference
       fs.writeFileSync(path.resolve(__dirname, 'public', 'version.json'), versionData);
     },
   };
@@ -33,6 +31,7 @@ export default defineConfig(({ mode }) => ({
   },
   define: {
     __BUILD_VERSION__: JSON.stringify(BUILD_VERSION),
+    __APP_VERSION__: JSON.stringify(APP_VERSION),
   },
   plugins: [
     react(),

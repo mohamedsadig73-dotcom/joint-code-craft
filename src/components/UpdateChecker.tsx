@@ -4,10 +4,69 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 declare const __BUILD_VERSION__: string;
+declare const __APP_VERSION__: string;
+
+type PublishedVersionPayload = {
+  version?: string;
+  build?: string;
+};
 
 const LOCAL_BUILD = __BUILD_VERSION__;
-const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const LOCAL_VERSION = __APP_VERSION__;
+const CHECK_INTERVAL = 5 * 60 * 1000;
 const PUBLISHED_URL = 'https://dts-store.lovable.app';
+const VERSION_URL = `${PUBLISHED_URL}/version.json`;
+
+function parseBuildNumber(value?: string) {
+  if (!value) return null;
+  const digits = value.replace(/\D/g, '');
+  return digits ? Number(digits) : null;
+}
+
+function compareVersions(remoteVersion?: string, localVersion?: string) {
+  if (!remoteVersion || !localVersion) return 0;
+
+  const remote = remoteVersion.split('.').map((part) => Number(part) || 0);
+  const local = localVersion.split('.').map((part) => Number(part) || 0);
+  const maxLength = Math.max(remote.length, local.length);
+
+  for (let index = 0; index < maxLength; index += 1) {
+    const remotePart = remote[index] ?? 0;
+    const localPart = local[index] ?? 0;
+
+    if (remotePart > localPart) return 1;
+    if (remotePart < localPart) return -1;
+  }
+
+  return 0;
+}
+
+function isRemoteUpdateAvailable(remoteData: PublishedVersionPayload) {
+  const remoteBuild = parseBuildNumber(remoteData.build);
+  const localBuild = parseBuildNumber(LOCAL_BUILD);
+
+  if (remoteBuild !== null && localBuild !== null) {
+    return remoteBuild > localBuild;
+  }
+
+  return compareVersions(remoteData.version, LOCAL_VERSION) > 0;
+}
+
+async function fetchPublishedVersion() {
+  if (window.electronAPI?.getPublishedVersion) {
+    return window.electronAPI.getPublishedVersion(VERSION_URL);
+  }
+
+  const response = await fetch(`${VERSION_URL}?_t=${Date.now()}`, {
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch version: ${response.status}`);
+  }
+
+  return response.json() as Promise<PublishedVersionPayload>;
+}
 
 export function UpdateChecker() {
   const { t } = useLanguage();
@@ -16,25 +75,30 @@ export function UpdateChecker() {
 
   const checkForUpdate = useCallback(async () => {
     try {
-      const res = await fetch(`${PUBLISHED_URL}/version.json?_t=${Date.now()}`, {
-        cache: 'no-store',
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      // Compare build timestamps - if remote build is newer, show update
-      if (data.build && data.build !== LOCAL_BUILD) {
-        setNewVersion(data.version || data.build);
+      const data = await fetchPublishedVersion();
+
+      if (isRemoteUpdateAvailable(data)) {
+        setNewVersion(data.version || data.build || t('updateAvailable'));
+        setDismissed(false);
       }
     } catch {
-      // Offline or network error — silently ignore
+      // Ignore temporary network / desktop bridge failures
     }
+  }, [t]);
+
+  const handleDownloadUpdate = useCallback(async () => {
+    if (window.electronAPI?.openExternal) {
+      await window.electronAPI.openExternal(PUBLISHED_URL);
+      return;
+    }
+
+    window.open(PUBLISHED_URL, '_blank', 'noopener,noreferrer');
   }, []);
 
   useEffect(() => {
-    // Check on mount after a short delay
-    const initialTimer = setTimeout(checkForUpdate, 5000);
-    // Then check periodically
+    const initialTimer = setTimeout(checkForUpdate, 1500);
     const interval = setInterval(checkForUpdate, CHECK_INTERVAL);
+
     return () => {
       clearTimeout(initialTimer);
       clearInterval(interval);
@@ -59,9 +123,7 @@ export function UpdateChecker() {
               size="sm"
               variant="secondary"
               className="gap-1.5 text-xs"
-              onClick={() => {
-                window.open(PUBLISHED_URL, '_blank');
-              }}
+              onClick={handleDownloadUpdate}
             >
               <RefreshCw className="w-3.5 h-3.5" />
               {t('downloadUpdate')}
