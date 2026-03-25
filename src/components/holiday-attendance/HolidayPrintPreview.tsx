@@ -32,15 +32,7 @@ export function HolidayPrintPreview({ sheet, workRecords, employees, onClose }: 
   const { t } = useLanguage();
 
   const handlePrint = () => {
-    const originalTitle = document.title;
-    const fileName = `كشف دوام الموظفين والعمال خلال العطلة الرسمية بمناسبة ${sheet.holiday_name} من ${formatDate(sheet.period_start)} إلى ${formatDate(sheet.period_end)}`;
-    document.title = fileName;
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => {
-        document.title = originalTitle;
-      }, 1000);
-    }, 100);
+    window.print();
   };
 
   return (

@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { HolidayPrintPreview } from '@/components/holiday-attendance/HolidayPrintPreview';
 import { EmployeePickerDialog } from '@/components/holiday-attendance/EmployeePickerDialog';
+import { formatDate } from '@/utils/dateUtils';
 
 
 interface SheetData {
@@ -123,6 +124,30 @@ export default function HolidayAttendanceDetail() {
   const [deleteEmployeeId, setDeleteEmployeeId] = useState<string | null>(null);
   const [workTypes, setWorkTypes] = useState<string[]>(DEFAULT_WORK_TYPES);
   const [newWorkType, setNewWorkType] = useState('');
+  const originalTitleRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!showPrint) {
+      if (originalTitleRef.current !== null) {
+        document.title = originalTitleRef.current;
+        originalTitleRef.current = null;
+      }
+      return;
+    }
+
+    if (originalTitleRef.current === null) {
+      originalTitleRef.current = document.title;
+    }
+
+    document.title = `كشف دوام الموظفين والعمال خلال العطلة الرسمية بمناسبة ${sheet.holiday_name} من ${formatDate(sheet.period_start)} إلى ${formatDate(sheet.period_end)}`;
+
+    return () => {
+      if (originalTitleRef.current !== null) {
+        document.title = originalTitleRef.current;
+        originalTitleRef.current = null;
+      }
+    };
+  }, [showPrint, sheet.holiday_name, sheet.period_start, sheet.period_end]);
 
   const loadData = useCallback(async () => {
     if (isNew) return;
