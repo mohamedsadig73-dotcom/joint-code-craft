@@ -10,7 +10,7 @@ interface FABProps {
 
 export function FAB({ onSuccess, className }: FABProps) {
   return (
-    <div className={cn('fixed bottom-6 end-6 z-50', className)}>
+    <div className={cn('fixed bottom-24 md:bottom-6 end-6 z-50', className)}>
       <CreateDeclarationDialog 
         onSuccess={onSuccess}
         trigger={

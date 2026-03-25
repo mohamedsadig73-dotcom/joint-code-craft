@@ -116,12 +116,14 @@ export function Navigation() {
           </div>
 
           {/* Right Side Actions */}
-          <div className="flex items-center gap-1 ltr-flex shrink-0">
+          <div className="flex items-center gap-1.5 md:gap-1 ltr-flex shrink-0">
             <div className="hidden lg:block">
               <OfflineIndicator />
             </div>
 
-            <ThemeToggleSimple />
+            <div className="hidden md:block">
+              <ThemeToggleSimple />
+            </div>
 
             {/* Language Toggle - Icon only */}
             <Button
@@ -129,6 +131,7 @@ export function Navigation() {
               size="icon"
               onClick={toggleLanguage}
               title={t('switchLanguage')}
+              className="hidden md:inline-flex"
             >
               <Globe className="w-4 h-4" />
             </Button>
