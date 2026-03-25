@@ -156,6 +156,11 @@ export function Navigation() {
                   <User className="w-4 h-4 me-2" />
                   {t('profile')}
                 </DropdownMenuItem>
+                {/* Mobile-only: Theme & Language */}
+                <DropdownMenuItem onClick={toggleLanguage} className="md:hidden">
+                  <Globe className="w-4 h-4 me-2" />
+                  {t('switchLanguage')}
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/install')}>
                   <Download className="w-4 h-4 me-2" />
                   {t('installApp')}
