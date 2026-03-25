@@ -163,6 +163,22 @@ export default function HolidayAttendanceDetail() {
     }
   };
 
+  const addEmployeesFromPicker = async (pickedEmployees: { employee_number: string; employee_name: string; job_title: string }[]) => {
+    if (isNew || pickedEmployees.length === 0) return;
+    try {
+      const inserts = pickedEmployees.map(e => ({
+        sheet_id: id!, employee_number: e.employee_number, employee_name: e.employee_name,
+        job_title: e.job_title, total_days: 0,
+      }));
+      const { data, error } = await supabase.from('holiday_employees').insert(inserts).select();
+      if (error) throw error;
+      setEmployees(prev => [...prev, ...(data || [])]);
+      toast({ title: t('success'), description: `${pickedEmployees.length} ${t('employeesData')}` });
+    } catch (error: any) {
+      toast({ title: t('error'), description: error.message, variant: 'destructive' });
+    }
+  };
+
   const addEmployee = async () => {
     if (isNew) { toast({ title: t('error'), description: t('saveSheetFirst'), variant: 'destructive' }); return; }
     try {

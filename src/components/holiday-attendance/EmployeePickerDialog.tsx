@@ -116,7 +116,7 @@ export function EmployeePickerDialog({ open, onClose, onSelect, existingNumbers 
           {loading ? (
             <div className="p-4 text-center text-muted-foreground">{t('loading')}</div>
           ) : filtered.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground">{t('noEmployeesFound')}</div>
+            <div className="p-4 text-center text-muted-foreground">{t('noEmployees')}</div>
           ) : (
             <div className="divide-y">
               {filtered.map(emp => (
