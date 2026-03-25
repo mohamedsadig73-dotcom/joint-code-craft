@@ -25,6 +25,48 @@ import { HolidayPrintPreview } from '@/components/holiday-attendance/HolidayPrin
 import { EmployeePickerDialog } from '@/components/holiday-attendance/EmployeePickerDialog';
 
 
+function EmployeeMultiSelect({ employees, selectedNames, onChange }: {
+  employees: Employee[];
+  selectedNames: string;
+  onChange: (names: string) => void;
+}) {
+  const currentNames = selectedNames ? selectedNames.split('\n').map(n => n.trim()).filter(Boolean) : [];
+
+  const toggleEmployee = (name: string) => {
+    const updated = currentNames.includes(name)
+      ? currentNames.filter(n => n !== name)
+      : [...currentNames, name];
+    onChange(updated.join('\n'));
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="min-w-[200px] justify-between text-start h-auto min-h-[40px] whitespace-normal">
+          <span className="truncate text-sm">
+            {currentNames.length > 0
+              ? `${currentNames.length} موظف`
+              : 'اختر الموظفين'}
+          </span>
+          <ChevronDown className="w-4 h-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-2 max-h-60 overflow-y-auto" align="start">
+        {employees.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">لا يوجد موظفين - أضف موظفين أولاً</p>
+        ) : employees.map(emp => (
+          <label key={emp.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer">
+            <Checkbox
+              checked={currentNames.includes(emp.employee_name)}
+              onCheckedChange={() => toggleEmployee(emp.employee_name)}
+            />
+            <span className="text-sm">{emp.employee_name}</span>
+          </label>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 interface SheetData {
   id?: string;
