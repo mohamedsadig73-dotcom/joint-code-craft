@@ -91,6 +91,9 @@ export default function HolidayAttendanceDetail() {
       setSheet(sheetRes.data);
       setWorkRecords(recordsRes.data || []);
       setEmployees(employeesRes.data || []);
+      // Merge custom work types from existing records
+      const existingTypes = (recordsRes.data || []).map((r: any) => r.work_type).filter(Boolean);
+      setWorkTypes(prev => [...new Set([...prev, ...existingTypes])]);
     } catch (error: any) {
       toast({ title: t('error'), description: error.message, variant: 'destructive' });
     } finally {
