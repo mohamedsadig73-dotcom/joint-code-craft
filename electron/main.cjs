@@ -1,6 +1,10 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
+// The live production URL
+const REMOTE_URL = 'https://dts-store.lovable.app';
+const LOCAL_FALLBACK = path.join(__dirname, '..', 'dist', 'index.html');
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
@@ -16,7 +20,11 @@ function createWindow() {
     autoHideMenuBar: true,
   });
 
-  win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
+  // Try loading the live site first, fall back to local if offline
+  win.loadURL(REMOTE_URL).catch(() => {
+    console.log('Remote URL unreachable, loading local fallback...');
+    win.loadFile(LOCAL_FALLBACK);
+  });
 }
 
 app.whenReady().then(createWindow);
