@@ -34,16 +34,17 @@ export function HolidayPrintPreview({ sheet, workRecords, employees, onClose }: 
   const originalTitleRef = useRef(document.title);
 
   useEffect(() => {
-    const fileName = `كشف دوام الموظفين والعمال خلال العطلة الرسمية بمناسبة ${sheet.holiday_name} من ${formatDate(sheet.period_start)} إلى ${formatDate(sheet.period_end)}`;
-    document.title = fileName;
-
     return () => {
       document.title = originalTitleRef.current;
     };
-  }, [sheet.holiday_name, sheet.period_start, sheet.period_end]);
+  }, []);
 
   const handlePrint = () => {
+    const originalTitle = document.title;
+    const fileName = `كشف دوام الموظفين والعمال خلال العطلة الرسمية بمناسبة ${sheet.holiday_name} من ${formatDate(sheet.period_start)} إلى ${formatDate(sheet.period_end)}`;
+    document.title = fileName;
     window.print();
+    document.title = originalTitle;
   };
 
   return (
