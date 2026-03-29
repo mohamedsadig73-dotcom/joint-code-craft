@@ -39,7 +39,7 @@ export function useDashboardData() {
         .from('declarations')
         .select(`*, sender:profiles!sender_id(username)`)
         .is('deleted_at', null)
-        .order('created_at', { ascending: false });
+        .order('id', { ascending: true });
 
       // Apply year filter
       if (selectedYear !== 'all') {
