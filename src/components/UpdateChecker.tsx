@@ -88,7 +88,6 @@ export function UpdateChecker() {
   }, [t]);
 
   const handleApplyUpdate = useCallback(async () => {
-    // For both web and Electron: force reload to get the latest version
     await forceAppUpdate();
   }, []);
 
