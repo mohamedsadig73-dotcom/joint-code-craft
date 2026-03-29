@@ -62,7 +62,7 @@ export function PettyCashDashboard() {
       }, {} as Record<string, number>) || {};
       
       const topVendor = Object.entries(vendorCounts)
-        .sort(([, a], [, b]) => b - a)[0]?.[0] || '-';
+        .sort(([, a], [, b]) => (b as number) - (a as number))[0]?.[0] || '-';
 
       setStats({
         totalExpenses,
