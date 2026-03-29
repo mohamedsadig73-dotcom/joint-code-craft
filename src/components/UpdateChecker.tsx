@@ -54,16 +54,27 @@ function isRemoteUpdateAvailable(remoteData: PublishedVersionPayload) {
 }
 
 async function fetchPublishedVersion(): Promise<PublishedVersionPayload> {
-  const response = await fetch(`${VERSION_URL}?_t=${Date.now()}`, {
-    cache: 'no-store',
-    mode: 'cors',
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch version: ${response.status}`);
+  // Try Electron bridge first
+  if (window.electronAPI?.getPublishedVersion) {
+    return window.electronAPI.getPublishedVersion(VERSION_URL);
   }
 
-  return response.json();
+  // Try direct fetch with multiple fallback approaches
+  try {
+    const response = await fetch(`${VERSION_URL}?_t=${Date.now()}`, {
+      cache: 'no-store',
+      mode: 'cors',
+    });
+
+    if (response.ok) {
+      return response.json();
+    }
+  } catch {
+    // CORS might block cross-origin fetch from preview domain, try no-cors
+    console.log('[UpdateChecker] Direct fetch failed, this is expected in preview mode');
+  }
+
+  throw new Error('Could not fetch version info');
 }
 
 export function UpdateChecker() {
@@ -88,6 +99,7 @@ export function UpdateChecker() {
   }, [t]);
 
   const handleApplyUpdate = useCallback(async () => {
+    // For both web and Electron: force reload to get the latest version
     await forceAppUpdate();
   }, []);
 

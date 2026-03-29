@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = [
-  Deno.env.get("ALLOWED_ORIGIN") ?? "https://dts-store.lovable.app",
-  "https://dts-store.lovable.app",
+  Deno.env.get("ALLOWED_ORIGIN") ?? "https://lovable.dev",
   "http://localhost:5173",
   "http://localhost:8080",
   "https://lovable.dev",
