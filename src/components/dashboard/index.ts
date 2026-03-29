@@ -4,3 +4,4 @@ export { DashboardFilters } from './DashboardFilters';
 export { DeclarationsTable } from './DeclarationsTable';
 export { RecentDeclarationsTable } from './RecentDeclarationsTable';
 export { TrashTable } from './TrashTable';
+export { MissingDeclarations } from './MissingDeclarations';
