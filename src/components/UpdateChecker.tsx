@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Download, X, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { forceAppUpdate } from '@/components/ForceUpdateButton';
 
 declare const __BUILD_VERSION__: string;
 declare const __APP_VERSION__: string;
@@ -52,20 +53,28 @@ function isRemoteUpdateAvailable(remoteData: PublishedVersionPayload) {
   return compareVersions(remoteData.version, LOCAL_VERSION) > 0;
 }
 
-async function fetchPublishedVersion() {
+async function fetchPublishedVersion(): Promise<PublishedVersionPayload> {
+  // Try Electron bridge first
   if (window.electronAPI?.getPublishedVersion) {
     return window.electronAPI.getPublishedVersion(VERSION_URL);
   }
 
-  const response = await fetch(`${VERSION_URL}?_t=${Date.now()}`, {
-    cache: 'no-store',
-  });
+  // Try direct fetch with multiple fallback approaches
+  try {
+    const response = await fetch(`${VERSION_URL}?_t=${Date.now()}`, {
+      cache: 'no-store',
+      mode: 'cors',
+    });
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch version: ${response.status}`);
+    if (response.ok) {
+      return response.json();
+    }
+  } catch {
+    // CORS might block cross-origin fetch from preview domain, try no-cors
+    console.log('[UpdateChecker] Direct fetch failed, this is expected in preview mode');
   }
 
-  return response.json() as Promise<PublishedVersionPayload>;
+  throw new Error('Could not fetch version info');
 }
 
 export function UpdateChecker() {
@@ -80,23 +89,22 @@ export function UpdateChecker() {
       if (isRemoteUpdateAvailable(data)) {
         setNewVersion(data.version || data.build || t('updateAvailable'));
         setDismissed(false);
+        console.log('[UpdateChecker] New version available:', data.version || data.build);
+      } else {
+        console.log('[UpdateChecker] App is up to date. Local:', LOCAL_VERSION, 'Remote:', data.version);
       }
     } catch {
-      // Ignore temporary network / desktop bridge failures
+      // Silently ignore - expected in preview/development environments
     }
   }, [t]);
 
-  const handleDownloadUpdate = useCallback(async () => {
-    if (window.electronAPI?.openExternal) {
-      await window.electronAPI.openExternal(PUBLISHED_URL);
-      return;
-    }
-
-    window.open(PUBLISHED_URL, '_blank', 'noopener,noreferrer');
+  const handleApplyUpdate = useCallback(async () => {
+    // For both web and Electron: force reload to get the latest version
+    await forceAppUpdate();
   }, []);
 
   useEffect(() => {
-    const initialTimer = setTimeout(checkForUpdate, 1500);
+    const initialTimer = setTimeout(checkForUpdate, 3000);
     const interval = setInterval(checkForUpdate, CHECK_INTERVAL);
 
     return () => {
@@ -123,10 +131,10 @@ export function UpdateChecker() {
               size="sm"
               variant="secondary"
               className="gap-1.5 text-xs"
-              onClick={handleDownloadUpdate}
+              onClick={handleApplyUpdate}
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              {t('downloadUpdate')}
+              {t('updateNow')}
             </Button>
             <Button
               size="sm"
