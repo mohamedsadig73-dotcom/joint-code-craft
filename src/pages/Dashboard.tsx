@@ -29,6 +29,7 @@ import {
   DeclarationsTable,
   RecentDeclarationsTable,
   TrashTable,
+  MissingDeclarations,
 } from '@/components/dashboard';
 
 export default function Dashboard() {
@@ -298,6 +299,7 @@ export default function Dashboard() {
 
           {/* Manage Tab */}
           <TabsContent value="manage" className="space-y-6">
+            <MissingDeclarations declarations={declarations} loading={loading} />
             <DashboardFilters
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
