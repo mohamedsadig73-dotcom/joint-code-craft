@@ -125,7 +125,7 @@ export default function HolidayAttendanceDetail() {
   const [deleteEmployeeId, setDeleteEmployeeId] = useState<string | null>(null);
   const [workTypes, setWorkTypes] = useState<string[]>(DEFAULT_WORK_TYPES);
   const [newWorkType, setNewWorkType] = useState('');
-  const originalTitleRef = useRef<string | null>(null);
+  
 
   // Reset title on unmount to ensure it's always restored
   useEffect(() => {
