@@ -727,7 +727,7 @@ export function UserManagementTab() {
               <ShieldAlert className="w-5 h-5" />
               {t('cannotDeleteUser')}
             </AlertDialogTitle>
-            <AlertDialogDescription asChild>
+            <AlertDialogDescription>
               <div className="space-y-4">
                 <p>{t('userHasLinkedDataDescription')}</p>
                 
