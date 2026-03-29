@@ -29,6 +29,7 @@ import {
   DeclarationsTable,
   RecentDeclarationsTable,
   TrashTable,
+  MissingDeclarations,
 } from '@/components/dashboard';
 
 export default function Dashboard() {
