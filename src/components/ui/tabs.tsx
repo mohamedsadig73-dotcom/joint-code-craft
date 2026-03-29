@@ -3,28 +3,40 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 
 import { cn } from "@/lib/utils";
 
-const Tabs = TabsPrimitive.Root;
+const Tabs = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    value?: string;
+    defaultValue?: string;
+    onValueChange?: (value: string) => void;
+    orientation?: "horizontal" | "vertical";
+    dir?: "ltr" | "rtl";
+    activationMode?: "automatic" | "manual";
+  }
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Root ref={ref} className={cn(className)} {...props} />
+));
+Tabs.displayName = "Tabs";
 
 const TabsList = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.List>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
   <TabsPrimitive.List
     ref={ref}
     className={cn(
       "inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
-      // RTL Support: flex-row is handled by CSS, ensure proper gap
       "gap-1 rtl:flex-row-reverse",
       className,
     )}
     {...props}
   />
 ));
-TabsList.displayName = TabsPrimitive.List.displayName;
+TabsList.displayName = "TabsList";
 
 const TabsTrigger = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & { value: string }
 >(({ className, ...props }, ref) => (
   <TabsPrimitive.Trigger
     ref={ref}
@@ -33,18 +45,17 @@ const TabsTrigger = React.forwardRef<
       "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       "disabled:pointer-events-none disabled:opacity-50",
-      // RTL Support: Keep icon + text in proper order
       "gap-2 rtl:flex-row-reverse",
       className,
     )}
     {...props}
   />
 ));
-TabsTrigger.displayName = TabsPrimitive.Trigger.displayName;
+TabsTrigger.displayName = "TabsTrigger";
 
 const TabsContent = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { value: string; forceMount?: true }
 >(({ className, ...props }, ref) => (
   <TabsPrimitive.Content
     ref={ref}
@@ -55,6 +66,6 @@ const TabsContent = React.forwardRef<
     {...props}
   />
 ));
-TabsContent.displayName = TabsPrimitive.Content.displayName;
+TabsContent.displayName = "TabsContent";
 
 export { Tabs, TabsList, TabsTrigger, TabsContent };
