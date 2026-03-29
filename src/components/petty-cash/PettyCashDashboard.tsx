@@ -53,7 +53,7 @@ export function PettyCashDashboard() {
       }, {} as Record<string, number>) || {};
       
       const topCostCenter = Object.entries(costCenterCounts)
-        .sort(([, a], [, b]) => b - a)[0]?.[0] || '-';
+        .sort(([, a], [, b]) => (b as number) - (a as number))[0]?.[0] || '-';
 
       // Find top vendor
       const vendorCounts = expenses?.reduce((acc, e) => {
