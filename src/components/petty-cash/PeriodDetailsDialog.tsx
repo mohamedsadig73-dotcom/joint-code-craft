@@ -9,6 +9,7 @@ import { formatNumber } from '@/utils/numberFormat';
 import { formatDate } from '@/utils/dateUtils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Lock, Unlock, Wallet, FileText, Calendar, User } from 'lucide-react';
+import { PettyCashPrintPreview } from './PettyCashPrintPreview';
 
 interface Expense {
   id: string;
