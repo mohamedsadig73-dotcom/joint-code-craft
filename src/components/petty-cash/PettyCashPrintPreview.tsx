@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -37,7 +36,6 @@ interface PettyCashPrintPreviewProps {
 
 export function PettyCashPrintPreview({ period, expenses }: PettyCashPrintPreviewProps) {
   const { t, language } = useLanguage();
-  const printRef = useRef<HTMLDivElement>(null);
 
   const statusLabels: Record<string, string> = {
     open: language === 'ar' ? 'مفتوحة' : 'Open',
@@ -55,9 +53,6 @@ export function PettyCashPrintPreview({ period, expenses }: PettyCashPrintPrevie
   const handlePrint = () => {
     const originalTitle = document.title;
     document.title = `تفاصيل النثرية - ${period.period_number}`;
-
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
 
     const html = `
 <!DOCTYPE html>
@@ -499,9 +494,42 @@ export function PettyCashPrintPreview({ period, expenses }: PettyCashPrintPrevie
 </body>
 </html>`;
 
-    printWindow.document.write(html);
-    printWindow.document.close();
-    document.title = originalTitle;
+    const blob = new Blob([html], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+    const iframe = document.createElement('iframe');
+
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.setAttribute('aria-hidden', 'true');
+
+    const cleanup = () => {
+      document.title = originalTitle;
+      URL.revokeObjectURL(blobUrl);
+      iframe.remove();
+    };
+
+    iframe.onload = () => {
+      const frameWindow = iframe.contentWindow;
+      if (!frameWindow) {
+        cleanup();
+        return;
+      }
+
+      frameWindow.focus();
+      setTimeout(() => {
+        frameWindow.print();
+      }, 250);
+
+      frameWindow.onafterprint = cleanup;
+      setTimeout(cleanup, 1500);
+    };
+
+    iframe.src = blobUrl;
+    document.body.appendChild(iframe);
   };
 
   return (
