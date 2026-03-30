@@ -9,6 +9,7 @@ import { formatNumber } from '@/utils/numberFormat';
 import { formatDate } from '@/utils/dateUtils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Lock, Unlock, Wallet, FileText, Calendar, User } from 'lucide-react';
+import { PettyCashPrintPreview } from './PettyCashPrintPreview';
 
 interface Expense {
   id: string;
@@ -99,9 +100,12 @@ export function PeriodDetailsDialog({ open, onOpenChange, period }: PeriodDetail
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir={isRTL ? 'rtl' : 'ltr'}>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Wallet className="w-5 h-5" />
-            {t('periodDetails')}: {period.period_number}
+          <DialogTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Wallet className="w-5 h-5" />
+              {t('periodDetails')}: {period.period_number}
+            </span>
+            <PettyCashPrintPreview period={period} expenses={expenses} />
           </DialogTitle>
         </DialogHeader>
 
