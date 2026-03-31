@@ -48,7 +48,7 @@ export const ReportsExportTab = memo(function ReportsExportTab({ dateFrom, dateT
     try {
       const formatted = await fetchAndFormat();
       if (type === 'excel') {
-        exportDeclarationsToExcel(formatted, isAr ? 'تقرير_الإقرارات' : 'Declarations_Report');
+        await exportDeclarationsToExcel(formatted, isAr ? 'تقرير_الإقرارات' : 'Declarations_Report');
       } else {
         await exportDeclarationsToPDFSecure(formatted, 'Declarations Report');
       }
