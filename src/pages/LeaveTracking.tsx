@@ -361,16 +361,16 @@ const LeaveTracking = () => {
   const departments = [...new Set(records.map(r => r.department))];
 
   // Export handlers
-  const handleExportAll = () => {
+  const handleExportAll = async () => {
     if (records.length === 0) {
       toast({ title: t('error'), description: t('noData'), variant: 'destructive' });
       return;
     }
-    exportLeaveTrackingToExcel(records, language);
+    await exportLeaveTrackingToExcel(records, language);
     toast({ title: t('success'), description: t('exportSuccess') });
   };
 
-  const handleExportUpcoming = () => {
+  const handleExportUpcoming = async () => {
     const upcomingRecords = records.filter(r => {
       if (!r.next_leave_due) return false;
       const nextLeave = new Date(r.next_leave_due);
@@ -381,17 +381,17 @@ const LeaveTracking = () => {
       toast({ title: t('error'), description: t('noData'), variant: 'destructive' });
       return;
     }
-    exportUpcomingLeavesReport(upcomingRecords, language);
+    await exportUpcomingLeavesReport(upcomingRecords, language);
     toast({ title: t('success'), description: t('exportSuccess') });
   };
 
-  const handleExportOverdue = () => {
+  const handleExportOverdue = async () => {
     const overdueRecords = records.filter(r => calculateStatus(r) === 'overdue_return');
     if (overdueRecords.length === 0) {
       toast({ title: t('error'), description: t('noData'), variant: 'destructive' });
       return;
     }
-    exportOverdueReturnsReport(overdueRecords, language);
+    await exportOverdueReturnsReport(overdueRecords, language);
     toast({ title: t('success'), description: t('exportSuccess') });
   };
 

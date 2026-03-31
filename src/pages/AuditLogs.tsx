@@ -149,7 +149,7 @@ export default function AuditLogs() {
         profiles: log.profiles,
       }));
       
-      exportAuditLogsToExcel(exportData, 'audit_logs');
+      await exportAuditLogsToExcel(exportData, 'audit_logs');
       toast({ title: 'تم التصدير', description: 'تم تصدير السجلات إلى Excel بنجاح' });
     } catch (error: any) {
       toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
