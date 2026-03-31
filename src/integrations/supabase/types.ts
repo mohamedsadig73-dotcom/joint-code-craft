@@ -1161,7 +1161,7 @@ export type Database = {
           invoice_number: string | null
           item_name: string | null
           notes: string | null
-          period_id: string | null
+          period_id: string
           quantity: number
           recipient: string | null
           status: string
@@ -1182,7 +1182,7 @@ export type Database = {
           invoice_number?: string | null
           item_name?: string | null
           notes?: string | null
-          period_id?: string | null
+          period_id: string
           quantity?: number
           recipient?: string | null
           status?: string
@@ -1203,7 +1203,7 @@ export type Database = {
           invoice_number?: string | null
           item_name?: string | null
           notes?: string | null
-          period_id?: string | null
+          period_id?: string
           quantity?: number
           recipient?: string | null
           status?: string
