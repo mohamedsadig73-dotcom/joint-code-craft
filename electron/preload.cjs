@@ -1,13 +1,13 @@
 const { contextBridge, shell, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  // Fetch version info (bypasses CORS)
+  // Fetch version/release info (bypasses CORS)
   getPublishedVersion: async (url) => {
     const response = await fetch(`${url}?_t=${Date.now()}`, {
       cache: 'no-store',
       headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
     });
-    if (!response.ok) throw new Error(`Failed to fetch version: ${response.status}`);
+    if (!response.ok) throw new Error(`Failed: ${response.status}`);
     return response.json();
   },
 
@@ -21,20 +21,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('print-html', html);
   },
 
-  // Download update ZIP in background
+  // Download update ZIP, extract, and replace dist/ (Hot-Swap)
   downloadUpdate: async (downloadUrl) => {
     return ipcRenderer.invoke('download-update', downloadUrl);
   },
 
-  // Listen for download progress
+  // Listen for download/install progress
   onDownloadProgress: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('download-progress', handler);
-    // Return cleanup function
     return () => ipcRenderer.removeListener('download-progress', handler);
   },
 
-  // Restart the app
+  // Restart the app to apply update
   restartApp: async () => {
     return ipcRenderer.invoke('restart-app');
   },
