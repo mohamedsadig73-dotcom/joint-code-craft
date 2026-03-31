@@ -194,6 +194,24 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
       return;
     }
 
+    // Manual validation for fields that HTML5 required doesn't cover
+    if (!formData.vendor_name.trim()) {
+      toast.error(language === 'ar' ? 'يرجى إدخال اسم المورد' : 'Please enter vendor name');
+      return;
+    }
+    if (!formData.description.trim()) {
+      toast.error(language === 'ar' ? 'يرجى إدخال الوصف' : 'Please enter description');
+      return;
+    }
+    if (!formData.cost_center.trim()) {
+      toast.error(language === 'ar' ? 'يرجى اختيار مركز التكلفة' : 'Please select cost center');
+      return;
+    }
+    if (!formData.unit_price || parseFloat(formData.unit_price) <= 0) {
+      toast.error(language === 'ar' ? 'يرجى إدخال سعر صحيح' : 'Please enter a valid price');
+      return;
+    }
+
     // Check date validation
     if (dateError) {
       toast.error(dateError);
@@ -203,7 +221,7 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
     setLoading(true);
 
     try {
-      const quantity = parseFloat(formData.quantity);
+      const quantity = parseFloat(formData.quantity) || 1;
       const unitPrice = parseFloat(formData.unit_price);
       const calculatedTotal = quantity * unitPrice;
       const periodId = openPeriod?.id || expense?.period_id || null;
@@ -228,8 +246,8 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
       const payload = {
         expense_date: formData.expense_date,
         invoice_number: formData.invoice_number || null,
-        vendor_name: formData.vendor_name,
-        description: formData.description,
+        vendor_name: formData.vendor_name.trim(),
+        description: formData.description.trim(),
         quantity,
         unit_price: unitPrice,
         total_amount: calculatedTotal,
@@ -265,8 +283,6 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
           .eq('id', expense.id);
 
         if (error) throw error;
-        
-        if (periodId) await recalculatePeriodTotals(periodId);
         toast.success(t('expenseUpdated'));
       } else {
         const { error } = await supabase
@@ -274,57 +290,28 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
           .insert(payload);
 
         if (error) throw error;
-        
-        if (periodId) await recalculatePeriodTotals(periodId);
         toast.success(t('expenseAdded'));
       }
 
+      // DB trigger 'update_period_totals_trigger' handles recalculation automatically
       onOpenChange(false);
       onSuccess();
     } catch (error: unknown) {
       console.error('Error saving expense:', error);
-      const msg = error instanceof Error ? error.message : '';
+      const msg = error instanceof Error ? error.message : String(error);
       if (msg.includes('قبل تاريخ بداية') || msg.includes('بعد تاريخ نهاية') || msg.includes('before period') || msg.includes('after period')) {
         toast.error(language === 'ar' 
           ? 'تاريخ المصروف خارج نطاق فترة النثرية'
           : 'Expense date is outside the period date range');
+      } else if (msg.includes('row-level security')) {
+        toast.error(language === 'ar'
+          ? 'ليس لديك صلاحية لإضافة مصروف. تأكد من تسجيل الدخول.'
+          : 'Permission denied. Please make sure you are logged in.');
       } else {
-        toast.error(t('errorOccurred'));
+        toast.error(`${t('errorOccurred')}: ${msg}`);
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const recalculatePeriodTotals = async (periodId: string) => {
-    try {
-      const { data: periodExpenses } = await supabase
-        .from('petty_cash_expenses')
-        .select('total_amount, status')
-        .eq('period_id', periodId)
-        .neq('status', 'rejected');
-
-      const totalExp = periodExpenses?.reduce((sum, e) => sum + Number(e.total_amount || 0), 0) || 0;
-      const count = periodExpenses?.length || 0;
-
-      const { data: period } = await supabase
-        .from('petty_cash_periods')
-        .select('opening_balance')
-        .eq('id', periodId)
-        .single();
-
-      const openingBalance = Number(period?.opening_balance || 0);
-
-      await supabase
-        .from('petty_cash_periods')
-        .update({
-          total_expenses: totalExp,
-          expenses_count: count,
-          current_balance: openingBalance - totalExp
-        })
-        .eq('id', periodId);
-    } catch (error) {
-      console.error('Error recalculating period totals:', error);
     }
   };
 
