@@ -1,0 +1,2 @@
+CREATE POLICY "Allow public upload to desktop-releases" ON storage.objects FOR INSERT TO anon WITH CHECK (bucket_id = 'desktop-releases');
+CREATE POLICY "Allow public read from desktop-releases" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'desktop-releases');
