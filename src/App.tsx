@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, HashRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -26,6 +26,12 @@ const queryClient = new QueryClient({
   },
 });
 
+const AppRouter =
+  typeof window !== "undefined" &&
+  (window.location.protocol === "file:" || Boolean(window.electronAPI))
+    ? HashRouter
+    : BrowserRouter;
+
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
 
@@ -41,7 +47,7 @@ function AppRoutes() {
   );
 }
 
-// App v4.3.2
+// App v4.3.3
 const App = () => (
   <ThemeProvider>
     <QueryClientProvider client={queryClient}>
@@ -49,14 +55,14 @@ const App = () => (
         <Toaster />
         <Sonner />
         <RegisterSW />
-        <BrowserRouter>
+        <AppRouter>
           <LanguageProvider>
             <AuthProvider>
               <AppRoutes />
               <PWAInstallPrompt />
             </AuthProvider>
           </LanguageProvider>
-        </BrowserRouter>
+        </AppRouter>
       </TooltipProvider>
     </QueryClientProvider>
   </ThemeProvider>
