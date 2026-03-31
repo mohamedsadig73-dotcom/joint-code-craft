@@ -385,7 +385,7 @@ export function PettyCashPeriodsManagement() {
                         <span>{period.end_date ? formatDate(period.end_date) : (language === 'ar' ? 'مفتوحة' : 'Open')}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{formatDate(period.opened_at)}</TableCell>
+                    <TableCell>
                       <div className={`flex gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <Button
                           size="icon"
