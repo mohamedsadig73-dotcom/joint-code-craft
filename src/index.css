@@ -170,12 +170,11 @@
 
   /* Root Typography - Applied to entire document */
   html {
-    font-family: 'Cairo', 'IBM Plex Sans', Arial, sans-serif !important;
+    font-family: 'Cairo', sans-serif !important;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     font-feature-settings: 'kern' 1, 'liga' 1;
-    /* Prevent layout shifts during font loading */
     font-display: swap;
   }
 
