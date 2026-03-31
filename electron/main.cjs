@@ -1,58 +1,20 @@
-const { app, BrowserWindow, session, ipcMain } = require('electron');
+const { app, BrowserWindow, session, ipcMain, shell } = require('electron');
 const path = require('path');
+const fs = require('fs');
+const https = require('https');
+const http = require('http');
 
 app.disableHardwareAcceleration();
 
-// Production URL
+// ── Paths ──────────────────────────────────────────────
+const LOCAL_INDEX = path.join(__dirname, '..', 'dist', 'index.html');
 const PUBLISHED_URL = 'https://dts-store-qatar-2026.lovable.app';
-const LOCAL_FALLBACK = path.join(__dirname, '..', 'dist', 'index.html');
-
-// How many times to retry loading the remote URL
-const MAX_RETRIES = 3;
-const LOAD_TIMEOUT = 20000; // 20 seconds per attempt
-const CONTENT_CHECK_DELAY = 3000; // Wait 3s after load for JS to execute
-
-// Splash HTML shown instantly while remote loads
-const SPLASH_HTML = `data:text/html;charset=utf-8,<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head><meta charset="utf-8">
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
-    background: #0a0a1a;
-    color: #e2e8f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    overflow: hidden;
-  }
-  .container { text-align: center; }
-  h1 { font-size: 28px; margin-bottom: 16px; color: #60a5fa; }
-  p { font-size: 16px; color: #94a3b8; margin-bottom: 32px; }
-  .spinner {
-    width: 48px; height: 48px;
-    border: 4px solid #1e293b;
-    border-top: 4px solid #60a5fa;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-</style>
-</head>
-<body>
-  <div class="container">
-    <h1>نظام إدارة المخزن</h1>
-    <p>جاري تحميل النظام...</p>
-    <div class="spinner"></div>
-  </div>
-</body>
-</html>`;
+const DESKTOP_RELEASE_URL = `${PUBLISHED_URL}/desktop-release.json`;
+const UPDATE_DIR = path.join(app.getPath('userData'), 'updates');
 
 let mainWindow = null;
 
+// ── Window ─────────────────────────────────────────────
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -70,113 +32,30 @@ function createWindow() {
     autoHideMenuBar: true,
   });
 
-  // Show window with splash
-  mainWindow.loadURL(SPLASH_HTML).then(() => {
-    mainWindow.show();
-    loadRemoteWithRetries(0);
-  });
-}
-
-/**
- * Try to load the remote URL with retries.
- * After each successful HTTP load, verify that the React app
- * actually rendered (check for #root with children).
- */
-function loadRemoteWithRetries(attempt) {
-  if (attempt >= MAX_RETRIES) {
-    console.log(`All ${MAX_RETRIES} remote attempts failed, loading local fallback...`);
-    loadLocal();
-    return;
-  }
-
-  const url = `${PUBLISHED_URL}?_electron=${Date.now()}`;
-  console.log(`[Electron] Attempt ${attempt + 1}/${MAX_RETRIES}: Loading ${PUBLISHED_URL}`);
-
-  // Timeout: if nothing happens in LOAD_TIMEOUT ms, retry
-  const timeout = setTimeout(() => {
-    console.log(`[Electron] Timeout on attempt ${attempt + 1}`);
-    cleanup();
-    loadRemoteWithRetries(attempt + 1);
-  }, LOAD_TIMEOUT);
-
-  const cleanup = () => {
-    clearTimeout(timeout);
-    mainWindow.webContents.removeListener('did-finish-load', onFinish);
-    mainWindow.webContents.removeListener('did-fail-load', onFail);
-  };
-
-  const onFinish = () => {
-    clearTimeout(timeout);
-    console.log(`[Electron] Page loaded, verifying content...`);
-    // Wait for JS to execute, then check if React rendered
-    setTimeout(() => verifyContent(attempt), CONTENT_CHECK_DELAY);
-  };
-
-  const onFail = (_event, errorCode, errorDescription) => {
-    if (errorCode === -3) return; // Aborted, ignore
-    console.log(`[Electron] Load failed: ${errorCode} - ${errorDescription}`);
-    cleanup();
-    loadRemoteWithRetries(attempt + 1);
-  };
-
-  mainWindow.webContents.once('did-finish-load', onFinish);
-  mainWindow.webContents.once('did-fail-load', onFail);
-
-  mainWindow.loadURL(url).catch((err) => {
-    console.log(`[Electron] loadURL rejected: ${err.message}`);
-    cleanup();
-    loadRemoteWithRetries(attempt + 1);
-  });
-}
-
-/**
- * Check if the React app actually rendered by inspecting the DOM.
- * If #root is empty or missing, the JS failed to execute.
- */
-function verifyContent(attempt) {
-  if (!mainWindow || mainWindow.isDestroyed()) return;
-
-  mainWindow.webContents
-    .executeJavaScript(`
-      (function() {
-        var root = document.getElementById('root');
-        if (!root) return { ok: false, reason: 'no-root' };
-        if (root.children.length === 0) return { ok: false, reason: 'empty-root' };
-        // Check if it's a real app (has meaningful content)
-        var text = root.innerText || '';
-        if (text.length < 10) return { ok: false, reason: 'minimal-content' };
-        return { ok: true, childCount: root.children.length };
-      })()
-    `)
-    .then((result) => {
-      if (result && result.ok) {
-        console.log(`[Electron] ✓ App verified successfully (${result.childCount} children)`);
-        setupRuntimeRecovery();
-      } else {
-        console.log(`[Electron] ✗ Content verification failed: ${result ? result.reason : 'unknown'}`);
-        loadRemoteWithRetries(attempt + 1);
-      }
-    })
-    .catch((err) => {
-      console.log(`[Electron] Content check error: ${err.message}`);
-      loadRemoteWithRetries(attempt + 1);
-    });
-}
-
-function loadLocal() {
-  const fs = require('fs');
-  if (fs.existsSync(LOCAL_FALLBACK)) {
-    console.log('[Electron] Loading local fallback...');
-    mainWindow.loadFile(LOCAL_FALLBACK).catch((err) => {
-      console.error('[Electron] Local fallback failed:', err);
+  // ── Load local dist directly (v5 standard) ──
+  if (fs.existsSync(LOCAL_INDEX)) {
+    console.log('[Electron] Loading local dist/index.html...');
+    mainWindow.loadFile(LOCAL_INDEX).then(() => {
+      mainWindow.show();
+      setupRuntimeRecovery();
+    }).catch((err) => {
+      console.error('[Electron] Local load failed:', err);
+      mainWindow.show();
       showErrorPage();
     });
   } else {
-    console.error('[Electron] Local fallback not found');
-    showErrorPage();
+    // Fallback: try remote if no local build
+    console.log('[Electron] No local dist, loading remote...');
+    mainWindow.loadURL(PUBLISHED_URL).then(() => {
+      mainWindow.show();
+    }).catch(() => {
+      mainWindow.show();
+      showErrorPage();
+    });
   }
 }
 
+// ── Error page ─────────────────────────────────────────
 function showErrorPage() {
   const errorHTML = `data:text/html;charset=utf-8,<!DOCTYPE html>
   <html dir="rtl" lang="ar">
@@ -187,48 +66,38 @@ function showErrorPage() {
     p { color: #94a3b8; margin-bottom: 8px; }
     button { margin-top: 24px; padding: 12px 32px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
     button:hover { background: #2563eb; }
-    .info { font-size: 12px; color: #64748b; margin-top: 16px; }
   </style>
   </head>
   <body>
     <div>
-      <h1>تعذّر الاتصال</h1>
-      <p>لم يتم العثور على اتصال بالإنترنت أو فشل تحميل التطبيق.</p>
-      <p>تأكد من اتصالك بالإنترنت وأعد المحاولة.</p>
+      <h1>تعذّر تحميل التطبيق</h1>
+      <p>تأكد من وجود ملفات التطبيق أو اتصالك بالإنترنت.</p>
       <button onclick="location.reload()">إعادة المحاولة</button>
-      <p class="info">إذا استمرت المشكلة، جرّب فتح الرابط مباشرة في المتصفح:<br/>
-      <a href="${PUBLISHED_URL}" style="color:#60a5fa">${PUBLISHED_URL}</a></p>
     </div>
   </body>
   </html>`;
   mainWindow.loadURL(errorHTML);
 }
 
-/**
- * After successful load, set up recovery for runtime navigation failures.
- */
+// ── Runtime recovery ───────────────────────────────────
 function setupRuntimeRecovery() {
-  mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
-    if (errorCode === -3) return; // Ignore aborted loads
-    console.log(`[Electron] Runtime failure: ${errorCode} - ${errorDescription} - ${validatedURL}`);
-    // Retry loading the main URL after a short delay
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode) => {
+    if (errorCode === -3) return;
+    console.log(`[Electron] Runtime failure: ${errorCode}`);
     setTimeout(() => {
       if (!mainWindow.isDestroyed()) {
-        loadRemoteWithRetries(0);
+        mainWindow.loadFile(LOCAL_INDEX).catch(() => showErrorPage());
       }
     }, 2000);
   });
 
-  // Handle unresponsive renderer
   mainWindow.webContents.on('unresponsive', () => {
     console.log('[Electron] Page unresponsive, reloading...');
-    if (!mainWindow.isDestroyed()) {
-      mainWindow.webContents.reload();
-    }
+    if (!mainWindow.isDestroyed()) mainWindow.webContents.reload();
   });
 }
 
-// IPC: Print HTML content in a hidden window
+// ── IPC: Print HTML ────────────────────────────────────
 ipcMain.handle('print-html', async (_event, htmlContent) => {
   return new Promise((resolve, reject) => {
     const printWin = new BrowserWindow({
@@ -252,7 +121,76 @@ ipcMain.handle('print-html', async (_event, htmlContent) => {
   });
 });
 
-// Clear cache on startup to avoid stale content
+// ── IPC: Open external URL ─────────────────────────────
+ipcMain.handle('open-external', async (_event, url) => {
+  await shell.openExternal(url);
+});
+
+// ── IPC: Download update ZIP ───────────────────────────
+ipcMain.handle('download-update', async (event, downloadUrl) => {
+  return new Promise((resolve, reject) => {
+    if (!fs.existsSync(UPDATE_DIR)) {
+      fs.mkdirSync(UPDATE_DIR, { recursive: true });
+    }
+
+    const fileName = path.basename(new URL(downloadUrl).pathname) || 'update.zip';
+    const filePath = path.join(UPDATE_DIR, fileName);
+    const file = fs.createWriteStream(filePath);
+
+    const doRequest = (url) => {
+      const proto = url.startsWith('https') ? https : http;
+      proto.get(url, (response) => {
+        // Handle redirects
+        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          doRequest(response.headers.location);
+          return;
+        }
+
+        if (response.statusCode !== 200) {
+          reject(new Error(`Download failed: HTTP ${response.statusCode}`));
+          return;
+        }
+
+        const totalSize = parseInt(response.headers['content-length'] || '0', 10);
+        let downloadedSize = 0;
+
+        response.on('data', (chunk) => {
+          downloadedSize += chunk.length;
+          file.write(chunk);
+          if (totalSize > 0) {
+            const progress = Math.round((downloadedSize / totalSize) * 100);
+            mainWindow?.webContents?.send('download-progress', { progress, downloaded: downloadedSize, total: totalSize });
+          }
+        });
+
+        response.on('end', () => {
+          file.end();
+          console.log(`[Electron] Update downloaded to: ${filePath}`);
+          resolve({ success: true, filePath });
+        });
+
+        response.on('error', (err) => {
+          file.end();
+          fs.unlinkSync(filePath);
+          reject(err);
+        });
+      }).on('error', (err) => {
+        file.end();
+        reject(err);
+      });
+    };
+
+    doRequest(downloadUrl);
+  });
+});
+
+// ── IPC: Restart app ───────────────────────────────────
+ipcMain.handle('restart-app', () => {
+  app.relaunch();
+  app.exit(0);
+});
+
+// ── App lifecycle ──────────────────────────────────────
 app.whenReady().then(() => {
   session.defaultSession.clearCache().then(() => {
     createWindow();
