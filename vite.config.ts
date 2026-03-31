@@ -54,7 +54,7 @@ export default defineConfig(({ mode }) => ({
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
           'supabase': ['@supabase/supabase-js'],
-          'excel-export': ['xlsx'],
+          'excel-export': ['exceljs'],
           'date-utils': ['date-fns'],
         }
       }
