@@ -250,7 +250,6 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
         description: formData.description.trim(),
         quantity,
         unit_price: unitPrice,
-        total_amount: calculatedTotal,
         cost_center: formData.cost_center,
         item_name: formData.item_name || null,
         recipient: formData.recipient || null,
@@ -298,11 +297,19 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
       onSuccess();
     } catch (error: unknown) {
       console.error('Error saving expense:', error);
-      const msg = error instanceof Error ? error.message : String(error);
+      const msg = error instanceof Error
+        ? error.message
+        : typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string'
+          ? error.message
+          : String(error);
       if (msg.includes('قبل تاريخ بداية') || msg.includes('بعد تاريخ نهاية') || msg.includes('before period') || msg.includes('after period')) {
         toast.error(language === 'ar' 
           ? 'تاريخ المصروف خارج نطاق فترة النثرية'
           : 'Expense date is outside the period date range');
+      } else if (msg.includes('generated column') || msg.includes('total_amount')) {
+        toast.error(language === 'ar'
+          ? 'تم إصلاح خطأ حفظ الإجمالي. حاول إضافة المصروف مرة أخرى.'
+          : 'The total field save issue was fixed. Please try adding the expense again.');
       } else if (msg.includes('row-level security')) {
         toast.error(language === 'ar'
           ? 'ليس لديك صلاحية لإضافة مصروف. تأكد من تسجيل الدخول.'
