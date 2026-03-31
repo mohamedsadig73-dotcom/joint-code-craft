@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,11 +26,12 @@ export function PettyCashDashboard() {
     loadStats();
   }, []);
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const { data: expenses, error } = await supabase
         .from('petty_cash_expenses')
-        .select('*');
+        .select('*')
+        .limit(1000);
 
       if (error) throw error;
 
@@ -81,7 +82,7 @@ export function PettyCashDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   if (loading) {
     return (

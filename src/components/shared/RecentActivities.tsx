@@ -62,6 +62,11 @@ export const RecentActivities = memo(function RecentActivities({
                   <span className="text-muted-foreground mx-2">•</span>
                   <span className="text-muted-foreground">
                     {activity.message || auditActionLabels[activity.action] || activity.action}
+                    {activity.table_name && activity.record_id && (
+                      <span className="text-muted-foreground/70 text-xs ms-1">
+                        ({activity.table_name} #{activity.record_id.slice(0, 8)})
+                      </span>
+                    )}
                   </span>
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">

@@ -17,12 +17,19 @@ const routeLabels: Record<string, { en: string; ar: string }> = {
   '': { en: 'Dashboard', ar: 'لوحة التحكم' },
   'dashboard': { en: 'Dashboard', ar: 'لوحة التحكم' },
   'reports': { en: 'Reports', ar: 'التقارير' },
+  'reports-analytics': { en: 'Reports & Analytics', ar: 'التقارير والتحليلات' },
   'admin': { en: 'Admin', ar: 'الإدارة' },
   'maintenance': { en: 'Maintenance', ar: 'الصيانة' },
   'profile': { en: 'Profile', ar: 'الملف الشخصي' },
   'trash': { en: 'Trash', ar: 'المحذوفات' },
   'audit-logs': { en: 'Audit Logs', ar: 'سجل التدقيق' },
   'declaration': { en: 'Declaration', ar: 'إقرار' },
+  'petty-cash': { en: 'Petty Cash', ar: 'العهد النثرية' },
+  'leave-tracking': { en: 'Leave Tracking', ar: 'تتبع الإجازات' },
+  'holiday-attendance': { en: 'Holiday Attendance', ar: 'حضور العطلات' },
+  'employees': { en: 'Employees', ar: 'الموظفين' },
+  'manager-dashboard': { en: 'Manager Dashboard', ar: 'لوحة المدير' },
+  'install': { en: 'Install App', ar: 'تثبيت التطبيق' },
 };
 
 export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
