@@ -37,6 +37,8 @@ interface PettyCashPeriod {
   balance_disposition: string | null;
   disposition_amount: number | null;
   carried_from_period_id: string | null;
+  start_date: string | null;
+  end_date: string | null;
 }
 
 export function PettyCashPeriodsManagement() {
