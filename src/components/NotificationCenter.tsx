@@ -36,7 +36,6 @@ export function NotificationCenter() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
   const hasFetchedRef = useRef(false);
 
   const userId = user?.id;
@@ -86,7 +85,6 @@ export function NotificationCenter() {
 
   // Lazy-load full notifications on first open
   const handleOpenChange = useCallback((open: boolean) => {
-    setIsOpen(open);
     if (open && !hasFetchedRef.current) {
       hasFetchedRef.current = true;
       loadNotifications();
@@ -150,7 +148,7 @@ export function NotificationCenter() {
     if (!notification.read) {
       markAsRead(notification.id);
     }
-    setIsOpen(false);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     navigate(`/declaration/${notification.declaration_id}`);
   }, [markAsRead, navigate]);
 
@@ -219,7 +217,7 @@ export function NotificationCenter() {
   if (!user) return null;
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={handleOpenChange}>
+    <DropdownMenu onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="w-5 h-5" />
