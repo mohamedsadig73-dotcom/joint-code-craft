@@ -96,6 +96,13 @@ export function PettyCashPeriodsManagement() {
         return;
       }
       
+      // Delete disposition transactions before reopening
+      await supabase
+        .from('petty_cash_transactions')
+        .delete()
+        .eq('period_id', id)
+        .in('transaction_type', ['carry_forward_out', 'refund', 'write_off']);
+
       const { error } = await supabase
         .from('petty_cash_periods')
         .update({
