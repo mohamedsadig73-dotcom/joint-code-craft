@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Download, X, RefreshCw, ExternalLink } from 'lucide-react';
+import { Download, X, RefreshCw, ExternalLink, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { forceAppUpdate } from '@/components/ForceUpdateButton';
 
@@ -74,14 +75,17 @@ type UpdateInfo =
   | { type: 'web'; version: string }
   | { type: 'desktop'; version: string; downloadUrl: string; releaseNotes?: string; mandatory?: boolean };
 
+type DownloadState = 'idle' | 'downloading' | 'done' | 'error';
+
 export function UpdateChecker() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [downloadState, setDownloadState] = useState<DownloadState>('idle');
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   const checkForUpdate = useCallback(async () => {
     try {
-      // For Electron: check desktop release first
       if (isElectron) {
         try {
           const desktop = await fetchJSON<DesktopReleasePayload>(DESKTOP_RELEASE_URL);
@@ -95,6 +99,11 @@ export function UpdateChecker() {
             });
             setDismissed(false);
             console.log('[UpdateChecker] Desktop update available:', desktop.desktop_shell_version);
+
+            // Auto-download for mandatory updates
+            if (desktop.mandatory && window.electronAPI?.downloadUpdate) {
+              handleAutoDownload(desktop.download_url);
+            }
             return;
           }
         } catch {
@@ -102,7 +111,6 @@ export function UpdateChecker() {
         }
       }
 
-      // Web version check
       const data = await fetchJSON<PublishedVersionPayload>(VERSION_URL);
       if (isRemoteUpdateAvailable(data)) {
         setUpdateInfo({
@@ -119,17 +127,44 @@ export function UpdateChecker() {
     }
   }, [t]);
 
+  const handleAutoDownload = useCallback(async (downloadUrl: string) => {
+    if (!window.electronAPI?.downloadUpdate) return;
+    setDownloadState('downloading');
+    setDownloadProgress(0);
+
+    const cleanup = window.electronAPI.onDownloadProgress?.((data) => {
+      setDownloadProgress(data.progress);
+    });
+
+    try {
+      await window.electronAPI.downloadUpdate(downloadUrl);
+      setDownloadState('done');
+    } catch (err) {
+      console.error('[UpdateChecker] Auto-download failed:', err);
+      setDownloadState('error');
+    } finally {
+      cleanup?.();
+    }
+  }, []);
+
   const handleApplyUpdate = useCallback(async () => {
     if (!updateInfo) return;
 
-    if (updateInfo.type === 'desktop' && window.electronAPI?.openExternal) {
-      // Open download URL in default browser
-      await window.electronAPI.openExternal(updateInfo.downloadUrl);
+    if (updateInfo.type === 'desktop') {
+      if (window.electronAPI?.downloadUpdate && downloadState === 'idle') {
+        // Start download in background
+        handleAutoDownload(updateInfo.downloadUrl);
+      } else if (downloadState === 'done' && window.electronAPI?.restartApp) {
+        // Restart to apply
+        await window.electronAPI.restartApp();
+      } else if (window.electronAPI?.openExternal) {
+        // Fallback: open in browser
+        await window.electronAPI.openExternal(updateInfo.downloadUrl);
+      }
     } else {
-      // Web: force reload
       await forceAppUpdate();
     }
-  }, [updateInfo]);
+  }, [updateInfo, downloadState, handleAutoDownload]);
 
   useEffect(() => {
     const initialTimer = setTimeout(checkForUpdate, 3000);
@@ -143,6 +178,23 @@ export function UpdateChecker() {
   if (!updateInfo || dismissed) return null;
 
   const isDesktop = updateInfo.type === 'desktop';
+  const isAr = language === 'ar';
+
+  const getButtonLabel = () => {
+    if (isDesktop) {
+      if (downloadState === 'downloading') return isAr ? 'جاري التحميل...' : 'Downloading...';
+      if (downloadState === 'done') return isAr ? 'إعادة التشغيل للتحديث' : 'Restart to Update';
+      if (downloadState === 'error') return isAr ? 'فشل التحميل - حاول مجدداً' : 'Download Failed - Retry';
+      return t('downloadUpdate') || t('updateNow');
+    }
+    return t('updateNow');
+  };
+
+  const getButtonIcon = () => {
+    if (downloadState === 'done') return <CheckCircle className="w-3.5 h-3.5" />;
+    if (isDesktop) return <ExternalLink className="w-3.5 h-3.5" />;
+    return <RefreshCw className="w-3.5 h-3.5" />;
+  };
 
   return (
     <div className="fixed bottom-4 start-4 end-4 sm:start-auto sm:end-4 sm:w-96 z-50 bg-primary text-primary-foreground rounded-lg shadow-2xl p-4 animate-in slide-in-from-bottom-4 fade-in duration-300">
@@ -162,26 +214,27 @@ export function UpdateChecker() {
           {isDesktop && updateInfo.releaseNotes && (
             <p className="text-xs opacity-75 mt-1">{updateInfo.releaseNotes}</p>
           )}
+
+          {/* Download progress bar */}
+          {downloadState === 'downloading' && (
+            <div className="mt-2">
+              <Progress value={downloadProgress} className="h-2" />
+              <p className="text-xs opacity-75 mt-1">{downloadProgress}%</p>
+            </div>
+          )}
+
           <div className="flex gap-2 mt-3">
             <Button
               size="sm"
               variant="secondary"
               className="gap-1.5 text-xs"
               onClick={handleApplyUpdate}
+              disabled={downloadState === 'downloading'}
             >
-              {isDesktop ? (
-                <>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  {t('downloadUpdate') || t('updateNow')}
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  {t('updateNow')}
-                </>
-              )}
+              {getButtonIcon()}
+              {getButtonLabel()}
             </Button>
-            {!(isDesktop && updateInfo.mandatory) && (
+            {!(isDesktop && updateInfo.mandatory) && downloadState !== 'downloading' && (
               <Button
                 size="sm"
                 variant="ghost"
