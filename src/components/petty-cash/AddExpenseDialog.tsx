@@ -267,6 +267,38 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
     }
   };
 
+  const recalculatePeriodTotals = async (periodId: string) => {
+    try {
+      const { data: periodExpenses } = await supabase
+        .from('petty_cash_expenses')
+        .select('total_amount, status')
+        .eq('period_id', periodId)
+        .neq('status', 'rejected');
+
+      const totalExp = periodExpenses?.reduce((sum, e) => sum + Number(e.total_amount || 0), 0) || 0;
+      const count = periodExpenses?.length || 0;
+
+      const { data: period } = await supabase
+        .from('petty_cash_periods')
+        .select('opening_balance')
+        .eq('id', periodId)
+        .single();
+
+      const openingBalance = Number(period?.opening_balance || 0);
+
+      await supabase
+        .from('petty_cash_periods')
+        .update({
+          total_expenses: totalExp,
+          expenses_count: count,
+          current_balance: openingBalance - totalExp
+        })
+        .eq('id', periodId);
+    } catch (error) {
+      console.error('Error recalculating period totals:', error);
+    }
+  };
+
   const totalAmount = (parseFloat(formData.quantity) || 0) * (parseFloat(formData.unit_price) || 0);
 
   return (
