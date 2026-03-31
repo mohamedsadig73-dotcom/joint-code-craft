@@ -15,7 +15,7 @@ type PublishedVersionPayload = {
 const LOCAL_BUILD = __BUILD_VERSION__;
 const LOCAL_VERSION = __APP_VERSION__;
 const CHECK_INTERVAL = 5 * 60 * 1000;
-const PUBLISHED_URL = 'https://dts-store.lovable.app';
+const PUBLISHED_URL = 'https://dts-store-qatar-2026.lovable.app';
 const VERSION_URL = `${PUBLISHED_URL}/version.json`;
 
 function parseBuildNumber(value?: string) {
