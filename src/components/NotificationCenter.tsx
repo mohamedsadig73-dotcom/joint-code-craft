@@ -85,7 +85,6 @@ export function NotificationCenter() {
 
   // Lazy-load full notifications on first open
   const handleOpenChange = useCallback((open: boolean) => {
-    setIsOpen(open);
     if (open && !hasFetchedRef.current) {
       hasFetchedRef.current = true;
       loadNotifications();
