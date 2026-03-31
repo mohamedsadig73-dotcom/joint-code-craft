@@ -127,7 +127,8 @@ export function OpenPeriodDialog({ open, onOpenChange, onSuccess }: OpenPeriodDi
           notes: formData.notes || null,
           opened_by: user?.id,
           status: 'open',
-          carried_from_period_id: carryForward?.period_id || null
+          carried_from_period_id: carryForward?.period_id || null,
+          start_date: now.toISOString().split('T')[0]
         });
 
       if (error) throw error;

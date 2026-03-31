@@ -70,7 +70,8 @@ export function ClosePeriodDialog({
       const updateData: Record<string, unknown> = {
         status: 'pending_approval',
         closed_at: new Date().toISOString(),
-        closed_by: user?.id
+        closed_by: user?.id,
+        end_date: new Date().toISOString().split('T')[0]
       };
 
       // If there's a remaining balance, set disposition
