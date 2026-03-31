@@ -82,7 +82,7 @@ export function PettyCashDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   if (loading) {
     return (
