@@ -1,102 +1,80 @@
 
 
-# Plan: Performance Fix, Auto-Update, and Stability Improvements
+# خطة: بناء نسخة ويندوز v5 + إصلاح الإشعارات + التحديث التلقائي
 
-## Problem Summary
+## المشكلة الحالية
 
-1. **Critical Bug**: Console shows "Maximum update depth exceeded" in `NotificationCenter` — a `DropdownMenu` is triggering infinite re-renders, likely from Radix UI state management interaction
-2. **Auto-update for Electron**: Currently `UpdateChecker` shows a banner but requires manual download; user wants automatic download + install
-3. **Performance**: General loading speed improvements needed
+خطأ `Maximum update depth exceeded` لا يزال موجوداً في `NotificationCenter` رغم التعديل السابق. السبب: استخدام `DropdownMenu` في وضع **controlled** (`open={isOpen}`) يتسبب في حلقة render مع Radix UI.
 
 ---
 
-## Step 1: Fix NotificationCenter Infinite Re-render Loop
+## الخطوة 1: إصلاح NotificationCenter نهائياً
 
-The console error traces to `NotificationCenter` inside a Radix `DropdownMenu`. The `onOpenChange` callback on the `DropdownMenu` is causing cascading setState calls.
+**المشكلة**: Radix `DropdownMenu` في الوضع المتحكم (controlled) يعيد استدعاء `onOpenChange` بشكل متكرر مما يسبب حلقة لا نهائية.
 
-**Fix**: Wrap `setIsOpen` in a stable callback and ensure the `DropdownMenu` `open`/`onOpenChange` props don't trigger re-renders of the entire notification list. Memoize the notifications list rendering.
+**الحل**: التحويل إلى وضع **غير متحكم** (uncontrolled) مع استخدام `ref` لتتبع حالة الفتح بدلاً من `useState`:
 
-**File**: `src/components/NotificationCenter.tsx`
-- Wrap `onOpenChange` in `useCallback`
-- Memoize notification items with `useMemo`
-- Move `isRTL` computation to avoid re-computation
+- إزالة `open={isOpen}` من `DropdownMenu`
+- استخدام `onOpenChange` فقط لتفعيل التحميل الكسول (lazy-load) وتتبع الحالة عبر `ref`
+- إبقاء `useMemo` و `useCallback` الحالية
 
----
-
-## Step 2: Enhance Auto-Update for Electron Desktop App
-
-Currently `UpdateChecker` detects new versions but only does a force-reload (web behavior). For Electron, it should:
-1. Detect if a new **desktop shell** version is available (via `desktop-release.json` on Supabase Storage)
-2. Show download progress
-3. Open the download link directly (since we can't do in-place binary updates without electron-updater)
-
-**Files**:
-- `src/components/UpdateChecker.tsx` — Add Electron-specific flow: fetch `desktop-release.json`, compare `desktop_shell_version`, show "Download New Version" button that opens the ZIP URL via `window.electronAPI.openExternal()`
-- `electron/preload.cjs` — Already has `openExternal`, no changes needed
-- Create `public/desktop-release.json` — Central metadata file with `desktop_shell_version`, `download_url`, `release_notes`
-
-**Behavior**:
-- Web users: existing reload behavior (unchanged)
-- Electron users: "Download update" button opens the Supabase Storage ZIP link in the default browser
+**الملف**: `src/components/NotificationCenter.tsx`
 
 ---
 
-## Step 3: Performance Improvements
+## الخطوة 2: تحديث Electron للتحميل المحلي أولاً + تحديث تلقائي
 
-**3a. Lazy-load NotificationCenter** — It loads notifications on mount even if the dropdown is never opened. Defer the query until the dropdown is first opened.
+**المشكلة**: `electron/main.cjs` الحالي لا يزال يحاول التحميل من الرابط الخارجي أولاً (الذي قد لا يعمل)، مما يسبب تجمّد.
 
-**File**: `src/components/NotificationCenter.tsx`
-- Only fetch notifications when `isOpen` becomes `true` for the first time
-- Show skeleton inside dropdown on first open
+**التعديلات**:
 
-**3b. Reduce Dashboard initial queries** — The dashboard fires multiple parallel queries on mount. Add a small stagger or combine where possible.
+### electron/main.cjs
+- تحميل `dist/index.html` المحلي مباشرةً (بدون محاولة الرابط الخارجي)
+- إضافة دعم **تحديث تلقائي صامت**: عند اكتشاف نسخة أحدث عبر `desktop-release.json`، يتم تحميل الـ ZIP تلقائياً في الخلفية ثم إشعار المستخدم بإعادة التشغيل
+- إضافة `ipcMain` handler لتنزيل التحديث
 
-**File**: `src/hooks/useDashboardData.ts`
-- Already looks reasonable; main optimization is ensuring `loadDeclarations` doesn't re-fire unnecessarily
+### electron/preload.cjs
+- إضافة `downloadUpdate(url)` — تنزيل الملف مع إرسال نسبة التقدم
+- إضافة `onDownloadProgress(callback)` — استقبال نسبة التحميل
+- إضافة `restartApp()` — إعادة تشغيل التطبيق بعد التحديث
 
-**3c. Memoize expensive components** — Wrap `DashboardStats`, `DashboardFilters` with `React.memo` if not already done.
+### src/components/UpdateChecker.tsx
+- في وضع Electron: عرض شريط تقدم التحميل بدلاً من فتح المتصفح
+- بعد اكتمال التحميل: زر "إعادة التشغيل للتحديث"
+- التحديث الإجباري (`mandatory: true`): بدء التحميل تلقائياً
 
----
-
-## Technical Details
-
-### NotificationCenter fix (critical)
-```
-// Current: onOpenChange={setIsOpen} triggers re-render cascade
-// Fix: stable callback + guard
-const handleOpenChange = useCallback((open: boolean) => {
-  setIsOpen(open);
-  if (open && !hasFetched) {
-    loadNotifications();
-    setHasFetched(true);
-  }
-}, [hasFetched]);
-```
-
-### desktop-release.json structure
-```json
-{
-  "desktop_shell_version": "4.3.4",
-  "web_version": "4.3.4", 
-  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.zip",
-  "release_notes": "Fixed black screen issue"
-}
-```
-
-### UpdateChecker Electron flow
-- Fetch `desktop-release.json` from Supabase Storage
-- Compare `desktop_shell_version` with `__APP_VERSION__`
-- If newer: show banner with "Download" button
-- Button calls `window.electronAPI.openExternal(download_url)`
+### src/vite-env.d.ts
+- تحديث تعريف `electronAPI` بالوظائف الجديدة
 
 ---
 
-## Summary of Changes
+## الخطوة 3: رفع النسخة وتحديث الإصدار
 
-| File | Change |
-|------|--------|
-| `src/components/NotificationCenter.tsx` | Fix infinite re-render; lazy-load notifications |
-| `src/components/UpdateChecker.tsx` | Add Electron auto-update download flow |
-| `public/desktop-release.json` | New: central release metadata |
-| `src/hooks/useDashboardData.ts` | Minor: guard against unnecessary re-fetches |
+### vite.config.ts
+- رفع `APP_VERSION` إلى `'4.4.0'`
+
+### public/desktop-release.json
+- تحديث `desktop_shell_version` إلى `4.4.0`
+- تحديث `download_url` للإشارة إلى `v5.zip`
+
+### بناء ورفع نسخة ويندوز
+1. `vite build` لإنشاء `dist/`
+2. `@electron/packager` لتجميع نسخة Windows x64
+3. ضغط الملف كـ ZIP
+4. رفع إلى Supabase Storage bucket `desktop-releases`
+5. تحديث `desktop-release.json`
+
+---
+
+## ملخص الملفات
+
+| الملف | التغيير |
+|-------|---------|
+| `src/components/NotificationCenter.tsx` | إصلاح حلقة render — تحويل لوضع uncontrolled |
+| `electron/main.cjs` | تحميل محلي مباشر + دعم تنزيل التحديثات |
+| `electron/preload.cjs` | إضافة downloadUpdate, onDownloadProgress, restartApp |
+| `src/components/UpdateChecker.tsx` | شريط تقدم + تحديث تلقائي في Electron |
+| `src/vite-env.d.ts` | تعريفات TypeScript للوظائف الجديدة |
+| `vite.config.ts` | رفع النسخة إلى 4.4.0 |
+| `public/desktop-release.json` | تحديث معلومات الإصدار v5 |
 
