@@ -297,22 +297,26 @@ export function PettyCashList() {
                             </Button>
                           </>
                         )}
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => { setEditingExpense(expense); setDialogOpen(true); }}
-                          className="h-8 w-8"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => setDeleteId(expense.id)}
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {expense.status !== 'approved' && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => { setEditingExpense(expense); setDialogOpen(true); }}
+                            className="h-8 w-8"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {expense.status !== 'approved' && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setDeleteId(expense.id)}
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
