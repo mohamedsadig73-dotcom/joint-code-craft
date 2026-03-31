@@ -39,10 +39,74 @@ export function HolidayPrintPreview({ sheet, workRecords, employees, onClose }: 
     };
   }, []);
 
-  const handlePrint = () => {
+  const buildPrintHTML = () => {
+    const workRows = workRecords.map(record => `
+      <tr>
+        <td>${record.serial_number}</td>
+        <td>${record.work_type}</td>
+        <td>${record.notes || '-'}</td>
+        <td>${record.work_date}</td>
+        <td style="white-space:pre-wrap">${record.employee_names}</td>
+      </tr>
+    `).join('');
+
+    const empRows = employees.filter(emp => emp.total_days > 0).map(emp => `
+      <tr>
+        <td style="font-family:monospace">${emp.employee_number}</td>
+        <td style="font-weight:bold;color:#1d4ed8">${emp.employee_name}</td>
+        <td>${emp.job_title}</td>
+        <td>${emp.total_days} يوم</td>
+      </tr>
+    `).join('');
+
+    return `<!DOCTYPE html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Cairo','Arial',sans-serif; padding:15mm; color:#000; direction:rtl; }
+  @page { size:A4; margin:10mm 15mm; }
+  h1 { font-size:16px; color:#1d4ed8; margin-bottom:8px; text-align:center; }
+  h2 { font-size:14px; color:#2563eb; text-align:center; line-height:1.6; margin-bottom:4px; }
+  .subtitle { font-size:12px; color:#2563eb; font-weight:bold; text-align:center; margin-bottom:16px; }
+  table { width:100%; border-collapse:collapse; margin-bottom:24px; font-size:12px; }
+  th, td { border:1px solid #9ca3af; padding:6px 8px; text-align:center; }
+  th { background:#eff6ff; font-weight:bold; }
+  .print-date { text-align:center; font-size:10px; color:#6b7280; margin-top:20px; }
+</style></head><body>
+  <h1>${sheet.warehouse_name} بالمنطقة اللوجستية رقم (${sheet.warehouse_number})</h1>
+  <h2>كشف دوام الموظفين والعمال خلال العطلة الرسمية بمناسبة ${sheet.holiday_name} من ${formatDate(sheet.period_start)} إلى ${formatDate(sheet.period_end)}</h2>
+  ${sheet.month_year ? `<div class="subtitle">${sheet.month_year}</div>` : ''}
+  <table><thead><tr>
+    <th>المسلسل</th><th>نوع العمل</th><th>وصف العمل</th><th>تاريخ العمل</th><th>اسم الموظف المتواجد اثناء العمل</th>
+  </tr></thead><tbody>${workRows}</tbody></table>
+  <table><thead><tr>
+    <th>الرقم الوظيفي</th><th>اسم الموظف</th><th>الوظيفة</th><th>اجمالي أيام العمل</th>
+  </tr></thead><tbody>${empRows}</tbody></table>
+  <div class="print-date">تم الطباعة بتاريخ: ${new Date().toLocaleDateString('en-GB')}</div>
+</body></html>`;
+  };
+
+  const handlePrint = async () => {
     const originalTitle = document.title;
     const fileName = `كشف دوام الموظفين والعمال خلال العطلة الرسمية بمناسبة ${sheet.holiday_name} من ${formatDate(sheet.period_start)} إلى ${formatDate(sheet.period_end)}`;
     document.title = fileName;
+
+    const html = buildPrintHTML();
+
+    // Use Electron's native print if available
+    if (window.electronAPI?.printHTML) {
+      try {
+        await window.electronAPI.printHTML(html);
+      } catch (e) {
+        console.log('Electron print cancelled or failed:', e);
+      } finally {
+        document.title = originalTitle;
+      }
+      return;
+    }
+
+    // Fallback: browser print
     window.print();
     document.title = originalTitle;
   };
