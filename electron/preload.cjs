@@ -1,4 +1,4 @@
-const { contextBridge, shell } = require('electron');
+const { contextBridge, shell, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   getPublishedVersion: async (url) => {
@@ -18,5 +18,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   openExternal: async (url) => {
     await shell.openExternal(url);
+  },
+  printHTML: async (html) => {
+    return ipcRenderer.invoke('print-html', html);
   },
 });

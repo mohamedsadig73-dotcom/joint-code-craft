@@ -5,6 +5,7 @@ interface Window {
   electronAPI?: {
     getPublishedVersion: (url: string) => Promise<{ version?: string; build?: string }>;
     openExternal: (url: string) => Promise<void>;
+    printHTML: (html: string) => Promise<boolean>;
   };
 }
 
