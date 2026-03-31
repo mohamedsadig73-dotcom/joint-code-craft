@@ -1,4 +1,4 @@
-const { app, BrowserWindow, session } = require('electron');
+const { app, BrowserWindow, session, ipcMain } = require('electron');
 const path = require('path');
 
 app.disableHardwareAcceleration();
@@ -227,6 +227,30 @@ function setupRuntimeRecovery() {
     }
   });
 }
+
+// IPC: Print HTML content in a hidden window
+ipcMain.handle('print-html', async (_event, htmlContent) => {
+  return new Promise((resolve, reject) => {
+    const printWin = new BrowserWindow({
+      width: 800,
+      height: 600,
+      show: false,
+      webPreferences: { contextIsolation: true, nodeIntegration: false },
+    });
+
+    printWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
+
+    printWin.webContents.once('did-finish-load', () => {
+      setTimeout(() => {
+        printWin.webContents.print({ silent: false, printBackground: true }, (success, failureReason) => {
+          printWin.close();
+          if (success) resolve(true);
+          else reject(new Error(failureReason || 'Print cancelled'));
+        });
+      }, 500);
+    });
+  });
+});
 
 // Clear cache on startup to avoid stale content
 app.whenReady().then(() => {
