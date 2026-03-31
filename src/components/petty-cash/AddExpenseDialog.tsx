@@ -172,28 +172,77 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
     setLoading(true);
 
     try {
+      const quantity = parseFloat(formData.quantity);
+      const unitPrice = parseFloat(formData.unit_price);
+      const calculatedTotal = quantity * unitPrice;
+      const periodId = openPeriod?.id || expense?.period_id || null;
+
+      // Validate balance for new expenses
+      if (!expense && openPeriod && calculatedTotal > openPeriod.current_balance) {
+        toast.error(language === 'ar' 
+          ? `المبلغ (${formatNumber(calculatedTotal)}) يتجاوز الرصيد المتبقي (${formatNumber(openPeriod.current_balance)})`
+          : `Amount (${formatNumber(calculatedTotal)}) exceeds remaining balance (${formatNumber(openPeriod.current_balance)})`);
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         expense_date: formData.expense_date,
         invoice_number: formData.invoice_number || null,
         vendor_name: formData.vendor_name,
         description: formData.description,
-        quantity: parseFloat(formData.quantity),
-        unit_price: parseFloat(formData.unit_price),
+        quantity,
+        unit_price: unitPrice,
+        total_amount: calculatedTotal,
         cost_center: formData.cost_center,
         item_name: formData.item_name || null,
         recipient: formData.recipient || null,
         notes: formData.notes || null,
         created_by: user?.id,
-        period_id: openPeriod?.id || expense?.period_id || null
+        period_id: periodId
       };
 
       if (expense) {
+        // Prevent editing approved expenses
+        if (expense.period_id) {
+          const { data: expData } = await supabase
+            .from('petty_cash_expenses')
+            .select('status, total_amount')
+            .eq('id', expense.id)
+            .single();
+          
+          if (expData?.status === 'approved') {
+            toast.error(language === 'ar' 
+              ? 'لا يمكن تعديل مصروف تمت الموافقة عليه'
+              : 'Cannot edit an approved expense');
+            setLoading(false);
+            return;
+          }
+
+          // If amount changed, update period balance
+          const oldAmount = Number(expData?.total_amount || 0);
+          const diff = calculatedTotal - oldAmount;
+          if (diff !== 0 && periodId) {
+            await supabase
+              .from('petty_cash_periods')
+              .update({
+                total_expenses: Math.max(0, (openPeriod?.current_balance ? 0 : 0)),
+              })
+              .eq('id', periodId);
+            // Use raw SQL via RPC would be better, but for now recalculate after
+          }
+        }
+
         const { error } = await supabase
           .from('petty_cash_expenses')
           .update(payload)
           .eq('id', expense.id);
 
         if (error) throw error;
+        
+        // Recalculate period totals
+        if (periodId) await recalculatePeriodTotals(periodId);
+        
         toast.success(t('expenseUpdated'));
       } else {
         const { error } = await supabase
@@ -201,6 +250,10 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
           .insert(payload);
 
         if (error) throw error;
+        
+        // Recalculate period totals
+        if (periodId) await recalculatePeriodTotals(periodId);
+        
         toast.success(t('expenseAdded'));
       }
 
@@ -211,6 +264,38 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
       toast.error(t('errorOccurred'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const recalculatePeriodTotals = async (periodId: string) => {
+    try {
+      const { data: periodExpenses } = await supabase
+        .from('petty_cash_expenses')
+        .select('total_amount, status')
+        .eq('period_id', periodId)
+        .neq('status', 'rejected');
+
+      const totalExp = periodExpenses?.reduce((sum, e) => sum + Number(e.total_amount || 0), 0) || 0;
+      const count = periodExpenses?.length || 0;
+
+      const { data: period } = await supabase
+        .from('petty_cash_periods')
+        .select('opening_balance')
+        .eq('id', periodId)
+        .single();
+
+      const openingBalance = Number(period?.opening_balance || 0);
+
+      await supabase
+        .from('petty_cash_periods')
+        .update({
+          total_expenses: totalExp,
+          expenses_count: count,
+          current_balance: openingBalance - totalExp
+        })
+        .eq('id', periodId);
+    } catch (error) {
+      console.error('Error recalculating period totals:', error);
     }
   };
 

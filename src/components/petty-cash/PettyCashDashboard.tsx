@@ -37,29 +37,32 @@ export function PettyCashDashboard() {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      const totalExpenses = expenses?.reduce((sum, e) => sum + Number(e.total_amount || 0), 0) || 0;
-      const monthlyExpenses = expenses
-        ?.filter(e => new Date(e.expense_date) >= startOfMonth)
-        .reduce((sum, e) => sum + Number(e.total_amount || 0), 0) || 0;
+      // Only count approved expenses in financial totals
+      const approvedExpenses = expenses?.filter(e => e.status === 'approved') || [];
+      
+      const totalExpenses = approvedExpenses.reduce((sum, e) => sum + Number(e.total_amount || 0), 0);
+      const monthlyExpenses = approvedExpenses
+        .filter(e => new Date(e.expense_date) >= startOfMonth)
+        .reduce((sum, e) => sum + Number(e.total_amount || 0), 0);
 
       const pendingCount = expenses?.filter(e => e.status === 'pending').length || 0;
-      const approvedCount = expenses?.filter(e => e.status === 'approved').length || 0;
+      const approvedCount = approvedExpenses.length;
       const rejectedCount = expenses?.filter(e => e.status === 'rejected').length || 0;
 
-      // Find top cost center
-      const costCenterCounts = expenses?.reduce((acc, e) => {
+      // Find top cost center (approved only)
+      const costCenterCounts = approvedExpenses.reduce((acc, e) => {
         acc[e.cost_center] = (acc[e.cost_center] || 0) + Number(e.total_amount || 0);
         return acc;
-      }, {} as Record<string, number>) || {};
+      }, {} as Record<string, number>);
       
       const topCostCenter = Object.entries(costCenterCounts)
         .sort(([, a], [, b]) => (b as number) - (a as number))[0]?.[0] || '-';
 
-      // Find top vendor
-      const vendorCounts = expenses?.reduce((acc, e) => {
+      // Find top vendor (approved only)
+      const vendorCounts = approvedExpenses.reduce((acc, e) => {
         acc[e.vendor_name] = (acc[e.vendor_name] || 0) + Number(e.total_amount || 0);
         return acc;
-      }, {} as Record<string, number>) || {};
+      }, {} as Record<string, number>);
       
       const topVendor = Object.entries(vendorCounts)
         .sort(([, a], [, b]) => (b as number) - (a as number))[0]?.[0] || '-';
