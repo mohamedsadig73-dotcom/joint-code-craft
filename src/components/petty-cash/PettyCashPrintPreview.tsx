@@ -50,11 +50,29 @@ export function PettyCashPrintPreview({ period, expenses }: PettyCashPrintPrevie
     ? Math.round((period.total_expenses / period.opening_balance) * 100)
     : 0;
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     const originalTitle = document.title;
     document.title = `تفاصيل النثرية - ${period.period_number}`;
 
-    const html = `
+    const html = buildPrintHTML();
+
+    // Use Electron's native print if available
+    if (window.electronAPI?.printHTML) {
+      try {
+        await window.electronAPI.printHTML(html);
+      } catch (e) {
+        console.log('Electron print cancelled or failed:', e);
+      } finally {
+        document.title = originalTitle;
+      }
+      return;
+    }
+
+    // Fallback: iframe approach for browser
+    printViaIframe(html, originalTitle);
+  };
+
+  const printViaIframe = (html: string, originalTitle: string) => {
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
