@@ -87,45 +87,36 @@ export function Navigation() {
   const isRTL = language === 'ar';
 
   return (
-    <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/40 shadow-sm">
-      <div className="max-w-[1440px] mx-auto px-3 lg:px-6">
-        <div className="flex items-center justify-between h-12">
-          
-          {/* Logo — compact */}
-          <Link to="/" className="flex items-center gap-2 ltr-flex shrink-0 me-4">
-            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-              <LayoutDashboard className="w-3.5 h-3.5 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-sm whitespace-nowrap hidden sm:block">
-              {isRTL ? 'إدارة المخزن' : 'DTS Store'}
-            </span>
-          </Link>
+    <nav className="glass-card border-b border-border/50 sticky top-0 z-50 backdrop-blur-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-14 md:h-16">
+          {/* Logo */}
+          <div className="flex items-center gap-2 ltr-flex shrink-0">
+            <h1 className="text-lg font-bold gradient-text whitespace-nowrap">إدارة المخزن</h1>
+          </div>
 
-          {/* Center Nav — pill style */}
-          <div className="hidden md:flex items-center gap-px ltr-flex flex-1 justify-center">
+          {/* Navigation Links - Icons with text on large screens, icons only on medium */}
+          <div className="hidden md:flex items-center gap-1 ltr-flex">
             {allNavItems.map((item) => {
               const Icon = item.icon;
-              const active = isActive(item.path);
               return (
                 <Link key={item.path} to={item.path}>
-                  <button
-                    className={`flex items-center gap-1.5 ltr-flex px-2.5 lg:px-3 h-8 rounded-md text-[11px] lg:text-xs font-medium transition-colors whitespace-nowrap ${
-                      active
-                        ? 'bg-primary/15 text-primary'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
-                    }`}
+                  <Button
+                    variant={isActive(item.path) ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="gap-1.5 ltr-flex px-2 lg:px-3"
                     title={t(item.labelKey)}
                   >
-                    <Icon className={`w-3.5 h-3.5 shrink-0 ${active ? 'text-primary' : ''}`} />
-                    <span className="hidden lg:inline">{t(item.labelKey)}</span>
-                  </button>
+                    <Icon className="w-4 h-4 shrink-0" />
+                    <span className="hidden xl:inline text-xs">{t(item.labelKey)}</span>
+                  </Button>
                 </Link>
               );
             })}
           </div>
 
-          {/* Actions — right side */}
-          <div className="flex items-center gap-1 ltr-flex shrink-0 ms-4">
+          {/* Right Side Actions */}
+          <div className="flex items-center gap-1.5 md:gap-1 ltr-flex shrink-0">
             <div className="hidden lg:block">
               <OfflineIndicator />
             </div>

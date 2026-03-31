@@ -19,8 +19,9 @@ export function DashboardHeader({
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
       <div>
+        <h1 className="text-2xl md:text-3xl font-bold gradient-text">{t('systemTitle')}</h1>
         <p className="text-muted-foreground text-sm">
-          {t('welcome')}، {user?.username}!
+          {t('welcome')}, {user?.username}!
         </p>
       </div>
       <div className="flex gap-2">
