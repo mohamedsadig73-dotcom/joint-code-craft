@@ -91,18 +91,24 @@ function setupRuntimeRecovery() {
 // ── IPC: Print HTML ────────────────────────────────────
 ipcMain.handle('print-html', async (_event, htmlContent) => {
   return new Promise((resolve, reject) => {
+    // Write HTML to a temp file to avoid data: URL limitations
+    const tmpFile = path.join(app.getPath('temp'), `dts-print-${Date.now()}.html`);
+    fs.writeFileSync(tmpFile, htmlContent, 'utf-8');
+
     const printWin = new BrowserWindow({
       width: 800, height: 600, show: false,
       webPreferences: { contextIsolation: true, nodeIntegration: false },
     });
-    printWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
+
+    printWin.loadFile(tmpFile);
     printWin.webContents.once('did-finish-load', () => {
       setTimeout(() => {
         printWin.webContents.print({ silent: false, printBackground: true }, (success, reason) => {
           printWin.close();
+          try { fs.unlinkSync(tmpFile); } catch (_) {}
           success ? resolve(true) : reject(new Error(reason || 'Print cancelled'));
         });
-      }, 500);
+      }, 800);
     });
   });
 });
