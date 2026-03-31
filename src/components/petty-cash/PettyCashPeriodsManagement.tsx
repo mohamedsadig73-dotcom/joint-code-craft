@@ -239,7 +239,30 @@ export function PettyCashPeriodsManagement() {
   const openPeriods = periods.filter(p => p.status === 'open').length;
   const totalBudget = periods.filter(p => p.status === 'open').reduce((sum, p) => sum + p.opening_balance, 0);
   const totalSpent = periods.filter(p => p.status === 'open').reduce((sum, p) => sum + p.total_expenses, 0);
-  const pendingApprovalCount = periods.filter(p => p.status === 'pending_approval').length;
+  const pendingApprovalPeriods = periods.filter(p => p.status === 'pending_approval').length;
+
+  // Count pending expenses across all open periods
+  const [pendingExpensesCount, setPendingExpensesCount] = useState(0);
+  useEffect(() => {
+    const loadPendingExpenses = async () => {
+      try {
+        const openPeriodIds = periods.filter(p => p.status === 'open').map(p => p.id);
+        if (openPeriodIds.length === 0) {
+          setPendingExpensesCount(0);
+          return;
+        }
+        const { count, error } = await supabase
+          .from('petty_cash_expenses')
+          .select('*', { count: 'exact', head: true })
+          .in('period_id', openPeriodIds)
+          .eq('status', 'pending');
+        if (!error) setPendingExpensesCount(count || 0);
+      } catch (e) {
+        console.error('Error counting pending expenses:', e);
+      }
+    };
+    if (periods.length > 0) loadPendingExpenses();
+  }, [periods]);
 
   if (loading) {
     return (
