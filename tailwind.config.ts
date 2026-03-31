@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Cairo"', '"IBM Plex Sans"', 'Arial', 'sans-serif'],
-        arabic: ['"Cairo"', '"IBM Plex Sans"', 'Arial', 'sans-serif'],
-        latin: ['"IBM Plex Sans"', '"Cairo"', 'Arial', 'sans-serif'],
+        sans: ['"Cairo"', 'sans-serif'],
+        arabic: ['"Cairo"', 'sans-serif'],
+        latin: ['"Cairo"', 'sans-serif'],
       },
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1.5', letterSpacing: '0.01em' }],
