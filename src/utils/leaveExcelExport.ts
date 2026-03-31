@@ -194,7 +194,7 @@ export const exportLeaveFormTemplate = async (language: string = 'ar') => {
 
   const timestamp = new Date().toISOString().split('T')[0];
   const fullFileName = `leave_request_form_${timestamp}.xlsx`;
-  await downloadBuffer(wb, fullFileName);
+  await saveAndDownload(wb, fullFileName);
   return fullFileName;
 };
 
