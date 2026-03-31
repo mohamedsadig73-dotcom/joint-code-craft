@@ -54,6 +54,7 @@ export function PettyCashPeriodsManagement() {
   const [periodToClose, setPeriodToClose] = useState<PettyCashPeriod | null>(null);
   const [editDispositionOpen, setEditDispositionOpen] = useState(false);
   const [periodToEdit, setPeriodToEdit] = useState<PettyCashPeriod | null>(null);
+  const [pendingExpensesCount, setPendingExpensesCount] = useState(0);
 
   useEffect(() => {
     loadPeriods();
