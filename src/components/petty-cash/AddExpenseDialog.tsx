@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatNumber } from '@/utils/numberFormat';
-import { Check, ChevronsUpDown, AlertCircle } from 'lucide-react';
+import { Check, ChevronsUpDown, AlertCircle, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CostCenter {
@@ -26,6 +26,8 @@ interface OpenPeriod {
   id: string;
   period_number: string;
   current_balance: number;
+  start_date: string | null;
+  end_date: string | null;
 }
 
 interface Expense {
@@ -60,6 +62,7 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
   const [vendorOpen, setVendorOpen] = useState(false);
   const [openPeriod, setOpenPeriod] = useState<OpenPeriod | null>(null);
   const [loadingPeriod, setLoadingPeriod] = useState(true);
+  const [dateError, setDateError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     expense_date: new Date().toISOString().split('T')[0],
@@ -108,13 +111,36 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
         notes: ''
       });
     }
+    setDateError(null);
   }, [expense, open]);
+
+  // Validate expense date against period dates
+  useEffect(() => {
+    if (!openPeriod || !formData.expense_date) {
+      setDateError(null);
+      return;
+    }
+
+    const expDate = formData.expense_date;
+    
+    if (openPeriod.start_date && expDate < openPeriod.start_date) {
+      setDateError(language === 'ar' 
+        ? `تاريخ المصروف قبل تاريخ بداية الفترة (${openPeriod.start_date})`
+        : `Expense date is before period start date (${openPeriod.start_date})`);
+    } else if (openPeriod.end_date && expDate > openPeriod.end_date) {
+      setDateError(language === 'ar'
+        ? `تاريخ المصروف بعد تاريخ نهاية الفترة (${openPeriod.end_date})`
+        : `Expense date is after period end date (${openPeriod.end_date})`);
+    } else {
+      setDateError(null);
+    }
+  }, [formData.expense_date, openPeriod, language]);
 
   const loadOpenPeriod = async () => {
     try {
       const { data, error } = await supabase
         .from('petty_cash_periods')
-        .select('id, period_number, current_balance')
+        .select('id, period_number, current_balance, start_date, end_date')
         .eq('status', 'open')
         .limit(1)
         .single();
@@ -152,7 +178,6 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
         .order('vendor_name');
 
       if (error) throw error;
-      // Get unique vendor names
       const uniqueVendors = [...new Set(data?.map(e => e.vendor_name) || [])];
       setVendors(uniqueVendors);
     } catch (error) {
@@ -166,6 +191,12 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
     // Check if there's an open period (only for new expenses)
     if (!expense && !openPeriod) {
       toast.error(t('noOpenPeriodError'));
+      return;
+    }
+
+    // Check date validation
+    if (dateError) {
+      toast.error(dateError);
       return;
     }
     
@@ -182,6 +213,14 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
         toast.error(language === 'ar' 
           ? `المبلغ (${formatNumber(calculatedTotal)}) يتجاوز الرصيد المتبقي (${formatNumber(openPeriod.current_balance)})`
           : `Amount (${formatNumber(calculatedTotal)}) exceeds remaining balance (${formatNumber(openPeriod.current_balance)})`);
+        setLoading(false);
+        return;
+      }
+
+      if (!periodId) {
+        toast.error(language === 'ar'
+          ? 'يجب ربط المصروف بفترة نثرية'
+          : 'Expense must be linked to a period');
         setLoading(false);
         return;
       }
@@ -218,19 +257,6 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
             setLoading(false);
             return;
           }
-
-          // If amount changed, update period balance
-          const oldAmount = Number(expData?.total_amount || 0);
-          const diff = calculatedTotal - oldAmount;
-          if (diff !== 0 && periodId) {
-            await supabase
-              .from('petty_cash_periods')
-              .update({
-                total_expenses: Math.max(0, (openPeriod?.current_balance ? 0 : 0)),
-              })
-              .eq('id', periodId);
-            // Use raw SQL via RPC would be better, but for now recalculate after
-          }
         }
 
         const { error } = await supabase
@@ -240,9 +266,7 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
 
         if (error) throw error;
         
-        // Recalculate period totals
         if (periodId) await recalculatePeriodTotals(periodId);
-        
         toast.success(t('expenseUpdated'));
       } else {
         const { error } = await supabase
@@ -251,17 +275,22 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
 
         if (error) throw error;
         
-        // Recalculate period totals
         if (periodId) await recalculatePeriodTotals(periodId);
-        
         toast.success(t('expenseAdded'));
       }
 
       onOpenChange(false);
       onSuccess();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error saving expense:', error);
-      toast.error(t('errorOccurred'));
+      const msg = error instanceof Error ? error.message : '';
+      if (msg.includes('قبل تاريخ بداية') || msg.includes('بعد تاريخ نهاية') || msg.includes('before period') || msg.includes('after period')) {
+        toast.error(language === 'ar' 
+          ? 'تاريخ المصروف خارج نطاق فترة النثرية'
+          : 'Expense date is outside the period date range');
+      } else {
+        toast.error(t('errorOccurred'));
+      }
     } finally {
       setLoading(false);
     }
@@ -319,6 +348,13 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
                 {t('expenseWillBeAddedToPeriod')}: <strong>{openPeriod.period_number}</strong>
                 <span className="mx-2">|</span>
                 {t('remainingBalance')}: <strong>{formatNumber(openPeriod.current_balance)} {t('currency')}</strong>
+                {openPeriod.start_date && (
+                  <>
+                    <span className="mx-2">|</span>
+                    <Calendar className="inline w-3 h-3" /> {openPeriod.start_date}
+                    {openPeriod.end_date ? ` → ${openPeriod.end_date}` : ` → ${language === 'ar' ? 'مفتوحة' : 'Open'}`}
+                  </>
+                )}
               </AlertDescription>
             </Alert>
           ) : (
@@ -329,6 +365,14 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
               </AlertDescription>
             </Alert>
           )
+        )}
+
+        {/* Date validation error */}
+        {dateError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{dateError}</AlertDescription>
+          </Alert>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -342,6 +386,8 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
                 value={formData.expense_date}
                 onChange={(e) => setFormData({ ...formData, expense_date: e.target.value })}
                 required
+                className={dateError ? 'border-destructive' : ''}
+                min={openPeriod?.start_date || undefined}
               />
             </div>
 
@@ -502,14 +548,18 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 placeholder={t('notesPlaceholder')}
-                rows={3}
+                rows={2}
               />
             </div>
           </div>
 
           <div className={`flex gap-3 pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? t('saving') : (expense ? t('update') : t('add'))}
+            <Button 
+              type="submit" 
+              disabled={loading || (!expense && !openPeriod) || !!dateError} 
+              className="flex-1"
+            >
+              {loading ? t('saving') : (expense ? t('update') : t('addExpense'))}
             </Button>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               {t('cancel')}
