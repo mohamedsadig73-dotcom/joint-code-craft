@@ -36,7 +36,7 @@ const getStatusLabel = (status: string, isArabic: boolean): string => {
   return labels[status]?.[isArabic ? 'ar' : 'en'] || status;
 };
 
-const downloadBuffer = async (wb: ExcelJS.Workbook, fullFileName: string) => {
+const saveAndDownload = async (wb: ExcelJS.Workbook, fullFileName: string) => {
   const buffer = await wb.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = URL.createObjectURL(blob);
