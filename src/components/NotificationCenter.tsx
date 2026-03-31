@@ -148,7 +148,7 @@ export function NotificationCenter() {
     if (!notification.read) {
       markAsRead(notification.id);
     }
-    setIsOpen(false);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     navigate(`/declaration/${notification.declaration_id}`);
   }, [markAsRead, navigate]);
 
