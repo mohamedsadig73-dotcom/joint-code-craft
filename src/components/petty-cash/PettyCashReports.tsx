@@ -104,22 +104,48 @@ export function PettyCashReports() {
 
   const handleExportExcel = async () => {
     try {
-      const XLSX = await import('xlsx');
-      
-      const exportData = expenses.map(e => ({
-        [t('date')]: formatDate(e.expense_date),
-        [t('vendor')]: e.vendor_name,
-        [t('description')]: e.description,
-        [t('costCenter')]: e.cost_center,
-        [t('quantity')]: e.quantity,
-        [t('unitPrice')]: e.unit_price,
-        [t('total')]: e.total_amount
-      }));
+      const ExcelJS = await import('exceljs');
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet(t('pettyCashReport'));
 
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, t('pettyCashReport'));
-      XLSX.writeFile(wb, `petty-cash-report-${new Date().toISOString().split('T')[0]}.xlsx`);
+      ws.columns = [
+        { header: t('date'), key: 'date', width: 15 },
+        { header: t('vendor'), key: 'vendor', width: 20 },
+        { header: t('description'), key: 'description', width: 25 },
+        { header: t('costCenter'), key: 'costCenter', width: 20 },
+        { header: t('quantity'), key: 'quantity', width: 12 },
+        { header: t('unitPrice'), key: 'unitPrice', width: 15 },
+        { header: t('total'), key: 'total', width: 15 },
+      ];
+
+      ws.getRow(1).eachCell(cell => {
+        cell.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B82F6' } };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      });
+
+      expenses.forEach(e => {
+        ws.addRow({
+          date: formatDate(e.expense_date),
+          vendor: e.vendor_name,
+          description: e.description,
+          costCenter: e.cost_center,
+          quantity: e.quantity,
+          unitPrice: e.unit_price,
+          total: e.total_amount,
+        });
+      });
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `petty-cash-report-${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       
       toast.success(t('exportSuccess'));
     } catch (error) {
