@@ -87,46 +87,45 @@ export function Navigation() {
   const isRTL = language === 'ar';
 
   return (
-    <nav className="border-b border-border/30 sticky top-0 z-50 bg-background/95 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-14">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 ltr-flex shrink-0 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-              <LayoutDashboard className="w-4 h-4 text-primary-foreground" />
+    <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/40 shadow-sm">
+      <div className="max-w-[1440px] mx-auto px-3 lg:px-6">
+        <div className="flex items-center justify-between h-12">
+          
+          {/* Logo — compact */}
+          <Link to="/" className="flex items-center gap-2 ltr-flex shrink-0 me-4">
+            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
+              <LayoutDashboard className="w-3.5 h-3.5 text-primary-foreground" />
             </div>
-            <span className="text-base font-bold tracking-tight whitespace-nowrap hidden sm:inline">
+            <span className="font-semibold text-sm whitespace-nowrap hidden sm:block">
               {isRTL ? 'إدارة المخزن' : 'DTS Store'}
             </span>
           </Link>
 
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center gap-0.5 ltr-flex bg-muted/30 rounded-lg p-1">
+          {/* Center Nav — pill style */}
+          <div className="hidden md:flex items-center gap-px ltr-flex flex-1 justify-center">
             {allNavItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
               return (
                 <Link key={item.path} to={item.path}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`gap-1.5 ltr-flex px-2.5 h-8 rounded-md transition-all text-xs font-medium ${
-                      active 
-                        ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground' 
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  <button
+                    className={`flex items-center gap-1.5 ltr-flex px-2.5 lg:px-3 h-8 rounded-md text-[11px] lg:text-xs font-medium transition-colors whitespace-nowrap ${
+                      active
+                        ? 'bg-primary/15 text-primary'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
                     }`}
                     title={t(item.labelKey)}
                   >
-                    <Icon className="w-3.5 h-3.5 shrink-0" />
-                    <span className="hidden xl:inline">{t(item.labelKey)}</span>
-                  </Button>
+                    <Icon className={`w-3.5 h-3.5 shrink-0 ${active ? 'text-primary' : ''}`} />
+                    <span className="hidden lg:inline">{t(item.labelKey)}</span>
+                  </button>
                 </Link>
               );
             })}
           </div>
 
-          {/* Right Side Actions */}
-          <div className="flex items-center gap-1.5 md:gap-1 ltr-flex shrink-0">
+          {/* Actions — right side */}
+          <div className="flex items-center gap-1 ltr-flex shrink-0 ms-4">
             <div className="hidden lg:block">
               <OfflineIndicator />
             </div>
