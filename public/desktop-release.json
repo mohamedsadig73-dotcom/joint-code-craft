@@ -1,0 +1,7 @@
+{
+  "desktop_shell_version": "4.3.4",
+  "web_version": "4.3.4",
+  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.zip",
+  "release_notes": "Fixed black screen issue, improved stability and performance",
+  "mandatory": false
+}
