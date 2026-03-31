@@ -50,7 +50,7 @@ export function StatsCard({
         </div>
         <div className="flex-1 min-w-0">
           <div className={cn('font-bold tabular-nums tracking-tight leading-none', sizes.value)}>{value}</div>
-          <div className={cn('text-muted-foreground truncate mt-0.5', sizes.label)}>{label}</div>
+          <div className={cn('text-muted-foreground truncate mt-0.5', sizes.label)} title={label}>{label}</div>
         </div>
         {trend && (
           <div className={cn(

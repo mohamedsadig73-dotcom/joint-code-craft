@@ -157,7 +157,7 @@ export function UpdateChecker() {
           <p className="text-xs opacity-90 mt-1">
             {isDesktop
               ? `${t('newDesktopVersionAvailable')} (v${updateInfo.version})`
-              : `${t('newDesktopVersionAvailable')} (v${updateInfo.version})`}
+              : `${t('newVersionAvailable') || t('updateAvailable')} (v${updateInfo.version})`}
           </p>
           {isDesktop && updateInfo.releaseNotes && (
             <p className="text-xs opacity-75 mt-1">{updateInfo.releaseNotes}</p>

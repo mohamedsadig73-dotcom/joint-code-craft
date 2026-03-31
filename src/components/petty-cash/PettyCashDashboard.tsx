@@ -26,11 +26,12 @@ export function PettyCashDashboard() {
     loadStats();
   }, []);
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const { data: expenses, error } = await supabase
         .from('petty_cash_expenses')
-        .select('*');
+        .select('*')
+        .limit(1000);
 
       if (error) throw error;
 
