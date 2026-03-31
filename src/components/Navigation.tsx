@@ -87,28 +87,38 @@ export function Navigation() {
   const isRTL = language === 'ar';
 
   return (
-    <nav className="glass-card border-b border-border/50 sticky top-0 z-50 backdrop-blur-md">
+    <nav className="border-b border-border/30 sticky top-0 z-50 bg-background/95 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-14 md:h-16">
+        <div className="flex justify-between items-center h-14">
           {/* Logo */}
-          <div className="flex items-center gap-2 ltr-flex shrink-0">
-            <h1 className="text-lg font-bold gradient-text whitespace-nowrap">إدارة المخزن</h1>
-          </div>
+          <Link to="/" className="flex items-center gap-2.5 ltr-flex shrink-0 group">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+              <LayoutDashboard className="w-4 h-4 text-primary-foreground" />
+            </div>
+            <span className="text-base font-bold tracking-tight whitespace-nowrap hidden sm:inline">
+              {isRTL ? 'إدارة المخزن' : 'DTS Store'}
+            </span>
+          </Link>
 
-          {/* Navigation Links - Icons with text on large screens, icons only on medium */}
-          <div className="hidden md:flex items-center gap-1 ltr-flex">
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center gap-0.5 ltr-flex bg-muted/30 rounded-lg p-1">
             {allNavItems.map((item) => {
               const Icon = item.icon;
+              const active = isActive(item.path);
               return (
                 <Link key={item.path} to={item.path}>
                   <Button
-                    variant={isActive(item.path) ? 'secondary' : 'ghost'}
+                    variant="ghost"
                     size="sm"
-                    className="gap-1.5 ltr-flex px-2 lg:px-3"
+                    className={`gap-1.5 ltr-flex px-2.5 h-8 rounded-md transition-all text-xs font-medium ${
+                      active 
+                        ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    }`}
                     title={t(item.labelKey)}
                   >
-                    <Icon className="w-4 h-4 shrink-0" />
-                    <span className="hidden xl:inline text-xs">{t(item.labelKey)}</span>
+                    <Icon className="w-3.5 h-3.5 shrink-0" />
+                    <span className="hidden xl:inline">{t(item.labelKey)}</span>
                   </Button>
                 </Link>
               );
