@@ -131,7 +131,7 @@ export const exportLeaveRequestsToExcel = async (
 
   const timestamp = new Date().toISOString().split('T')[0];
   const fullFileName = `${fileName}_${timestamp}.xlsx`;
-  await downloadBuffer(wb, fullFileName);
+  await saveAndDownload(wb, fullFileName);
   return fullFileName;
 };
 
