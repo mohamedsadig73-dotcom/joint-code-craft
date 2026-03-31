@@ -7,9 +7,10 @@ const http = require('http');
 app.disableHardwareAcceleration();
 
 // ── Paths ──────────────────────────────────────────────
-const LOCAL_INDEX = path.join(__dirname, '..', 'dist', 'index.html');
+const APP_ROOT = path.join(__dirname, '..');
+const DIST_DIR = path.join(APP_ROOT, 'dist');
+const LOCAL_INDEX = path.join(DIST_DIR, 'index.html');
 const PUBLISHED_URL = 'https://dts-store-qatar-2026.lovable.app';
-const DESKTOP_RELEASE_URL = `${PUBLISHED_URL}/desktop-release.json`;
 const UPDATE_DIR = path.join(app.getPath('userData'), 'updates');
 
 let mainWindow = null;
@@ -44,8 +45,7 @@ function createWindow() {
       showErrorPage();
     });
   } else {
-    // Fallback: try remote if no local build
-    console.log('[Electron] No local dist, loading remote...');
+    console.log('[Electron] No local dist found, loading remote...');
     mainWindow.loadURL(PUBLISHED_URL).then(() => {
       mainWindow.show();
     }).catch(() => {
@@ -58,24 +58,17 @@ function createWindow() {
 // ── Error page ─────────────────────────────────────────
 function showErrorPage() {
   const errorHTML = `data:text/html;charset=utf-8,<!DOCTYPE html>
-  <html dir="rtl" lang="ar">
-  <head><meta charset="utf-8">
+  <html dir="rtl" lang="ar"><head><meta charset="utf-8">
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #0a0a1a; color: #e2e8f0; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0a0a1a; color: #e2e8f0; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
     h1 { color: #f87171; margin-bottom: 16px; }
     p { color: #94a3b8; margin-bottom: 8px; }
     button { margin-top: 24px; padding: 12px 32px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-    button:hover { background: #2563eb; }
-  </style>
-  </head>
-  <body>
-    <div>
-      <h1>تعذّر تحميل التطبيق</h1>
-      <p>تأكد من وجود ملفات التطبيق أو اتصالك بالإنترنت.</p>
-      <button onclick="location.reload()">إعادة المحاولة</button>
-    </div>
-  </body>
-  </html>`;
+  </style></head><body><div>
+    <h1>تعذّر تحميل التطبيق</h1>
+    <p>تأكد من وجود ملفات التطبيق.</p>
+    <button onclick="location.reload()">إعادة المحاولة</button>
+  </div></body></html>`;
   mainWindow.loadURL(errorHTML);
 }
 
@@ -83,7 +76,6 @@ function showErrorPage() {
 function setupRuntimeRecovery() {
   mainWindow.webContents.on('did-fail-load', (_event, errorCode) => {
     if (errorCode === -3) return;
-    console.log(`[Electron] Runtime failure: ${errorCode}`);
     setTimeout(() => {
       if (!mainWindow.isDestroyed()) {
         mainWindow.loadFile(LOCAL_INDEX).catch(() => showErrorPage());
@@ -92,7 +84,6 @@ function setupRuntimeRecovery() {
   });
 
   mainWindow.webContents.on('unresponsive', () => {
-    console.log('[Electron] Page unresponsive, reloading...');
     if (!mainWindow.isDestroyed()) mainWindow.webContents.reload();
   });
 }
@@ -101,20 +92,15 @@ function setupRuntimeRecovery() {
 ipcMain.handle('print-html', async (_event, htmlContent) => {
   return new Promise((resolve, reject) => {
     const printWin = new BrowserWindow({
-      width: 800,
-      height: 600,
-      show: false,
+      width: 800, height: 600, show: false,
       webPreferences: { contextIsolation: true, nodeIntegration: false },
     });
-
     printWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
-
     printWin.webContents.once('did-finish-load', () => {
       setTimeout(() => {
-        printWin.webContents.print({ silent: false, printBackground: true }, (success, failureReason) => {
+        printWin.webContents.print({ silent: false, printBackground: true }, (success, reason) => {
           printWin.close();
-          if (success) resolve(true);
-          else reject(new Error(failureReason || 'Print cancelled'));
+          success ? resolve(true) : reject(new Error(reason || 'Print cancelled'));
         });
       }, 500);
     });
@@ -126,62 +112,233 @@ ipcMain.handle('open-external', async (_event, url) => {
   await shell.openExternal(url);
 });
 
-// ── IPC: Download update ZIP ───────────────────────────
-ipcMain.handle('download-update', async (event, downloadUrl) => {
+// ── Helper: Download file with progress ────────────────
+function downloadFile(url, destPath, progressCallback) {
   return new Promise((resolve, reject) => {
-    if (!fs.existsSync(UPDATE_DIR)) {
-      fs.mkdirSync(UPDATE_DIR, { recursive: true });
-    }
-
-    const fileName = path.basename(new URL(downloadUrl).pathname) || 'update.zip';
-    const filePath = path.join(UPDATE_DIR, fileName);
-    const file = fs.createWriteStream(filePath);
-
-    const doRequest = (url) => {
-      const proto = url.startsWith('https') ? https : http;
-      proto.get(url, (response) => {
-        // Handle redirects
+    const doRequest = (reqUrl) => {
+      const proto = reqUrl.startsWith('https') ? https : http;
+      proto.get(reqUrl, (response) => {
         if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
           doRequest(response.headers.location);
           return;
         }
-
         if (response.statusCode !== 200) {
-          reject(new Error(`Download failed: HTTP ${response.statusCode}`));
+          reject(new Error(`HTTP ${response.statusCode}`));
           return;
         }
 
         const totalSize = parseInt(response.headers['content-length'] || '0', 10);
-        let downloadedSize = 0;
+        let downloaded = 0;
+        const file = fs.createWriteStream(destPath);
 
         response.on('data', (chunk) => {
-          downloadedSize += chunk.length;
+          downloaded += chunk.length;
           file.write(chunk);
-          if (totalSize > 0) {
-            const progress = Math.round((downloadedSize / totalSize) * 100);
-            mainWindow?.webContents?.send('download-progress', { progress, downloaded: downloadedSize, total: totalSize });
+          if (totalSize > 0 && progressCallback) {
+            progressCallback(Math.round((downloaded / totalSize) * 100), downloaded, totalSize);
           }
         });
 
         response.on('end', () => {
-          file.end();
-          console.log(`[Electron] Update downloaded to: ${filePath}`);
-          resolve({ success: true, filePath });
+          file.end(() => resolve(destPath));
         });
 
         response.on('error', (err) => {
           file.end();
-          fs.unlinkSync(filePath);
+          try { fs.unlinkSync(destPath); } catch (_) {}
           reject(err);
         });
-      }).on('error', (err) => {
-        file.end();
-        reject(err);
-      });
+      }).on('error', reject);
     };
-
-    doRequest(downloadUrl);
+    doRequest(url);
   });
+}
+
+// ── Helper: Extract ZIP and replace dist/ ──────────────
+function extractAndReplaceDist(zipPath) {
+  // Use Node.js built-in zlib + manual ZIP parsing
+  // For simplicity and reliability, use the 'unzip' approach with AdmZip-like logic
+  const AdmZip = (() => {
+    try { return require('adm-zip'); } catch (_) { return null; }
+  })();
+
+  if (AdmZip) {
+    return extractWithAdmZip(AdmZip, zipPath);
+  }
+
+  // Fallback: use PowerShell on Windows to extract
+  return extractWithPowerShell(zipPath);
+}
+
+function extractWithAdmZip(AdmZip, zipPath) {
+  return new Promise((resolve, reject) => {
+    try {
+      const tempExtract = path.join(UPDATE_DIR, 'extracted');
+      
+      // Clean temp extract dir
+      if (fs.existsSync(tempExtract)) {
+        fs.rmSync(tempExtract, { recursive: true, force: true });
+      }
+      fs.mkdirSync(tempExtract, { recursive: true });
+
+      const zip = new AdmZip(zipPath);
+      zip.extractAllTo(tempExtract, true);
+
+      // Find the dist folder in extracted content
+      const distSource = findDistFolder(tempExtract);
+      if (!distSource) {
+        reject(new Error('No dist folder found in update package'));
+        return;
+      }
+
+      // Backup current dist
+      const backupDir = path.join(UPDATE_DIR, 'dist-backup');
+      if (fs.existsSync(backupDir)) {
+        fs.rmSync(backupDir, { recursive: true, force: true });
+      }
+      if (fs.existsSync(DIST_DIR)) {
+        fs.cpSync(DIST_DIR, backupDir, { recursive: true });
+      }
+
+      // Replace dist
+      fs.rmSync(DIST_DIR, { recursive: true, force: true });
+      fs.cpSync(distSource, DIST_DIR, { recursive: true });
+
+      // Cleanup
+      fs.rmSync(tempExtract, { recursive: true, force: true });
+      try { fs.unlinkSync(zipPath); } catch (_) {}
+
+      console.log('[Electron] ✓ dist/ replaced successfully');
+      resolve({ success: true });
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+function extractWithPowerShell(zipPath) {
+  const { execSync } = require('child_process');
+  return new Promise((resolve, reject) => {
+    try {
+      const tempExtract = path.join(UPDATE_DIR, 'extracted');
+      
+      if (fs.existsSync(tempExtract)) {
+        fs.rmSync(tempExtract, { recursive: true, force: true });
+      }
+      fs.mkdirSync(tempExtract, { recursive: true });
+
+      // Use PowerShell to extract ZIP
+      const psCmd = `Expand-Archive -Path "${zipPath}" -DestinationPath "${tempExtract}" -Force`;
+      execSync(`powershell -Command "${psCmd}"`, { timeout: 120000 });
+
+      const distSource = findDistFolder(tempExtract);
+      if (!distSource) {
+        reject(new Error('No dist folder found in update package'));
+        return;
+      }
+
+      // Backup current dist
+      const backupDir = path.join(UPDATE_DIR, 'dist-backup');
+      if (fs.existsSync(backupDir)) {
+        fs.rmSync(backupDir, { recursive: true, force: true });
+      }
+      if (fs.existsSync(DIST_DIR)) {
+        fs.cpSync(DIST_DIR, backupDir, { recursive: true });
+      }
+
+      // Replace dist
+      fs.rmSync(DIST_DIR, { recursive: true, force: true });
+      fs.cpSync(distSource, DIST_DIR, { recursive: true });
+
+      // Cleanup
+      fs.rmSync(tempExtract, { recursive: true, force: true });
+      try { fs.unlinkSync(zipPath); } catch (_) {}
+
+      console.log('[Electron] ✓ dist/ replaced via PowerShell');
+      resolve({ success: true });
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+// Find 'dist' folder recursively in extracted content
+function findDistFolder(extractDir) {
+  // Check if extractDir itself contains index.html (flat ZIP)
+  if (fs.existsSync(path.join(extractDir, 'index.html'))) {
+    return extractDir;
+  }
+
+  // Check direct children for dist/ or */dist/
+  const entries = fs.readdirSync(extractDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const fullPath = path.join(extractDir, entry.name);
+
+    // Direct dist folder
+    if (entry.name === 'dist' && fs.existsSync(path.join(fullPath, 'index.html'))) {
+      return fullPath;
+    }
+
+    // Nested: AppName-win32-x64/resources/app/dist
+    const nestedDist = path.join(fullPath, 'resources', 'app', 'dist');
+    if (fs.existsSync(nestedDist) && fs.existsSync(path.join(nestedDist, 'index.html'))) {
+      return nestedDist;
+    }
+
+    // Simple nested: AppName/dist
+    const simpleDist = path.join(fullPath, 'dist');
+    if (fs.existsSync(simpleDist) && fs.existsSync(path.join(simpleDist, 'index.html'))) {
+      return simpleDist;
+    }
+
+    // Check if this folder itself has index.html
+    if (fs.existsSync(path.join(fullPath, 'index.html'))) {
+      return fullPath;
+    }
+  }
+
+  return null;
+}
+
+// ── IPC: Download and apply update (Hot-Swap) ──────────
+ipcMain.handle('download-update', async (_event, downloadUrl) => {
+  if (!fs.existsSync(UPDATE_DIR)) {
+    fs.mkdirSync(UPDATE_DIR, { recursive: true });
+  }
+
+  const zipPath = path.join(UPDATE_DIR, 'update.zip');
+
+  // Step 1: Download
+  console.log('[Electron] Downloading update from:', downloadUrl);
+  await downloadFile(downloadUrl, zipPath, (progress, downloaded, total) => {
+    mainWindow?.webContents?.send('download-progress', {
+      phase: 'downloading',
+      progress,
+      downloaded,
+      total,
+    });
+  });
+
+  // Step 2: Extract and replace dist/
+  console.log('[Electron] Extracting and replacing dist/...');
+  mainWindow?.webContents?.send('download-progress', {
+    phase: 'installing',
+    progress: 100,
+    downloaded: 0,
+    total: 0,
+  });
+
+  await extractAndReplaceDist(zipPath);
+
+  mainWindow?.webContents?.send('download-progress', {
+    phase: 'done',
+    progress: 100,
+    downloaded: 0,
+    total: 0,
+  });
+
+  return { success: true };
 });
 
 // ── IPC: Restart app ───────────────────────────────────
@@ -192,11 +349,7 @@ ipcMain.handle('restart-app', () => {
 
 // ── App lifecycle ──────────────────────────────────────
 app.whenReady().then(() => {
-  session.defaultSession.clearCache().then(() => {
-    createWindow();
-  }).catch(() => {
-    createWindow();
-  });
+  session.defaultSession.clearCache().then(() => createWindow()).catch(() => createWindow());
 });
 
 app.on('window-all-closed', () => {
