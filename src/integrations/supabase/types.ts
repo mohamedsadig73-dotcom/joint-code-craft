@@ -3303,6 +3303,10 @@ export type Database = {
             Returns: string
           }
       reactivate_user: { Args: { target_user_id: string }; Returns: boolean }
+      verify_backup_code: {
+        Args: { _code: string; _user_id: string }
+        Returns: boolean
+      }
       verify_code: {
         Args: { _code: string; _type?: string; _user_id: string }
         Returns: boolean
