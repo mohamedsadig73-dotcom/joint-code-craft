@@ -243,7 +243,6 @@ export function PettyCashPeriodsManagement() {
   const pendingApprovalPeriods = periods.filter(p => p.status === 'pending_approval').length;
 
   // Count pending expenses across all open periods
-  const [pendingExpensesCount, setPendingExpensesCount] = useState(0);
   useEffect(() => {
     const loadPendingExpenses = async () => {
       try {
@@ -264,6 +263,8 @@ export function PettyCashPeriodsManagement() {
     };
     if (periods.length > 0) loadPendingExpenses();
   }, [periods]);
+
+  const pendingApprovalCount = pendingExpensesCount + pendingApprovalPeriods;
 
   if (loading) {
     return (
