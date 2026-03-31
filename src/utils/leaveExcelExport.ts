@@ -198,15 +198,3 @@ export const exportLeaveFormTemplate = async (language: string = 'ar') => {
   return fullFileName;
 };
 
-const downloadBuffer = async (wb: ExcelJS.Workbook, fullFileName: string) => {
-  const buffer = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fullFileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-};
