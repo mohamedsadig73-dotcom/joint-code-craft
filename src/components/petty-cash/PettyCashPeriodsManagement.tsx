@@ -115,7 +115,8 @@ export function PettyCashPeriodsManagement() {
           disposition_amount: null,
           disposition_reference: null,
           approved_at: null,
-          approved_by: null
+          approved_by: null,
+          end_date: null
         })
         .eq('id', id);
 
