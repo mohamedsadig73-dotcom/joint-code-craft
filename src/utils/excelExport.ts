@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 export interface ExportDeclaration {
   id: string;
@@ -8,65 +8,54 @@ export interface ExportDeclaration {
   created_at: string;
 }
 
-export const exportDeclarationsToExcel = (
+export const exportDeclarationsToExcel = async (
   declarations: ExportDeclaration[],
   fileName: string = 'declarations'
 ) => {
-  // Prepare data with Arabic headers
-  const exportData = declarations.map((dec) => ({
-    'رقم الإقرار': dec.id,
-    'النوع': dec.type,
-    'المرسل': dec.sender,
-    'الحالة': dec.status,
-    'تاريخ الإنشاء': dec.created_at,
-  }));
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Declaration System';
+  wb.created = new Date();
 
-  // Create worksheet
-  const ws = XLSX.utils.json_to_sheet(exportData);
+  const ws = wb.addWorksheet('الإقرارات');
 
-  // Set column widths for better readability
-  ws['!cols'] = [
-    { wch: 20 }, // رقم الإقرار
-    { wch: 15 }, // النوع
-    { wch: 20 }, // المرسل
-    { wch: 15 }, // الحالة
-    { wch: 22 }, // تاريخ الإنشاء
+  ws.columns = [
+    { header: 'رقم الإقرار', key: 'id', width: 20 },
+    { header: 'النوع', key: 'type', width: 15 },
+    { header: 'المرسل', key: 'sender', width: 20 },
+    { header: 'الحالة', key: 'status', width: 15 },
+    { header: 'تاريخ الإنشاء', key: 'created_at', width: 22 },
   ];
 
-  // Style the header row
-  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
-  for (let col = range.s.c; col <= range.e.c; col++) {
-    const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
-    if (!ws[cellAddress]) continue;
-    
-    ws[cellAddress].s = {
-      font: { bold: true, sz: 12 },
-      fill: { fgColor: { rgb: '3B82F6' } },
-      alignment: { horizontal: 'center', vertical: 'center' },
-    };
-  }
+  // Style header row
+  ws.getRow(1).eachCell(cell => {
+    cell.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B82F6' } };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+  });
 
-  // Create workbook
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'الإقرارات');
+  declarations.forEach(dec => {
+    ws.addRow({
+      id: dec.id,
+      type: dec.type,
+      sender: dec.sender,
+      status: dec.status,
+      created_at: dec.created_at,
+    });
+  });
 
-  // Add metadata
-  wb.Props = {
-    Title: 'تقرير الإقرارات',
-    Subject: 'Declarations Report',
-    Author: 'Declaration System',
-    CreatedDate: new Date(),
-  };
-
-  // Generate file name with timestamp
   const timestamp = new Date().toISOString().split('T')[0];
   const fullFileName = `${fileName}_${timestamp}.xlsx`;
 
-  // Write file
-  XLSX.writeFile(wb, fullFileName, {
-    bookType: 'xlsx',
-    type: 'binary',
-  });
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fullFileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 
   return fullFileName;
 };

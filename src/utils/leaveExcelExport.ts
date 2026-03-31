@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 interface LeaveRequest {
   id: string;
@@ -36,116 +36,116 @@ const getStatusLabel = (status: string, isArabic: boolean): string => {
   return labels[status]?.[isArabic ? 'ar' : 'en'] || status;
 };
 
-export const exportLeaveRequestsToExcel = (
+const downloadBuffer = async (wb: ExcelJS.Workbook, fullFileName: string) => {
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fullFileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+export const exportLeaveRequestsToExcel = async (
   requests: LeaveRequest[],
   language: string = 'ar',
   fileName: string = 'leave_requests'
 ) => {
   const isArabic = language === 'ar';
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'HR System';
+  wb.created = new Date();
 
-  // Prepare data with bilingual headers
-  const exportData = requests.map((req, index) => ({
-    '#': index + 1,
-    [isArabic ? 'اسم الموظف / Employee Name' : 'Employee Name / اسم الموظف']: req.employee_name,
-    [isArabic ? 'الرقم الوظيفي / Employee ID' : 'Employee ID / الرقم الوظيفي']: req.employee_id,
-    [isArabic ? 'الإدارة / Department' : 'Department / الإدارة']: req.department,
-    [isArabic ? 'المسمى الوظيفي / Job Title' : 'Job Title / المسمى الوظيفي']: req.job_title,
-    [isArabic ? 'تاريخ التعيين / Hire Date' : 'Hire Date / تاريخ التعيين']: req.hire_date,
-    [isArabic ? 'أشهر الخدمة / Months of Service' : 'Months of Service / أشهر الخدمة']: req.months_of_service,
-    [isArabic ? 'الرصيد الأصلي / Original Balance' : 'Original Balance / الرصيد الأصلي']: req.original_balance,
-    [isArabic ? 'المستهلك سابقاً / Previously Used' : 'Previously Used / المستهلك سابقاً']: req.previously_used_days,
-    [isArabic ? 'تاريخ البداية / Start Date' : 'Start Date / تاريخ البداية']: req.start_date_gregorian,
-    [isArabic ? 'تاريخ النهاية / End Date' : 'End Date / تاريخ النهاية']: req.end_date_gregorian,
-    [isArabic ? 'الأيام المطلوبة / Days Requested' : 'Days Requested / الأيام المطلوبة']: req.days_requested,
-    [isArabic ? 'الرصيد المتبقي المتوقع / Expected Remaining' : 'Expected Remaining / الرصيد المتبقي المتوقع']: req.expected_remaining_balance,
-    [isArabic ? 'الحالة / Status' : 'Status / الحالة']: getStatusLabel(req.request_status, isArabic),
-    [isArabic ? 'سبب الإجازة / Reason' : 'Reason / سبب الإجازة']: req.reason || '-',
-    [isArabic ? 'اسم النائب / Deputy Name' : 'Deputy Name / اسم النائب']: req.deputy_name || '-',
-    [isArabic ? 'رقم التواصل / Deputy Contact' : 'Deputy Contact / رقم التواصل']: req.deputy_contact || '-',
-    [isArabic ? 'تاريخ الطلب / Request Date' : 'Request Date / تاريخ الطلب']: req.created_at.split('T')[0],
-  }));
-
-  // Create worksheet
-  const ws = XLSX.utils.json_to_sheet(exportData);
-
-  // Set column widths for better readability
-  ws['!cols'] = [
-    { wch: 5 },   // #
-    { wch: 25 },  // Employee Name
-    { wch: 15 },  // Employee ID
-    { wch: 18 },  // Department
-    { wch: 18 },  // Job Title
-    { wch: 15 },  // Hire Date
-    { wch: 12 },  // Months of Service
-    { wch: 15 },  // Original Balance
-    { wch: 15 },  // Previously Used
-    { wch: 15 },  // Start Date
-    { wch: 15 },  // End Date
-    { wch: 15 },  // Days Requested
-    { wch: 18 },  // Expected Remaining
-    { wch: 25 },  // Status
-    { wch: 25 },  // Reason
-    { wch: 20 },  // Deputy Name
-    { wch: 18 },  // Deputy Contact
-    { wch: 15 },  // Request Date
+  // Main sheet
+  const ws = wb.addWorksheet(isArabic ? 'طلبات الإجازة' : 'Leave Requests');
+  const headers = [
+    { header: '#', key: 'num', width: 5 },
+    { header: isArabic ? 'اسم الموظف' : 'Employee Name', key: 'name', width: 25 },
+    { header: isArabic ? 'الرقم الوظيفي' : 'Employee ID', key: 'empId', width: 15 },
+    { header: isArabic ? 'الإدارة' : 'Department', key: 'dept', width: 18 },
+    { header: isArabic ? 'المسمى الوظيفي' : 'Job Title', key: 'title', width: 18 },
+    { header: isArabic ? 'تاريخ التعيين' : 'Hire Date', key: 'hire', width: 15 },
+    { header: isArabic ? 'أشهر الخدمة' : 'Months of Service', key: 'months', width: 12 },
+    { header: isArabic ? 'الرصيد الأصلي' : 'Original Balance', key: 'origBal', width: 15 },
+    { header: isArabic ? 'المستهلك سابقاً' : 'Previously Used', key: 'prevUsed', width: 15 },
+    { header: isArabic ? 'تاريخ البداية' : 'Start Date', key: 'start', width: 15 },
+    { header: isArabic ? 'تاريخ النهاية' : 'End Date', key: 'end', width: 15 },
+    { header: isArabic ? 'الأيام المطلوبة' : 'Days Requested', key: 'days', width: 15 },
+    { header: isArabic ? 'الرصيد المتبقي المتوقع' : 'Expected Remaining', key: 'expRem', width: 18 },
+    { header: isArabic ? 'الحالة' : 'Status', key: 'status', width: 25 },
+    { header: isArabic ? 'سبب الإجازة' : 'Reason', key: 'reason', width: 25 },
+    { header: isArabic ? 'اسم النائب' : 'Deputy Name', key: 'deputy', width: 20 },
+    { header: isArabic ? 'رقم التواصل' : 'Deputy Contact', key: 'contact', width: 18 },
+    { header: isArabic ? 'تاريخ الطلب' : 'Request Date', key: 'reqDate', width: 15 },
   ];
+  ws.columns = headers;
 
-  // Create a calculation sheet
-  const calcData = requests.map((req, index) => ({
-    [isArabic ? 'اسم الموظف' : 'Employee Name']: req.employee_name,
-    [isArabic ? 'تاريخ التعيين' : 'Hire Date']: req.hire_date,
-    [isArabic ? 'الرصيد الأصلي' : 'Original Balance']: req.original_balance,
-    [isArabic ? 'المستهلك سابقاً' : 'Previously Used']: req.previously_used_days,
-    [isArabic ? 'الأيام المطلوبة' : 'Days Requested']: req.days_requested,
-    [isArabic ? 'الرصيد المتبقي المتوقع' : 'Expected Remaining']: req.expected_remaining_balance,
-    [isArabic ? 'أشهر الخدمة' : 'Months of Service']: req.months_of_service,
-    [isArabic ? 'الحالة' : 'Status']: getStatusLabel(req.request_status, isArabic),
-  }));
-
-  const wsCalc = XLSX.utils.json_to_sheet(calcData);
-  wsCalc['!cols'] = [
-    { wch: 25 },
-    { wch: 15 },
-    { wch: 15 },
-    { wch: 15 },
-    { wch: 15 },
-    { wch: 18 },
-    { wch: 12 },
-    { wch: 25 },
-  ];
-
-  // Create workbook
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, isArabic ? 'طلبات الإجازة' : 'Leave Requests');
-  XLSX.utils.book_append_sheet(wb, wsCalc, isArabic ? 'ملخص الحساب' : 'Calculation Summary');
-
-  // Add metadata
-  wb.Props = {
-    Title: isArabic ? 'تقرير طلبات الإجازة السنوية' : 'Annual Leave Requests Report',
-    Subject: 'Leave Requests Report',
-    Author: 'HR System',
-    CreatedDate: new Date(),
-  };
-
-  // Generate file name with timestamp
-  const timestamp = new Date().toISOString().split('T')[0];
-  const fullFileName = `${fileName}_${timestamp}.xlsx`;
-
-  // Write file
-  XLSX.writeFile(wb, fullFileName, {
-    bookType: 'xlsx',
-    type: 'binary',
+  ws.getRow(1).eachCell(cell => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B82F6' } };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
   });
 
+  requests.forEach((req, i) => {
+    ws.addRow({
+      num: i + 1, name: req.employee_name, empId: req.employee_id, dept: req.department,
+      title: req.job_title, hire: req.hire_date, months: req.months_of_service,
+      origBal: req.original_balance, prevUsed: req.previously_used_days,
+      start: req.start_date_gregorian, end: req.end_date_gregorian, days: req.days_requested,
+      expRem: req.expected_remaining_balance, status: getStatusLabel(req.request_status, isArabic),
+      reason: req.reason || '-', deputy: req.deputy_name || '-', contact: req.deputy_contact || '-',
+      reqDate: req.created_at.split('T')[0],
+    });
+  });
+
+  // Calculation summary sheet
+  const wsCalc = wb.addWorksheet(isArabic ? 'ملخص الحساب' : 'Calculation Summary');
+  wsCalc.columns = [
+    { header: isArabic ? 'اسم الموظف' : 'Employee Name', key: 'name', width: 25 },
+    { header: isArabic ? 'تاريخ التعيين' : 'Hire Date', key: 'hire', width: 15 },
+    { header: isArabic ? 'الرصيد الأصلي' : 'Original Balance', key: 'origBal', width: 15 },
+    { header: isArabic ? 'المستهلك سابقاً' : 'Previously Used', key: 'prevUsed', width: 15 },
+    { header: isArabic ? 'الأيام المطلوبة' : 'Days Requested', key: 'days', width: 15 },
+    { header: isArabic ? 'الرصيد المتبقي المتوقع' : 'Expected Remaining', key: 'expRem', width: 18 },
+    { header: isArabic ? 'أشهر الخدمة' : 'Months of Service', key: 'months', width: 12 },
+    { header: isArabic ? 'الحالة' : 'Status', key: 'status', width: 25 },
+  ];
+
+  wsCalc.getRow(1).eachCell(cell => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B82F6' } };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+  });
+
+  requests.forEach(req => {
+    wsCalc.addRow({
+      name: req.employee_name, hire: req.hire_date, origBal: req.original_balance,
+      prevUsed: req.previously_used_days, days: req.days_requested,
+      expRem: req.expected_remaining_balance, months: req.months_of_service,
+      status: getStatusLabel(req.request_status, isArabic),
+    });
+  });
+
+  const timestamp = new Date().toISOString().split('T')[0];
+  const fullFileName = `${fileName}_${timestamp}.xlsx`;
+  await downloadBuffer(wb, fullFileName);
   return fullFileName;
 };
 
-// Export a blank form template
-export const exportLeaveFormTemplate = (language: string = 'ar') => {
+export const exportLeaveFormTemplate = async (language: string = 'ar') => {
   const isArabic = language === 'ar';
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet(isArabic ? 'نموذج طلب إجازة' : 'Leave Request Form');
 
-  // Create form template
-  const formData = [
+  ws.getColumn(1).width = 50;
+  ws.getColumn(2).width = 25;
+  ws.getColumn(3).width = 20;
+  ws.getColumn(4).width = 25;
+
+  const formData: (string | number)[][] = [
     ['', isArabic ? 'نموذج طلب الإجازة السنوية' : 'Annual Leave Request Form'],
     ['', 'Annual Leave Request Form'],
     [''],
@@ -159,59 +159,54 @@ export const exportLeaveFormTemplate = (language: string = 'ar') => {
     [isArabic ? 'الرصيد المتبقي الحالي / Current Balance' : 'Current Balance / الرصيد المتبقي الحالي', ''],
     [''],
     [isArabic ? 'ثانياً: تفاصيل الطلب' : 'Request Details', ''],
-    [isArabic ? 'تاريخ بداية الإجازة (ميلادي) / Start Date (Gregorian)' : 'Start Date (Gregorian) / تاريخ بداية الإجازة (ميلادي)', ''],
-    [isArabic ? 'تاريخ بداية الإجازة (هجري) / Start Date (Hijri)' : 'Start Date (Hijri) / تاريخ بداية الإجازة (هجري)', ''],
-    [isArabic ? 'تاريخ نهاية الإجازة (ميلادي) / End Date (Gregorian)' : 'End Date (Gregorian) / تاريخ نهاية الإجازة (ميلادي)', ''],
-    [isArabic ? 'تاريخ نهاية الإجازة (هجري) / End Date (Hijri)' : 'End Date (Hijri) / تاريخ نهاية الإجازة (هجري)', ''],
-    [isArabic ? 'عدد الأيام المطلوبة / Days Requested' : 'Days Requested / عدد الأيام المطلوبة', ''],
-    [isArabic ? 'تاريخ العودة المتوقع / Expected Return Date' : 'Expected Return Date / تاريخ العودة المتوقع', ''],
+    [isArabic ? 'تاريخ بداية الإجازة (ميلادي)' : 'Start Date (Gregorian)', ''],
+    [isArabic ? 'تاريخ بداية الإجازة (هجري)' : 'Start Date (Hijri)', ''],
+    [isArabic ? 'تاريخ نهاية الإجازة (ميلادي)' : 'End Date (Gregorian)', ''],
+    [isArabic ? 'تاريخ نهاية الإجازة (هجري)' : 'End Date (Hijri)', ''],
+    [isArabic ? 'عدد الأيام المطلوبة' : 'Days Requested', ''],
+    [isArabic ? 'تاريخ العودة المتوقع' : 'Expected Return Date', ''],
     [''],
     [isArabic ? 'ثالثاً: سبب الاستحقاق (اختياري)' : 'Reason (Optional)', ''],
     [''],
     [''],
     [isArabic ? 'رابعاً: البديل/النائب' : 'Substitute/Deputy', ''],
-    [isArabic ? 'اسم النائب / Deputy Name' : 'Deputy Name / اسم النائب', ''],
-    [isArabic ? 'إدارة النائب / Deputy Department' : 'Deputy Department / إدارة النائب', ''],
-    [isArabic ? 'رقم التواصل / Contact Number' : 'Contact Number / رقم التواصل', ''],
+    [isArabic ? 'اسم النائب / Deputy Name' : 'Deputy Name', ''],
+    [isArabic ? 'إدارة النائب / Deputy Department' : 'Deputy Department', ''],
+    [isArabic ? 'رقم التواصل / Contact Number' : 'Contact Number', ''],
     [''],
     [isArabic ? 'خامساً: الموافقات' : 'Approvals', '', '', ''],
     [isArabic ? 'الجهة' : 'Party', isArabic ? 'التوقيع' : 'Signature', isArabic ? 'التاريخ' : 'Date', isArabic ? 'الملاحظات' : 'Notes'],
-    [isArabic ? 'توقيع الموظف / Employee' : 'Employee / توقيع الموظف', '', '', ''],
-    [isArabic ? 'مدير الإدارة / Department Manager' : 'Department Manager / مدير الإدارة', '', '', ''],
-    [isArabic ? 'الموارد البشرية / HR' : 'HR / الموارد البشرية', '', '', ''],
+    [isArabic ? 'توقيع الموظف' : 'Employee', '', '', ''],
+    [isArabic ? 'مدير الإدارة' : 'Department Manager', '', '', ''],
+    [isArabic ? 'الموارد البشرية' : 'HR', '', '', ''],
     [''],
     [isArabic ? '⚠️ تنبيه هام:' : '⚠️ Important Notice:'],
-    [isArabic 
+    [isArabic
       ? 'لا تُمنح الإجازة السنوية إلا بعد اجتياز 6 أشهر من تاريخ التعيين، ويُشترط ألا يقل الرصيد المتبقي عن 5 أيام بعد خصم المدة المطلوبة.'
       : 'Annual leave is granted only after completing 6 months of employment, and the remaining balance must not be less than 5 days after deducting the requested period.'],
   ];
 
-  const ws = XLSX.utils.aoa_to_sheet(formData);
+  formData.forEach(row => ws.addRow(row));
 
-  // Set column widths
-  ws['!cols'] = [
-    { wch: 50 },
-    { wch: 25 },
-    { wch: 20 },
-    { wch: 25 },
-  ];
-
-  // Merge cells for title
-  ws['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } },
-  ];
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, isArabic ? 'نموذج طلب إجازة' : 'Leave Request Form');
+  // Merge title cells
+  ws.mergeCells('A1:D1');
+  ws.mergeCells('A2:D2');
 
   const timestamp = new Date().toISOString().split('T')[0];
   const fullFileName = `leave_request_form_${timestamp}.xlsx`;
-
-  XLSX.writeFile(wb, fullFileName, {
-    bookType: 'xlsx',
-    type: 'binary',
-  });
-
+  await downloadBuffer(wb, fullFileName);
   return fullFileName;
+};
+
+const downloadBuffer = async (wb: ExcelJS.Workbook, fullFileName: string) => {
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fullFileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 };

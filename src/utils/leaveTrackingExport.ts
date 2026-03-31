@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 interface LeaveTracking {
   id: string;
@@ -34,181 +34,155 @@ const getContractTypeLabel = (type: string, isArabic: boolean): string => {
 const getStatusLabel = (record: LeaveTracking, isArabic: boolean): string => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
   if (record.current_leave_start && record.current_leave_end) {
     const leaveStart = new Date(record.current_leave_start);
     const leaveEnd = new Date(record.current_leave_end);
-    
     if (today >= leaveStart && today <= leaveEnd) {
       if (record.expected_return_date && !record.actual_return_date) {
         const expectedReturn = new Date(record.expected_return_date);
-        if (today > expectedReturn) {
-          return isArabic ? 'متأخر عن العودة' : 'Overdue Return';
-        }
+        if (today > expectedReturn) return isArabic ? 'متأخر عن العودة' : 'Overdue Return';
       }
       return isArabic ? 'في إجازة' : 'On Leave';
     }
   }
-  
   return isArabic ? 'على رأس العمل' : 'At Work';
 };
 
-export const exportLeaveTrackingToExcel = (
+const downloadBuffer = async (wb: ExcelJS.Workbook, fullFileName: string) => {
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fullFileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+const styleHeaderRow = (ws: ExcelJS.Worksheet) => {
+  ws.getRow(1).eachCell(cell => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B82F6' } };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+  });
+};
+
+export const exportLeaveTrackingToExcel = async (
   records: LeaveTracking[],
   language: string = 'ar',
   fileName: string = 'leave_tracking'
 ) => {
   const isArabic = language === 'ar';
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'HR System';
+  wb.created = new Date();
 
-  const exportData = records.map((rec, index) => ({
-    '#': index + 1,
-    [isArabic ? 'اسم الموظف' : 'Employee Name']: rec.employee_name,
-    [isArabic ? 'الرقم الوظيفي' : 'Employee ID']: rec.employee_id,
-    [isArabic ? 'المسمى الوظيفي' : 'Job Title']: rec.job_title,
-    [isArabic ? 'الإدارة' : 'Department']: rec.department,
-    [isArabic ? 'نوع العقد' : 'Contract Type']: getContractTypeLabel(rec.contract_type, isArabic),
-    [isArabic ? 'تاريخ التعيين' : 'Hire Date']: rec.hire_date,
-    [isArabic ? 'آخر إجازة' : 'Last Leave']: rec.last_leave_end || '-',
-    [isArabic ? 'الإجازة القادمة' : 'Next Leave Due']: rec.next_leave_due || '-',
-    [isArabic ? 'الرصيد المستحق' : 'Entitled Days']: rec.entitled_days,
-    [isArabic ? 'الأيام المستخدمة' : 'Used Days']: rec.used_days,
-    [isArabic ? 'الرصيد المتبقي' : 'Remaining Balance']: rec.remaining_balance,
-    [isArabic ? 'تاريخ السفر' : 'Travel Date']: rec.travel_date || '-',
-    [isArabic ? 'وجهة السفر' : 'Destination']: rec.travel_destination || '-',
-    [isArabic ? 'تاريخ العودة المتوقع' : 'Expected Return']: rec.expected_return_date || '-',
-    [isArabic ? 'تاريخ العودة الفعلي' : 'Actual Return']: rec.actual_return_date || '-',
-    [isArabic ? 'الحالة' : 'Status']: getStatusLabel(rec, isArabic),
-    [isArabic ? 'ملاحظات' : 'Notes']: rec.notes || '-',
-  }));
-
-  const ws = XLSX.utils.json_to_sheet(exportData);
-
-  ws['!cols'] = [
-    { wch: 5 },   // #
-    { wch: 25 },  // Employee Name
-    { wch: 15 },  // Employee ID
-    { wch: 20 },  // Job Title
-    { wch: 18 },  // Department
-    { wch: 12 },  // Contract Type
-    { wch: 12 },  // Hire Date
-    { wch: 12 },  // Last Leave
-    { wch: 12 },  // Next Leave Due
-    { wch: 10 },  // Entitled Days
-    { wch: 10 },  // Used Days
-    { wch: 12 },  // Remaining Balance
-    { wch: 12 },  // Travel Date
-    { wch: 15 },  // Destination
-    { wch: 12 },  // Expected Return
-    { wch: 12 },  // Actual Return
-    { wch: 15 },  // Status
-    { wch: 25 },  // Notes
+  const ws = wb.addWorksheet(isArabic ? 'متابعة الإجازات' : 'Leave Tracking');
+  ws.columns = [
+    { header: '#', key: 'num', width: 5 },
+    { header: isArabic ? 'اسم الموظف' : 'Employee Name', key: 'name', width: 25 },
+    { header: isArabic ? 'الرقم الوظيفي' : 'Employee ID', key: 'empId', width: 15 },
+    { header: isArabic ? 'المسمى الوظيفي' : 'Job Title', key: 'title', width: 20 },
+    { header: isArabic ? 'الإدارة' : 'Department', key: 'dept', width: 18 },
+    { header: isArabic ? 'نوع العقد' : 'Contract Type', key: 'contract', width: 12 },
+    { header: isArabic ? 'تاريخ التعيين' : 'Hire Date', key: 'hire', width: 12 },
+    { header: isArabic ? 'آخر إجازة' : 'Last Leave', key: 'lastLeave', width: 12 },
+    { header: isArabic ? 'الإجازة القادمة' : 'Next Leave Due', key: 'nextLeave', width: 12 },
+    { header: isArabic ? 'الرصيد المستحق' : 'Entitled Days', key: 'entitled', width: 10 },
+    { header: isArabic ? 'الأيام المستخدمة' : 'Used Days', key: 'used', width: 10 },
+    { header: isArabic ? 'الرصيد المتبقي' : 'Remaining Balance', key: 'remaining', width: 12 },
+    { header: isArabic ? 'تاريخ السفر' : 'Travel Date', key: 'travel', width: 12 },
+    { header: isArabic ? 'وجهة السفر' : 'Destination', key: 'dest', width: 15 },
+    { header: isArabic ? 'تاريخ العودة المتوقع' : 'Expected Return', key: 'expReturn', width: 12 },
+    { header: isArabic ? 'تاريخ العودة الفعلي' : 'Actual Return', key: 'actReturn', width: 12 },
+    { header: isArabic ? 'الحالة' : 'Status', key: 'status', width: 15 },
+    { header: isArabic ? 'ملاحظات' : 'Notes', key: 'notes', width: 25 },
   ];
+  styleHeaderRow(ws);
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, isArabic ? 'متابعة الإجازات' : 'Leave Tracking');
-
-  wb.Props = {
-    Title: isArabic ? 'تقرير متابعة الإجازات السنوية' : 'Annual Leave Tracking Report',
-    Subject: 'Leave Tracking Report',
-    Author: 'HR System',
-    CreatedDate: new Date(),
-  };
+  records.forEach((rec, i) => {
+    ws.addRow({
+      num: i + 1, name: rec.employee_name, empId: rec.employee_id, title: rec.job_title,
+      dept: rec.department, contract: getContractTypeLabel(rec.contract_type, isArabic),
+      hire: rec.hire_date, lastLeave: rec.last_leave_end || '-', nextLeave: rec.next_leave_due || '-',
+      entitled: rec.entitled_days, used: rec.used_days, remaining: rec.remaining_balance,
+      travel: rec.travel_date || '-', dest: rec.travel_destination || '-',
+      expReturn: rec.expected_return_date || '-', actReturn: rec.actual_return_date || '-',
+      status: getStatusLabel(rec, isArabic), notes: rec.notes || '-',
+    });
+  });
 
   const timestamp = new Date().toISOString().split('T')[0];
   const fullFileName = `${fileName}_${timestamp}.xlsx`;
-
-  XLSX.writeFile(wb, fullFileName, {
-    bookType: 'xlsx',
-    type: 'binary',
-  });
-
+  await downloadBuffer(wb, fullFileName);
   return fullFileName;
 };
 
-export const exportUpcomingLeavesReport = (
+export const exportUpcomingLeavesReport = async (
   records: LeaveTracking[],
   language: string = 'ar',
   fileName: string = 'upcoming_leaves'
 ) => {
   const isArabic = language === 'ar';
-
-  const exportData = records.map((rec, index) => ({
-    '#': index + 1,
-    [isArabic ? 'اسم الموظف' : 'Employee Name']: rec.employee_name,
-    [isArabic ? 'الرقم الوظيفي' : 'Employee ID']: rec.employee_id,
-    [isArabic ? 'الإدارة' : 'Department']: rec.department,
-    [isArabic ? 'نوع العقد' : 'Contract Type']: getContractTypeLabel(rec.contract_type, isArabic),
-    [isArabic ? 'تاريخ الإجازة القادمة' : 'Next Leave Due']: rec.next_leave_due || '-',
-    [isArabic ? 'الرصيد المتبقي' : 'Remaining Balance']: rec.remaining_balance,
-  }));
-
-  const ws = XLSX.utils.json_to_sheet(exportData);
-
-  ws['!cols'] = [
-    { wch: 5 },
-    { wch: 25 },
-    { wch: 15 },
-    { wch: 18 },
-    { wch: 12 },
-    { wch: 15 },
-    { wch: 12 },
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet(isArabic ? 'الإجازات القادمة' : 'Upcoming Leaves');
+  ws.columns = [
+    { header: '#', key: 'num', width: 5 },
+    { header: isArabic ? 'اسم الموظف' : 'Employee Name', key: 'name', width: 25 },
+    { header: isArabic ? 'الرقم الوظيفي' : 'Employee ID', key: 'empId', width: 15 },
+    { header: isArabic ? 'الإدارة' : 'Department', key: 'dept', width: 18 },
+    { header: isArabic ? 'نوع العقد' : 'Contract Type', key: 'contract', width: 12 },
+    { header: isArabic ? 'تاريخ الإجازة القادمة' : 'Next Leave Due', key: 'nextLeave', width: 15 },
+    { header: isArabic ? 'الرصيد المتبقي' : 'Remaining Balance', key: 'remaining', width: 12 },
   ];
+  styleHeaderRow(ws);
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, isArabic ? 'الإجازات القادمة' : 'Upcoming Leaves');
+  records.forEach((rec, i) => {
+    ws.addRow({
+      num: i + 1, name: rec.employee_name, empId: rec.employee_id, dept: rec.department,
+      contract: getContractTypeLabel(rec.contract_type, isArabic),
+      nextLeave: rec.next_leave_due || '-', remaining: rec.remaining_balance,
+    });
+  });
 
   const timestamp = new Date().toISOString().split('T')[0];
   const fullFileName = `${fileName}_${timestamp}.xlsx`;
-
-  XLSX.writeFile(wb, fullFileName, {
-    bookType: 'xlsx',
-    type: 'binary',
-  });
-
+  await downloadBuffer(wb, fullFileName);
   return fullFileName;
 };
 
-export const exportOverdueReturnsReport = (
+export const exportOverdueReturnsReport = async (
   records: LeaveTracking[],
   language: string = 'ar',
   fileName: string = 'overdue_returns'
 ) => {
   const isArabic = language === 'ar';
-
-  const exportData = records.map((rec, index) => ({
-    '#': index + 1,
-    [isArabic ? 'اسم الموظف' : 'Employee Name']: rec.employee_name,
-    [isArabic ? 'الرقم الوظيفي' : 'Employee ID']: rec.employee_id,
-    [isArabic ? 'الإدارة' : 'Department']: rec.department,
-    [isArabic ? 'تاريخ السفر' : 'Travel Date']: rec.travel_date || '-',
-    [isArabic ? 'تاريخ العودة المتوقع' : 'Expected Return']: rec.expected_return_date || '-',
-    [isArabic ? 'وجهة السفر' : 'Destination']: rec.travel_destination || '-',
-    [isArabic ? 'رقم التواصل' : 'Contact']: '-',
-  }));
-
-  const ws = XLSX.utils.json_to_sheet(exportData);
-
-  ws['!cols'] = [
-    { wch: 5 },
-    { wch: 25 },
-    { wch: 15 },
-    { wch: 18 },
-    { wch: 12 },
-    { wch: 15 },
-    { wch: 15 },
-    { wch: 15 },
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet(isArabic ? 'المتأخرين عن العودة' : 'Overdue Returns');
+  ws.columns = [
+    { header: '#', key: 'num', width: 5 },
+    { header: isArabic ? 'اسم الموظف' : 'Employee Name', key: 'name', width: 25 },
+    { header: isArabic ? 'الرقم الوظيفي' : 'Employee ID', key: 'empId', width: 15 },
+    { header: isArabic ? 'الإدارة' : 'Department', key: 'dept', width: 18 },
+    { header: isArabic ? 'تاريخ السفر' : 'Travel Date', key: 'travel', width: 12 },
+    { header: isArabic ? 'تاريخ العودة المتوقع' : 'Expected Return', key: 'expReturn', width: 15 },
+    { header: isArabic ? 'وجهة السفر' : 'Destination', key: 'dest', width: 15 },
+    { header: isArabic ? 'رقم التواصل' : 'Contact', key: 'contact', width: 15 },
   ];
+  styleHeaderRow(ws);
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, isArabic ? 'المتأخرين عن العودة' : 'Overdue Returns');
+  records.forEach((rec, i) => {
+    ws.addRow({
+      num: i + 1, name: rec.employee_name, empId: rec.employee_id, dept: rec.department,
+      travel: rec.travel_date || '-', expReturn: rec.expected_return_date || '-',
+      dest: rec.travel_destination || '-', contact: '-',
+    });
+  });
 
   const timestamp = new Date().toISOString().split('T')[0];
   const fullFileName = `${fileName}_${timestamp}.xlsx`;
-
-  XLSX.writeFile(wb, fullFileName, {
-    bookType: 'xlsx',
-    type: 'binary',
-  });
-
+  await downloadBuffer(wb, fullFileName);
   return fullFileName;
 };
