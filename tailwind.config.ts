@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Noto Sans Arabic"', 'sans-serif'],
-        arabic: ['"Noto Sans Arabic"', 'sans-serif'],
-        latin: ['"Noto Sans Arabic"', 'sans-serif'],
+        sans: ['"Segoe UI Arabic", "Segoe UI", "Tahoma"', 'sans-serif'],
+        arabic: ['"Segoe UI Arabic", "Segoe UI", "Tahoma"', 'sans-serif'],
+        latin: ['"Segoe UI Arabic", "Segoe UI", "Tahoma"', 'sans-serif'],
       },
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1.5', letterSpacing: '0.01em' }],
