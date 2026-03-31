@@ -36,7 +36,6 @@ export function NotificationCenter() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
   const hasFetchedRef = useRef(false);
 
   const userId = user?.id;
