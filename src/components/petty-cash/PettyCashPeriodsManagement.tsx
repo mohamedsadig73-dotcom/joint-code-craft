@@ -354,7 +354,7 @@ export function PettyCashPeriodsManagement() {
                 <TableHead className={isRTL ? 'text-right' : 'text-left'}>{t('status')}</TableHead>
                 <TableHead className={isRTL ? 'text-right' : 'text-left'}>{language === 'ar' ? 'تصفية الرصيد' : 'Disposition'}</TableHead>
                 <TableHead className={isRTL ? 'text-right' : 'text-left'}>{language === 'ar' ? 'فترة النثرية' : 'Period Range'}</TableHead>
-                <TableHead className={isRTL ? 'text-right' : 'text-left'}>{t('openedAt')}</TableHead>
+                <TableHead className={isRTL ? 'text-right' : 'text-left'}>{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
