@@ -56,6 +56,38 @@ export function PettyCashList() {
     loadExpenses();
   }, []);
 
+  const recalculatePeriodTotals = async (periodId: string) => {
+    try {
+      const { data: periodExpenses } = await supabase
+        .from('petty_cash_expenses')
+        .select('total_amount, status')
+        .eq('period_id', periodId)
+        .neq('status', 'rejected');
+
+      const totalExp = periodExpenses?.reduce((sum, e) => sum + Number(e.total_amount || 0), 0) || 0;
+      const count = periodExpenses?.length || 0;
+
+      const { data: period } = await supabase
+        .from('petty_cash_periods')
+        .select('opening_balance')
+        .eq('id', periodId)
+        .single();
+
+      const openingBalance = Number(period?.opening_balance || 0);
+
+      await supabase
+        .from('petty_cash_periods')
+        .update({
+          total_expenses: totalExp,
+          expenses_count: count,
+          current_balance: openingBalance - totalExp
+        })
+        .eq('id', periodId);
+    } catch (error) {
+      console.error('Error recalculating period totals:', error);
+    }
+  };
+
   const loadExpenses = async () => {
     try {
       const { data, error } = await supabase
@@ -75,6 +107,12 @@ export function PettyCashList() {
 
   const handleApprove = async (id: string) => {
     try {
+      const { data: exp } = await supabase
+        .from('petty_cash_expenses')
+        .select('period_id')
+        .eq('id', id)
+        .single();
+
       const { error } = await supabase
         .from('petty_cash_expenses')
         .update({ 
@@ -85,6 +123,7 @@ export function PettyCashList() {
         .eq('id', id);
 
       if (error) throw error;
+      if (exp?.period_id) await recalculatePeriodTotals(exp.period_id);
       toast.success(t('expenseApproved'));
       loadExpenses();
     } catch (error) {
@@ -95,6 +134,12 @@ export function PettyCashList() {
 
   const handleReject = async (id: string) => {
     try {
+      const { data: exp } = await supabase
+        .from('petty_cash_expenses')
+        .select('period_id')
+        .eq('id', id)
+        .single();
+
       const { error } = await supabase
         .from('petty_cash_expenses')
         .update({ 
@@ -105,6 +150,7 @@ export function PettyCashList() {
         .eq('id', id);
 
       if (error) throw error;
+      if (exp?.period_id) await recalculatePeriodTotals(exp.period_id);
       toast.success(t('expenseRejected'));
       loadExpenses();
     } catch (error) {
@@ -117,12 +163,19 @@ export function PettyCashList() {
     if (!deleteId) return;
     
     try {
+      const { data: exp } = await supabase
+        .from('petty_cash_expenses')
+        .select('period_id')
+        .eq('id', deleteId)
+        .single();
+
       const { error } = await supabase
         .from('petty_cash_expenses')
         .delete()
         .eq('id', deleteId);
 
       if (error) throw error;
+      if (exp?.period_id) await recalculatePeriodTotals(exp.period_id);
       toast.success(t('expenseDeleted'));
       loadExpenses();
     } catch (error) {
