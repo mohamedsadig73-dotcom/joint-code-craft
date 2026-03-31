@@ -378,8 +378,14 @@ export function PettyCashPeriodsManagement() {
                     <TableCell>{period.expenses_count}</TableCell>
                     <TableCell>{getStatusBadge(period.status)}</TableCell>
                     <TableCell>{getDispositionBadge(period) || <span className="text-muted-foreground text-xs">-</span>}</TableCell>
-                    <TableCell>{formatDate(period.opened_at)}</TableCell>
                     <TableCell>
+                      <div className="text-xs">
+                        <span>{period.start_date ? formatDate(period.start_date) : '-'}</span>
+                        <span className="mx-1">→</span>
+                        <span>{period.end_date ? formatDate(period.end_date) : (language === 'ar' ? 'مفتوحة' : 'Open')}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{formatDate(period.opened_at)}</TableCell>
                       <div className={`flex gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <Button
                           size="icon"
