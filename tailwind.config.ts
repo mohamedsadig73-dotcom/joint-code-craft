@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Cairo"', 'sans-serif'],
-        arabic: ['"Cairo"', 'sans-serif'],
-        latin: ['"Cairo"', 'sans-serif'],
+        sans: ['"Noto Sans Arabic"', 'sans-serif'],
+        arabic: ['"Noto Sans Arabic"', 'sans-serif'],
+        latin: ['"Noto Sans Arabic"', 'sans-serif'],
       },
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1.5', letterSpacing: '0.01em' }],
