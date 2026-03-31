@@ -1249,6 +1249,7 @@ export type Database = {
           current_balance: number
           disposition_amount: number | null
           disposition_reference: string | null
+          end_date: string | null
           expenses_count: number
           id: string
           location: string
@@ -1258,6 +1259,7 @@ export type Database = {
           opening_balance: number
           period_number: string
           responsible_person: string
+          start_date: string | null
           status: Database["public"]["Enums"]["petty_cash_status"]
           total_expenses: number
           updated_at: string
@@ -1274,6 +1276,7 @@ export type Database = {
           current_balance?: number
           disposition_amount?: number | null
           disposition_reference?: string | null
+          end_date?: string | null
           expenses_count?: number
           id?: string
           location: string
@@ -1283,6 +1286,7 @@ export type Database = {
           opening_balance?: number
           period_number: string
           responsible_person: string
+          start_date?: string | null
           status?: Database["public"]["Enums"]["petty_cash_status"]
           total_expenses?: number
           updated_at?: string
@@ -1299,6 +1303,7 @@ export type Database = {
           current_balance?: number
           disposition_amount?: number | null
           disposition_reference?: string | null
+          end_date?: string | null
           expenses_count?: number
           id?: string
           location?: string
@@ -1308,6 +1313,7 @@ export type Database = {
           opening_balance?: number
           period_number?: string
           responsible_person?: string
+          start_date?: string | null
           status?: Database["public"]["Enums"]["petty_cash_status"]
           total_expenses?: number
           updated_at?: string

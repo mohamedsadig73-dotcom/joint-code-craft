@@ -37,6 +37,8 @@ interface PettyCashPeriod {
   balance_disposition: string | null;
   disposition_amount: number | null;
   carried_from_period_id: string | null;
+  start_date: string | null;
+  end_date: string | null;
 }
 
 export function PettyCashPeriodsManagement() {
@@ -113,7 +115,8 @@ export function PettyCashPeriodsManagement() {
           disposition_amount: null,
           disposition_reference: null,
           approved_at: null,
-          approved_by: null
+          approved_by: null,
+          end_date: null
         })
         .eq('id', id);
 
@@ -350,7 +353,7 @@ export function PettyCashPeriodsManagement() {
                 <TableHead className={isRTL ? 'text-right' : 'text-left'}>{t('expensesCount')}</TableHead>
                 <TableHead className={isRTL ? 'text-right' : 'text-left'}>{t('status')}</TableHead>
                 <TableHead className={isRTL ? 'text-right' : 'text-left'}>{language === 'ar' ? 'تصفية الرصيد' : 'Disposition'}</TableHead>
-                <TableHead className={isRTL ? 'text-right' : 'text-left'}>{t('openedAt')}</TableHead>
+                <TableHead className={isRTL ? 'text-right' : 'text-left'}>{language === 'ar' ? 'فترة النثرية' : 'Period Range'}</TableHead>
                 <TableHead className={isRTL ? 'text-right' : 'text-left'}>{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -375,7 +378,13 @@ export function PettyCashPeriodsManagement() {
                     <TableCell>{period.expenses_count}</TableCell>
                     <TableCell>{getStatusBadge(period.status)}</TableCell>
                     <TableCell>{getDispositionBadge(period) || <span className="text-muted-foreground text-xs">-</span>}</TableCell>
-                    <TableCell>{formatDate(period.opened_at)}</TableCell>
+                    <TableCell>
+                      <div className="text-xs">
+                        <span>{period.start_date ? formatDate(period.start_date) : '-'}</span>
+                        <span className="mx-1">→</span>
+                        <span>{period.end_date ? formatDate(period.end_date) : (language === 'ar' ? 'مفتوحة' : 'Open')}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div className={`flex gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <Button
