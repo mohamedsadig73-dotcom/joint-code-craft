@@ -19,15 +19,14 @@ export default {
         latin: ['"IBM Plex Sans"', '"Cairo"', 'Arial', 'sans-serif'],
       },
       fontSize: {
-        // Optimized for Arabic readability
         'xs': ['0.75rem', { lineHeight: '1.5', letterSpacing: '0.01em' }],
-        'sm': ['0.875rem', { lineHeight: '1.6', letterSpacing: '0.01em' }],
-        'base': ['1rem', { lineHeight: '1.7', letterSpacing: '0.01em' }],
-        'lg': ['1.125rem', { lineHeight: '1.65', letterSpacing: '0.005em' }],
-        'xl': ['1.25rem', { lineHeight: '1.6', letterSpacing: '0' }],
-        '2xl': ['1.5rem', { lineHeight: '1.5', letterSpacing: '-0.01em' }],
-        '3xl': ['1.875rem', { lineHeight: '1.4', letterSpacing: '-0.015em' }],
-        '4xl': ['2.25rem', { lineHeight: '1.3', letterSpacing: '-0.02em' }],
+        'sm': ['0.875rem', { lineHeight: '1.6', letterSpacing: '0.005em' }],
+        'base': ['1rem', { lineHeight: '1.7', letterSpacing: '0.005em' }],
+        'lg': ['1.125rem', { lineHeight: '1.65', letterSpacing: '0' }],
+        'xl': ['1.25rem', { lineHeight: '1.6', letterSpacing: '-0.005em' }],
+        '2xl': ['1.5rem', { lineHeight: '1.5', letterSpacing: '-0.015em' }],
+        '3xl': ['1.875rem', { lineHeight: '1.4', letterSpacing: '-0.02em' }],
+        '4xl': ['2.25rem', { lineHeight: '1.3', letterSpacing: '-0.025em' }],
       },
       colors: {
         border: "hsl(var(--border))",
