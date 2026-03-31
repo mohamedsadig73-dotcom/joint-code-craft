@@ -1,10 +1,12 @@
 const { app, BrowserWindow, session } = require('electron');
 const path = require('path');
 
+app.disableHardwareAcceleration();
+
 // Production URLs - try in order
 const REMOTE_URLS = [
   'https://dts-store.lovable.app',
-  'https://https-https-dts-store-lovable-app-lovable-app.lovable.app'
+  'https://3af22d2e-d72f-44d9-8733-d6857e165138.lovableproject.com/'
 ];
 const LOCAL_FALLBACK = path.join(__dirname, '..', 'dist', 'index.html');
 
