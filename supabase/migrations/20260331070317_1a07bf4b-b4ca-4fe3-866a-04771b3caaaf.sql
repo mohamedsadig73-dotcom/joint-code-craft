@@ -1,0 +1,1 @@
+INSERT INTO storage.buckets (id, name, public) VALUES ('desktop-releases', 'desktop-releases', true) ON CONFLICT (id) DO NOTHING;
