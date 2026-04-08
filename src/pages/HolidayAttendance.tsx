@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -73,23 +74,22 @@ export default function HolidayAttendance() {
   ];
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen pb-24 md:pb-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navigation />
-      <main className="pt-20 pb-24 md:pb-8 px-4 sm:px-6 max-w-7xl mx-auto">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <Breadcrumbs items={breadcrumbs} className="mb-4" />
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{t('holidayAttendance')}</h1>
-            <p className="text-sm text-muted-foreground mt-1">{t('holidayAttendanceDesc')}</p>
-          </div>
-          {isAdmin && (
+        <PageHeader
+          icon={Calendar}
+          title={t('holidayAttendance')}
+          subtitle={t('holidayAttendanceDesc')}
+          actions={isAdmin ? (
             <Button onClick={() => navigate('/holiday-attendance/new')} className="gap-2">
               <Plus className="w-4 h-4" />
               {t('newSheet')}
             </Button>
-          )}
-        </div>
+          ) : undefined}
+        />
 
         {/* Search */}
         <div className="relative mb-6 max-w-md">
