@@ -55,10 +55,17 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
     setMoreOpen(false);
   };
 
+  // Hide bottom nav on Home page for clean dashboard mode
+  const isHomePage = location.pathname === '/';
+
   return (
     <>
       <nav 
-        className="fixed bottom-0 left-0 right-0 z-50 md:hidden print:hidden"
+        className={cn(
+          "fixed bottom-0 left-0 right-0 z-50 md:hidden print:hidden",
+          "transition-transform duration-300",
+          isHomePage && "translate-y-full"
+        )}
         dir={isRTL ? 'rtl' : 'ltr'}
       >
         {/* Gradient blur background */}
