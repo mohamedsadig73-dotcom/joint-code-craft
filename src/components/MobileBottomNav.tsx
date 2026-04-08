@@ -34,6 +34,7 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
 
   // Secondary pages shown in "More" menu
   const moreNavItems: NavItem[] = [
+    { path: '/leave-tracking', icon: CalendarDays, labelKey: 'leaveShort' },
     { path: '/reports-analytics', icon: BarChart3, labelKey: 'reports' },
     { path: '/holiday-attendance', icon: CalendarDays, labelKey: 'holidayAttendance' },
     { path: '/employees', icon: Users, labelKey: 'employeesManagement' },
