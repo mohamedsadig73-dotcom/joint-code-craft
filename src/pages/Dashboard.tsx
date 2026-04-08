@@ -238,8 +238,8 @@ export default function Dashboard() {
           onSuccess={loadDeclarations}
         />
 
-        {/* Stats */}
-        <div className="mb-4 md:mb-6">
+        {/* Stats - Compact */}
+        <div className="mb-6">
           <DashboardStats 
             stats={stats} 
             loading={loading} 
@@ -247,7 +247,6 @@ export default function Dashboard() {
             onYearChange={setSelectedYear}
             availableYears={availableYears}
           />
-          {/* Smart Nudge */}
           {activeNudge && (
             <SmartNudge
               nudge={activeNudge}

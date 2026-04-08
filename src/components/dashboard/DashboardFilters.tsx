@@ -55,7 +55,7 @@ export function DashboardFilters({
   const { t } = useLanguage();
 
   return (
-    <Card className="glass-card border-border/50 p-4 sticky top-20 z-40 backdrop-blur-md">
+    <div className="rounded-xl border border-border/40 bg-card p-4 sticky top-20 z-40 space-y-3">
       <div className="flex flex-col md:flex-row gap-4">
         {/* Search */}
         <div className="flex-1 relative">
@@ -140,9 +140,9 @@ export function DashboardFilters({
       </div>
 
       {/* Results count */}
-      <div className="mt-3 text-sm text-muted-foreground">
+      <div className="text-xs text-muted-foreground">
         {t('showing')} {filteredCount} {t('of')} {totalCount} {t('results')}
       </div>
-    </Card>
+    </div>
   );
 }

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Navigation } from '@/components/Navigation';
-import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -10,6 +9,7 @@ import { PettyCashList } from '@/components/petty-cash/PettyCashList';
 import { PettyCashReports } from '@/components/petty-cash/PettyCashReports';
 import { CostCentersManagement } from '@/components/petty-cash/CostCentersManagement';
 import { PettyCashPeriodsManagement } from '@/components/petty-cash/PettyCashPeriodsManagement';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function PettyCash() {
   const [activeTab, setActiveTab] = useState('periods');
@@ -23,68 +23,44 @@ export default function PettyCash() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <Breadcrumbs />
         
-        {/* Header Section - Compact on mobile */}
-        <div className="mb-4 md:mb-8">
-          <div className={`flex items-center gap-2 md:gap-3 mb-1 md:mb-2`}>
-            <Wallet className="w-6 h-6 md:w-8 md:h-8 text-primary" />
-            <h1 className="text-xl md:text-3xl font-bold gradient-text">
-              {t('pettyCashTitle')}
-            </h1>
+        <PageHeader
+          icon={Wallet}
+          title={t('pettyCashTitle')}
+          subtitle={t('pettyCashSubtitle')}
+        />
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-5 h-auto gap-1">
+              <TabsTrigger value="periods" className="gap-1.5 py-2 px-3 whitespace-nowrap">
+                <FolderOpen className="w-4 h-4" />
+                <span className="text-xs md:text-sm">{t('pettyCashPeriods')}</span>
+              </TabsTrigger>
+              <TabsTrigger value="dashboard" className="gap-1.5 py-2 px-3 whitespace-nowrap">
+                <TrendingUp className="w-4 h-4" />
+                <span className="text-xs md:text-sm">{t('overview')}</span>
+              </TabsTrigger>
+              <TabsTrigger value="expenses" className="gap-1.5 py-2 px-3 whitespace-nowrap">
+                <FileText className="w-4 h-4" />
+                <span className="text-xs md:text-sm">{t('expenses')}</span>
+              </TabsTrigger>
+              <TabsTrigger value="reports" className="gap-1.5 py-2 px-3 whitespace-nowrap">
+                <FileText className="w-4 h-4" />
+                <span className="text-xs md:text-sm">{t('reports')}</span>
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="gap-1.5 py-2 px-3 whitespace-nowrap">
+                <Settings className="w-4 h-4" />
+                <span className="text-xs md:text-sm">{t('costCenters')}</span>
+              </TabsTrigger>
+            </TabsList>
           </div>
-          <p className="text-muted-foreground text-sm">
-            {t('pettyCashSubtitle')}
-          </p>
-        </div>
 
-        <Card className="glass-card border-border/50">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="p-3 md:p-6">
-            {/* Scrollable tabs on mobile */}
-            <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 mb-4 md:mb-6">
-              <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-5 h-auto gap-1 md:gap-2">
-                <TabsTrigger value="periods" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
-                  <FolderOpen className="w-4 h-4" />
-                  <span className="text-xs md:text-sm">{t('pettyCashPeriods')}</span>
-                </TabsTrigger>
-                <TabsTrigger value="dashboard" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
-                  <TrendingUp className="w-4 h-4" />
-                  <span className="text-xs md:text-sm">{t('overview')}</span>
-                </TabsTrigger>
-                <TabsTrigger value="expenses" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
-                  <FileText className="w-4 h-4" />
-                  <span className="text-xs md:text-sm">{t('expenses')}</span>
-                </TabsTrigger>
-                <TabsTrigger value="reports" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
-                  <FileText className="w-4 h-4" />
-                  <span className="text-xs md:text-sm">{t('reports')}</span>
-                </TabsTrigger>
-                <TabsTrigger value="settings" className="gap-1 md:gap-2 py-2 px-3 md:px-4 whitespace-nowrap">
-                  <Settings className="w-4 h-4" />
-                  <span className="text-xs md:text-sm">{t('costCenters')}</span>
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <TabsContent value="periods">
-              <PettyCashPeriodsManagement />
-            </TabsContent>
-
-            <TabsContent value="dashboard">
-              <PettyCashDashboard />
-            </TabsContent>
-
-            <TabsContent value="expenses">
-              <PettyCashList />
-            </TabsContent>
-
-            <TabsContent value="reports">
-              <PettyCashReports />
-            </TabsContent>
-
-            <TabsContent value="settings">
-              <CostCentersManagement />
-            </TabsContent>
-          </Tabs>
-        </Card>
+          <TabsContent value="periods"><PettyCashPeriodsManagement /></TabsContent>
+          <TabsContent value="dashboard"><PettyCashDashboard /></TabsContent>
+          <TabsContent value="expenses"><PettyCashList /></TabsContent>
+          <TabsContent value="reports"><PettyCashReports /></TabsContent>
+          <TabsContent value="settings"><CostCentersManagement /></TabsContent>
+        </Tabs>
       </main>
     </div>
   );
