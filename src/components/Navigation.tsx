@@ -35,7 +35,7 @@ import {
 
 const APP_VERSION = '4.4.2';
 
-export function Navigation() {
+export function Navigation({ minimal = false }: { minimal?: boolean }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -96,25 +96,27 @@ export function Navigation() {
             <h1 className="text-lg font-bold gradient-text whitespace-nowrap">إدارة المخزن</h1>
           </Link>
 
-          {/* Navigation Links - Icons with text on large screens, icons only on medium */}
-          <div className="hidden md:flex items-center gap-1 ltr-flex">
-            {allNavItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link key={item.path} to={item.path}>
-                  <Button
-                    variant={isActive(item.path) ? 'secondary' : 'ghost'}
-                    size="sm"
-                    className="gap-1.5 ltr-flex px-2 lg:px-3"
-                    title={t(item.labelKey)}
-                  >
-                    <Icon className="w-4 h-4 shrink-0" />
-                    <span className="hidden xl:inline text-xs">{t(item.labelKey)}</span>
-                  </Button>
-                </Link>
-              );
-            })}
-          </div>
+          {/* Navigation Links - Hidden in minimal mode (Home page) */}
+          {!minimal && (
+            <div className="hidden md:flex items-center gap-1 ltr-flex">
+              {allNavItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link key={item.path} to={item.path}>
+                    <Button
+                      variant={isActive(item.path) ? 'secondary' : 'ghost'}
+                      size="sm"
+                      className="gap-1.5 ltr-flex px-2 lg:px-3"
+                      title={t(item.labelKey)}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span className="hidden xl:inline text-xs">{t(item.labelKey)}</span>
+                    </Button>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-1.5 md:gap-1 ltr-flex shrink-0">
