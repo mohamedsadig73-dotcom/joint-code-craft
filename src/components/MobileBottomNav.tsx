@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, Wrench, Wallet, FileText, MoreHorizontal, CalendarDays, Users, Shield, X } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Wrench, Wallet, FileText, MoreHorizontal, CalendarDays, Users, Shield, X, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,10 +13,10 @@ interface NavItem {
 }
 
 const primaryNavItems: NavItem[] = [
-  { path: '/', icon: LayoutDashboard, labelKey: 'declarations' },
+  { path: '/', icon: Home, labelKey: 'home' },
+  { path: '/declarations', icon: FileText, labelKey: 'declarations' },
   { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
   { path: '/petty-cash', icon: Wallet, labelKey: 'pettyCashShort' },
-  { path: '/leave-tracking', icon: FileText, labelKey: 'leaveShort' },
 ];
 
 export const MobileBottomNav = memo(function MobileBottomNav() {
