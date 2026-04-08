@@ -440,223 +440,123 @@ const LeaveTracking = () => {
             title={t('leaveTracking')}
             subtitle={t('leaveTrackingSubtitle')}
             actions={
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline">
-                    <Download className="w-4 h-4 me-2" />
-                    {t('exportExcel')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56" align="end">
-                  <div className="space-y-2">
-                    <Button variant="ghost" className="w-full justify-start" onClick={handleExportAll}>
-                      {t('exportAllTracking')}
+              <div className="flex flex-wrap gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline">
+                      <Download className="w-4 h-4 me-2" />
+                      {t('exportExcel')}
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start" onClick={handleExportUpcoming}>
-                      {t('exportUpcomingLeaves')}
-                    </Button>
-                    <Button variant="ghost" className="w-full justify-start" onClick={handleExportOverdue}>
-                      {t('exportOverdueReturns')}
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
-              <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="w-4 h-4 me-2" />
-                    {t('addEmployee')}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>{editingRecord ? t('editEmployee') : t('addEmployee')}</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Employee Information */}
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <User className="w-5 h-5" />
-                          {t('employeeInformation')}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <Label>{t('employeeName')} *</Label>
-                          <Input
-                            value={formData.employee_name}
-                            onChange={(e) => setFormData({ ...formData, employee_name: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('employeeId')} *</Label>
-                          <Input
-                            value={formData.employee_id}
-                            onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('jobTitle')} *</Label>
-                          <Input
-                            value={formData.job_title}
-                            onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('department')} *</Label>
-                          <Input
-                            value={formData.department}
-                            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('contractType')} *</Label>
-                          <Select value={formData.contract_type} onValueChange={(value: 'employee' | 'worker') => setFormData({ ...formData, contract_type: value })}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="employee">{t('employeeContract')}</SelectItem>
-                              <SelectItem value="worker">{t('workerContract')}</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <DatePickerField
-                          label={t('hireDate')}
-                          value={formData.hire_date}
-                          onChange={(date) => setFormData({ ...formData, hire_date: date })}
-                          required
-                        />
-                      </CardContent>
-                    </Card>
-
-                    {/* Leave Balance */}
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">{t('leaveBalance')}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <Label>{t('entitledDays')}</Label>
-                          <Input
-                            type="number"
-                            value={formData.entitled_days}
-                            onChange={(e) => setFormData({ ...formData, entitled_days: parseInt(e.target.value) || 0 })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('usedDays')}</Label>
-                          <Input
-                            type="number"
-                            value={formData.used_days}
-                            onChange={(e) => setFormData({ ...formData, used_days: parseInt(e.target.value) || 0 })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('remainingBalance')}</Label>
-                          <Input
-                            type="number"
-                            value={formData.entitled_days - formData.used_days}
-                            readOnly
-                            className="bg-muted"
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Leave History */}
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">{t('leaveHistory')}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <DatePickerField
-                          label={t('lastLeaveStart')}
-                          value={formData.last_leave_start}
-                          onChange={(date) => setFormData({ ...formData, last_leave_start: date })}
-                        />
-                        <DatePickerField
-                          label={t('lastLeaveEnd')}
-                          value={formData.last_leave_end}
-                          onChange={(date) => setFormData({ ...formData, last_leave_end: date })}
-                        />
-                      </CardContent>
-                    </Card>
-
-                    {/* Current Leave */}
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">{t('currentLeave')}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <DatePickerField
-                          label={t('currentLeaveStart')}
-                          value={formData.current_leave_start}
-                          onChange={(date) => setFormData({ ...formData, current_leave_start: date })}
-                        />
-                        <DatePickerField
-                          label={t('currentLeaveEnd')}
-                          value={formData.current_leave_end}
-                          onChange={(date) => setFormData({ ...formData, current_leave_end: date })}
-                        />
-                        <DatePickerField
-                          label={t('expectedReturnDate')}
-                          value={formData.expected_return_date}
-                          onChange={(date) => setFormData({ ...formData, expected_return_date: date })}
-                        />
-                        <DatePickerField
-                          label={t('actualReturnDate')}
-                          value={formData.actual_return_date}
-                          onChange={(date) => setFormData({ ...formData, actual_return_date: date })}
-                        />
-                        <DatePickerField
-                          label={t('travelDate')}
-                          value={formData.travel_date}
-                          onChange={(date) => setFormData({ ...formData, travel_date: date })}
-                        />
-                        <div className="space-y-2">
-                          <Label>{t('travelDestination')}</Label>
-                          <Input
-                            value={formData.travel_destination}
-                            onChange={(e) => setFormData({ ...formData, travel_destination: e.target.value })}
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Notes */}
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">{t('notes')}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <Textarea
-                          value={formData.notes}
-                          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                          placeholder={t('enterNotes')}
-                          rows={3}
-                        />
-                      </CardContent>
-                    </Card>
-
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => { setIsDialogOpen(false); resetForm(); }}>
-                        {t('cancel')}
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56" align="end">
+                    <div className="space-y-2">
+                      <Button variant="ghost" className="w-full justify-start" onClick={handleExportAll}>
+                        {t('exportAllTracking')}
                       </Button>
-                      <Button type="submit" disabled={saveMutation.isPending}>
-                        {saveMutation.isPending ? t('saving') : (editingRecord ? t('update') : t('save'))}
+                      <Button variant="ghost" className="w-full justify-start" onClick={handleExportUpcoming}>
+                        {t('exportUpcomingLeaves')}
                       </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
+                      <Button variant="ghost" className="w-full justify-start" onClick={handleExportOverdue}>
+                        {t('exportOverdueReturns')}
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="w-4 h-4 me-2" />
+                      {t('addEmployee')}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>{editingRecord ? t('editEmployee') : t('addEmployee')}</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                      {/* Personal Info Section */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold border-b pb-2">{t('personalInfo')}</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label>{t('employeeName')} *</Label>
+                            <Input value={formData.employee_name} onChange={e => setFormData(f => ({ ...f, employee_name: e.target.value }))} required />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>{t('employeeNumber')} *</Label>
+                            <Input value={formData.employee_id} onChange={e => setFormData(f => ({ ...f, employee_id: e.target.value }))} required />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>{t('jobTitle')} *</Label>
+                            <Input value={formData.job_title} onChange={e => setFormData(f => ({ ...f, job_title: e.target.value }))} required />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>{t('department')} *</Label>
+                            <Input value={formData.department} onChange={e => setFormData(f => ({ ...f, department: e.target.value }))} required />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>{t('contractType')}</Label>
+                            <Select value={formData.contract_type} onValueChange={(v: 'employee' | 'worker') => setFormData(f => ({ ...f, contract_type: v }))}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="employee">{t('employee')}</SelectItem>
+                                <SelectItem value="worker">{t('worker')}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <DatePickerField label={t('hireDate')} value={formData.hire_date} onChange={d => setFormData(f => ({ ...f, hire_date: d }))} required />
+                        </div>
+                      </div>
+                      {/* Leave Info Section */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold border-b pb-2">{t('leaveInfo')}</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label>{t('entitledDays')}</Label>
+                            <Input type="number" value={formData.entitled_days} onChange={e => setFormData(f => ({ ...f, entitled_days: parseInt(e.target.value) || 0 }))} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>{t('usedDays')}</Label>
+                            <Input type="number" value={formData.used_days} onChange={e => setFormData(f => ({ ...f, used_days: parseInt(e.target.value) || 0 }))} />
+                          </div>
+                          <DatePickerField label={t('lastLeaveStart')} value={formData.last_leave_start} onChange={d => setFormData(f => ({ ...f, last_leave_start: d }))} />
+                          <DatePickerField label={t('lastLeaveEnd')} value={formData.last_leave_end} onChange={d => setFormData(f => ({ ...f, last_leave_end: d }))} />
+                        </div>
+                      </div>
+                      {/* Current Leave Section */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold border-b pb-2">{t('currentLeave')}</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <DatePickerField label={t('currentLeaveStart')} value={formData.current_leave_start} onChange={d => setFormData(f => ({ ...f, current_leave_start: d }))} />
+                          <DatePickerField label={t('currentLeaveEnd')} value={formData.current_leave_end} onChange={d => setFormData(f => ({ ...f, current_leave_end: d }))} />
+                          <DatePickerField label={t('expectedReturnDate')} value={formData.expected_return_date} onChange={d => setFormData(f => ({ ...f, expected_return_date: d }))} />
+                          <DatePickerField label={t('actualReturnDate')} value={formData.actual_return_date} onChange={d => setFormData(f => ({ ...f, actual_return_date: d }))} />
+                          <DatePickerField label={t('travelDate')} value={formData.travel_date} onChange={d => setFormData(f => ({ ...f, travel_date: d }))} />
+                          <div className="space-y-2">
+                            <Label>{t('travelDestination')}</Label>
+                            <Input value={formData.travel_destination} onChange={e => setFormData(f => ({ ...f, travel_destination: e.target.value }))} />
+                          </div>
+                        </div>
+                      </div>
+                      {/* Notes */}
+                      <div className="space-y-2">
+                        <Label>{t('notes')}</Label>
+                        <Textarea value={formData.notes} onChange={e => setFormData(f => ({ ...f, notes: e.target.value }))} rows={3} />
+                      </div>
+                      <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => { setIsDialogOpen(false); resetForm(); }}>
+                          {t('cancel')}
+                        </Button>
+                        <Button type="submit" disabled={saveMutation.isPending}>
+                          {saveMutation.isPending ? t('saving') : (editingRecord ? t('update') : t('save'))}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            }
+          />
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
