@@ -184,26 +184,15 @@ export default function EmployeesManagement() {
         </div>
 
         <Card>
-          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              {t('employeesManagement')}
-            </CardTitle>
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-none">
-                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder={t('searchEmployees')}
-                  className="ps-9 w-full sm:w-64"
-                />
-              </div>
-              {isAdmin && (
-                <Button onClick={openAddDialog} className="gap-2 shrink-0">
-                  <UserPlus className="w-4 h-4" />{t('addEmployee')}
-                </Button>
-              )}
+          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
+            <div className="relative flex-1 sm:flex-none w-full sm:w-auto">
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={t('searchEmployees')}
+                className="ps-9 w-full sm:w-72"
+              />
             </div>
           </CardHeader>
           <CardContent>
