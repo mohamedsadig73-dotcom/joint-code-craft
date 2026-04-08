@@ -56,9 +56,10 @@ export function Navigation() {
     await forceAppUpdate();
   };
 
-  // Navigation items ordered: Declarations -> Maintenance -> Petty Cash -> Leave Tracking -> Reports -> Admin
+  // Navigation items ordered: Home -> Declarations -> Maintenance -> Petty Cash -> Leave Tracking -> Reports -> Admin
   const navItems = [
-    { path: '/', icon: LayoutDashboard, labelKey: 'declarations' },
+    { path: '/', icon: LayoutDashboard, labelKey: 'home' },
+    { path: '/declarations', icon: FileText, labelKey: 'declarations' },
     { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
     { path: '/petty-cash', icon: Wallet, labelKey: 'pettyCash' },
     { path: '/leave-tracking', icon: FileText, labelKey: 'leaveTracking' },
