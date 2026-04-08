@@ -6,10 +6,10 @@ import { PageTransition } from '@/components/PageTransition';
 import { Loader2 } from 'lucide-react';
 
 // Lazy load pages with preload hints for critical pages
-// Landing page removed - unauthenticated users go directly to login
 const Login = lazy(() => import('@/pages/Login'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+const Home = lazy(() => import('@/pages/Home'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
 const ReportsAnalytics = lazy(() => import('@/pages/ReportsAnalytics'));
@@ -87,7 +87,7 @@ export function AnimatedRoutes() {
               </PageTransition>
             }
           />
-          {/* Root route - show Dashboard if authenticated, redirect to login if not */}
+          {/* Root route - show Home (App Launcher) if authenticated */}
           <Route
             path="/"
             element={
@@ -96,7 +96,7 @@ export function AnimatedRoutes() {
               ) : shouldShowAuthenticatedContent ? (
                 <ProtectedRoute>
                   <PageTransition>
-                    <Dashboard />
+                    <Home />
                   </PageTransition>
                 </ProtectedRoute>
               ) : (
@@ -104,10 +104,20 @@ export function AnimatedRoutes() {
               )
             }
           />
-          {/* Legacy /landing route - redirect to root */}
+          {/* Declarations route */}
+          <Route
+            path="/declarations"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <Dashboard />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          {/* Legacy /landing and /dashboard routes */}
           <Route path="/landing" element={<Navigate to="/" replace />} />
-          {/* Legacy /dashboard route - redirect to root */}
-          <Route path="/dashboard" element={<Navigate to="/" replace />} />
+          <Route path="/dashboard" element={<Navigate to="/declarations" replace />} />
           <Route
             path="/reports-analytics"
             element={

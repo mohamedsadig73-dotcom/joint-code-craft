@@ -56,9 +56,10 @@ export function Navigation() {
     await forceAppUpdate();
   };
 
-  // Navigation items ordered: Declarations -> Maintenance -> Petty Cash -> Leave Tracking -> Reports -> Admin
+  // Navigation items ordered: Home -> Declarations -> Maintenance -> Petty Cash -> Leave Tracking -> Reports -> Admin
   const navItems = [
-    { path: '/', icon: LayoutDashboard, labelKey: 'declarations' },
+    { path: '/', icon: LayoutDashboard, labelKey: 'home' },
+    { path: '/declarations', icon: FileText, labelKey: 'declarations' },
     { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
     { path: '/petty-cash', icon: Wallet, labelKey: 'pettyCash' },
     { path: '/leave-tracking', icon: FileText, labelKey: 'leaveTracking' },
@@ -90,10 +91,10 @@ export function Navigation() {
     <nav className="glass-card border-b border-border/50 sticky top-0 z-50 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14 md:h-16">
-          {/* Logo */}
-          <div className="flex items-center gap-2 ltr-flex shrink-0">
+          {/* Logo - links to home */}
+          <Link to="/" className="flex items-center gap-2 ltr-flex shrink-0">
             <h1 className="text-lg font-bold gradient-text whitespace-nowrap">إدارة المخزن</h1>
-          </div>
+          </Link>
 
           {/* Navigation Links - Icons with text on large screens, icons only on medium */}
           <div className="hidden md:flex items-center gap-1 ltr-flex">
