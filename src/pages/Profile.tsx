@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -168,10 +169,11 @@ export default function Profile() {
       <Navigation />
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        <div className="mb-4 md:mb-8">
-          <h1 className="text-xl md:text-3xl font-bold mb-1 md:mb-2">{t('myProfile')}</h1>
-          <p className="text-muted-foreground text-sm">{t('profileSubtitle')}</p>
-        </div>
+        <PageHeader
+          icon={User}
+          title={t('myProfile')}
+          subtitle={t('profileSubtitle')}
+        />
 
         {/* Profile Information */}
         <Card className="glass-card mb-6">
