@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -151,54 +152,47 @@ export default function EmployeesManagement() {
   const breadcrumbs = [{ label: t('employeesManagement') }];
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen pb-24 md:pb-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navigation />
-      <main className="pt-20 pb-24 md:pb-8 px-4 sm:px-6 max-w-7xl mx-auto">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <Breadcrumbs items={breadcrumbs} className="mb-4" />
+
+        <PageHeader
+          icon={Users}
+          title={t('employeesManagement')}
+          actions={isAdmin ? (
+            <Button onClick={openAddDialog} className="gap-2">
+              <UserPlus className="w-4 h-4" />{t('addEmployee')}
+            </Button>
+          ) : undefined}
+        />
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-primary">{employees.length}</p>
-              <p className="text-sm text-muted-foreground">{t('totalEmployees')}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-primary">{activeCount}</p>
-              <p className="text-sm text-muted-foreground">{t('activeEmployees')}</p>
-            </CardContent>
-          </Card>
-          <Card className="col-span-2 sm:col-span-1">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-muted-foreground">{employees.length - activeCount}</p>
-              <p className="text-sm text-muted-foreground">{t('inactiveEmployees')}</p>
-            </CardContent>
-          </Card>
+          <div className="rounded-xl border border-border/40 bg-card p-4 text-center">
+            <p className="text-2xl font-bold text-primary">{employees.length}</p>
+            <p className="text-xs text-muted-foreground">{t('totalEmployees')}</p>
+          </div>
+          <div className="rounded-xl border border-border/40 bg-card p-4 text-center">
+            <p className="text-2xl font-bold text-primary">{activeCount}</p>
+            <p className="text-xs text-muted-foreground">{t('activeEmployees')}</p>
+          </div>
+          <div className="rounded-xl border border-border/40 bg-card p-4 text-center col-span-2 sm:col-span-1">
+            <p className="text-2xl font-bold text-muted-foreground">{employees.length - activeCount}</p>
+            <p className="text-xs text-muted-foreground">{t('inactiveEmployees')}</p>
+          </div>
         </div>
 
         <Card>
-          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              {t('employeesManagement')}
-            </CardTitle>
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-none">
-                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder={t('searchEmployees')}
-                  className="ps-9 w-full sm:w-64"
-                />
-              </div>
-              {isAdmin && (
-                <Button onClick={openAddDialog} className="gap-2 shrink-0">
-                  <UserPlus className="w-4 h-4" />{t('addEmployee')}
-                </Button>
-              )}
+          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
+            <div className="relative flex-1 sm:flex-none w-full sm:w-auto">
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={t('searchEmployees')}
+                className="ps-9 w-full sm:w-72"
+              />
             </div>
           </CardHeader>
           <CardContent>

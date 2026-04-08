@@ -119,7 +119,7 @@ export function DeclarationsTable({
   }
 
   return (
-    <Card className="glass-card border-border/50 overflow-hidden">
+    <Card className="border-border/40 overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>

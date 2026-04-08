@@ -184,15 +184,17 @@ export default function AdminDashboard() {
     <div className="min-h-screen">
       <Navigation />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <Shield className="w-8 h-8 text-primary" />
-              <h1 className="text-3xl font-bold">{t('adminDashboardTitle')}</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
+              <Shield className="w-5 h-5 text-primary" />
             </div>
-            <p className="text-muted-foreground">{t('adminDashboardSubtitle')}</p>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold">{t('adminDashboardTitle')}</h1>
+              <p className="text-muted-foreground text-sm mt-0.5">{t('adminDashboardSubtitle')}</p>
+            </div>
           </div>
           <BulkNotificationDialog />
         </div>

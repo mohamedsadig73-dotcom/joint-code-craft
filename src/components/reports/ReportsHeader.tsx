@@ -34,14 +34,14 @@ export const ReportsHeader = memo(function ReportsHeader({
     <div className="space-y-4 mb-6">
       {/* Title Row */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <div className="p-2.5 rounded-xl bg-primary/10">
-              <BarChart3 className="w-6 h-6 text-primary" aria-hidden="true" />
-            </div>
-            <h1 className="text-xl md:text-3xl font-bold">{t('reportsTitle')}</h1>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
+            <BarChart3 className="w-5 h-5 text-primary" aria-hidden="true" />
           </div>
-          <p className="text-muted-foreground text-sm">{t('reportsSubtitle')}</p>
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold">{t('reportsTitle')}</h1>
+            <p className="text-muted-foreground text-sm mt-0.5">{t('reportsSubtitle')}</p>
+          </div>
         </div>
 
         {/* Controls */}

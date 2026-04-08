@@ -167,22 +167,23 @@ export default function ManagerDashboard() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-24 md:pb-8">
       <Navigation />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2 gradient-text">
-              لوحة تحكم المدير
-            </h1>
-            <p className="text-muted-foreground">
-              نظرة عامة على الإقرارات والنشاطات
-            </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
+              <Activity className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold">لوحة تحكم المدير</h1>
+              <p className="text-muted-foreground text-sm mt-0.5">نظرة عامة على الإقرارات والنشاطات</p>
+            </div>
           </div>
-          <Button onClick={loadDashboardData} variant="outline" disabled={loading}>
-            <RefreshCw className={`w-4 h-4 ml-2 ${loading ? 'animate-spin' : ''}`} />
+          <Button onClick={loadDashboardData} variant="outline" disabled={loading} className="gap-2">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             تحديث
           </Button>
         </div>

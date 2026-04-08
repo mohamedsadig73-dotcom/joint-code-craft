@@ -29,7 +29,7 @@ const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttribut
   ({ className, ...props }, ref) => (
     <thead 
       ref={ref} 
-      className={cn("[&_tr]:border-b bg-muted/20", className)} 
+      className={cn("[&_tr]:border-b [&_tr]:border-border/50 bg-muted/10", className)} 
       {...props} 
     />
   ),
@@ -55,7 +55,7 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
     <tr
       ref={ref}
       className={cn(
-        "border-b transition-all duration-200 data-[state=selected]:bg-muted hover:bg-muted/30 hover:shadow-sm",
+        "border-b border-border/40 transition-colors duration-150 data-[state=selected]:bg-muted/50 hover:bg-muted/20",
         className
       )}
       {...props}
@@ -69,10 +69,9 @@ const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<
     <th
       ref={ref}
       className={cn(
-        "h-12 px-4 align-middle font-semibold text-foreground/80 bg-muted/30",
+        "h-11 px-4 align-middle font-medium text-xs uppercase tracking-wider text-muted-foreground",
         "text-start whitespace-nowrap",
         "[&:has([role=checkbox])]:pe-0",
-        // RTL resize cursor support
         "relative",
         className,
       )}
