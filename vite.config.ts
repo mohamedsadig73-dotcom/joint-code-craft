@@ -6,7 +6,7 @@ import { componentTagger } from "lovable-tagger";
 
 // Build version for cache busting
 const BUILD_VERSION = Date.now().toString();
-const APP_VERSION = '4.4.2';
+const APP_VERSION = '4.4.3';
 
 // Plugin to auto-update version.json on build
 function versionJsonPlugin() {
