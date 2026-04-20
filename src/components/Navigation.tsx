@@ -33,7 +33,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const APP_VERSION = '4.4.2';
+const APP_VERSION = '4.4.5';
 
 export function Navigation({ minimal = false }: { minimal?: boolean }) {
   const location = useLocation();
