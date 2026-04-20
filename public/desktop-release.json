@@ -1,7 +1,7 @@
 {
-  "desktop_shell_version": "4.4.2",
-  "web_version": "4.4.2",
-  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.4.2-dist.zip",
-  "release_notes": "إصلاح نظام الطباعة والتحديث التلقائي، تحسينات عامة",
+  "desktop_shell_version": "4.4.3",
+  "web_version": "4.4.3",
+  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.4.3-dist.zip",
+  "release_notes": "تحسينات شاملة على واجهة المستخدم بنمط Odoo، إضافة حالة 'ملغي'، إصلاح كاشف الإقرارات المفقودة، وتحسينات عامة",
   "mandatory": false
 }
