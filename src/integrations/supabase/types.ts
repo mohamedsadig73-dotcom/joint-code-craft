@@ -3265,6 +3265,7 @@ export type Database = {
       }
       generate_wms_order_number: { Args: { prefix: string }; Returns: string }
       generate_work_order_number: { Args: never; Returns: string }
+      get_decrypted_totp_secret: { Args: { _user_id: string }; Returns: string }
       hard_delete_user: { Args: { target_user_id: string }; Returns: Json }
       has_role: {
         Args: {
