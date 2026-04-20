@@ -28,7 +28,7 @@ import { Progress } from '@/components/ui/progress';
 const declarationSchema = z.object({
   number: z.string().trim().min(3, 'رقم الإقرار يجب أن يكون 3 أرقام على الأقل').max(6, 'رقم الإقرار طويل جداً').regex(/^\d+$/, 'يجب أن يحتوي على أرقام فقط'),
   type: z.enum(['دخول', 'خروج'], { required_error: 'يجب اختيار نوع الإقرار' }),
-  status: z.enum(['draft', 'pending_warehouse_signature', 'warehouse_signed', 'sent_to_admin_office', 'returned_to_warehouse', 'archived']),
+  status: z.enum(['draft', 'pending_warehouse_signature', 'warehouse_signed', 'sent_to_admin_office', 'returned_to_warehouse', 'archived', 'rejected']),
 });
 
 interface CreateDeclarationDialogProps {
@@ -55,6 +55,7 @@ const getStatusOptions = (type: 'دخول' | 'خروج', t: (key: string) => str
     { value: 'sent_to_admin_office', label: t('sentToAdminOffice') },
     { value: 'returned_to_warehouse', label: t('returnedForModification') },
     { value: 'archived', label: t('archived') },
+    { value: 'rejected', label: t('rejected') },
   ];
 };
 
@@ -66,7 +67,7 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
   const [loadingNextNumber, setLoadingNextNumber] = useState(false);
   const [declarationNumber, setDeclarationNumber] = useState('');
   const [type, setType] = useState<'دخول' | 'خروج'>('دخول');
-  const [status, setStatus] = useState<'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'returned_to_warehouse' | 'archived'>('draft');
+  const [status, setStatus] = useState<'draft' | 'pending_warehouse_signature' | 'warehouse_signed' | 'sent_to_admin_office' | 'returned_to_warehouse' | 'archived' | 'rejected'>('draft');
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [mode, setMode] = useState<CreationMode>('single');
   const [fromNumber, setFromNumber] = useState('');
