@@ -58,7 +58,7 @@ export const statusLabels: Record<string, string> = {
   received_by_admin_office: 'مستلم',
   returned_to_warehouse: 'مُعاد للتعديل',
   archived: 'مؤرشف',
-  rejected: 'مرفوض',
+  rejected: 'ملغي',
 };
 
 // English status labels
@@ -70,7 +70,7 @@ export const statusLabelsEn: Record<string, string> = {
   received_by_admin_office: 'Received',
   returned_to_warehouse: 'Returned for Modification',
   archived: 'Archived',
-  rejected: 'Rejected',
+  rejected: 'Cancelled',
 };
 
 // Dynamic status labels based on declaration type (Arabic)
