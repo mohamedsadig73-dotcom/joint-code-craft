@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useBoxReceipts } from '@/hooks/useBoxReceipts';
 import { useBoxSummary } from '@/hooks/useBoxSummary';
 import { RTLEChart } from '@/components/charts/RTLEChart';
-import { Package, Boxes, Truck, Users, Loader2 } from 'lucide-react';
+import { Package, Boxes, Truck, Users, Loader2, PackageOpen } from 'lucide-react';
 import type { EChartsOption } from 'echarts';
 
 export function BoxesDashboardTab() {
@@ -15,7 +15,9 @@ export function BoxesDashboardTab() {
   const stats = useMemo(() => {
     const totalQty = receipts.reduce((s, r) => s + r.qty, 0);
     const suppliers = new Set(receipts.map((r) => r.supplier)).size;
-    const boxes = new Set(receipts.map((r) => r.box_no)).size;
+    const boxedReceipts = receipts.filter((r) => r.packing_type === 'boxed');
+    const looseReceipts = receipts.filter((r) => r.packing_type === 'loose');
+    const boxes = new Set(boxedReceipts.map((r) => r.box_no).filter(Boolean)).size;
     const morocco = receipts.filter((r) => r.destination === 'morocco');
     const uzbekistan = receipts.filter((r) => r.destination === 'uzbekistan');
     return {
@@ -23,6 +25,10 @@ export function BoxesDashboardTab() {
       totalQty,
       boxes,
       suppliers,
+      boxedCount: boxedReceipts.length,
+      boxedQty: boxedReceipts.reduce((s, r) => s + r.qty, 0),
+      looseCount: looseReceipts.length,
+      looseQty: looseReceipts.reduce((s, r) => s + r.qty, 0),
       moroccoCount: morocco.length,
       moroccoQty: morocco.reduce((s, r) => s + r.qty, 0),
       uzbCount: uzbekistan.length,
@@ -55,6 +61,19 @@ export function BoxesDashboardTab() {
     }],
   }), [stats, t]);
 
+  const packingPieOption = useMemo<EChartsOption>(() => ({
+    tooltip: { trigger: 'item' as const },
+    legend: { bottom: 0 },
+    series: [{
+      type: 'pie' as const,
+      radius: ['40%', '70%'],
+      data: [
+        { value: stats.boxedQty, name: t('boxed'), itemStyle: { color: 'hsl(217 91% 60%)' } },
+        { value: stats.looseQty, name: t('loose'), itemStyle: { color: 'hsl(271 81% 56%)' } },
+      ],
+    }],
+  }), [stats, t]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12 text-muted-foreground">
@@ -67,6 +86,7 @@ export function BoxesDashboardTab() {
     { label: t('totalItems'), value: stats.items, icon: Package, color: 'text-emerald-600' },
     { label: t('totalQty'), value: stats.totalQty, icon: Boxes, color: 'text-blue-600' },
     { label: t('totalBoxes'), value: stats.boxes, icon: Package, color: 'text-destructive' },
+    { label: t('looseItems'), value: `${stats.looseCount} / ${stats.looseQty}`, icon: PackageOpen, color: 'text-purple-600' },
     { label: t('suppliers'), value: stats.suppliers, icon: Users, color: 'text-purple-600' },
     { label: t('dest_morocco'), value: `${stats.moroccoCount} / ${stats.moroccoQty}`, icon: Truck, color: 'text-orange-600' },
     { label: t('dest_uzbekistan'), value: `${stats.uzbCount} / ${stats.uzbQty}`, icon: Truck, color: 'text-green-600' },
@@ -74,7 +94,7 @@ export function BoxesDashboardTab() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
         {kpis.map((k) => {
           const Icon = k.icon;
           return (
@@ -91,7 +111,7 @@ export function BoxesDashboardTab() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="p-4">
           <h3 className="font-semibold mb-2">{t('qtyPerBox')}</h3>
           <RTLEChart option={qtyPerBoxOption} style={{ height: '320px' }} />
@@ -99,6 +119,10 @@ export function BoxesDashboardTab() {
         <Card className="p-4">
           <h3 className="font-semibold mb-2">{t('destDistribution')}</h3>
           <RTLEChart option={destPieOption} style={{ height: '320px' }} />
+        </Card>
+        <Card className="p-4">
+          <h3 className="font-semibold mb-2">{t('packingDistribution')}</h3>
+          <RTLEChart option={packingPieOption} style={{ height: '320px' }} />
         </Card>
       </div>
     </div>
