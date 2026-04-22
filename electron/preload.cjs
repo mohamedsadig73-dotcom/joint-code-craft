@@ -3,12 +3,7 @@ const { contextBridge, shell, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   // Fetch version/release info (bypasses CORS)
   getPublishedVersion: async (url) => {
-    const response = await fetch(`${url}?_t=${Date.now()}`, {
-      cache: 'no-store',
-      headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-    });
-    if (!response.ok) throw new Error(`Failed: ${response.status}`);
-    return response.json();
+    return ipcRenderer.invoke('fetch-json', `${url}?_t=${Date.now()}`);
   },
 
   // Open URL in default browser
