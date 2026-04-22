@@ -116,9 +116,7 @@ export default function ItemsMaster() {
                       </TableCell>
                       <TableCell>
                         {item.is_active ? (
-                          <Badge variant="default" className="bg-green-600 hover:bg-green-700">
-                            {t('active')}
-                          </Badge>
+                          <Badge variant="default">{t('active')}</Badge>
                         ) : (
                           <Badge variant="outline">{t('inactive')}</Badge>
                         )}
