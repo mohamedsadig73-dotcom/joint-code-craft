@@ -12,6 +12,35 @@ const DIST_DIR = path.join(APP_ROOT, 'dist');
 const LOCAL_INDEX = path.join(DIST_DIR, 'index.html');
 const PUBLISHED_URL = 'https://dts-store-qatar-2026.lovable.app';
 const UPDATE_DIR = path.join(app.getPath('userData'), 'updates');
+const LOCK_FILE = path.join(UPDATE_DIR, 'update.lock');
+const PENDING_DIST = path.join(UPDATE_DIR, 'dist-pending');
+
+// Read shell version from package.json
+function getShellVersion() {
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(APP_ROOT, 'package.json'), 'utf-8'));
+    return pkg.version || '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+}
+
+// Apply pending update on startup if it exists
+function applyPendingUpdateIfAny() {
+  try {
+    if (!fs.existsSync(PENDING_DIST)) return;
+    console.log('[Electron] Applying pending update from previous session...');
+    if (fs.existsSync(DIST_DIR)) {
+      fs.rmSync(DIST_DIR, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
+    }
+    fs.cpSync(PENDING_DIST, DIST_DIR, { recursive: true });
+    fs.rmSync(PENDING_DIST, { recursive: true, force: true });
+    try { fs.unlinkSync(LOCK_FILE); } catch (_) {}
+    console.log('[Electron] ✓ Pending update applied');
+  } catch (err) {
+    console.error('[Electron] Failed to apply pending update:', err);
+  }
+}
 
 let mainWindow = null;
 
@@ -395,6 +424,8 @@ ipcMain.handle('restart-app', () => {
 
 // ── App lifecycle ──────────────────────────────────────
 app.whenReady().then(() => {
+  if (!fs.existsSync(UPDATE_DIR)) fs.mkdirSync(UPDATE_DIR, { recursive: true });
+  applyPendingUpdateIfAny();
   session.defaultSession.clearCache().then(() => createWindow()).catch(() => createWindow());
 });
 

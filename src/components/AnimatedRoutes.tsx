@@ -25,6 +25,8 @@ const PettyCash = lazy(() => import('@/pages/PettyCash'));
 const HolidayAttendance = lazy(() => import('@/pages/HolidayAttendance'));
 const HolidayAttendanceDetail = lazy(() => import('@/pages/HolidayAttendanceDetail'));
 const EmployeesManagement = lazy(() => import('@/pages/EmployeesManagement'));
+const UpdateLog = lazy(() => import('@/pages/UpdateLog'));
+const UpdateDiagnostics = lazy(() => import('@/pages/UpdateDiagnostics'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -250,6 +252,26 @@ export function AnimatedRoutes() {
               <ProtectedRoute allowedRoles={['admin', 'manager']}>
                 <PageTransition>
                   <ManagerDashboard />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/update-log"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <UpdateLog />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/update-diagnostics"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <PageTransition>
+                  <UpdateDiagnostics />
                 </PageTransition>
               </ProtectedRoute>
             }

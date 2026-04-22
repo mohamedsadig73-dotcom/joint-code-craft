@@ -172,10 +172,20 @@ export function Navigation({ minimal = false }: { minimal?: boolean }) {
                   <RefreshCw className={`w-4 h-4 me-2 ${isUpdating ? 'animate-spin' : ''}`} />
                   {t('forceUpdate')}
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/update-log')}>
+                  <History className="w-4 h-4 me-2" />
+                  {t('updateLog')}
+                </DropdownMenuItem>
                 {user?.role === 'admin' && (
                   <DropdownMenuItem onClick={() => navigate('/audit-logs')}>
                     <History className="w-4 h-4 me-2" />
                     {t('auditLog')}
+                  </DropdownMenuItem>
+                )}
+                {user?.role === 'admin' && (
+                  <DropdownMenuItem onClick={() => navigate('/admin/update-diagnostics')}>
+                    <History className="w-4 h-4 me-2" />
+                    {t('updateDiagnostics')}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
