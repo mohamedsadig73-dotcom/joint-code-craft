@@ -19,12 +19,22 @@ import {
 } from '@/components/ui/alert-dialog';
 import { exportBoxesToExcel, parseReceiptsFromExcel } from '@/utils/boxesExcelExport';
 import { BOX_DESTINATIONS, BOX_STATUSES, PACKING_TYPES } from '@/utils/boxNumberValidation';
+import { ImportDuplicateDialog, type ImportResolution } from './ImportDuplicateDialog';
+import { findImportDuplicates, type ImportDuplicateMatch } from '@/utils/boxDuplicateAnalysis';
 
 export function ReceiptsTab() {
   const { user } = useAuth();
   const { t, language } = useLanguage();
   const { toast } = useToast();
-  const { receipts, loading, createReceipt, updateReceipt, deleteReceipt, bulkInsertReceipts } = useBoxReceipts();
+  const {
+    receipts,
+    loading,
+    createReceipt,
+    updateReceipt,
+    deleteReceipt,
+    bulkInsertReceipts,
+    bulkAddQuantity,
+  } = useBoxReceipts();
   const { summary } = useBoxSummary();
 
   const [search, setSearch] = useState('');
@@ -36,6 +46,11 @@ export function ReceiptsTab() {
   const [toDelete, setToDelete] = useState<BoxReceipt | null>(null);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Import duplicate detection state
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [pendingDuplicates, setPendingDuplicates] = useState<ImportDuplicateMatch<BoxReceiptInput>[]>([]);
+  const [pendingUniques, setPendingUniques] = useState<BoxReceiptInput[]>([]);
 
   const isAdmin = user?.role === 'admin';
   const isManager = user?.role === 'manager';
@@ -139,13 +154,44 @@ export function ReceiptsTab() {
       if (inputs.length === 0) {
         toast({ title: t('error'), description: t('noValidRows'), variant: 'destructive' });
       } else {
-        await bulkInsertReceipts(inputs);
+        // Validate against existing receipts for duplicates
+        const { duplicates, uniques } = findImportDuplicates(inputs, receipts);
+        if (duplicates.length === 0) {
+          await bulkInsertReceipts(inputs);
+        } else {
+          setPendingDuplicates(duplicates);
+          setPendingUniques(uniques);
+          setImportDialogOpen(true);
+        }
       }
     } catch (err) {
       toast({ title: t('error'), description: (err as Error).message, variant: 'destructive' });
     } finally {
       setImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleResolveImport = async (resolution: ImportResolution) => {
+    setImportDialogOpen(false);
+    try {
+      if (resolution === 'merge') {
+        if (pendingUniques.length > 0) await bulkInsertReceipts(pendingUniques);
+        const updates = pendingDuplicates.map((d) => ({ id: d.existing.id, addQty: d.input.qty }));
+        const merged = await bulkAddQuantity(updates);
+        toast({
+          title: t('success'),
+          description: `${pendingUniques.length} ${t('rowsImported')} · ${merged} ${t('mergedRecordsCount').replace('{count}', String(merged))}`,
+        });
+      } else if (resolution === 'skip') {
+        if (pendingUniques.length > 0) await bulkInsertReceipts(pendingUniques);
+      } else {
+        const all = [...pendingUniques, ...pendingDuplicates.map((d) => d.input)];
+        await bulkInsertReceipts(all);
+      }
+    } finally {
+      setPendingDuplicates([]);
+      setPendingUniques([]);
     }
   };
 
@@ -300,6 +346,14 @@ export function ReceiptsTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ImportDuplicateDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        duplicates={pendingDuplicates}
+        uniqueCount={pendingUniques.length}
+        onResolve={handleResolveImport}
+      />
     </div>
   );
 }

@@ -30,6 +30,7 @@ const UpdateDiagnostics = lazy(() => import('@/pages/UpdateDiagnostics'));
 const BoxesManagement = lazy(() => import('@/pages/BoxesManagement'));
 const BoxCardPrint = lazy(() => import('@/pages/BoxCardPrint'));
 const ContainerDetails = lazy(() => import('@/pages/ContainerDetails'));
+const BoxesDataAdmin = lazy(() => import('@/pages/BoxesDataAdmin'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -303,6 +304,16 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <ContainerDetails />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/boxes/data-admin"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                <PageTransition>
+                  <BoxesDataAdmin />
                 </PageTransition>
               </ProtectedRoute>
             }
