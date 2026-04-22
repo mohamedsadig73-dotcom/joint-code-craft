@@ -11,6 +11,7 @@ import { useBoxSummary } from '@/hooks/useBoxSummary';
 import { ReceiptsTable } from './ReceiptsTable';
 import { ReceiptMobileCard } from './ReceiptMobileCard';
 import { ReceiptFormDialog } from './ReceiptFormDialog';
+import { ReceiptsPrintPreview } from './ReceiptsPrintPreview';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
