@@ -31,15 +31,15 @@ export function DuplicateCheckBanner() {
   return (
     <Card
       className={`p-3 border ${
-        ok ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-amber-500/50 bg-amber-500/10'
+        ok ? 'border-success/40 bg-success/5' : 'border-warning/50 bg-warning/10'
       }`}
     >
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
           {ok ? (
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
           ) : (
-            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <AlertTriangle className="w-5 h-5 text-warning shrink-0" />
           )}
           <div className="min-w-0">
             <div className="text-sm font-semibold">
