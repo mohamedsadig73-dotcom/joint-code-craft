@@ -247,6 +247,9 @@ export const tableLabels: Record<string, string> = {
   maintenance_schedule: 'جدول الصيانة',
   maintenance_assets: 'الأصول',
   maintenance_vendors: 'الموردين',
+  box_receipts: 'سجل الاستلام',
+  shipping_containers: 'الحاويات',
+  container_items: 'محتويات الحاوية',
 };
 
 // Table labels (English)
@@ -258,6 +261,9 @@ export const tableLabelsEn: Record<string, string> = {
   maintenance_schedule: 'Maintenance Schedule',
   maintenance_assets: 'Assets',
   maintenance_vendors: 'Vendors',
+  box_receipts: 'Receipts',
+  shipping_containers: 'Containers',
+  container_items: 'Container Items',
 };
 
 // Chart colors using CSS variables

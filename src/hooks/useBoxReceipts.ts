@@ -148,6 +148,70 @@ export function useBoxReceipts() {
     [user?.id, toast, t]
   );
 
+  /**
+   * Merge a set of duplicate receipts into a single keeper record.
+   * - Keeper qty is set to the sum of all involved receipts.
+   * - All non-keeper receipts are soft-deleted with a traceable note.
+   */
+  const mergeReceipts = useCallback(
+    async (keeperId: string, mergeIds: string[]) => {
+      if (!user?.id) return false;
+      const keeper = receipts.find((r) => r.id === keeperId);
+      const merged = receipts.filter((r) => mergeIds.includes(r.id) && r.id !== keeperId);
+      if (!keeper || merged.length === 0) return false;
+
+      const newQty = keeper.qty + merged.reduce((s, r) => s + r.qty, 0);
+      const { error: kErr } = await supabase
+        .from('box_receipts')
+        .update({ qty: newQty })
+        .eq('id', keeper.id);
+      if (kErr) {
+        toast({ title: t('error'), description: kErr.message, variant: 'destructive' });
+        return false;
+      }
+
+      const nowIso = new Date().toISOString();
+      const noteSuffix = ` ${t('mergeNotePrefix')}${keeper.serial_no}]`;
+      const updates = merged.map((r) =>
+        supabase
+          .from('box_receipts')
+          .update({
+            deleted_at: nowIso,
+            deleted_by: user.id,
+            notes: (r.notes ?? '') + noteSuffix,
+          })
+          .eq('id', r.id)
+      );
+      const results = await Promise.all(updates);
+      const failed = results.find((res) => res.error);
+      if (failed?.error) {
+        toast({ title: t('error'), description: failed.error.message, variant: 'destructive' });
+        return false;
+      }
+      toast({ title: t('success'), description: t('mergeSuccess') });
+      return true;
+    },
+    [user?.id, receipts, toast, t]
+  );
+
+  const bulkAddQuantity = useCallback(
+    async (updates: Array<{ id: string; addQty: number }>) => {
+      if (!user?.id || updates.length === 0) return 0;
+      let success = 0;
+      for (const u of updates) {
+        const target = receipts.find((r) => r.id === u.id);
+        if (!target) continue;
+        const { error } = await supabase
+          .from('box_receipts')
+          .update({ qty: target.qty + u.addQty })
+          .eq('id', u.id);
+        if (!error) success++;
+      }
+      return success;
+    },
+    [user?.id, receipts]
+  );
+
   return {
     receipts,
     loading,
@@ -156,5 +220,7 @@ export function useBoxReceipts() {
     updateReceipt,
     deleteReceipt,
     bulkInsertReceipts,
+    mergeReceipts,
+    bulkAddQuantity,
   };
 }
