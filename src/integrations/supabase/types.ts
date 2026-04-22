@@ -99,6 +99,7 @@ export type Database = {
           destination: Database["public"]["Enums"]["box_destination"]
           id: string
           image_path: string | null
+          item_id: string | null
           notes: string | null
           packing_type: Database["public"]["Enums"]["packing_type"]
           part_no: string
@@ -121,6 +122,7 @@ export type Database = {
           destination?: Database["public"]["Enums"]["box_destination"]
           id?: string
           image_path?: string | null
+          item_id?: string | null
           notes?: string | null
           packing_type?: Database["public"]["Enums"]["packing_type"]
           part_no: string
@@ -143,6 +145,7 @@ export type Database = {
           destination?: Database["public"]["Enums"]["box_destination"]
           id?: string
           image_path?: string | null
+          item_id?: string | null
           notes?: string | null
           packing_type?: Database["public"]["Enums"]["packing_type"]
           part_no?: string
@@ -168,6 +171,13 @@ export type Database = {
             columns: ["deleted_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "box_receipts_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items_master"
             referencedColumns: ["id"]
           },
         ]
@@ -715,6 +725,56 @@ export type Database = {
             columns: ["sheet_id"]
             isOneToOne: false
             referencedRelation: "holiday_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      items_master: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          default_supplier: string | null
+          default_unit: Database["public"]["Enums"]["box_unit"]
+          description: string
+          id: string
+          image_path: string | null
+          is_active: boolean
+          notes: string | null
+          part_no: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          default_supplier?: string | null
+          default_unit?: Database["public"]["Enums"]["box_unit"]
+          description?: string
+          id?: string
+          image_path?: string | null
+          is_active?: boolean
+          notes?: string | null
+          part_no: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          default_supplier?: string | null
+          default_unit?: Database["public"]["Enums"]["box_unit"]
+          description?: string
+          id?: string
+          image_path?: string | null
+          is_active?: boolean
+          notes?: string | null
+          part_no?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_master_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
