@@ -50,7 +50,7 @@ export function useUpdateLogger() {
           metadata: entry.metadata ?? null,
         };
 
-        const { error } = await supabase.from('update_logs').insert(payload);
+        const { error } = await supabase.from('update_logs').insert([payload]);
         if (error) console.warn('[updateLogger] insert failed:', error.message);
       } catch (err) {
         console.warn('[updateLogger] unexpected error:', err);

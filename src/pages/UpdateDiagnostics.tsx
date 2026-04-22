@@ -95,10 +95,6 @@ export default function UpdateDiagnosticsPage() {
         <PageHeader
           title={t('updateDiagnosticsTitle')}
           subtitle={t('updateDiagnosticsSubtitle')}
-          breadcrumbs={[
-            { label: t('adminDashboard'), href: '/admin' },
-            { label: t('updateDiagnostics') },
-          ]}
         />
 
         {/* KPIs */}
@@ -157,7 +153,7 @@ export default function UpdateDiagnosticsPage() {
                           {r.status === 'error' ? (
                             <AlertTriangle className="w-4 h-4 text-destructive" />
                           ) : (
-                            <CheckCircle2 className="w-4 h-4 text-green-600" />
+                            <CheckCircle2 className="w-4 h-4 text-success" />
                           )}
                           <Badge variant="outline">{phaseLabel(r.phase)}</Badge>
                           <Badge variant={r.status === 'error' ? 'destructive' : 'default'}>
