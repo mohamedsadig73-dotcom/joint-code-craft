@@ -12,7 +12,7 @@ import {
 import { useItemsMaster } from '@/hooks/useItemsMaster';
 import { supabase } from '@/integrations/supabase/client';
 import type { BoxReceipt } from '@/hooks/useBoxReceipts';
-import { ArrowLeft, Library, Loader2 } from 'lucide-react';
+import { ArrowLeft, Library, Loader2, ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function ItemDetails() {
@@ -24,6 +24,9 @@ export default function ItemDetails() {
   const [loading, setLoading] = useState(true);
 
   const item = useMemo(() => items.find((i) => i.id === id), [items, id]);
+  const imageUrl = item?.image_path
+    ? supabase.storage.from('box-images').getPublicUrl(item.image_path).data.publicUrl
+    : null;
 
   useEffect(() => {
     if (!id) return;
@@ -92,6 +95,35 @@ export default function ItemDetails() {
           subtitle={item.description}
           icon={Library}
         />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="md:col-span-1">
+            <CardContent className="p-3">
+              <div className="w-full aspect-square rounded-md bg-muted/30 border overflow-hidden flex items-center justify-center">
+                {imageUrl ? (
+                  <img src={imageUrl} alt={item.part_no} className="w-full h-full object-contain" />
+                ) : (
+                  <div className="flex flex-col items-center text-muted-foreground gap-1.5">
+                    <ImageIcon className="w-10 h-10 opacity-40" />
+                    <span className="text-xs">{t('noImage')}</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="md:col-span-2 flex items-center justify-center">
+            <CardContent className="py-6 text-center">
+              <p className="text-sm text-muted-foreground mb-1">{t('description')}</p>
+              <p className="text-base font-medium">{item.description}</p>
+              {item.notes && (
+                <>
+                  <p className="text-sm text-muted-foreground mt-3 mb-1">{t('notes')}</p>
+                  <p className="text-sm">{item.notes}</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>

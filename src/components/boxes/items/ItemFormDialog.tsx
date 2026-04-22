@@ -10,6 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { BOX_UNITS } from '@/utils/boxNumberValidation';
 import type { ItemMaster, ItemMasterInput } from '@/hooks/useItemsMaster';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { ItemImageUpload } from './ItemImageUpload';
 
 interface Props {
   open: boolean;
@@ -128,6 +129,15 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
           <div className="md:col-span-2 space-y-1.5">
             <Label>{t('notes')}</Label>
             <Textarea rows={2} value={values.notes ?? ''} onChange={(e) => setField('notes', e.target.value)} />
+          </div>
+
+          <div className="md:col-span-2 space-y-1.5">
+            <Label>{t('itemImage')}</Label>
+            <ItemImageUpload
+              partNo={values.part_no}
+              imagePath={values.image_path}
+              onChange={(p) => setField('image_path', p)}
+            />
           </div>
 
           {initial && (
