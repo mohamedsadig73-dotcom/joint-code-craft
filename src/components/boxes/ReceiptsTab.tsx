@@ -177,6 +177,19 @@ export function ReceiptsTab() {
             <Download className="w-4 h-4 me-1.5" />
             {t('export')}
           </Button>
+          <ReceiptsPrintPreview
+            receipts={filtered}
+            filterSummary={
+              [
+                destFilter !== 'all' ? `${t('destination')}: ${t(`dest_${destFilter}`)}` : null,
+                statusFilter !== 'all' ? `${t('status')}: ${t(`boxStatus_${statusFilter}`)}` : null,
+                packingFilter !== 'all' ? `${t('packingType')}: ${t(packingFilter)}` : null,
+                search ? `${t('search')}: "${search}"` : null,
+              ]
+                .filter(Boolean)
+                .join(' • ') || undefined
+            }
+          />
           <Button variant="outline" onClick={handleImportClick} disabled={importing}>
             {importing ? <Loader2 className="w-4 h-4 me-1.5 animate-spin" /> : <Upload className="w-4 h-4 me-1.5" />}
             {t('import')}
