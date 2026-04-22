@@ -11,6 +11,9 @@ import { receiptSchema, normalizeBoxNo, BOX_UNITS, BOX_DESTINATIONS, BOX_STATUSE
 import type { BoxReceipt, BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { ReceiptImageUpload } from './ReceiptImageUpload';
 import { Loader2, Package, PackageOpen, Info } from 'lucide-react';
+import { ItemPickerCombobox } from './items/ItemPickerCombobox';
+import { ItemFormDialog } from './items/ItemFormDialog';
+import { useItemsMaster } from '@/hooks/useItemsMaster';
 
 interface Props {
   open: boolean;
@@ -39,6 +42,10 @@ const DEFAULT: BoxReceiptInput = {
 
 export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, existingSuppliers, existingBoxes }: Props) {
   const { t } = useLanguage();
+  const { items, createItem } = useItemsMaster();
+  const [itemDialogOpen, setItemDialogOpen] = useState(false);
+  const [pendingNewPartNo, setPendingNewPartNo] = useState('');
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [values, setValues] = useState<BoxReceiptInput>(DEFAULT);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -61,15 +68,44 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
           notes: initial.notes,
           image_path: initial.image_path,
         });
+        const found = items.find(
+          (i) => i.part_no.trim().toLowerCase() === initial.part_no.trim().toLowerCase()
+        );
+        setSelectedItemId(found?.id ?? null);
       } else {
         setValues(DEFAULT);
+        setSelectedItemId(null);
       }
       setErrors({});
     }
-  }, [open, initial]);
+  }, [open, initial, items]);
 
   const setField = <K extends keyof BoxReceiptInput>(key: K, value: BoxReceiptInput[K]) => {
     setValues((v) => ({ ...v, [key]: value }));
+  };
+
+  const handleSelectItem = (item: typeof items[number]) => {
+    setSelectedItemId(item.id);
+    setValues((v) => ({
+      ...v,
+      part_no: item.part_no,
+      description: item.description || v.description,
+      supplier: item.default_supplier || v.supplier,
+      unit: item.default_unit,
+      image_path: item.image_path ?? v.image_path,
+    }));
+    setErrors((e) => ({ ...e, part_no: '', description: '', supplier: '' }));
+  };
+
+  const handleCreateItemRequest = (partNo: string) => {
+    setPendingNewPartNo(partNo);
+    setItemDialogOpen(true);
+  };
+
+  const handleItemCreated = async (input: Parameters<typeof createItem>[0]) => {
+    const created = await createItem(input);
+    if (created) handleSelectItem(created);
+    return created;
   };
 
   const handleSubmit = async () => {
@@ -144,6 +180,21 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
             </RadioGroup>
           </div>
 
+          <div className="md:col-span-2 space-y-1.5">
+            <Label>{t('partNo')} *</Label>
+            <ItemPickerCombobox
+              items={items.filter((i) => i.is_active)}
+              value={selectedItemId}
+              onSelect={handleSelectItem}
+              onCreateNew={handleCreateItemRequest}
+              disabled={!!initial}
+            />
+            {errors.part_no && <p className="text-xs text-destructive">{errors.part_no}</p>}
+            {!selectedItemId && !initial && (
+              <p className="text-xs text-muted-foreground">{t('pickItemFromMaster')}</p>
+            )}
+          </div>
+
           <div className="space-y-1.5">
             <Label>{t('supplier')} *</Label>
             <Input
@@ -158,12 +209,6 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
           </div>
 
           <div className="space-y-1.5">
-            <Label>{t('partNo')} *</Label>
-            <Input value={values.part_no} onChange={(e) => setField('part_no', e.target.value)} />
-            {errors.part_no && <p className="text-xs text-destructive">{errors.part_no}</p>}
-          </div>
-
-          <div className="md:col-span-2 space-y-1.5">
             <Label>{t('description')} *</Label>
             <Input value={values.description} onChange={(e) => setField('description', e.target.value)} />
             {errors.description && <p className="text-xs text-destructive">{errors.description}</p>}
