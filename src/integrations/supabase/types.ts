@@ -1489,6 +1489,62 @@ export type Database = {
         }
         Relationships: []
       }
+      update_logs: {
+        Row: {
+          app_version: string | null
+          attempted_url: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          phase: string
+          platform: string
+          shell_version: string | null
+          status: string
+          target_version: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          app_version?: string | null
+          attempted_url?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          phase: string
+          platform?: string
+          shell_version?: string | null
+          status: string
+          target_version?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          app_version?: string | null
+          attempted_url?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          phase?: string
+          platform?: string
+          shell_version?: string | null
+          status?: string
+          target_version?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "update_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_2fa_settings: {
         Row: {
           backup_codes: string[] | null

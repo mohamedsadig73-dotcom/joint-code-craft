@@ -32,4 +32,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   restartApp: async () => {
     return ipcRenderer.invoke('restart-app');
   },
+
+  // Get the installed Electron shell version (from package.json)
+  getShellVersion: async () => {
+    return ipcRenderer.invoke('get-shell-version');
+  },
+
+  // Test connectivity to update channel endpoints (bypasses CORS)
+  testUpdateChannel: async (urls) => {
+    return ipcRenderer.invoke('test-update-channel', urls);
+  },
 });

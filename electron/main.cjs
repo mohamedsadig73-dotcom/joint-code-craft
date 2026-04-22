@@ -12,6 +12,35 @@ const DIST_DIR = path.join(APP_ROOT, 'dist');
 const LOCAL_INDEX = path.join(DIST_DIR, 'index.html');
 const PUBLISHED_URL = 'https://dts-store-qatar-2026.lovable.app';
 const UPDATE_DIR = path.join(app.getPath('userData'), 'updates');
+const LOCK_FILE = path.join(UPDATE_DIR, 'update.lock');
+const PENDING_DIST = path.join(UPDATE_DIR, 'dist-pending');
+
+// Read shell version from package.json
+function getShellVersion() {
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(APP_ROOT, 'package.json'), 'utf-8'));
+    return pkg.version || '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+}
+
+// Apply pending update on startup if it exists
+function applyPendingUpdateIfAny() {
+  try {
+    if (!fs.existsSync(PENDING_DIST)) return;
+    console.log('[Electron] Applying pending update from previous session...');
+    if (fs.existsSync(DIST_DIR)) {
+      fs.rmSync(DIST_DIR, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
+    }
+    fs.cpSync(PENDING_DIST, DIST_DIR, { recursive: true });
+    fs.rmSync(PENDING_DIST, { recursive: true, force: true });
+    try { fs.unlinkSync(LOCK_FILE); } catch (_) {}
+    console.log('[Electron] ✓ Pending update applied');
+  } catch (err) {
+    console.error('[Electron] Failed to apply pending update:', err);
+  }
+}
 
 let mainWindow = null;
 
@@ -393,8 +422,56 @@ ipcMain.handle('restart-app', () => {
   app.exit(0);
 });
 
+// ── IPC: Get shell version ────────────────────────────
+ipcMain.handle('get-shell-version', () => getShellVersion());
+
+// ── IPC: Test update channel connectivity ─────────────
+function headRequest(url) {
+  return new Promise((resolve) => {
+    const doRequest = (reqUrl, redirects = 0) => {
+      if (redirects > 5) return resolve({ ok: false, error: 'Too many redirects' });
+      const proto = reqUrl.startsWith('https') ? https : http;
+      const req = proto.request(reqUrl, { method: 'HEAD' }, (response) => {
+        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          return doRequest(response.headers.location, redirects + 1);
+        }
+        const size = parseInt(response.headers['content-length'] || '0', 10);
+        resolve({ ok: response.statusCode === 200, status: response.statusCode, size });
+      });
+      req.on('error', (err) => resolve({ ok: false, error: err.message }));
+      req.end();
+    };
+    doRequest(url);
+  });
+}
+
+ipcMain.handle('test-update-channel', async (_event, urls) => {
+  const result = { versionJson: { ok: false }, releaseJson: { ok: false }, downloadHead: { ok: false } };
+  try {
+    const v = await fetchJson(`${urls.versionUrl}?_t=${Date.now()}`);
+    result.versionJson = { ok: true, status: 200, data: v };
+  } catch (err) {
+    result.versionJson = { ok: false, error: err.message };
+  }
+  try {
+    const r = await fetchJson(`${urls.releaseUrl}?_t=${Date.now()}`);
+    result.releaseJson = { ok: true, status: 200, data: r };
+    if (!urls.downloadUrl && r && r.download_url) urls.downloadUrl = r.download_url;
+  } catch (err) {
+    result.releaseJson = { ok: false, error: err.message };
+  }
+  if (urls.downloadUrl) {
+    result.downloadHead = await headRequest(urls.downloadUrl);
+  } else {
+    result.downloadHead = { ok: false, error: 'No download URL available' };
+  }
+  return result;
+});
+
 // ── App lifecycle ──────────────────────────────────────
 app.whenReady().then(() => {
+  if (!fs.existsSync(UPDATE_DIR)) fs.mkdirSync(UPDATE_DIR, { recursive: true });
+  applyPendingUpdateIfAny();
   session.defaultSession.clearCache().then(() => createWindow()).catch(() => createWindow());
 });
 
