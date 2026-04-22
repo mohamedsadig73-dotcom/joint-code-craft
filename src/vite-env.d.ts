@@ -16,5 +16,11 @@ interface Window {
     downloadUpdate: (downloadUrl: string) => Promise<{ success: boolean }>;
     onDownloadProgress: (callback: (data: DownloadProgressData) => void) => () => void;
     restartApp: () => Promise<void>;
+    getShellVersion?: () => Promise<string>;
+    testUpdateChannel?: (urls: { versionUrl: string; releaseUrl: string; downloadUrl?: string }) => Promise<{
+      versionJson: { ok: boolean; status?: number; error?: string; data?: unknown };
+      releaseJson: { ok: boolean; status?: number; error?: string; data?: unknown };
+      downloadHead: { ok: boolean; status?: number; error?: string; size?: number };
+    }>;
   };
 }
