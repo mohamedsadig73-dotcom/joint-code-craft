@@ -25,7 +25,7 @@ export default function BoxesManagement() {
     setDownloading(true);
     try {
       await downloadBoxesTotalsPdf(receipts, language as 'ar' | 'en');
-      toast({ title: t('success'), description: t('pdfReportReady') });
+      toast({ title: t('success'), description: t('downloadPdfReport') });
     } catch (e) {
       toast({ title: t('error'), description: (e as Error).message, variant: 'destructive' });
     } finally {
