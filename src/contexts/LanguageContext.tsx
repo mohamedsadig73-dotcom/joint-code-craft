@@ -1041,7 +1041,6 @@ const translations = {
     pdfReportTitle: 'Boxes & Destinations Totals Report',
     downloadPdfReport: 'Download PDF Report',
     pdfGenerating: 'Generating PDF…',
-    serial: 'Serial',
     deletedSoft: 'Deleted (soft)',
     showDeleted: 'Show deleted',
     consistencyOk: 'Consistency OK',
