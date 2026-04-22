@@ -118,6 +118,46 @@ ipcMain.handle('open-external', async (_event, url) => {
   await shell.openExternal(url);
 });
 
+// ── IPC: Fetch remote JSON from main process (avoids renderer CORS) ──
+function fetchJson(url) {
+  return new Promise((resolve, reject) => {
+    const doRequest = (reqUrl) => {
+      const proto = reqUrl.startsWith('https') ? https : http;
+      proto.get(reqUrl, (response) => {
+        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          doRequest(response.headers.location);
+          return;
+        }
+
+        if (response.statusCode !== 200) {
+          reject(new Error(`HTTP ${response.statusCode}`));
+          return;
+        }
+
+        let raw = '';
+        response.setEncoding('utf8');
+        response.on('data', (chunk) => {
+          raw += chunk;
+        });
+        response.on('end', () => {
+          try {
+            resolve(JSON.parse(raw));
+          } catch (error) {
+            reject(error);
+          }
+        });
+        response.on('error', reject);
+      }).on('error', reject);
+    };
+
+    doRequest(url);
+  });
+}
+
+ipcMain.handle('fetch-json', async (_event, url) => {
+  return fetchJson(url);
+});
+
 // ── Helper: Download file with progress ────────────────
 function downloadFile(url, destPath, progressCallback) {
   return new Promise((resolve, reject) => {
