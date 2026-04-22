@@ -12,6 +12,8 @@ import {
 import { useItemsMaster, useItemReceiptsCount, type ItemMaster } from '@/hooks/useItemsMaster';
 import { ItemFormDialog } from '@/components/boxes/items/ItemFormDialog';
 import { Library, Plus, Search, Edit, Trash2, Eye, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { ImageIcon } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -89,6 +91,7 @@ export default function ItemsMaster() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-14"></TableHead>
                   <TableHead>{t('partNo')}</TableHead>
                   <TableHead>{t('description')}</TableHead>
                   <TableHead>{t('supplier')}</TableHead>
@@ -101,8 +104,25 @@ export default function ItemsMaster() {
               <TableBody>
                 {filtered.map((item) => {
                   const count = counts[item.id] ?? 0;
+                  const thumbUrl = item.image_path
+                    ? supabase.storage.from('box-images').getPublicUrl(item.image_path).data.publicUrl
+                    : null;
                   return (
                     <TableRow key={item.id}>
+                      <TableCell>
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/boxes/items/${item.id}`)}
+                          className="w-10 h-10 rounded-md border bg-muted/30 overflow-hidden flex items-center justify-center hover:ring-2 hover:ring-primary/40 transition"
+                          title={t('view')}
+                        >
+                          {thumbUrl ? (
+                            <img src={thumbUrl} alt={item.part_no} className="w-full h-full object-cover" />
+                          ) : (
+                            <ImageIcon className="w-4 h-4 text-muted-foreground/60" />
+                          )}
+                        </button>
+                      </TableCell>
                       <TableCell className="font-mono text-xs">{item.part_no}</TableCell>
                       <TableCell className="max-w-xs truncate">{item.description}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
