@@ -11,7 +11,10 @@ import { useBoxSummary } from '@/hooks/useBoxSummary';
 import { ReceiptsTable } from './ReceiptsTable';
 import { ReceiptMobileCard } from './ReceiptMobileCard';
 import { ReceiptFormDialog } from './ReceiptFormDialog';
-import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { exportBoxesToExcel, parseReceiptsFromExcel } from '@/utils/boxesExcelExport';
 import { BOX_DESTINATIONS, BOX_STATUSES } from '@/utils/boxNumberValidation';
 
@@ -224,13 +227,20 @@ export function ReceiptsTab() {
         existingBoxes={existingBoxes}
       />
 
-      <DeleteConfirmationDialog
-        open={!!toDelete}
-        onOpenChange={(o) => !o && setToDelete(null)}
-        onConfirm={handleDeleteConfirm}
-        title={t('deleteReceipt')}
-        description={t('deleteReceiptConfirm')}
-      />
+      <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteReceipt')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('deleteReceiptConfirm')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {t('delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
