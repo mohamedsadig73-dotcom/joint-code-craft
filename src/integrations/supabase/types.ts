@@ -88,6 +88,87 @@ export type Database = {
         }
         Relationships: []
       }
+      box_receipts: {
+        Row: {
+          box_no: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          description: string
+          destination: Database["public"]["Enums"]["box_destination"]
+          id: string
+          image_path: string | null
+          notes: string | null
+          part_no: string
+          place: string | null
+          qty: number
+          receipt_date: string
+          serial_no: number
+          status: Database["public"]["Enums"]["box_receipt_status"]
+          supplier: string
+          unit: Database["public"]["Enums"]["box_unit"]
+          updated_at: string
+        }
+        Insert: {
+          box_no: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description: string
+          destination?: Database["public"]["Enums"]["box_destination"]
+          id?: string
+          image_path?: string | null
+          notes?: string | null
+          part_no: string
+          place?: string | null
+          qty: number
+          receipt_date?: string
+          serial_no?: number
+          status?: Database["public"]["Enums"]["box_receipt_status"]
+          supplier: string
+          unit?: Database["public"]["Enums"]["box_unit"]
+          updated_at?: string
+        }
+        Update: {
+          box_no?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string
+          destination?: Database["public"]["Enums"]["box_destination"]
+          id?: string
+          image_path?: string | null
+          notes?: string | null
+          part_no?: string
+          place?: string | null
+          qty?: number
+          receipt_date?: string
+          serial_no?: number
+          status?: Database["public"]["Enums"]["box_receipt_status"]
+          supplier?: string
+          unit?: Database["public"]["Enums"]["box_unit"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "box_receipts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "box_receipts_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compliance_logs: {
         Row: {
           created_at: string | null
@@ -3287,7 +3368,19 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      box_summary: {
+        Row: {
+          box_no: string | null
+          destination: Database["public"]["Enums"]["box_destination"] | null
+          first_date: string | null
+          items_count: number | null
+          last_date: string | null
+          last_updated: string | null
+          suppliers: string | null
+          total_qty: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_admin_office_notifications: { Args: never; Returns: undefined }
@@ -3296,6 +3389,7 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      cleanup_old_deleted_box_receipts: { Args: never; Returns: undefined }
       cleanup_old_deleted_declarations: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       create_maintenance_notification: {
@@ -3371,6 +3465,9 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "manager" | "user"
+      box_destination: "morocco" | "uzbekistan" | "unspecified"
+      box_receipt_status: "received" | "sorted" | "packed" | "shipped"
+      box_unit: "PCS" | "SET" | "BOX" | "KG" | "MTR" | "LTR" | "PAIR"
       declaration_status:
         | "draft"
         | "pending_warehouse_signature"
@@ -3541,6 +3638,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "manager", "user"],
+      box_destination: ["morocco", "uzbekistan", "unspecified"],
+      box_receipt_status: ["received", "sorted", "packed", "shipped"],
+      box_unit: ["PCS", "SET", "BOX", "KG", "MTR", "LTR", "PAIR"],
       declaration_status: [
         "draft",
         "pending_warehouse_signature",
