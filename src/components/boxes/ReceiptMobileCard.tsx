@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, ImageIcon } from 'lucide-react';
+import { Pencil, Trash2, ImageIcon, Package, PackageOpen } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { BoxReceipt } from '@/hooks/useBoxReceipts';
@@ -20,6 +20,7 @@ export function ReceiptMobileCard({ receipt, onEdit, onDelete, canModify }: Prop
   const imgUrl = receipt.image_path
     ? supabase.storage.from('box-images').getPublicUrl(receipt.image_path).data.publicUrl
     : null;
+  const isLoose = receipt.packing_type === 'loose';
 
   return (
     <Card className={cn('p-3 space-y-2', destinationRowTint(receipt.destination))}>
@@ -37,6 +38,18 @@ export function ReceiptMobileCard({ receipt, onEdit, onDelete, canModify }: Prop
             <Badge className={destinationBadgeClass(receipt.destination)}>
               {t(`dest_${receipt.destination}`)}
             </Badge>
+            <Badge
+              variant="outline"
+              className={cn(
+                'text-[10px] gap-1',
+                isLoose
+                  ? 'border-purple-500/30 bg-purple-500/10 text-purple-700 dark:text-purple-300'
+                  : 'border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300'
+              )}
+            >
+              {isLoose ? <PackageOpen className="w-3 h-3" /> : <Package className="w-3 h-3" />}
+              {t(isLoose ? 'loose' : 'boxed')}
+            </Badge>
           </div>
           <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{receipt.description}</p>
         </div>
@@ -44,7 +57,12 @@ export function ReceiptMobileCard({ receipt, onEdit, onDelete, canModify }: Prop
 
       <div className="grid grid-cols-3 gap-2 text-xs">
         <div><span className="text-muted-foreground">{t('supplier')}: </span><span className="font-medium">{receipt.supplier}</span></div>
-        <div><span className="text-muted-foreground">{t('boxNo')}: </span><span className="font-bold">{receipt.box_no}</span></div>
+        <div>
+          <span className="text-muted-foreground">{t('boxNo')}: </span>
+          <span className={cn('font-bold', isLoose && 'text-muted-foreground')}>
+            {isLoose ? '—' : receipt.box_no}
+          </span>
+        </div>
         <div><span className="text-muted-foreground">{t('qty')}: </span><span className="font-bold">{receipt.qty} {receipt.unit}</span></div>
       </div>
 

@@ -16,7 +16,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { exportBoxesToExcel, parseReceiptsFromExcel } from '@/utils/boxesExcelExport';
-import { BOX_DESTINATIONS, BOX_STATUSES } from '@/utils/boxNumberValidation';
+import { BOX_DESTINATIONS, BOX_STATUSES, PACKING_TYPES } from '@/utils/boxNumberValidation';
 
 export function ReceiptsTab() {
   const { user } = useAuth();
@@ -28,6 +28,7 @@ export function ReceiptsTab() {
   const [search, setSearch] = useState('');
   const [destFilter, setDestFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [packingFilter, setPackingFilter] = useState<string>('all');
   const [editing, setEditing] = useState<BoxReceipt | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [toDelete, setToDelete] = useState<BoxReceipt | null>(null);
@@ -45,7 +46,7 @@ export function ReceiptsTab() {
     [receipts]
   );
   const existingBoxes = useMemo(
-    () => Array.from(new Set(receipts.map((r) => r.box_no))).sort(),
+    () => Array.from(new Set(receipts.map((r) => r.box_no).filter((b): b is string => !!b))).sort(),
     [receipts]
   );
 
@@ -54,15 +55,16 @@ export function ReceiptsTab() {
     return receipts.filter((r) => {
       if (destFilter !== 'all' && r.destination !== destFilter) return false;
       if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+      if (packingFilter !== 'all' && r.packing_type !== packingFilter) return false;
       if (!q) return true;
       return (
         r.supplier.toLowerCase().includes(q) ||
         r.part_no.toLowerCase().includes(q) ||
         r.description.toLowerCase().includes(q) ||
-        r.box_no.toLowerCase().includes(q)
+        (r.box_no?.toLowerCase().includes(q) ?? false)
       );
     });
-  }, [receipts, search, destFilter, statusFilter]);
+  }, [receipts, search, destFilter, statusFilter, packingFilter]);
 
   const handleAdd = () => {
     setEditing(null);
@@ -114,6 +116,7 @@ export function ReceiptsTab() {
           unit: 'PCS',
           destination: 'unspecified',
           place: 'مخزنة بالمخزن (B)',
+          packing_type: 'boxed',
           box_no: boxNo,
           receipt_date: new Date().toISOString().slice(0, 10),
           status: 'received',
@@ -159,6 +162,13 @@ export function ReceiptsTab() {
           <SelectContent>
             <SelectItem value="all">{t('all')}</SelectItem>
             {BOX_STATUSES.map((s) => <SelectItem key={s} value={s}>{t(`boxStatus_${s}`)}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={packingFilter} onValueChange={setPackingFilter}>
+          <SelectTrigger className="w-full md:w-40"><SelectValue placeholder={t('packingType')} /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('all')}</SelectItem>
+            {PACKING_TYPES.map((p) => <SelectItem key={p} value={p}>{t(p)}</SelectItem>)}
           </SelectContent>
         </Select>
         <div className="flex gap-2">

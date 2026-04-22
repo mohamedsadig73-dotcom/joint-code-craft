@@ -90,7 +90,7 @@ export type Database = {
       }
       box_receipts: {
         Row: {
-          box_no: string
+          box_no: string | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -100,6 +100,7 @@ export type Database = {
           id: string
           image_path: string | null
           notes: string | null
+          packing_type: Database["public"]["Enums"]["packing_type"]
           part_no: string
           place: string | null
           qty: number
@@ -111,7 +112,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          box_no: string
+          box_no?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -121,6 +122,7 @@ export type Database = {
           id?: string
           image_path?: string | null
           notes?: string | null
+          packing_type?: Database["public"]["Enums"]["packing_type"]
           part_no: string
           place?: string | null
           qty: number
@@ -132,7 +134,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          box_no?: string
+          box_no?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -142,6 +144,7 @@ export type Database = {
           id?: string
           image_path?: string | null
           notes?: string | null
+          packing_type?: Database["public"]["Enums"]["packing_type"]
           part_no?: string
           place?: string | null
           qty?: number
@@ -225,6 +228,59 @@ export type Database = {
             columns: ["resolved_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      container_items: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          container_id: string
+          id: string
+          receipt_id: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          container_id: string
+          id?: string
+          receipt_id: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          container_id?: string
+          id?: string
+          receipt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "container_items_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "container_items_container_id_fkey"
+            columns: ["container_id"]
+            isOneToOne: false
+            referencedRelation: "container_summary"
+            referencedColumns: ["container_id"]
+          },
+          {
+            foreignKeyName: "container_items_container_id_fkey"
+            columns: ["container_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_containers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "container_items_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "box_receipts"
             referencedColumns: ["id"]
           },
         ]
@@ -1569,6 +1625,66 @@ export type Database = {
           window_start?: string
         }
         Relationships: []
+      }
+      shipping_containers: {
+        Row: {
+          container_no: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          destination: Database["public"]["Enums"]["box_destination"]
+          id: string
+          notes: string | null
+          shipped_date: string | null
+          shipping_company: string
+          status: Database["public"]["Enums"]["container_status"]
+          updated_at: string
+        }
+        Insert: {
+          container_no: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          destination: Database["public"]["Enums"]["box_destination"]
+          id?: string
+          notes?: string | null
+          shipped_date?: string | null
+          shipping_company: string
+          status?: Database["public"]["Enums"]["container_status"]
+          updated_at?: string
+        }
+        Update: {
+          container_no?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          destination?: Database["public"]["Enums"]["box_destination"]
+          id?: string
+          notes?: string | null
+          shipped_date?: string | null
+          shipping_company?: string
+          status?: Database["public"]["Enums"]["container_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_containers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipping_containers_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       update_logs: {
         Row: {
@@ -3371,11 +3487,25 @@ export type Database = {
       box_summary: {
         Row: {
           box_no: string | null
+          date: string | null
           destination: Database["public"]["Enums"]["box_destination"] | null
-          first_date: string | null
           items_count: number | null
-          last_date: string | null
-          last_updated: string | null
+          suppliers: string | null
+          total_qty: number | null
+        }
+        Relationships: []
+      }
+      container_summary: {
+        Row: {
+          boxes_count: number | null
+          container_id: string | null
+          container_no: string | null
+          created_at: string | null
+          destination: Database["public"]["Enums"]["box_destination"] | null
+          loose_count: number | null
+          shipped_date: string | null
+          shipping_company: string | null
+          status: Database["public"]["Enums"]["container_status"] | null
           suppliers: string | null
           total_qty: number | null
         }
@@ -3468,6 +3598,7 @@ export type Database = {
       box_destination: "morocco" | "uzbekistan" | "unspecified"
       box_receipt_status: "received" | "sorted" | "packed" | "shipped"
       box_unit: "PCS" | "SET" | "BOX" | "KG" | "MTR" | "LTR" | "PAIR"
+      container_status: "preparing" | "sealed" | "shipped" | "delivered"
       declaration_status:
         | "draft"
         | "pending_warehouse_signature"
@@ -3493,6 +3624,7 @@ export type Database = {
         | "annual"
         | "ad_hoc"
       maintenance_status: "pending" | "done" | "not_required" | "overdue"
+      packing_type: "boxed" | "loose"
       petty_cash_status: "open" | "closed" | "pending_approval" | "rejected"
       wms_order_status:
         | "draft"
@@ -3641,6 +3773,7 @@ export const Constants = {
       box_destination: ["morocco", "uzbekistan", "unspecified"],
       box_receipt_status: ["received", "sorted", "packed", "shipped"],
       box_unit: ["PCS", "SET", "BOX", "KG", "MTR", "LTR", "PAIR"],
+      container_status: ["preparing", "sealed", "shipped", "delivered"],
       declaration_status: [
         "draft",
         "pending_warehouse_signature",
@@ -3669,6 +3802,7 @@ export const Constants = {
         "ad_hoc",
       ],
       maintenance_status: ["pending", "done", "not_required", "overdue"],
+      packing_type: ["boxed", "loose"],
       petty_cash_status: ["open", "closed", "pending_approval", "rejected"],
       wms_order_status: [
         "draft",
