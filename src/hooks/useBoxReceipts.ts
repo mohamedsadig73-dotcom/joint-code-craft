@@ -13,8 +13,9 @@ export interface BoxReceipt {
   qty: number;
   unit: 'PCS' | 'SET' | 'BOX' | 'KG' | 'MTR' | 'LTR' | 'PAIR';
   destination: 'morocco' | 'uzbekistan' | 'unspecified';
+  packing_type: 'boxed' | 'loose';
   place: string | null;
-  box_no: string;
+  box_no: string | null;
   receipt_date: string;
   status: 'received' | 'sorted' | 'packed' | 'shipped';
   notes: string | null;
