@@ -1,206 +1,203 @@
 
 
-## وحدة جديدة: نظام إدارة الصناديق والاستلام (Boxes & Receipts)
+## تطوير النظام: من "إدارة الصناديق" إلى "نظام الاستلام والفرز والشحن المتكامل"
 
-سأضيف وحدة كاملة للبرنامج الحالي (DTS-Store) لإدارة استلام البضائع من الموردين، فرزها حسب الوجهة، تعبئتها في صناديق مرقّمة، وطباعة بطاقات الصناديق مع صور المنتجات. الوحدة ستندمج بسلاسة مع البنية القائمة (Supabase, RLS, App Launcher, Navigation, RTL/LTR, Dark/Light, Soft Delete, Audit Logs).
+### 🎯 التحول الجوهري
+النظام الحالي يفترض أن **كل صنف = صندوق**. الواقع التشغيلي مختلف: بعض الأصناف (إطارات، زيوت، مواد كبيرة) تُشحن **بدون صناديق** (Loose). كما أن الكونتينرات هي المرحلة النهائية الفعلية للشحن — وهي غير موجودة في النظام حالياً.
 
 ---
 
-### 1. قاعدة البيانات (Supabase Migration)
+### 1. تعديلات قاعدة البيانات
 
-#### جدول `box_receipts` (سجل الاستلام)
-```text
-- id (uuid, PK)
-- serial_no (int, auto-increment)
-- supplier (text)            — المورد
-- part_no (text)             — رقم القطعة
-- description (text)         — الوصف
-- qty (int)                  — الكمية
-- unit (enum: PCS|SET|BOX|KG|MTR|LTR|PAIR)
-- destination (enum: morocco | uzbekistan | unspecified)
-- place (text, default 'مخزنة بالمخزن (B)')
-- box_no (text)              — رقم الصندوق (B-01)
-- receipt_date (date)
-- status (enum: received | sorted | packed | shipped)
-- notes (text)
-- image_path (text)          — مسار الصورة في Storage
-- created_by (uuid)
-- created_at, updated_at
-- deleted_at, deleted_by      — Soft delete (سياسة 30 يوم)
-```
+#### أ. تعديل جدول `box_receipts` (إعادة تسمية مفاهيمية)
+سنحتفظ باسم الجدول لتجنب كسر البيانات الحالية، لكن نضيف:
 
-#### View `box_summary` (ملخص الصناديق — محسوب تلقائياً)
 ```sql
-SELECT box_no,
-       string_agg(DISTINCT supplier, ' / ') as suppliers,
-       destination,
-       COUNT(*) as items_count,
-       SUM(qty) as total_qty,
-       MIN(receipt_date) as date
-FROM box_receipts WHERE deleted_at IS NULL
-GROUP BY box_no, destination;
+-- نوع التعبئة
+CREATE TYPE packing_type AS ENUM ('boxed', 'loose');
+
+ALTER TABLE box_receipts 
+  ADD COLUMN packing_type packing_type NOT NULL DEFAULT 'boxed',
+  ALTER COLUMN box_no DROP NOT NULL;  -- box_no يصبح اختياري للـ loose
+
+-- تحقق: إذا boxed يجب وجود box_no
+ALTER TABLE box_receipts 
+  ADD CONSTRAINT chk_box_no_required 
+  CHECK (packing_type = 'loose' OR (packing_type = 'boxed' AND box_no IS NOT NULL AND box_no != ''));
 ```
 
-#### Storage Bucket
-- `box-images` (public, max 5MB، يقبل jpg/png/webp)
-- اسم الملف = `part_no` (مثل `BS.IDS00005.jpg`)
+#### ب. تحديث `box_summary` view
+استبعاد الأصناف الـ loose من ملخص الصناديق (هي ليست في صناديق):
+```sql
+WHERE deleted_at IS NULL AND packing_type = 'boxed'
+```
 
-#### RLS Policies
-- المستخدم المسجل يقرأ الكل
-- المستخدم يضيف/يعدل سجلاته فقط
-- Admin/Manager يعدلون كل السجلات
-- نفس سياسة Soft Delete الحالية
+#### ج. جداول جديدة للكونتينرات
 
-#### Audit Trigger
-- ربط الجدول بـ `audit_logs` (مثل بقية الوحدات)
-
----
-
-### 2. الصفحات الجديدة (Routes)
-
-| المسار | الصفحة | الوصف |
-|---|---|---|
-| `/boxes` | **BoxesManagement** | الصفحة الأم — Tabs: استلام / صناديق / لوحة |
-| `/boxes/card/:boxNo` | **BoxCardPrint** | بطاقة الصندوق القابلة للطباعة (A4) |
-
-نمط Tabs (سياسة قائمة لتقليل التعقيد):
-- **Tab 1: سجل الاستلام** — جدول كامل + إضافة/تعديل/حذف + استيراد Excel + بحث وفلترة
-- **Tab 2: ملخص الصناديق** — Cards Grid لكل صندوق + ملخص علوي + فلترة + تصدير
-- **Tab 3: لوحة الإحصائيات** — KPI Cards + RTLEChart (شريطي/دائري) + آخر النشاطات
-
----
-
-### 3. المكوّنات الجديدة
-
+**`shipping_containers`** (الكونتينرات):
 ```text
-src/components/boxes/
-├── ReceiptsTab.tsx              — جدول الاستلام (orchestrator)
-├── ReceiptsTable.tsx            — VirtualizedList للأداء
-├── ReceiptFormDialog.tsx        — Add/Edit modal (zod validation)
-├── ReceiptMobileCard.tsx        — Card view للجوال (mobile-first)
-├── ReceiptImageUpload.tsx       — رفع صورة بـ Supabase Storage
-├── BoxesSummaryTab.tsx          — Grid للصناديق
-├── BoxCard.tsx                  — كرت ملخص صندوق واحد
-├── BoxesDashboardTab.tsx        — KPIs + Charts
-└── BoxCardPrintLayout.tsx       — Layout الطباعة A4
+- id (uuid)
+- container_no (text, unique)        — رقم الكونتينر
+- shipping_company (text)            — شركة الشحن
+- destination (enum: morocco | uzbekistan)
+- shipped_date (date, nullable)
+- status (enum: preparing | sealed | shipped | delivered)
+- notes (text)
+- created_by, created_at, updated_at
+- deleted_at, deleted_by              — Soft delete
+```
 
-src/pages/
-├── BoxesManagement.tsx          — صفحة Tabs الرئيسية
-└── BoxCardPrint.tsx             — صفحة الطباعة المستقلة
+**`container_items`** (محتويات الكونتينر — يربط الكونتينر بالاستلامات):
+```text
+- id (uuid)
+- container_id (uuid → shipping_containers)
+- receipt_id (uuid → box_receipts)
+- added_at (timestamp)
+- added_by (uuid)
+UNIQUE(container_id, receipt_id)
+```
+> هذا الجدول يربط كلاً من **الصناديق المُعبَّأة** والأصناف **الـ Loose** مباشرةً بالكونتينر، عبر سجلات الاستلام نفسها.
+
+#### د. View جديد `container_summary`
+يجمع لكل كونتينر:
+- عدد الصناديق المختلفة (count distinct box_no حيث packing_type='boxed')
+- عدد الأصناف الـ loose
+- إجمالي الكمية
+- قائمة الموردين
+
+#### هـ. RLS + Audit Triggers
+- نفس سياسة `box_receipts` (المستخدم يقرأ الكل، Admin/Manager يديرون الكل)
+- ربط الجداول الجديدة بـ `audit_logs`
+
+---
+
+### 2. تحديث الواجهة
+
+#### أ. `ReceiptFormDialog.tsx` — الحقل الجديد
+```text
+[Radio Group]: نوع التعبئة *
+  ◉ صندوق (Boxed)        — يُظهر حقل "رقم الصندوق"
+  ◯ بدون صندوق (Loose)   — يُخفي "رقم الصندوق" + ينبه: "سيُشحن مباشرة في الكونتينر"
+```
+- منطق ديناميكي: عند اختيار `loose`، يُخفى حقل `box_no` ويُمسح
+- تحديث Zod schema: `box_no` مطلوب فقط إذا `packing_type = 'boxed'`
+
+#### ب. `ReceiptsTable.tsx` + `ReceiptMobileCard.tsx`
+- إضافة عمود/شارة **"نوع التعبئة"** (Badge أزرق "صندوق" / Badge بنفسجي "بدون صندوق")
+- عند `loose`: عرض "—" بدل رقم الصندوق
+- فلتر جديد: الكل / صناديق فقط / بدون صناديق
+
+#### ج. `BoxesSummaryTab.tsx`
+- يعرض فقط `packing_type = 'boxed'` (بالفعل سيحدث تلقائياً عبر تحديث الـ view)
+- إضافة بطاقة منفصلة في الأعلى: **"الأصناف غير المعبأة (Loose)"** مع عدّاد قابل للنقر يفتح قائمة بها
+
+#### د. `BoxesDashboardTab.tsx`
+- KPI جديد: **أصناف Loose**
+- Pie جديد: **التوزيع بحسب نوع التعبئة** (Boxed vs Loose)
+
+---
+
+### 3. وحدة الكونتينرات الجديدة (Tab رابع في BoxesManagement)
+
+#### Tab "الكونتينرات والشحن":
+- **القائمة:** جدول الكونتينرات (رقم، شركة الشحن، الوجهة، عدد الصناديق، عدد Loose، الحالة، التاريخ)
+- **زر "كونتينر جديد":** Dialog لإنشاء كونتينر فارغ
+- **عند فتح كونتينر:** صفحة `/boxes/container/:id` تعرض:
+  - بيانات الكونتينر + زر تعديل
+  - **قسمان:**
+    1. **الصناديق داخل الكونتينر** — قائمة الصناديق المُضافة + زر "إضافة صندوق" يفتح dialog يعرض الصناديق المتاحة (status='packed' وغير مرتبطة بكونتينر آخر)
+    2. **الأصناف Loose داخل الكونتينر** — قائمة الـ loose المُضافة + زر "إضافة صنف" مشابه
+  - زر "ختم الكونتينر" (يحوّل الحالة لـ `sealed`)
+  - زر "طباعة بوليصة الكونتينر" (Container Manifest A4)
+
+#### مكونات جديدة:
+```text
+src/components/boxes/containers/
+├── ContainersTab.tsx              — قائمة الكونتينرات
+├── ContainerFormDialog.tsx        — إنشاء/تعديل كونتينر
+├── ContainerDetailsView.tsx       — صفحة تفاصيل كونتينر
+├── AddItemsToContainerDialog.tsx  — اختيار صناديق/loose للإضافة
+└── ContainerManifestPrint.tsx     — بوليصة طباعة A4
 
 src/hooks/
-├── useBoxReceipts.ts            — CRUD + realtime
-├── useBoxSummary.ts             — جلب الـ view
-└── useBoxStats.ts               — إحصائيات اللوحة
+├── useContainers.ts
+└── useContainerItems.ts
 
-src/utils/
-├── boxesExcelExport.ts          — تصدير ExcelJS (مع RTL وألوان)
-└── boxNumberValidation.ts       — تنسيق B-XX
+src/pages/
+└── ContainerDetails.tsx           — Route: /boxes/container/:id
 ```
 
-كل المكوّنات < 300 سطر.
+---
+
+### 4. صفحة `BoxCardPrint` — تحديث
+- لا تتأثر (تطبع الصناديق فقط — الـ loose ليس له بطاقة صندوق)
+- إضافة تنبيه إذا حاول المستخدم طباعة `box_no` يحتوي فقط أصناف loose
 
 ---
 
-### 4. التكامل مع النظام الحالي
+### 5. الترجمات (LanguageContext)
 
-| النقطة | التغيير |
+مفاتيح جديدة (AR/EN):
+```
+packingType, boxed, loose, boxedItems, looseItems,
+packingTypeBoxedDesc, packingTypeLooseDesc,
+containers, containersManagement, newContainer, containerNo,
+shippingCompany, containerStatus_preparing, containerStatus_sealed,
+containerStatus_shipped, containerStatus_delivered,
+addToContainer, sealContainer, containerManifest,
+boxesInContainer, looseItemsInContainer,
+availableBoxes, availableLooseItems, printManifest,
+itemsCount, looseCount, boxesCount,
+filterByPackingType, allItems, boxedOnly, looseOnly
+```
+
+---
+
+### 6. Navigation & Routes
+- `/boxes` يبقى كما هو لكن يضيف **Tab رابع: "الكونتينرات"**
+- Route جديد: `/boxes/container/:id` → `ContainerDetails`
+- لا تغيير على Home / MobileBottomNav / Sidebar (الكل يدخل من بوابة `/boxes`)
+
+---
+
+### 7. صلاحيات (RBAC) للكونتينرات
+- **Admin/Manager:** إنشاء، تعديل، إضافة محتويات، ختم، حذف ناعم، طباعة
+- **User:** عرض فقط + طباعة
+
+---
+
+### 8. ملخص الملفات
+
+| النوع | عدد |
 |---|---|
-| **App Launcher (`Home.tsx`)** | إضافة بطاقة "إدارة الصناديق" مع أيقونة Package |
-| **Navigation.tsx** | إضافة عنصر `boxesManagement` بعد "الصيانة" |
-| **AnimatedRoutes.tsx** | تسجيل المسارين الجديدين مع Lazy Loading |
-| **MobileBottomNav** | إضافة الأيقونة في قائمة "المزيد" |
-| **LanguageContext** | إضافة كل المفاتيح (AR/EN) — لا نص hardcoded |
-| **types/database** | يُحدَّث تلقائياً من Supabase |
+| Migrations | 1 (تعديل + جداول جديدة + view) |
+| Components جديدة | 5 (وحدة الكونتينرات) |
+| Components معدّلة | 6 (Form, Table, MobileCard, Summary, Dashboard, Management) |
+| Pages جديدة | 1 (ContainerDetails) |
+| Hooks جديدة | 2 |
+| Translations | ~25 مفتاح جديد |
 
 ---
 
-### 5. المواصفات البصرية (موحّدة مع النظام)
+### 9. الترتيب التنفيذي
 
-- **التصميم:** Clean Minimalist — متطابق مع بقية الوحدات (PageHeader, Card, Badge)
-- **الألوان:**
-  - Destination المغرب → Badge برتقالي
-  - Destination أوزبكستان → Badge أخضر
-  - Destination غير محدد → Badge رمادي
-- **الجدول:** صفوف مظلّلة بلون الوجهة بشفافية خفيفة (متوافقة مع Dark/Light)
-- **التواريخ:** `DD/MM/YYYY` — **الأرقام:** فواصل آلاف غربية (1,000)
-- **الخط:** Segoe UI Arabic / Inter
-
----
-
-### 6. ميزات الطباعة (بطاقة الصندوق)
-
-- **A4 Portrait** — هوامش 10mm
-- **iframe + Blob** للويب / **`webContents.printToPDF`** للـ Electron (سياسة قائمة)
-- Header يتكرر في كل صفحة
-- صور المنتجات بحجم ثابت (≈80×80px) أو fallback لرقم القطعة
-- زر تنقّل: السابق / التالي / اختيار صندوق
-- تغيير `document.title` مؤقتاً لـ "Box-Card-B-01"
-- **QR Code** على البطاقة (يحوي `box_no` + `total_qty`)
+1. **Migration:** إضافة `packing_type`، تخفيف `box_no`، جداول الكونتينرات، تحديث الـ view، RLS، Audit
+2. **تحديث `ReceiptFormDialog`** — حقل packing_type + منطق ديناميكي
+3. **تحديث `ReceiptsTable` + `ReceiptMobileCard`** — عمود + فلتر
+4. **تحديث `BoxesSummaryTab` + `BoxesDashboardTab`** — عرض loose
+5. **بناء وحدة الكونتينرات الكاملة** (Tab + قائمة + Dialog + صفحة تفاصيل)
+6. **بوليصة طباعة الكونتينر A4** (مع QR + قائمة الصناديق + قائمة Loose)
+7. **الترجمات + Routes + اختبار شامل**
+8. **بعدها** → بناء v4.4.6 لـ Windows
 
 ---
 
-### 7. التصدير والاستيراد لـ Excel
+### 🤔 سؤال قبل التنفيذ
 
-- **التصدير:** ExcelJS، ورقتان (سجل الاستلام + ملخص الصناديق)، ألوان حسب الوجهة، RTL
-- **الاستيراد:** زر "استيراد"، يقرأ `.xlsx` بـ ExcelJS، معاينة قبل الحفظ، تخطّي المكررات
+هل تريد أن أنفذ **كل ما سبق دفعة واحدة** (تنفيذ شامل + يستغرق رسالة طويلة)، أم نقسمه على مرحلتين:
 
----
+- **المرحلة A (الآن):** تعديل النموذج لإضافة `packing_type` + عرض Loose في الجداول والملخص (تحسين فوري للنظام الحالي)
+- **المرحلة B (لاحقاً):** بناء وحدة الكونتينرات الكاملة (شغل أكبر، يحتاج اختبار منفصل)
 
-### 8. الإحصائيات (Dashboard Tab)
-
-**KPI Cards:** الأصناف | الكمية | الصناديق | الموردين | المغرب | أوزبكستان
-
-**Charts (RTLEChart — Apache ECharts):**
-- Bar: الكمية لكل صندوق
-- Pie: التوزيع حسب الوجهة
-- Bar: الأصناف لكل مورد
-
-**آخر النشاطات:** آخر 10 سجلات
-
----
-
-### 9. الصلاحيات (RBAC)
-
-- **Admin** → كل الصلاحيات + حذف نهائي
-- **Manager** → إضافة/تعديل/حذف ناعم/تصدير/طباعة
-- **User** → إضافة/تعديل سجلاته فقط، عرض الكل، طباعة
-
----
-
-### 10. التحقق (Zod Validation)
-
-- جميع الحقول المطلوبة (*) مع رسائل عربية/إنجليزية
-- `qty > 0`
-- تنسيق `box_no` يطابق `^B-\d{2,3}$` (تحذير لا منع)
-- تحذير عند تكرار `part_no` في نفس الصندوق
-- حد حجم الصورة 5MB، أنواع: jpg/png/webp فقط
-
----
-
-### 11. ملخص الملفات
-
-| النوع | العدد |
-|---|---|
-| Migration SQL | 1 |
-| Pages | 2 |
-| Components | 9 |
-| Hooks | 3 |
-| Utils | 2 |
-| Storage Bucket | 1 |
-| ملفات معدّلة | 5 |
-
----
-
-### الترتيب التنفيذي بعد الموافقة
-
-1. إنشاء Migration + Storage Bucket + RLS
-2. الـ Hooks + Utils
-3. Tab سجل الاستلام (الأهم) + Form Dialog + Image Upload
-4. Tab ملخص الصناديق
-5. صفحة طباعة بطاقة الصندوق
-6. Tab الإحصائيات
-7. ربط Navigation + App Launcher + Routes + Translations
-8. اختبار شامل (Build + RLS + Mobile + Print)
-9. **بعدها** → بناء ورفع نسخة Windows جديدة v4.4.6 (تشمل تحسينات التحديث + الوحدة الجديدة معاً)
+التوصية: **البدء بالمرحلة A** أولاً (لأنها تصلح المنطق الجوهري فوراً)، ثم B في رسالة تالية.
 
