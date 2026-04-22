@@ -13,7 +13,8 @@ import {
   Shield, 
   ClipboardList,
   Search,
-  X
+  X,
+  Package
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -44,6 +45,14 @@ const appModules: AppModule[] = [
     description: 'الصيانة الدورية والجدولة',
     color: 'text-orange-600 dark:text-orange-400',
     bgColor: 'bg-orange-500/10 dark:bg-orange-500/20',
+  },
+  {
+    path: '/boxes',
+    icon: Package,
+    labelKey: 'boxesManagement',
+    description: 'استلام البضائع وإدارة الصناديق',
+    color: 'text-rose-600 dark:text-rose-400',
+    bgColor: 'bg-rose-500/10 dark:bg-rose-500/20',
   },
   {
     path: '/petty-cash',

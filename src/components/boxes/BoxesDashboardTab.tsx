@@ -5,6 +5,7 @@ import { useBoxReceipts } from '@/hooks/useBoxReceipts';
 import { useBoxSummary } from '@/hooks/useBoxSummary';
 import { RTLEChart } from '@/components/charts/RTLEChart';
 import { Package, Boxes, Truck, Users, Loader2 } from 'lucide-react';
+import type { EChartsOption } from 'echarts';
 
 export function BoxesDashboardTab() {
   const { t } = useLanguage();
@@ -29,27 +30,27 @@ export function BoxesDashboardTab() {
     };
   }, [receipts]);
 
-  const qtyPerBoxOption = useMemo(() => ({
-    tooltip: { trigger: 'axis' },
+  const qtyPerBoxOption = useMemo<EChartsOption>(() => ({
+    tooltip: { trigger: 'axis' as const },
     grid: { top: 20, left: 50, right: 20, bottom: 50 },
-    xAxis: { type: 'category', data: summary.map((s) => s.box_no), axisLabel: { rotate: 45 } },
-    yAxis: { type: 'value' },
+    xAxis: { type: 'category' as const, data: summary.map((s) => s.box_no), axisLabel: { rotate: 45 } },
+    yAxis: { type: 'value' as const },
     series: [{
-      type: 'bar',
+      type: 'bar' as const,
       data: summary.map((s) => s.total_qty),
-      itemStyle: { color: '#2E75B6' },
+      itemStyle: { color: 'hsl(var(--primary))' },
     }],
   }), [summary]);
 
-  const destPieOption = useMemo(() => ({
-    tooltip: { trigger: 'item' },
+  const destPieOption = useMemo<EChartsOption>(() => ({
+    tooltip: { trigger: 'item' as const },
     legend: { bottom: 0 },
     series: [{
-      type: 'pie',
+      type: 'pie' as const,
       radius: ['40%', '70%'],
       data: [
-        { value: stats.moroccoQty, name: t('dest_morocco'), itemStyle: { color: '#FF8C42' } },
-        { value: stats.uzbQty, name: t('dest_uzbekistan'), itemStyle: { color: '#4CAF50' } },
+        { value: stats.moroccoQty, name: t('dest_morocco'), itemStyle: { color: 'hsl(25 95% 53%)' } },
+        { value: stats.uzbQty, name: t('dest_uzbekistan'), itemStyle: { color: 'hsl(142 71% 45%)' } },
       ],
     }],
   }), [stats, t]);

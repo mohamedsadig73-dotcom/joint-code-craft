@@ -22,7 +22,8 @@ import {
   RefreshCw,
   Wallet,
   CalendarDays,
-  Users
+  Users,
+  Package
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -61,6 +62,7 @@ export function Navigation({ minimal = false }: { minimal?: boolean }) {
     { path: '/', icon: LayoutDashboard, labelKey: 'home' },
     { path: '/declarations', icon: FileText, labelKey: 'declarations' },
     { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
+    { path: '/boxes', icon: Package, labelKey: 'boxesManagement' },
     { path: '/petty-cash', icon: Wallet, labelKey: 'pettyCash' },
     { path: '/leave-tracking', icon: FileText, labelKey: 'leaveTracking' },
     { path: '/holiday-attendance', icon: CalendarDays, labelKey: 'holidayAttendance' },
