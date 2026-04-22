@@ -315,5 +315,14 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+      <ItemFormDialog
+        open={itemDialogOpen}
+        onOpenChange={setItemDialogOpen}
+        initialPartNo={pendingNewPartNo}
+        onSubmit={handleItemCreated}
+        existingPartNos={items.map((i) => i.part_no)}
+      />
+    </>
   );
 }
