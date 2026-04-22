@@ -21,11 +21,11 @@ export function BoxCard({ box }: { box: BoxSummaryRow }) {
     <Card className="p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
-            <Package className="w-5 h-5 text-destructive" />
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Package className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <div className="text-lg font-bold text-destructive">{box.box_no}</div>
+            <div className="text-lg font-bold text-primary">{box.box_no}</div>
             <Badge className={destinationBadgeClass(box.destination)}>
               {t(`dest_${box.destination}`)}
             </Badge>
@@ -42,15 +42,15 @@ export function BoxCard({ box }: { box: BoxSummaryRow }) {
       </div>
 
       <div className="grid grid-cols-2 gap-2 mt-3">
-        <div className="bg-emerald-500/10 rounded-md p-2 text-center">
+        <div className="bg-accent/40 rounded-md p-2 text-center">
           <div className="text-xs text-muted-foreground">{t('items')}</div>
-          <div className="text-base font-bold text-emerald-700 dark:text-emerald-300">
+          <div className="text-base font-bold text-foreground">
             {box.items_count.toLocaleString('en-US')}
           </div>
         </div>
-        <div className="bg-blue-500/10 rounded-md p-2 text-center">
+        <div className="bg-primary/10 rounded-md p-2 text-center">
           <div className="text-xs text-muted-foreground">{t('totalQty')}</div>
-          <div className="text-base font-bold text-blue-700 dark:text-blue-300">
+          <div className="text-base font-bold text-primary">
             {box.total_qty.toLocaleString('en-US')}
           </div>
         </div>

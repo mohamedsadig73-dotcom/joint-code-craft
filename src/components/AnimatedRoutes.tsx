@@ -27,6 +27,8 @@ const HolidayAttendanceDetail = lazy(() => import('@/pages/HolidayAttendanceDeta
 const EmployeesManagement = lazy(() => import('@/pages/EmployeesManagement'));
 const UpdateLog = lazy(() => import('@/pages/UpdateLog'));
 const UpdateDiagnostics = lazy(() => import('@/pages/UpdateDiagnostics'));
+const BoxesManagement = lazy(() => import('@/pages/BoxesManagement'));
+const BoxCardPrint = lazy(() => import('@/pages/BoxCardPrint'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -273,6 +275,24 @@ export function AnimatedRoutes() {
                 <PageTransition>
                   <UpdateDiagnostics />
                 </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/boxes"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <BoxesManagement />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/boxes/card/:boxNo"
+            element={
+              <ProtectedRoute>
+                <BoxCardPrint />
               </ProtectedRoute>
             }
           />

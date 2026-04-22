@@ -18,7 +18,7 @@ export default function BoxesManagement() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
         <PageHeader
           title={t('boxesManagement')}
-          description={t('boxesManagementDesc')}
+          subtitle={t('boxesManagementDesc')}
           icon={Package}
         />
 
