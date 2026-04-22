@@ -6,18 +6,20 @@ import { ReceiptsTab } from '@/components/boxes/ReceiptsTab';
 import { BoxesSummaryTab } from '@/components/boxes/BoxesSummaryTab';
 import { BoxesDashboardTab } from '@/components/boxes/BoxesDashboardTab';
 import { ContainersTab } from '@/components/boxes/containers/ContainersTab';
-import { Package, ClipboardList, BarChart3, Ship, FileDown, Loader2 } from 'lucide-react';
+import { Package, ClipboardList, BarChart3, Ship, FileDown, Loader2, Library } from 'lucide-react';
 import { Navigation } from '@/components/Navigation';
 import { DuplicateCheckBanner } from '@/components/boxes/DuplicateCheckBanner';
 import { Button } from '@/components/ui/button';
 import { useBoxReceipts } from '@/hooks/useBoxReceipts';
 import { downloadBoxesTotalsPdf } from '@/utils/boxesTotalsPdf';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 export default function BoxesManagement() {
   const { t, language } = useLanguage();
   const { receipts } = useBoxReceipts();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<'receipts' | 'boxes' | 'containers' | 'dashboard'>('receipts');
   const [downloading, setDownloading] = useState(false);
 
@@ -45,7 +47,16 @@ export default function BoxesManagement() {
 
         <div className="mt-4 space-y-3">
           <DuplicateCheckBanner />
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/boxes/items')}
+              className="gap-1.5"
+            >
+              <Library className="w-4 h-4" />
+              {t('itemsMaster')}
+            </Button>
             <Button
               variant="outline"
               size="sm"
