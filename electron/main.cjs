@@ -422,6 +422,52 @@ ipcMain.handle('restart-app', () => {
   app.exit(0);
 });
 
+// ── IPC: Get shell version ────────────────────────────
+ipcMain.handle('get-shell-version', () => getShellVersion());
+
+// ── IPC: Test update channel connectivity ─────────────
+function headRequest(url) {
+  return new Promise((resolve) => {
+    const doRequest = (reqUrl, redirects = 0) => {
+      if (redirects > 5) return resolve({ ok: false, error: 'Too many redirects' });
+      const proto = reqUrl.startsWith('https') ? https : http;
+      const req = proto.request(reqUrl, { method: 'HEAD' }, (response) => {
+        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          return doRequest(response.headers.location, redirects + 1);
+        }
+        const size = parseInt(response.headers['content-length'] || '0', 10);
+        resolve({ ok: response.statusCode === 200, status: response.statusCode, size });
+      });
+      req.on('error', (err) => resolve({ ok: false, error: err.message }));
+      req.end();
+    };
+    doRequest(url);
+  });
+}
+
+ipcMain.handle('test-update-channel', async (_event, urls) => {
+  const result = { versionJson: { ok: false }, releaseJson: { ok: false }, downloadHead: { ok: false } };
+  try {
+    const v = await fetchJson(`${urls.versionUrl}?_t=${Date.now()}`);
+    result.versionJson = { ok: true, status: 200, data: v };
+  } catch (err) {
+    result.versionJson = { ok: false, error: err.message };
+  }
+  try {
+    const r = await fetchJson(`${urls.releaseUrl}?_t=${Date.now()}`);
+    result.releaseJson = { ok: true, status: 200, data: r };
+    if (!urls.downloadUrl && r && r.download_url) urls.downloadUrl = r.download_url;
+  } catch (err) {
+    result.releaseJson = { ok: false, error: err.message };
+  }
+  if (urls.downloadUrl) {
+    result.downloadHead = await headRequest(urls.downloadUrl);
+  } else {
+    result.downloadHead = { ok: false, error: 'No download URL available' };
+  }
+  return result;
+});
+
 // ── App lifecycle ──────────────────────────────────────
 app.whenReady().then(() => {
   if (!fs.existsSync(UPDATE_DIR)) fs.mkdirSync(UPDATE_DIR, { recursive: true });

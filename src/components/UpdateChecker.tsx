@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { forceAppUpdate } from '@/components/ForceUpdateButton';
+import { useUpdateLogger } from '@/hooks/useUpdateLogger';
+import { useNavigate } from 'react-router-dom';
 
 declare const __BUILD_VERSION__: string;
 declare const __APP_VERSION__: string;
@@ -11,6 +13,7 @@ declare const __APP_VERSION__: string;
 type PublishedVersionPayload = { version?: string; build?: string };
 type DesktopReleasePayload = {
   desktop_shell_version: string;
+  min_shell_version?: string;
   web_version: string;
   download_url: string;
   release_notes?: string;
@@ -67,16 +70,44 @@ type Phase = 'idle' | 'downloading' | 'installing' | 'done' | 'error';
 export function UpdateChecker() {
   const { t, language } = useLanguage();
   const isAr = language === 'ar';
+  const { log } = useUpdateLogger();
+  const navigate = useNavigate();
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [phase, setPhase] = useState<Phase>('idle');
   const [progress, setProgress] = useState(0);
+  const [shellOutdated, setShellOutdated] = useState(false);
 
   const checkForUpdate = useCallback(async () => {
     try {
       if (isElectron) {
         try {
           const d = await fetchJSON<DesktopReleasePayload>(DESKTOP_RELEASE_URL);
+          // Check shell compatibility
+          let localShell = LOCAL_VERSION;
+          if (window.electronAPI?.getShellVersion) {
+            try { localShell = await window.electronAPI.getShellVersion(); } catch { /* ignore */ }
+          }
+          if (d.min_shell_version && compareVersions(localShell, d.min_shell_version) < 0) {
+            setShellOutdated(true);
+            setUpdateInfo({
+              type: 'desktop',
+              version: d.desktop_shell_version,
+              downloadUrl: d.download_url,
+              releaseNotes: d.release_notes,
+              mandatory: true,
+            });
+            setDismissed(false);
+            await log({
+              phase: 'shell-mismatch',
+              status: 'error',
+              targetVersion: d.desktop_shell_version,
+              shellVersion: localShell,
+              attemptedUrl: d.download_url,
+              errorMessage: `Local shell v${localShell} < min required v${d.min_shell_version}`,
+            });
+            return;
+          }
           if (compareVersions(d.desktop_shell_version, LOCAL_VERSION) > 0) {
             setUpdateInfo({
               type: 'desktop',
@@ -86,19 +117,45 @@ export function UpdateChecker() {
               mandatory: d.mandatory,
             });
             setDismissed(false);
+            await log({
+              phase: 'check',
+              status: 'success',
+              targetVersion: d.desktop_shell_version,
+              attemptedUrl: DESKTOP_RELEASE_URL,
+            });
             console.log('[UpdateChecker] Desktop update:', d.desktop_shell_version);
             return;
           }
-        } catch { /* ignore */ }
+        } catch (err) {
+          await log({
+            phase: 'check',
+            status: 'error',
+            attemptedUrl: DESKTOP_RELEASE_URL,
+            errorMessage: err instanceof Error ? err.message : String(err),
+          });
+        }
       }
 
       const data = await fetchJSON<PublishedVersionPayload>(VERSION_URL);
       if (isRemoteUpdateAvailable(data)) {
         setUpdateInfo({ type: 'web', version: data.version || data.build || '' });
         setDismissed(false);
+        await log({
+          phase: 'check',
+          status: 'success',
+          targetVersion: data.version,
+          attemptedUrl: VERSION_URL,
+        });
       }
-    } catch { /* ignore */ }
-  }, [t]);
+    } catch (err) {
+      await log({
+        phase: 'check',
+        status: 'error',
+        attemptedUrl: VERSION_URL,
+        errorMessage: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }, [t, log]);
 
   // Listen for progress events from Electron
   useEffect(() => {
@@ -121,6 +178,15 @@ export function UpdateChecker() {
   const handleClick = useCallback(async () => {
     if (!updateInfo) return;
 
+    if (shellOutdated && updateInfo.type === 'desktop') {
+      if (window.electronAPI?.openExternal) {
+        await window.electronAPI.openExternal(updateInfo.downloadUrl);
+      } else {
+        window.open(updateInfo.downloadUrl, '_blank');
+      }
+      return;
+    }
+
     if (updateInfo.type === 'desktop' && isElectron) {
       if (phase === 'done') {
         // Restart to apply
@@ -129,12 +195,31 @@ export function UpdateChecker() {
         // Start download + hot-swap
         setPhase('downloading');
         setProgress(0);
+        await log({
+          phase: 'download',
+          status: 'info',
+          targetVersion: updateInfo.version,
+          attemptedUrl: updateInfo.downloadUrl,
+        });
         try {
           await window.electronAPI?.downloadUpdate(updateInfo.downloadUrl);
           setPhase('done');
+          await log({
+            phase: 'done',
+            status: 'success',
+            targetVersion: updateInfo.version,
+            attemptedUrl: updateInfo.downloadUrl,
+          });
         } catch (err) {
           console.error('[UpdateChecker] Update failed:', err);
           setPhase('error');
+          await log({
+            phase: 'failed',
+            status: 'error',
+            targetVersion: updateInfo.version,
+            attemptedUrl: updateInfo.downloadUrl,
+            errorMessage: err instanceof Error ? err.message : String(err),
+          });
         }
       }
     } else if (updateInfo.type === 'desktop' && window.electronAPI?.openExternal) {
@@ -142,7 +227,7 @@ export function UpdateChecker() {
     } else {
       await forceAppUpdate();
     }
-  }, [updateInfo, phase]);
+  }, [updateInfo, phase, shellOutdated, log]);
 
   useEffect(() => {
     const t1 = setTimeout(checkForUpdate, 3000);
