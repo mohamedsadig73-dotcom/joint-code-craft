@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import type { Json } from '@/integrations/supabase/types';
 
 declare const __APP_VERSION__: string;
 
@@ -47,7 +48,7 @@ export function useUpdateLogger() {
           platform,
           user_agent:
             typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 500) : null,
-          metadata: entry.metadata ?? null,
+          metadata: (entry.metadata ?? null) as Json,
         };
 
         const { error } = await supabase.from('update_logs').insert([payload]);

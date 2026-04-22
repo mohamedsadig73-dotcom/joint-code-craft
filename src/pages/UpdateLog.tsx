@@ -238,10 +238,6 @@ export default function UpdateLogPage() {
         <PageHeader
           title={t('updateLogTitle')}
           subtitle={t('updateLogSubtitle')}
-          breadcrumbs={[
-            { label: t('profile'), href: '/profile' },
-            { label: t('updateLog') },
-          ]}
         />
 
         {/* System Info */}
