@@ -114,6 +114,7 @@ export function ReceiptsTab() {
           unit: 'PCS',
           destination: 'unspecified',
           place: 'مخزنة بالمخزن (B)',
+          packing_type: 'boxed',
           box_no: boxNo,
           receipt_date: new Date().toISOString().slice(0, 10),
           status: 'received',

@@ -100,6 +100,50 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+          <div className="md:col-span-2 space-y-1.5">
+            <Label>{t('packingType')} *</Label>
+            <RadioGroup
+              value={values.packing_type}
+              onValueChange={(v) => setField('packing_type', v as 'boxed' | 'loose')}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-2"
+            >
+              <label
+                htmlFor="pt-boxed"
+                className={`flex items-start gap-3 rounded-md border p-3 cursor-pointer transition-colors ${
+                  values.packing_type === 'boxed'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:bg-muted/40'
+                }`}
+              >
+                <RadioGroupItem value="boxed" id="pt-boxed" className="mt-0.5" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5 font-medium text-sm">
+                    <Package className="w-4 h-4 text-blue-600" />
+                    {t('boxed')}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('packingTypeBoxedDesc')}</p>
+                </div>
+              </label>
+              <label
+                htmlFor="pt-loose"
+                className={`flex items-start gap-3 rounded-md border p-3 cursor-pointer transition-colors ${
+                  values.packing_type === 'loose'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:bg-muted/40'
+                }`}
+              >
+                <RadioGroupItem value="loose" id="pt-loose" className="mt-0.5" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5 font-medium text-sm">
+                    <PackageOpen className="w-4 h-4 text-purple-600" />
+                    {t('loose')}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('packingTypeLooseDesc')}</p>
+                </div>
+              </label>
+            </RadioGroup>
+          </div>
+
           <div className="space-y-1.5">
             <Label>{t('supplier')} *</Label>
             <Input
@@ -161,19 +205,29 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
             <Input value={values.place ?? ''} onChange={(e) => setField('place', e.target.value)} />
           </div>
 
-          <div className="space-y-1.5">
-            <Label>{t('boxNo')} *</Label>
-            <Input
-              list="boxes-existing"
-              value={values.box_no}
-              onChange={(e) => setField('box_no', e.target.value)}
-              onBlur={(e) => setField('box_no', normalizeBoxNo(e.target.value))}
-            />
-            <datalist id="boxes-existing">
-              {existingBoxes.map((b) => <option key={b} value={b} />)}
-            </datalist>
-            {errors.box_no && <p className="text-xs text-destructive">{errors.box_no}</p>}
-          </div>
+          {values.packing_type === 'boxed' ? (
+            <div className="space-y-1.5">
+              <Label>{t('boxNo')} *</Label>
+              <Input
+                list="boxes-existing"
+                value={values.box_no ?? ''}
+                onChange={(e) => setField('box_no', e.target.value)}
+                onBlur={(e) => setField('box_no', normalizeBoxNo(e.target.value))}
+              />
+              <datalist id="boxes-existing">
+                {existingBoxes.map((b) => <option key={b} value={b} />)}
+              </datalist>
+              {errors.box_no && <p className="text-xs text-destructive">{errors.box_no}</p>}
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label className="opacity-50">{t('boxNo')}</Label>
+              <div className="flex items-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground h-10">
+                <Info className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{t('packingTypeLooseDesc')}</span>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label>{t('date')} *</Label>
