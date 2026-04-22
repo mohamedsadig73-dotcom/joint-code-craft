@@ -29,6 +29,7 @@ const UpdateLog = lazy(() => import('@/pages/UpdateLog'));
 const UpdateDiagnostics = lazy(() => import('@/pages/UpdateDiagnostics'));
 const BoxesManagement = lazy(() => import('@/pages/BoxesManagement'));
 const BoxCardPrint = lazy(() => import('@/pages/BoxCardPrint'));
+const ContainerDetails = lazy(() => import('@/pages/ContainerDetails'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -293,6 +294,16 @@ export function AnimatedRoutes() {
             element={
               <ProtectedRoute>
                 <BoxCardPrint />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/boxes/container/:id"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <ContainerDetails />
+                </PageTransition>
               </ProtectedRoute>
             }
           />

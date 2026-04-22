@@ -5,12 +5,13 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { ReceiptsTab } from '@/components/boxes/ReceiptsTab';
 import { BoxesSummaryTab } from '@/components/boxes/BoxesSummaryTab';
 import { BoxesDashboardTab } from '@/components/boxes/BoxesDashboardTab';
-import { Package, ClipboardList, BarChart3 } from 'lucide-react';
+import { ContainersTab } from '@/components/boxes/containers/ContainersTab';
+import { Package, ClipboardList, BarChart3, Ship } from 'lucide-react';
 import { Navigation } from '@/components/Navigation';
 
 export default function BoxesManagement() {
   const { t } = useLanguage();
-  const [tab, setTab] = useState<'receipts' | 'boxes' | 'dashboard'>('receipts');
+  const [tab, setTab] = useState<'receipts' | 'boxes' | 'containers' | 'dashboard'>('receipts');
 
   return (
     <div className="min-h-screen bg-background">
@@ -23,7 +24,7 @@ export default function BoxesManagement() {
         />
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-4">
-          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-4 max-w-3xl">
             <TabsTrigger value="receipts" className="gap-1.5">
               <ClipboardList className="w-4 h-4" />
               <span className="hidden sm:inline">{t('receiptsLog')}</span>
@@ -33,6 +34,11 @@ export default function BoxesManagement() {
               <Package className="w-4 h-4" />
               <span className="hidden sm:inline">{t('boxesSummary')}</span>
               <span className="sm:hidden">{t('boxesShort')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="containers" className="gap-1.5">
+              <Ship className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('containers')}</span>
+              <span className="sm:hidden">{t('containers')}</span>
             </TabsTrigger>
             <TabsTrigger value="dashboard" className="gap-1.5">
               <BarChart3 className="w-4 h-4" />
@@ -46,6 +52,9 @@ export default function BoxesManagement() {
           </TabsContent>
           <TabsContent value="boxes" className="mt-4">
             <BoxesSummaryTab />
+          </TabsContent>
+          <TabsContent value="containers" className="mt-4">
+            <ContainersTab />
           </TabsContent>
           <TabsContent value="dashboard" className="mt-4">
             <BoxesDashboardTab />

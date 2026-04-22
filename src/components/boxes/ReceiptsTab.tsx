@@ -5,7 +5,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Download, Upload, Loader2 } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Plus, Search, Download, Upload, Loader2, Package, PackageOpen, Layers } from 'lucide-react';
 import { useBoxReceipts, type BoxReceipt, type BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { useBoxSummary } from '@/hooks/useBoxSummary';
 import { ReceiptsTable } from './ReceiptsTable';
@@ -50,6 +51,16 @@ export function ReceiptsTab() {
     () => Array.from(new Set(receipts.map((r) => r.box_no).filter((b): b is string => !!b))).sort(),
     [receipts]
   );
+
+  const counts = useMemo(() => {
+    let boxed = 0;
+    let loose = 0;
+    for (const r of receipts) {
+      if (r.packing_type === 'boxed') boxed++;
+      else if (r.packing_type === 'loose') loose++;
+    }
+    return { all: receipts.length, boxed, loose };
+  }, [receipts]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -140,6 +151,30 @@ export function ReceiptsTab() {
 
   return (
     <div className="space-y-4">
+      {/* Quick packing toggle */}
+      <ToggleGroup
+        type="single"
+        value={packingFilter}
+        onValueChange={(v) => v && setPackingFilter(v)}
+        className="justify-start flex-wrap gap-1"
+      >
+        <ToggleGroupItem value="all" aria-label={t('allItems')} className="gap-1.5 h-9 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+          <Layers className="w-3.5 h-3.5" />
+          <span className="text-xs">{t('allItems')}</span>
+          <span className="text-xs tabular-nums opacity-80">({counts.all.toLocaleString('en-US')})</span>
+        </ToggleGroupItem>
+        <ToggleGroupItem value="boxed" aria-label={t('boxedOnly')} className="gap-1.5 h-9 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+          <Package className="w-3.5 h-3.5" />
+          <span className="text-xs">{t('boxedOnly')}</span>
+          <span className="text-xs tabular-nums opacity-80">({counts.boxed.toLocaleString('en-US')})</span>
+        </ToggleGroupItem>
+        <ToggleGroupItem value="loose" aria-label={t('looseOnly')} className="gap-1.5 h-9 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+          <PackageOpen className="w-3.5 h-3.5" />
+          <span className="text-xs">{t('looseOnly')}</span>
+          <span className="text-xs tabular-nums opacity-80">({counts.loose.toLocaleString('en-US')})</span>
+        </ToggleGroupItem>
+      </ToggleGroup>
+
       {/* Toolbar */}
       <div className="flex flex-col md:flex-row gap-2">
         <div className="relative flex-1">

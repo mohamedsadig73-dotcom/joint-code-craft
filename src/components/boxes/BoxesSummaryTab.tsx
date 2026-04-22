@@ -11,6 +11,8 @@ import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { destinationBadgeClass } from './destinationStyles';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Layers } from 'lucide-react';
 
 export function BoxesSummaryTab() {
   const { t } = useLanguage();
@@ -18,6 +20,7 @@ export function BoxesSummaryTab() {
   const { receipts } = useBoxReceipts();
   const [search, setSearch] = useState('');
   const [destFilter, setDestFilter] = useState('all');
+  const [packingFilter, setPackingFilter] = useState<'all' | 'boxed' | 'loose'>('all');
   const [looseDialogOpen, setLooseDialogOpen] = useState(false);
 
   const looseItems = useMemo(
@@ -31,12 +34,27 @@ export function BoxesSummaryTab() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
+    if (packingFilter === 'loose') return [];
     return summary.filter((b) => {
       if (destFilter !== 'all' && b.destination !== destFilter) return false;
       if (!q) return true;
       return b.box_no.toLowerCase().includes(q) || b.suppliers.toLowerCase().includes(q);
     });
-  }, [summary, search, destFilter]);
+  }, [summary, search, destFilter, packingFilter]);
+
+  const filteredLoose = useMemo(() => {
+    if (packingFilter === 'boxed') return [];
+    const q = search.trim().toLowerCase();
+    return looseItems.filter((r) => {
+      if (destFilter !== 'all' && r.destination !== destFilter) return false;
+      if (!q) return true;
+      return (
+        r.part_no.toLowerCase().includes(q) ||
+        r.supplier.toLowerCase().includes(q) ||
+        r.description.toLowerCase().includes(q)
+      );
+    });
+  }, [looseItems, search, destFilter, packingFilter]);
 
   const totals = useMemo(() => {
     return filtered.reduce(
@@ -51,16 +69,40 @@ export function BoxesSummaryTab() {
 
   return (
     <div className="space-y-4">
+      {/* Quick packing toggle */}
+      <ToggleGroup
+        type="single"
+        value={packingFilter}
+        onValueChange={(v) => v && setPackingFilter(v as typeof packingFilter)}
+        className="justify-start flex-wrap gap-1"
+      >
+        <ToggleGroupItem value="all" className="gap-1.5 h-9 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+          <Layers className="w-3.5 h-3.5" />
+          <span className="text-xs">{t('allItems')}</span>
+          <span className="text-xs tabular-nums opacity-80">({(summary.length + looseItems.length).toLocaleString('en-US')})</span>
+        </ToggleGroupItem>
+        <ToggleGroupItem value="boxed" className="gap-1.5 h-9 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+          <Package className="w-3.5 h-3.5" />
+          <span className="text-xs">{t('boxedOnly')}</span>
+          <span className="text-xs tabular-nums opacity-80">({summary.length.toLocaleString('en-US')})</span>
+        </ToggleGroupItem>
+        <ToggleGroupItem value="loose" className="gap-1.5 h-9 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+          <PackageOpen className="w-3.5 h-3.5" />
+          <span className="text-xs">{t('looseOnly')}</span>
+          <span className="text-xs tabular-nums opacity-80">({looseItems.length.toLocaleString('en-US')})</span>
+        </ToggleGroupItem>
+      </ToggleGroup>
+
       {/* Loose items spotlight */}
-      {looseItems.length > 0 && (
+      {looseItems.length > 0 && packingFilter !== 'loose' && (
         <Card
-          className="p-3 cursor-pointer hover:bg-muted/30 transition-colors border-purple-500/30 bg-purple-500/5"
+          className="p-3 cursor-pointer hover:bg-muted/30 transition-colors border-accent bg-accent/30"
           onClick={() => setLooseDialogOpen(true)}
         >
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-md bg-purple-500/10 flex items-center justify-center">
-                <PackageOpen className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <div className="w-10 h-10 rounded-md bg-accent flex items-center justify-center">
+                <PackageOpen className="w-5 h-5 text-accent-foreground" />
               </div>
               <div>
                 <div className="font-semibold text-sm">{t('looseItems')}</div>
@@ -68,7 +110,7 @@ export function BoxesSummaryTab() {
               </div>
             </div>
             <div className="text-end">
-              <div className="text-2xl font-bold tabular-nums text-purple-600 dark:text-purple-400">
+              <div className="text-2xl font-bold tabular-nums text-accent-foreground">
                 {looseItems.length.toLocaleString('en-US')}
               </div>
               <div className="text-[10px] text-muted-foreground">
@@ -121,22 +163,52 @@ export function BoxesSummaryTab() {
           <Loader2 className="w-5 h-5 animate-spin me-2" />
           {t('loading')}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : filtered.length === 0 && filteredLoose.length === 0 ? (
         <div className="text-center py-12">
           <Package className="w-12 h-12 mx-auto opacity-30 mb-2" />
-          <p className="text-sm text-muted-foreground">{t('noBoxesYet')}</p>
+          <p className="text-sm text-muted-foreground">
+            {packingFilter === 'loose' ? t('noLooseInContainer') : t('noBoxesYet')}
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {filtered.map((b) => <BoxCard key={`${b.box_no}-${b.destination}`} box={b} />)}
-        </div>
+        <>
+          {filtered.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {filtered.map((b) => <BoxCard key={`${b.box_no}-${b.destination}`} box={b} />)}
+            </div>
+          )}
+          {packingFilter === 'loose' && filteredLoose.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {filteredLoose.map((r) => (
+                <Card key={r.id} className="p-3 border-accent bg-accent/20">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-xs font-bold">{r.part_no}</span>
+                        <Badge className={destinationBadgeClass(r.destination)}>
+                          {t(`dest_${r.destination}`)}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{r.description}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{r.supplier}</p>
+                    </div>
+                    <div className="text-end shrink-0">
+                      <div className="text-lg font-bold tabular-nums">{r.qty.toLocaleString('en-US')}</div>
+                      <div className="text-[10px] text-muted-foreground">{r.unit}</div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <Dialog open={looseDialogOpen} onOpenChange={setLooseDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <PackageOpen className="w-5 h-5 text-purple-600" />
+              <PackageOpen className="w-5 h-5 text-accent-foreground" />
               {t('looseItems')} ({looseItems.length.toLocaleString('en-US')})
             </DialogTitle>
           </DialogHeader>

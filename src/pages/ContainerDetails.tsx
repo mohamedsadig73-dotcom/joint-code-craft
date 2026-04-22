@@ -112,7 +112,7 @@ export default function ContainerDetails() {
               </Badge>
               <Badge variant="outline">{t(`containerStatus_${container.status}`)}</Badge>
               {locked && (
-                <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                <Badge variant="outline" className="border-warning/30 bg-warning/10 text-warning">
                   <Lock className="w-3 h-3 me-1" />
                   {t('containerLocked')}
                 </Badge>
@@ -164,7 +164,7 @@ export default function ContainerDetails() {
             <Card className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold flex items-center gap-2 text-sm">
-                  <Package className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <Package className="w-4 h-4 text-primary" />
                   {t('boxesInContainer')} ({boxedGroups.length.toLocaleString('en-US')})
                 </h3>
                 {canModify && (
@@ -228,7 +228,7 @@ export default function ContainerDetails() {
             <Card className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold flex items-center gap-2 text-sm">
-                  <PackageOpen className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  <PackageOpen className="w-4 h-4 text-accent-foreground" />
                   {t('looseItemsInContainer')} ({looseItems.length.toLocaleString('en-US')})
                 </h3>
                 {canModify && (
