@@ -340,8 +340,23 @@ export default function AuditLogs() {
                   <SelectItem value="user_roles">أدوار المستخدمين</SelectItem>
                   <SelectItem value="maintenance_items">بنود الصيانة</SelectItem>
                   <SelectItem value="maintenance_schedule">جدول الصيانة</SelectItem>
+                  <SelectItem value="box_receipts">سجل الاستلام (الصناديق)</SelectItem>
+                  <SelectItem value="shipping_containers">حاويات الشحن</SelectItem>
+                  <SelectItem value="container_items">عناصر الحاوية</SelectItem>
                 </SelectContent>
               </Select>
+
+              <Button
+                variant={filterTable === 'box_receipts' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() =>
+                  setFilterTable(filterTable === 'box_receipts' ? 'all' : 'box_receipts')
+                }
+                className="gap-1.5"
+              >
+                <FileText className="w-4 h-4" />
+                Receipts only
+              </Button>
               
               <Select value={filterUser} onValueChange={setFilterUser}>
                 <SelectTrigger className="w-full md:w-[200px]">
