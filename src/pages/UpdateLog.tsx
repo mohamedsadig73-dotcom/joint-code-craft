@@ -310,7 +310,7 @@ export default function UpdateLogPage() {
                 >
                   <div className="flex items-start gap-2 min-w-0">
                     {row.r.ok ? (
-                      <Wifi className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
+                      <Wifi className="w-4 h-4 text-success mt-0.5 shrink-0" />
                     ) : (
                       <WifiOff className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
                     )}
@@ -355,7 +355,7 @@ export default function UpdateLogPage() {
                       <div className="flex flex-wrap items-center gap-2 justify-between">
                         <div className="flex items-center gap-2 flex-wrap">
                           {r.status === 'success' ? (
-                            <CheckCircle2 className="w-4 h-4 text-green-600" />
+                            <CheckCircle2 className="w-4 h-4 text-success" />
                           ) : r.status === 'error' ? (
                             <XCircle className="w-4 h-4 text-destructive" />
                           ) : (
