@@ -46,6 +46,7 @@ export function ReceiptsTable({ receipts, onEdit, onDelete, canModify }: Props) 
               <TableHead className="text-center">{t('qty')}</TableHead>
               <TableHead className="text-center">{t('unit')}</TableHead>
               <TableHead>{t('destination')}</TableHead>
+              <TableHead className="text-center">{t('packingType')}</TableHead>
               <TableHead>{t('boxNo')}</TableHead>
               <TableHead>{t('date')}</TableHead>
               <TableHead>{t('status')}</TableHead>
@@ -58,13 +59,13 @@ export function ReceiptsTable({ receipts, onEdit, onDelete, canModify }: Props) 
                 {t('totalRows')}: {totals.rows.toLocaleString('en-US')}
               </TableCell>
               <TableCell className="text-center">{totals.qty.toLocaleString('en-US')}</TableCell>
-              <TableCell colSpan={6} />
+              <TableCell colSpan={7} />
             </TableRow>
           </TableHeader>
           <TableBody>
             {receipts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={12} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={13} className="text-center py-12 text-muted-foreground">
                   {t('noReceiptsYet')}
                 </TableCell>
               </TableRow>
@@ -74,6 +75,7 @@ export function ReceiptsTable({ receipts, onEdit, onDelete, canModify }: Props) 
                   ? supabase.storage.from('box-images').getPublicUrl(r.image_path).data.publicUrl
                   : null;
                 const allowed = canModify(r);
+                const isLoose = r.packing_type === 'loose';
                 return (
                   <TableRow key={r.id} className={cn('hover:bg-muted/40', destinationRowTint(r.destination))}>
                     <TableCell className="text-center text-muted-foreground text-xs">{idx + 1}</TableCell>
@@ -96,7 +98,22 @@ export function ReceiptsTable({ receipts, onEdit, onDelete, canModify }: Props) 
                         {t(`dest_${r.destination}`)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-bold text-destructive">{r.box_no}</TableCell>
+                    <TableCell className="text-center">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          'text-[10px] font-medium',
+                          isLoose
+                            ? 'border-purple-500/30 bg-purple-500/10 text-purple-700 dark:text-purple-300'
+                            : 'border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300'
+                        )}
+                      >
+                        {t(isLoose ? 'loose' : 'boxed')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className={cn('font-bold', isLoose ? 'text-muted-foreground' : 'text-destructive')}>
+                      {isLoose ? '—' : r.box_no}
+                    </TableCell>
                     <TableCell className="text-xs text-muted-foreground tabular-nums">{formatDate(r.receipt_date)}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusBadgeClass(r.status)}>
