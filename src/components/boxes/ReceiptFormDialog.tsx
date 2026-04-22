@@ -5,11 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { receiptSchema, normalizeBoxNo, BOX_UNITS, BOX_DESTINATIONS, BOX_STATUSES } from '@/utils/boxNumberValidation';
 import type { BoxReceipt, BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { ReceiptImageUpload } from './ReceiptImageUpload';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Package, PackageOpen, Info } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -28,6 +29,7 @@ const DEFAULT: BoxReceiptInput = {
   unit: 'PCS',
   destination: 'unspecified',
   place: 'مخزنة بالمخزن (B)',
+  packing_type: 'boxed',
   box_no: 'B-01',
   receipt_date: new Date().toISOString().slice(0, 10),
   status: 'received',
@@ -52,6 +54,7 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
           unit: initial.unit,
           destination: initial.destination,
           place: initial.place,
+          packing_type: initial.packing_type ?? 'boxed',
           box_no: initial.box_no,
           receipt_date: initial.receipt_date,
           status: initial.status,
@@ -70,7 +73,10 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
   };
 
   const handleSubmit = async () => {
-    const normalized = { ...values, box_no: normalizeBoxNo(values.box_no) };
+    const normalized = {
+      ...values,
+      box_no: values.packing_type === 'loose' ? null : normalizeBoxNo(values.box_no ?? ''),
+    };
     const parsed = receiptSchema.safeParse(normalized);
     if (!parsed.success) {
       const errs: Record<string, string> = {};
