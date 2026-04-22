@@ -163,22 +163,52 @@ export function BoxesSummaryTab() {
           <Loader2 className="w-5 h-5 animate-spin me-2" />
           {t('loading')}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : filtered.length === 0 && filteredLoose.length === 0 ? (
         <div className="text-center py-12">
           <Package className="w-12 h-12 mx-auto opacity-30 mb-2" />
-          <p className="text-sm text-muted-foreground">{t('noBoxesYet')}</p>
+          <p className="text-sm text-muted-foreground">
+            {packingFilter === 'loose' ? t('noLooseInContainer') : t('noBoxesYet')}
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {filtered.map((b) => <BoxCard key={`${b.box_no}-${b.destination}`} box={b} />)}
-        </div>
+        <>
+          {filtered.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {filtered.map((b) => <BoxCard key={`${b.box_no}-${b.destination}`} box={b} />)}
+            </div>
+          )}
+          {packingFilter === 'loose' && filteredLoose.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {filteredLoose.map((r) => (
+                <Card key={r.id} className="p-3 border-accent bg-accent/20">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-xs font-bold">{r.part_no}</span>
+                        <Badge className={destinationBadgeClass(r.destination)}>
+                          {t(`dest_${r.destination}`)}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{r.description}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{r.supplier}</p>
+                    </div>
+                    <div className="text-end shrink-0">
+                      <div className="text-lg font-bold tabular-nums">{r.qty.toLocaleString('en-US')}</div>
+                      <div className="text-[10px] text-muted-foreground">{r.unit}</div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <Dialog open={looseDialogOpen} onOpenChange={setLooseDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <PackageOpen className="w-5 h-5 text-purple-600" />
+              <PackageOpen className="w-5 h-5 text-accent-foreground" />
               {t('looseItems')} ({looseItems.length.toLocaleString('en-US')})
             </DialogTitle>
           </DialogHeader>
