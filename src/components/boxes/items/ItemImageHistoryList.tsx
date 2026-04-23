@@ -25,6 +25,13 @@ interface Props {
   onRestore?: (entry: ItemImageHistoryEntry, path: string) => void | Promise<void>;
   /** Current item image path — used in the restore confirmation preview. */
   currentImagePath?: string | null;
+  /** Notified after a successful download (kind, filename, entry). */
+  onDownloaded?: (info: {
+    kind: 'current' | 'previous';
+    fileName: string;
+    path: string;
+    entry: ItemImageHistoryEntry;
+  }) => void;
 }
 
 const ICON: Record<ItemImageHistoryEntry['action'], typeof Upload> = {
@@ -70,7 +77,7 @@ async function downloadImage(path: string): Promise<void> {
 }
 
 export function ItemImageHistoryList({
-  entries, loading, showItem, onRestore, currentImagePath,
+  entries, loading, showItem, onRestore, currentImagePath, onDownloaded,
 }: Props) {
   const { t } = useLanguage();
   const { toast } = useToast();
