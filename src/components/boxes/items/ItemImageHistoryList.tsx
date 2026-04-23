@@ -184,7 +184,7 @@ export function ItemImageHistoryList({
                         url={oldUrl}
                         label={t('previous')}
                         muted
-                        onDownload={e.old_path ? () => safeDownload(e.old_path, 'previous') : undefined}
+                        onDownload={e.old_path ? () => safeDownload(e.old_path, 'previous', e) : undefined}
                       />
                       <span className="text-muted-foreground text-xs">→</span>
                     </>
@@ -193,14 +193,14 @@ export function ItemImageHistoryList({
                     <Thumb
                       url={newUrl}
                       label={e.action === 'remove' ? t('removed') : t('current')}
-                      onDownload={e.new_path ? () => safeDownload(e.new_path, 'current') : undefined}
+                      onDownload={e.new_path ? () => safeDownload(e.new_path, 'current', e) : undefined}
                     />
                   ) : e.action === 'remove' && oldUrl ? (
                     <Thumb
                       url={oldUrl}
                       label={t('removed')}
                       muted
-                      onDownload={e.old_path ? () => safeDownload(e.old_path, 'previous') : undefined}
+                      onDownload={e.old_path ? () => safeDownload(e.old_path, 'previous', e) : undefined}
                     />
                   ) : (
                     <div className="w-12 h-12 rounded border border-dashed flex items-center justify-center text-muted-foreground">
@@ -211,7 +211,7 @@ export function ItemImageHistoryList({
                     <Button
                       type="button" variant="ghost" size="sm"
                       className="h-7 px-2 text-[11px] gap-1"
-                      onClick={() => safeDownload(e.new_path, 'current')}
+                      onClick={() => safeDownload(e.new_path, 'current', e)}
                       title={t('downloadCurrent')}
                     >
                       <Download className="w-3 h-3" />
@@ -222,7 +222,7 @@ export function ItemImageHistoryList({
                     <Button
                       type="button" variant="ghost" size="sm"
                       className="h-7 px-2 text-[11px] gap-1"
-                      onClick={() => safeDownload(e.old_path, 'previous')}
+                      onClick={() => safeDownload(e.old_path, 'previous', e)}
                       title={t('downloadPrevious')}
                     >
                       <Download className="w-3 h-3" />
