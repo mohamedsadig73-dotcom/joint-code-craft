@@ -112,3 +112,34 @@ export function useItemImageHistory({
 
   return { entries, loading, refetch: fetchEntries };
 }
+
+/**
+ * Append a manual entry into `item_image_history` to record the outcome of a
+ * "restore" action (success or failure). The trigger on `items_master` will
+ * automatically log the actual `replace` event when the image_path changes —
+ * this helper simply augments the timeline with a human-readable note so the
+ * audit log shows that the change came from a restore (and any failure
+ * reason).
+ */
+export async function logImageRestoreOutcome(params: {
+  itemId: string;
+  fromPath: string | null;
+  toPath: string | null;
+  success: boolean;
+  reason?: string;
+}) {
+  const { itemId, fromPath, toPath, success, reason } = params;
+  const { data: auth } = await supabase.auth.getUser();
+  const userId = auth.user?.id ?? null;
+  const note = success
+    ? `[restore] ${reason ?? 'OK'}`
+    : `[restore-failed] ${reason ?? 'unknown error'}`;
+  await supabase.from('item_image_history' as never).insert({
+    item_id: itemId,
+    action: 'replace',
+    old_path: fromPath,
+    new_path: success ? toPath : fromPath,
+    changed_by: userId,
+    notes: note,
+  } as never);
+}
