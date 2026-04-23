@@ -77,6 +77,94 @@ export function UpdateChecker() {
   const [isRetrying, setIsRetrying] = useState(false);
   const [nextRetryIn, setNextRetryIn] = useState(0);
 
+  const runDownloadWithRetry = useCallback(
+    async (info: Extract<UpdateInfo, { type: 'desktop' }>) => {
+      setPhase('downloading');
+      setProgress(0);
+      setErrorReason(null);
+      setRetryCount(0);
+
+      let lastError: unknown = null;
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        setRetryCount(attempt + 1);
+        await log({
+          phase: 'download',
+          status: 'info',
+          targetVersion: info.version,
+          attemptedUrl: info.downloadUrl,
+          metadata: { attempt: attempt + 1, max: MAX_RETRIES },
+        });
+        try {
+          await window.electronAPI?.downloadUpdate(info.downloadUrl);
+          setPhase('done');
+          await log({
+            phase: 'done',
+            status: 'success',
+            targetVersion: info.version,
+            attemptedUrl: info.downloadUrl,
+            metadata: { attempt: attempt + 1 },
+          });
+          return;
+        } catch (err) {
+          lastError = err;
+          const reason = err instanceof Error ? err.message : String(err);
+          console.error(`[UpdateChecker] Attempt ${attempt + 1} failed:`, reason);
+          await log({
+            phase: 'failed',
+            status: 'error',
+            targetVersion: info.version,
+            attemptedUrl: info.downloadUrl,
+            errorMessage: reason,
+            metadata: { attempt: attempt + 1, max: MAX_RETRIES },
+          });
+
+          if (attempt < MAX_RETRIES - 1) {
+            // Backoff with countdown
+            setIsRetrying(true);
+            const wait = BACKOFF_MS[attempt] ?? 5000;
+            const startedAt = Date.now();
+            while (Date.now() - startedAt < wait) {
+              setNextRetryIn(Math.ceil((wait - (Date.now() - startedAt)) / 1000));
+              await sleep(250);
+            }
+            setIsRetrying(false);
+            setNextRetryIn(0);
+            setProgress(0);
+          }
+        }
+      }
+
+      // All attempts failed
+      const finalReason = lastError instanceof Error ? lastError.message : String(lastError);
+      setErrorReason(finalReason);
+      setPhase('error');
+    },
+    [log]
+  );
+
+  const copyErrorReport = useCallback(async () => {
+    if (!updateInfo) return;
+    const lines = [
+      `=== ${isAr ? 'تقرير فشل التحديث' : 'Update Failure Report'} ===`,
+      `Generated: ${new Date().toISOString()}`,
+      `App version: v${LOCAL_VERSION}`,
+      `Installed shell: v${installedShellVersion}`,
+      `Target version: v${updateInfo.version}`,
+      updateInfo.type === 'desktop' ? `Download URL: ${updateInfo.downloadUrl}` : '',
+      `Attempts made: ${retryCount}/${MAX_RETRIES}`,
+      `Environment: ${isElectron ? 'Electron' : 'Web'}`,
+      `User-Agent: ${navigator.userAgent}`,
+      '',
+      '--- Failure reason ---',
+      errorReason ?? '(none)',
+    ].filter(Boolean);
+    await navigator.clipboard.writeText(lines.join('\n'));
+    toast({
+      title: t('reportCopied'),
+      description: t('reportCopiedDesc'),
+    });
+  }, [updateInfo, errorReason, retryCount, installedShellVersion, isAr, t]);
+
   const checkForUpdate = useCallback(async () => {
     try {
       if (isElectron) {
