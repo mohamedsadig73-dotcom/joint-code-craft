@@ -194,13 +194,35 @@ export function ReceiptsTable({
                         </Badge>
                       </TableCell>
                     )}
-                    <TableCell className={cn(stickyActions, destinationRowTint(r.destination) || 'bg-background')}>
-                      <div className="flex justify-center gap-1">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onEdit(r)} disabled={!allowed}>
-                          <Pencil className="w-3.5 h-3.5" />
+                    <TableCell
+                      className={cn(
+                        stickyActionsBase,
+                        // Solid, opaque background so columns underneath never bleed through
+                        isSelected ? 'bg-primary/15' : 'bg-card',
+                      )}
+                    >
+                      <div className="flex items-center justify-center gap-1.5">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                          onClick={() => onEdit(r)}
+                          disabled={!allowed}
+                          aria-label={t('edit')}
+                          title={t('edit')}
+                        >
+                          <Pencil className="w-4 h-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => onDelete(r)} disabled={!allowed}>
-                          <Trash2 className="w-3.5 h-3.5" />
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => onDelete(r)}
+                          disabled={!allowed}
+                          aria-label={t('delete')}
+                          title={t('delete')}
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </TableCell>
