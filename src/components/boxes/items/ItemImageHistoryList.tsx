@@ -93,6 +93,7 @@ export function ItemImageHistoryList({ entries, loading, showItem, onRestore, cu
   }
 
   return (
+    <>
     <ul className="divide-y">
       {entries.map((e) => {
         const Icon = ICON[e.action];
