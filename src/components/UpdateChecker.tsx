@@ -77,6 +77,8 @@ export function UpdateChecker() {
   const [phase, setPhase] = useState<Phase>('idle');
   const [progress, setProgress] = useState(0);
   const [shellOutdated, setShellOutdated] = useState(false);
+  const [errorReason, setErrorReason] = useState<string | null>(null);
+  const [installedShellVersion, setInstalledShellVersion] = useState<string>(LOCAL_VERSION);
 
   const checkForUpdate = useCallback(async () => {
     try {
@@ -88,6 +90,7 @@ export function UpdateChecker() {
           if (window.electronAPI?.getShellVersion) {
             try { localShell = await window.electronAPI.getShellVersion(); } catch { /* ignore */ }
           }
+          setInstalledShellVersion(localShell);
           if (d.min_shell_version && compareVersions(localShell, d.min_shell_version) < 0) {
             setShellOutdated(true);
             setUpdateInfo({
@@ -108,7 +111,8 @@ export function UpdateChecker() {
             });
             return;
           }
-          if (compareVersions(d.desktop_shell_version, LOCAL_VERSION) > 0) {
+          // Compare against installed shell version (not bundled web LOCAL_VERSION)
+          if (compareVersions(d.desktop_shell_version, localShell) > 0) {
             setUpdateInfo({
               type: 'desktop',
               version: d.desktop_shell_version,
@@ -195,6 +199,7 @@ export function UpdateChecker() {
         // Start download + hot-swap
         setPhase('downloading');
         setProgress(0);
+        setErrorReason(null);
         await log({
           phase: 'download',
           status: 'info',
@@ -213,12 +218,14 @@ export function UpdateChecker() {
         } catch (err) {
           console.error('[UpdateChecker] Update failed:', err);
           setPhase('error');
+          const reason = err instanceof Error ? err.message : String(err);
+          setErrorReason(reason);
           await log({
             phase: 'failed',
             status: 'error',
             targetVersion: updateInfo.version,
             attemptedUrl: updateInfo.downloadUrl,
-            errorMessage: err instanceof Error ? err.message : String(err),
+            errorMessage: reason,
           });
         }
       }
@@ -283,6 +290,21 @@ export function UpdateChecker() {
                 {phase === 'installing'
                   ? (isAr ? 'جاري استبدال الملفات...' : 'Replacing files...')
                   : `${progress}%`}
+              </p>
+            </div>
+          )}
+
+          {/* Error reason */}
+          {phase === 'error' && errorReason && (
+            <div className="mt-2 p-2 rounded bg-destructive/20 border border-destructive/40 text-xs">
+              <p className="font-semibold mb-1">
+                {isAr ? 'سبب الفشل:' : 'Failure reason:'}
+              </p>
+              <p className="opacity-90 break-words font-mono text-[10px]">{errorReason}</p>
+              <p className="mt-1.5 opacity-75">
+                {isAr
+                  ? `الإصدار المثبّت: v${installedShellVersion} • المستهدف: v${updateInfo.version}`
+                  : `Installed: v${installedShellVersion} • Target: v${updateInfo.version}`}
               </p>
             </div>
           )}
