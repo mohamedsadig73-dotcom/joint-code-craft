@@ -60,10 +60,17 @@ export function ReceiptsTable({
 
   // Sticky column classes — actions column stays pinned on the inline-end edge
   // so users can always reach Edit/Delete without horizontal scrolling.
-  const stickyActions =
-    'sticky end-0 z-20 bg-background shadow-[-4px_0_6px_-4px_hsl(var(--border))] rtl:shadow-[4px_0_6px_-4px_hsl(var(--border))]';
+  // Uses a SOLID background + a left border to clearly separate from data,
+  // and a wider min-width so the two icon buttons never overlap each other
+  // or bleed into the previous column.
+  const stickyActionsBase =
+    'sticky end-0 z-20 min-w-[96px] w-[96px] border-s border-border ' +
+    'shadow-[-6px_0_8px_-6px_hsl(var(--border))] ' +
+    'rtl:shadow-[6px_0_8px_-6px_hsl(var(--border))]';
   const stickyActionsHead =
-    'sticky end-0 z-40 bg-muted/95 backdrop-blur shadow-[-4px_0_6px_-4px_hsl(var(--border))] rtl:shadow-[4px_0_6px_-4px_hsl(var(--border))]';
+    'sticky end-0 z-40 min-w-[96px] w-[96px] border-s border-border bg-muted ' +
+    'shadow-[-6px_0_8px_-6px_hsl(var(--border))] ' +
+    'rtl:shadow-[6px_0_8px_-6px_hsl(var(--border))]';
 
   // Total visible columns (incl. # + optional select + actions) for empty-state colSpan
   const totalCols = 1 + (selectionEnabled ? 1 : 0) + visibleColumns.length + 1;
@@ -95,7 +102,7 @@ export function ReceiptsTable({
               {show('boxNo') && <TableHead>{t('boxNo')}</TableHead>}
               {show('date') && <TableHead>{t('date')}</TableHead>}
               {show('status') && <TableHead>{t('status')}</TableHead>}
-              <TableHead className={cn('w-24 text-center', stickyActionsHead)}>{t('actions')}</TableHead>
+              <TableHead className={cn('text-center', stickyActionsHead)}>{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -106,7 +113,7 @@ export function ReceiptsTable({
               <TableCell colSpan={Math.max(0, visibleColumns.length - 1)} className="text-muted-foreground text-xs">
                 {t('totalRows')}: {totals.rows.toLocaleString('en-US')} · {t('qty')}: {totals.qty.toLocaleString('en-US')}
               </TableCell>
-              <TableCell className={cn(stickyActions, 'bg-primary/5')} />
+              <TableCell className={cn(stickyActionsBase, 'bg-muted')} />
             </TableRow>
             {receipts.length === 0 ? (
               <TableRow>
@@ -187,13 +194,35 @@ export function ReceiptsTable({
                         </Badge>
                       </TableCell>
                     )}
-                    <TableCell className={cn(stickyActions, destinationRowTint(r.destination) || 'bg-background')}>
-                      <div className="flex justify-center gap-1">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onEdit(r)} disabled={!allowed}>
-                          <Pencil className="w-3.5 h-3.5" />
+                    <TableCell
+                      className={cn(
+                        stickyActionsBase,
+                        // Solid, opaque background so columns underneath never bleed through
+                        isSelected ? 'bg-primary/15' : 'bg-card',
+                      )}
+                    >
+                      <div className="flex items-center justify-center gap-1.5">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                          onClick={() => onEdit(r)}
+                          disabled={!allowed}
+                          aria-label={t('edit')}
+                          title={t('edit')}
+                        >
+                          <Pencil className="w-4 h-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => onDelete(r)} disabled={!allowed}>
-                          <Trash2 className="w-3.5 h-3.5" />
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => onDelete(r)}
+                          disabled={!allowed}
+                          aria-label={t('delete')}
+                          title={t('delete')}
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </TableCell>
