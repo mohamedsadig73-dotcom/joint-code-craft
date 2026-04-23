@@ -137,6 +137,7 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
               partNo={values.part_no}
               imagePath={values.image_path}
               onChange={(p) => setField('image_path', p)}
+              cleanupOnReplace={!!initial}
             />
           </div>
 
