@@ -128,7 +128,7 @@ export function ReceiptsTable({ receipts, onEdit, onDelete, canModify }: Props) 
                         {t(`boxStatus_${r.status}`)}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className={cn(stickyActions, destinationRowTint(r.destination) || 'bg-background')}>
                       <div className="flex justify-center gap-1">
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onEdit(r)} disabled={!allowed}>
                           <Pencil className="w-3.5 h-3.5" />
