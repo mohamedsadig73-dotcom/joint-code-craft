@@ -23,6 +23,7 @@ import { format } from 'date-fns';
 import { ItemImageUpload } from '@/components/boxes/items/ItemImageUpload';
 import { useItemImageHistory, logImageRestoreOutcome, type ItemImageHistoryEntry } from '@/hooks/useItemImageHistory';
 import { ItemImageHistoryList } from '@/components/boxes/items/ItemImageHistoryList';
+import { ItemImageHistoryViewer } from '@/components/boxes/items/ItemImageHistoryViewer';
 import { useToast } from '@/hooks/use-toast';
 
 /** Allowed configurable windows (days) for the "recent receipts" guard. */
@@ -60,10 +61,6 @@ export default function ItemDetails() {
   const { entries: imgHistory, loading: imgHistoryLoading } = useItemImageHistory({
     itemId: id,
     limit: 20,
-  });
-  const { entries: imgHistoryFull, loading: imgHistoryFullLoading } = useItemImageHistory({
-    itemId: fullHistoryOpen ? id : undefined,
-    limit: 500,
   });
 
   const handleImageChange = async (path: string | null) => {
@@ -366,13 +363,16 @@ export default function ItemDetails() {
                     {t('fullImageTimeline')} — {item.part_no}
                   </DialogTitle>
                 </DialogHeader>
-                <div className="flex-1 overflow-y-auto -mx-6 px-2">
-                  <ItemImageHistoryList
-                    entries={imgHistoryFull}
-                    loading={imgHistoryFullLoading}
-                    onRestore={handleRestore}
-                    currentImagePath={item.image_path}
-                  />
+                <div className="flex-1 overflow-y-auto -mx-6 px-4">
+                  {fullHistoryOpen && (
+                    <ItemImageHistoryViewer
+                      itemId={id}
+                      currentImagePath={item.image_path}
+                      onRestore={handleRestore}
+                      limit={500}
+                      compact
+                    />
+                  )}
                 </div>
               </DialogContent>
             </Dialog>
