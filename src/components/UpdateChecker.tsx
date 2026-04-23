@@ -199,6 +199,7 @@ export function UpdateChecker() {
         // Start download + hot-swap
         setPhase('downloading');
         setProgress(0);
+        setErrorReason(null);
         await log({
           phase: 'download',
           status: 'info',
@@ -217,12 +218,14 @@ export function UpdateChecker() {
         } catch (err) {
           console.error('[UpdateChecker] Update failed:', err);
           setPhase('error');
+          const reason = err instanceof Error ? err.message : String(err);
+          setErrorReason(reason);
           await log({
             phase: 'failed',
             status: 'error',
             targetVersion: updateInfo.version,
             attemptedUrl: updateInfo.downloadUrl,
-            errorMessage: err instanceof Error ? err.message : String(err),
+            errorMessage: reason,
           });
         }
       }
