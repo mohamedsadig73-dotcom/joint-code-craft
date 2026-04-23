@@ -175,6 +175,11 @@ export function ItemImageUpload({ partNo, imagePath, onChange, compact, cleanupO
           </Button>
         )}
       </div>
+      {lastError && (
+        <p className="text-xs text-destructive break-all" role="alert">
+          {lastError}
+        </p>
+      )}
       <input
         ref={inputRef}
         type="file"
