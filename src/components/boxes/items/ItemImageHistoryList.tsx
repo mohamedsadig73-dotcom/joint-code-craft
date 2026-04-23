@@ -347,12 +347,12 @@ export function ItemImageHistoryList({
         currentUrl={compareUrls.current}
         onDownloadPrevious={
           compareEntry?.old_path
-            ? () => safeDownload(compareEntry.old_path, 'previous')
+            ? () => safeDownload(compareEntry.old_path, 'previous', compareEntry)
             : undefined
         }
         onDownloadCurrent={
           compareEntry?.new_path
-            ? () => safeDownload(compareEntry.new_path, 'current')
+            ? () => safeDownload(compareEntry.new_path, 'current', compareEntry)
             : undefined
         }
       />
