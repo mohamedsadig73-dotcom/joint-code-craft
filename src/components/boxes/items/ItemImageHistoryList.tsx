@@ -1,9 +1,14 @@
+import { useState } from 'react';
 import { format } from 'date-fns';
-import { Upload, Replace, Trash2, ImageIcon, Clock, Download, RotateCcw } from 'lucide-react';
+import { Upload, Replace, Trash2, ImageIcon, Clock, Download, RotateCcw, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { ItemImageHistoryEntry } from '@/hooks/useItemImageHistory';
 
 interface Props {
@@ -16,6 +21,11 @@ interface Props {
    * `old_path` (replace/remove) different from the current state.
    */
   onRestore?: (entry: ItemImageHistoryEntry, path: string) => void | Promise<void>;
+  /**
+   * Current image path of the item. When provided, the restore confirmation
+   * dialog shows a side-by-side preview of "current" vs "to restore".
+   */
+  currentImagePath?: string | null;
 }
 
 const ICON: Record<ItemImageHistoryEntry['action'], typeof Upload> = {
@@ -55,8 +65,16 @@ async function downloadImage(path: string) {
   }
 }
 
-export function ItemImageHistoryList({ entries, loading, showItem, onRestore }: Props) {
+export function ItemImageHistoryList({ entries, loading, showItem, onRestore, currentImagePath }: Props) {
   const { t } = useLanguage();
+  const [pendingRestore, setPendingRestore] = useState<{
+    entry: ItemImageHistoryEntry;
+    path: string;
+  } | null>(null);
+
+  const currentUrl = currentImagePath ? pathToUrl(currentImagePath) : null;
+  const restoreFileName = pendingRestore?.path?.split('/').pop() ?? '';
+  const restoreUrl = pendingRestore ? pathToUrl(pendingRestore.path) : null;
 
   if (loading) {
     return (
@@ -83,6 +101,8 @@ export function ItemImageHistoryList({ entries, loading, showItem, onRestore }: 
         // Best candidate to restore: prefer old_path (it was the previous live image
         // before a replace/remove). For an upload entry, new_path is the candidate.
         const restorePath = e.action === 'upload' ? e.new_path : e.old_path;
+        const hasCurrent = !!e.new_path;
+        const hasPrevious = !!e.old_path;
         return (
           <li key={e.id} className="px-4 py-3 flex items-start gap-3">
             <div className={`shrink-0 w-9 h-9 rounded-full border flex items-center justify-center ${COLOR[e.action]}`}>
@@ -102,6 +122,11 @@ export function ItemImageHistoryList({ entries, loading, showItem, onRestore }: 
                 <span className="text-muted-foreground text-xs">
                   {format(new Date(e.changed_at), 'dd/MM/yyyy HH:mm')}
                 </span>
+                {e.notes && (
+                  <span className="text-[10px] text-muted-foreground italic max-w-[260px] truncate" title={e.notes}>
+                    {e.notes}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 {e.action === 'replace' && oldUrl && (
@@ -133,13 +158,39 @@ export function ItemImageHistoryList({ entries, loading, showItem, onRestore }: 
                     <ImageIcon className="w-4 h-4 opacity-50" />
                   </div>
                 )}
+                {hasCurrent && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-[11px] gap-1"
+                    onClick={() => downloadImage(e.new_path!)}
+                    title={t('downloadCurrent')}
+                  >
+                    <Download className="w-3 h-3" />
+                    {t('downloadCurrent')}
+                  </Button>
+                )}
+                {hasPrevious && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-[11px] gap-1"
+                    onClick={() => downloadImage(e.old_path!)}
+                    title={t('downloadPrevious')}
+                  >
+                    <Download className="w-3 h-3" />
+                    {t('downloadPrevious')}
+                  </Button>
+                )}
                 {onRestore && restorePath && (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     className="h-7 px-2 text-[11px] gap-1"
-                    onClick={() => onRestore(e, restorePath)}
+                    onClick={() => setPendingRestore({ entry: e, path: restorePath })}
                     title={t('restoreThisVersion')}
                   >
                     <RotateCcw className="w-3 h-3" />
@@ -152,6 +203,63 @@ export function ItemImageHistoryList({ entries, loading, showItem, onRestore }: 
         );
       })}
     </ul>
+
+    <AlertDialog open={!!pendingRestore} onOpenChange={(o) => !o && setPendingRestore(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-500" />
+            {t('confirmRestoreTitle')}
+          </AlertDialogTitle>
+          <AlertDialogDescription>{t('confirmRestoreDesc')}</AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <div className="space-y-3 py-2">
+          <div className="text-xs">
+            <span className="text-muted-foreground">{t('fileName')}: </span>
+            <span className="font-mono break-all">{restoreFileName}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <div className="text-[11px] text-muted-foreground">{t('currentImage')}</div>
+              <div className="aspect-square rounded border bg-muted/30 overflow-hidden flex items-center justify-center">
+                {currentUrl ? (
+                  <img src={currentUrl} alt="current" className="w-full h-full object-contain" loading="lazy" />
+                ) : (
+                  <ImageIcon className="w-6 h-6 text-muted-foreground opacity-40" />
+                )}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-[11px] text-muted-foreground">{t('versionToRestore')}</div>
+              <div className="aspect-square rounded border-2 border-primary/40 bg-muted/30 overflow-hidden flex items-center justify-center">
+                {restoreUrl ? (
+                  <img src={restoreUrl} alt="restore" className="w-full h-full object-contain" loading="lazy" />
+                ) : (
+                  <ImageIcon className="w-6 h-6 text-muted-foreground opacity-40" />
+                )}
+              </div>
+            </div>
+          </div>
+          <p className="text-[11px] text-muted-foreground">{t('affectedFutureReceipts')}</p>
+        </div>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={async () => {
+              if (pendingRestore && onRestore) {
+                await onRestore(pendingRestore.entry, pendingRestore.path);
+              }
+              setPendingRestore(null);
+            }}
+          >
+            {t('confirm')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
 
