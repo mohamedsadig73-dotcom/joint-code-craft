@@ -170,6 +170,10 @@ export function ItemImageUpload({ partNo, imagePath, onChange, compact, cleanupO
   }, [upload]);
 
   const handleRemove = async () => {
+    if (onBeforeRemove) {
+      const ok = await onBeforeRemove();
+      if (!ok) return;
+    }
     if (imagePath && cleanupOnReplace && imagePath.startsWith('items/')) {
       await supabase.storage.from('box-images').remove([imagePath]);
     }
@@ -204,7 +208,14 @@ export function ItemImageUpload({ partNo, imagePath, onChange, compact, cleanupO
         )}
         {uploading && (
           <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <div className="flex flex-col items-center gap-1.5">
+              <Loader2 className="w-6 h-6 animate-spin" />
+              {retryAttempt > 1 && (
+                <span className="text-[11px] text-muted-foreground">
+                  {t('retryingAttempt')} {retryAttempt}/{MAX_RETRIES}
+                </span>
+              )}
+            </div>
           </div>
         )}
       </div>
