@@ -294,6 +294,21 @@ export function UpdateChecker() {
             </div>
           )}
 
+          {/* Error reason */}
+          {phase === 'error' && errorReason && (
+            <div className="mt-2 p-2 rounded bg-destructive/20 border border-destructive/40 text-xs">
+              <p className="font-semibold mb-1">
+                {isAr ? 'سبب الفشل:' : 'Failure reason:'}
+              </p>
+              <p className="opacity-90 break-words font-mono text-[10px]">{errorReason}</p>
+              <p className="mt-1.5 opacity-75">
+                {isAr
+                  ? `الإصدار المثبّت: v${installedShellVersion} • المستهدف: v${updateInfo.version}`
+                  : `Installed: v${installedShellVersion} • Target: v${updateInfo.version}`}
+              </p>
+            </div>
+          )}
+
           <div className="flex gap-2 mt-3">
             <Button
               size="sm"
