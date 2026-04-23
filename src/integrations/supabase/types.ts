@@ -729,6 +729,51 @@ export type Database = {
           },
         ]
       }
+      item_image_history: {
+        Row: {
+          action: string
+          changed_at: string
+          changed_by: string | null
+          id: string
+          item_id: string
+          new_path: string | null
+          old_path: string | null
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          item_id: string
+          new_path?: string | null
+          old_path?: string | null
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          item_id?: string
+          new_path?: string | null
+          old_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_image_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_image_history_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       items_master: {
         Row: {
           created_at: string

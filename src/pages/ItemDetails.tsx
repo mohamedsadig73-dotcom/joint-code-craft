@@ -12,9 +12,11 @@ import {
 import { useItemsMaster } from '@/hooks/useItemsMaster';
 import { supabase } from '@/integrations/supabase/client';
 import type { BoxReceipt } from '@/hooks/useBoxReceipts';
-import { ArrowLeft, Library, Loader2, ImageIcon, Info } from 'lucide-react';
+import { ArrowLeft, Library, Loader2, ImageIcon, Info, History } from 'lucide-react';
 import { format } from 'date-fns';
 import { ItemImageUpload } from '@/components/boxes/items/ItemImageUpload';
+import { useItemImageHistory } from '@/hooks/useItemImageHistory';
+import { ItemImageHistoryList } from '@/components/boxes/items/ItemImageHistoryList';
 
 export default function ItemDetails() {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +30,11 @@ export default function ItemDetails() {
   const imageUrl = item?.image_path
     ? supabase.storage.from('box-images').getPublicUrl(item.image_path).data.publicUrl
     : null;
+
+  const { entries: imgHistory, loading: imgHistoryLoading } = useItemImageHistory({
+    itemId: id,
+    limit: 20,
+  });
 
   const handleImageChange = async (path: string | null) => {
     if (!item) return;
@@ -132,7 +139,7 @@ export default function ItemDetails() {
               />
               <p className="text-[11px] text-muted-foreground flex items-start gap-1.5">
                 <Info className="w-3 h-3 mt-0.5 shrink-0" />
-                <span>{t('imageInheritedNote')}</span>
+                <span>{t('imageSnapshotNote')}</span>
               </p>
             </CardContent>
           </Card>
@@ -227,6 +234,18 @@ export default function ItemDetails() {
                 </TableBody>
               </Table>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <History className="w-4 h-4 text-muted-foreground" />
+              {t('itemImageHistory')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ItemImageHistoryList entries={imgHistory} loading={imgHistoryLoading} />
           </CardContent>
         </Card>
       </main>

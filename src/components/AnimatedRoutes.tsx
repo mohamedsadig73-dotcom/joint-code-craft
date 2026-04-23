@@ -33,6 +33,7 @@ const ContainerDetails = lazy(() => import('@/pages/ContainerDetails'));
 const BoxesDataAdmin = lazy(() => import('@/pages/BoxesDataAdmin'));
 const ItemsMaster = lazy(() => import('@/pages/ItemsMaster'));
 const ItemDetails = lazy(() => import('@/pages/ItemDetails'));
+const ItemImageHistory = lazy(() => import('@/pages/ItemImageHistory'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -336,6 +337,16 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <ItemDetails />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/boxes/items-image-history"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <ItemImageHistory />
                 </PageTransition>
               </ProtectedRoute>
             }

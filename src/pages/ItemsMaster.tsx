@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { useItemsMaster, useItemReceiptsCount, type ItemMaster } from '@/hooks/useItemsMaster';
 import { ItemFormDialog } from '@/components/boxes/items/ItemFormDialog';
-import { Library, Plus, Search, Edit, Trash2, Eye, Loader2 } from 'lucide-react';
+import { Library, Plus, Search, Edit, Trash2, Eye, Loader2, History } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ImageIcon } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -73,10 +73,20 @@ export default function ItemsMaster() {
               className="ps-9"
             />
           </div>
-          <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-1.5">
-            <Plus className="w-4 h-4" />
-            {t('addItem')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/boxes/items-image-history')}
+              className="gap-1.5"
+            >
+              <History className="w-4 h-4" />
+              {t('imageHistory')}
+            </Button>
+            <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-1.5">
+              <Plus className="w-4 h-4" />
+              {t('addItem')}
+            </Button>
+          </div>
         </div>
 
         <div className="mt-4 rounded-lg border bg-card">

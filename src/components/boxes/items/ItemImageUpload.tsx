@@ -18,7 +18,8 @@ interface Props {
 }
 
 const MAX_BYTES = 5 * 1024 * 1024;
-const ALLOWED = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const ALLOWED = ['image/jpeg', 'image/jpg', 'image/png'];
+const ALLOWED_EXT = ['jpg', 'jpeg', 'png'];
 
 /**
  * Image upload optimized for Items Master.
@@ -40,18 +41,23 @@ export function ItemImageUpload({ partNo, imagePath, onChange, compact, cleanupO
 
   const upload = useCallback(
     async (file: File) => {
-      if (!ALLOWED.includes(file.type)) {
-        toast({ title: t('error'), description: t('invalidImageType'), variant: 'destructive' });
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+      if (!ALLOWED.includes(file.type) || !ALLOWED_EXT.includes(ext)) {
+        const msg = `${t('invalidImageType')} (${file.type || ext || '?'})`;
+        setLastError(msg);
+        toast({ title: t('error'), description: msg, variant: 'destructive' });
         return;
       }
       if (file.size > MAX_BYTES) {
-        toast({ title: t('error'), description: t('imageTooLarge'), variant: 'destructive' });
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+        const msg = `${t('imageTooLarge')} (${sizeMb} MB)`;
+        setLastError(msg);
+        toast({ title: t('error'), description: msg, variant: 'destructive' });
         return;
       }
 
       setUploading(true);
       setLastError(null);
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const safeKey = (partNo?.trim() || 'item').replace(/[^a-zA-Z0-9._-]/g, '_');
       const path = `items/${safeKey}-${Date.now()}.${ext}`;
       const previousPath = imagePath;
@@ -183,7 +189,7 @@ export function ItemImageUpload({ partNo, imagePath, onChange, compact, cleanupO
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,.jpg,.jpeg,.png"
         className="hidden"
         onChange={handleFile}
       />
