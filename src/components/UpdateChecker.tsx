@@ -301,7 +301,11 @@ export function UpdateChecker() {
 
   const phaseLabel: Record<Phase, string> = {
     idle: shellOutdated ? t('downloadFullInstaller') : (isAr ? 'تحديث الآن' : 'Update Now'),
-    downloading: isAr ? 'جاري التحميل...' : 'Downloading...',
+    downloading: isRetrying
+      ? (isAr ? `إعادة المحاولة خلال ${nextRetryIn}ث...` : `Retrying in ${nextRetryIn}s...`)
+      : retryCount > 1
+        ? (isAr ? `محاولة ${retryCount}/${MAX_RETRIES}...` : `Attempt ${retryCount}/${MAX_RETRIES}...`)
+        : (isAr ? 'جاري التحميل...' : 'Downloading...'),
     installing: isAr ? 'جاري التثبيت...' : 'Installing...',
     done: isAr ? 'إعادة التشغيل للتحديث' : 'Restart to Update',
     error: isAr ? 'فشل — حاول مجدداً' : 'Failed — Retry',
@@ -348,19 +352,37 @@ export function UpdateChecker() {
           )}
 
           {/* Error reason */}
-          {phase === 'error' && errorReason && (
-            <div className="mt-2 p-2 rounded bg-destructive/20 border border-destructive/40 text-xs">
-              <p className="font-semibold mb-1">
-                {isAr ? 'سبب الفشل:' : 'Failure reason:'}
-              </p>
-              <p className="opacity-90 break-words font-mono text-[10px]">{errorReason}</p>
-              <p className="mt-1.5 opacity-75">
-                {isAr
-                  ? `الإصدار المثبّت: v${installedShellVersion} • المستهدف: v${updateInfo.version}`
-                  : `Installed: v${installedShellVersion} • Target: v${updateInfo.version}`}
-              </p>
-            </div>
-          )}
+          {phase === 'error' && errorReason && (() => {
+            const hint = classifyUpdateError(errorReason);
+            return (
+              <div className="mt-2 p-2 rounded bg-destructive/20 border border-destructive/40 text-xs space-y-2">
+                <div className="flex items-start gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold">{t(hint.titleKey)}</p>
+                    <p className="opacity-90 mt-0.5">{t(hint.hintKey)}</p>
+                  </div>
+                </div>
+                <p className="opacity-90 break-words font-mono text-[10px] bg-background/30 rounded p-1">
+                  {errorReason}
+                </p>
+                <p className="opacity-75">
+                  {isAr
+                    ? `المثبّت: v${installedShellVersion} • المستهدف: v${updateInfo.version} • محاولات: ${retryCount}/${MAX_RETRIES}`
+                    : `Installed: v${installedShellVersion} • Target: v${updateInfo.version} • Attempts: ${retryCount}/${MAX_RETRIES}`}
+                </p>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="gap-1.5 text-xs h-7 w-full"
+                  onClick={copyErrorReport}
+                >
+                  <Copy className="w-3 h-3" />
+                  {t('copyErrorReport')}
+                </Button>
+              </div>
+            );
+          })()}
 
           <div className="flex gap-2 mt-3">
             <Button
