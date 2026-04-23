@@ -274,7 +274,7 @@ export function AnimatedRoutes() {
             }
           />
           <Route
-            path="/admin/update-diagnostics"
+            path="/update-diagnostics"
             element={
               <ProtectedRoute requiredRole="admin">
                 <PageTransition>

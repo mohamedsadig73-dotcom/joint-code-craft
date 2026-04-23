@@ -1,11 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Download, X, RefreshCw, ExternalLink, CheckCircle, Loader2, Package } from 'lucide-react';
+import { Download, X, RefreshCw, ExternalLink, CheckCircle, Loader2, Package, Copy, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { forceAppUpdate } from '@/components/ForceUpdateButton';
 import { useUpdateLogger } from '@/hooks/useUpdateLogger';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
+import { classifyUpdateError, compareVersions, sleep } from '@/utils/updateErrors';
 
 declare const __BUILD_VERSION__: string;
 declare const __APP_VERSION__: string;
@@ -34,17 +36,6 @@ function parseBuildNumber(value?: string) {
   return digits ? Number(digits) : null;
 }
 
-function compareVersions(a?: string, b?: string) {
-  if (!a || !b) return 0;
-  const ra = a.split('.').map(Number);
-  const rb = b.split('.').map(Number);
-  for (let i = 0; i < Math.max(ra.length, rb.length); i++) {
-    const diff = (ra[i] ?? 0) - (rb[i] ?? 0);
-    if (diff !== 0) return diff > 0 ? 1 : -1;
-  }
-  return 0;
-}
-
 function isRemoteUpdateAvailable(data: PublishedVersionPayload) {
   const rb = parseBuildNumber(data.build);
   const lb = parseBuildNumber(LOCAL_BUILD);
@@ -67,6 +58,9 @@ type UpdateInfo =
 
 type Phase = 'idle' | 'downloading' | 'installing' | 'done' | 'error';
 
+const MAX_RETRIES = 3;
+const BACKOFF_MS = [2000, 5000, 10000]; // 2s, 5s, 10s
+
 export function UpdateChecker() {
   const { t, language } = useLanguage();
   const isAr = language === 'ar';
@@ -79,6 +73,97 @@ export function UpdateChecker() {
   const [shellOutdated, setShellOutdated] = useState(false);
   const [errorReason, setErrorReason] = useState<string | null>(null);
   const [installedShellVersion, setInstalledShellVersion] = useState<string>(LOCAL_VERSION);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [nextRetryIn, setNextRetryIn] = useState(0);
+
+  const runDownloadWithRetry = useCallback(
+    async (info: Extract<UpdateInfo, { type: 'desktop' }>) => {
+      setPhase('downloading');
+      setProgress(0);
+      setErrorReason(null);
+      setRetryCount(0);
+
+      let lastError: unknown = null;
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        setRetryCount(attempt + 1);
+        await log({
+          phase: 'download',
+          status: 'info',
+          targetVersion: info.version,
+          attemptedUrl: info.downloadUrl,
+          metadata: { attempt: attempt + 1, max: MAX_RETRIES },
+        });
+        try {
+          await window.electronAPI?.downloadUpdate(info.downloadUrl);
+          setPhase('done');
+          await log({
+            phase: 'done',
+            status: 'success',
+            targetVersion: info.version,
+            attemptedUrl: info.downloadUrl,
+            metadata: { attempt: attempt + 1 },
+          });
+          return;
+        } catch (err) {
+          lastError = err;
+          const reason = err instanceof Error ? err.message : String(err);
+          console.error(`[UpdateChecker] Attempt ${attempt + 1} failed:`, reason);
+          await log({
+            phase: 'failed',
+            status: 'error',
+            targetVersion: info.version,
+            attemptedUrl: info.downloadUrl,
+            errorMessage: reason,
+            metadata: { attempt: attempt + 1, max: MAX_RETRIES },
+          });
+
+          if (attempt < MAX_RETRIES - 1) {
+            // Backoff with countdown
+            setIsRetrying(true);
+            const wait = BACKOFF_MS[attempt] ?? 5000;
+            const startedAt = Date.now();
+            while (Date.now() - startedAt < wait) {
+              setNextRetryIn(Math.ceil((wait - (Date.now() - startedAt)) / 1000));
+              await sleep(250);
+            }
+            setIsRetrying(false);
+            setNextRetryIn(0);
+            setProgress(0);
+          }
+        }
+      }
+
+      // All attempts failed
+      const finalReason = lastError instanceof Error ? lastError.message : String(lastError);
+      setErrorReason(finalReason);
+      setPhase('error');
+    },
+    [log]
+  );
+
+  const copyErrorReport = useCallback(async () => {
+    if (!updateInfo) return;
+    const lines = [
+      `=== ${isAr ? 'تقرير فشل التحديث' : 'Update Failure Report'} ===`,
+      `Generated: ${new Date().toISOString()}`,
+      `App version: v${LOCAL_VERSION}`,
+      `Installed shell: v${installedShellVersion}`,
+      `Target version: v${updateInfo.version}`,
+      updateInfo.type === 'desktop' ? `Download URL: ${updateInfo.downloadUrl}` : '',
+      `Attempts made: ${retryCount}/${MAX_RETRIES}`,
+      `Environment: ${isElectron ? 'Electron' : 'Web'}`,
+      `User-Agent: ${navigator.userAgent}`,
+      '',
+      '--- Failure reason ---',
+      errorReason ?? '(none)',
+    ].filter(Boolean);
+    await navigator.clipboard.writeText(lines.join('\n'));
+    toast({
+      title: t('reportCopied'),
+      description: t('reportCopiedDesc'),
+    });
+  }, [updateInfo, errorReason, retryCount, installedShellVersion, isAr, t]);
 
   const checkForUpdate = useCallback(async () => {
     try {
@@ -193,41 +278,9 @@ export function UpdateChecker() {
 
     if (updateInfo.type === 'desktop' && isElectron) {
       if (phase === 'done') {
-        // Restart to apply
         await window.electronAPI?.restartApp();
       } else if (phase === 'idle' || phase === 'error') {
-        // Start download + hot-swap
-        setPhase('downloading');
-        setProgress(0);
-        setErrorReason(null);
-        await log({
-          phase: 'download',
-          status: 'info',
-          targetVersion: updateInfo.version,
-          attemptedUrl: updateInfo.downloadUrl,
-        });
-        try {
-          await window.electronAPI?.downloadUpdate(updateInfo.downloadUrl);
-          setPhase('done');
-          await log({
-            phase: 'done',
-            status: 'success',
-            targetVersion: updateInfo.version,
-            attemptedUrl: updateInfo.downloadUrl,
-          });
-        } catch (err) {
-          console.error('[UpdateChecker] Update failed:', err);
-          setPhase('error');
-          const reason = err instanceof Error ? err.message : String(err);
-          setErrorReason(reason);
-          await log({
-            phase: 'failed',
-            status: 'error',
-            targetVersion: updateInfo.version,
-            attemptedUrl: updateInfo.downloadUrl,
-            errorMessage: reason,
-          });
-        }
+        await runDownloadWithRetry(updateInfo);
       }
     } else if (updateInfo.type === 'desktop' && window.electronAPI?.openExternal) {
       await window.electronAPI.openExternal(updateInfo.downloadUrl);
@@ -248,7 +301,11 @@ export function UpdateChecker() {
 
   const phaseLabel: Record<Phase, string> = {
     idle: shellOutdated ? t('downloadFullInstaller') : (isAr ? 'تحديث الآن' : 'Update Now'),
-    downloading: isAr ? 'جاري التحميل...' : 'Downloading...',
+    downloading: isRetrying
+      ? (isAr ? `إعادة المحاولة خلال ${nextRetryIn}ث...` : `Retrying in ${nextRetryIn}s...`)
+      : retryCount > 1
+        ? (isAr ? `محاولة ${retryCount}/${MAX_RETRIES}...` : `Attempt ${retryCount}/${MAX_RETRIES}...`)
+        : (isAr ? 'جاري التحميل...' : 'Downloading...'),
     installing: isAr ? 'جاري التثبيت...' : 'Installing...',
     done: isAr ? 'إعادة التشغيل للتحديث' : 'Restart to Update',
     error: isAr ? 'فشل — حاول مجدداً' : 'Failed — Retry',
@@ -295,19 +352,37 @@ export function UpdateChecker() {
           )}
 
           {/* Error reason */}
-          {phase === 'error' && errorReason && (
-            <div className="mt-2 p-2 rounded bg-destructive/20 border border-destructive/40 text-xs">
-              <p className="font-semibold mb-1">
-                {isAr ? 'سبب الفشل:' : 'Failure reason:'}
-              </p>
-              <p className="opacity-90 break-words font-mono text-[10px]">{errorReason}</p>
-              <p className="mt-1.5 opacity-75">
-                {isAr
-                  ? `الإصدار المثبّت: v${installedShellVersion} • المستهدف: v${updateInfo.version}`
-                  : `Installed: v${installedShellVersion} • Target: v${updateInfo.version}`}
-              </p>
-            </div>
-          )}
+          {phase === 'error' && errorReason && (() => {
+            const hint = classifyUpdateError(errorReason);
+            return (
+              <div className="mt-2 p-2 rounded bg-destructive/20 border border-destructive/40 text-xs space-y-2">
+                <div className="flex items-start gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold">{t(hint.titleKey)}</p>
+                    <p className="opacity-90 mt-0.5">{t(hint.hintKey)}</p>
+                  </div>
+                </div>
+                <p className="opacity-90 break-words font-mono text-[10px] bg-background/30 rounded p-1">
+                  {errorReason}
+                </p>
+                <p className="opacity-75">
+                  {isAr
+                    ? `المثبّت: v${installedShellVersion} • المستهدف: v${updateInfo.version} • محاولات: ${retryCount}/${MAX_RETRIES}`
+                    : `Installed: v${installedShellVersion} • Target: v${updateInfo.version} • Attempts: ${retryCount}/${MAX_RETRIES}`}
+                </p>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="gap-1.5 text-xs h-7 w-full"
+                  onClick={copyErrorReport}
+                >
+                  <Copy className="w-3 h-3" />
+                  {t('copyErrorReport')}
+                </Button>
+              </div>
+            );
+          })()}
 
           <div className="flex gap-2 mt-3">
             <Button
@@ -339,6 +414,16 @@ export function UpdateChecker() {
             >
               {t('updateLog')}
             </Button>
+            {phase === 'error' && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10"
+                onClick={() => navigate('/update-diagnostics')}
+              >
+                {t('runDiagnostics')}
+              </Button>
+            )}
           </div>
         </div>
       </div>
