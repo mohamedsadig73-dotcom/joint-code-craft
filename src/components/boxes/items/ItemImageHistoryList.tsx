@@ -103,10 +103,18 @@ export function ItemImageHistoryList({
   }, [compareEntry]);
 
   /** Wrap downloadImage so failures show a detailed toast (keeps callers terse). */
-  const safeDownload = async (path: string | null | undefined, kind: 'current' | 'previous') => {
+  const safeDownload = async (
+    path: string | null | undefined,
+    kind: 'current' | 'previous',
+    entry?: ItemImageHistoryEntry,
+  ) => {
     if (!path) return;
     try {
       await downloadImage(path);
+      if (entry) {
+        const fileName = path.split('/').pop() || 'image';
+        onDownloaded?.({ kind, fileName, path, entry });
+      }
     } catch (err) {
       const reason = err instanceof Error ? err.message : 'unknown';
       toast({
