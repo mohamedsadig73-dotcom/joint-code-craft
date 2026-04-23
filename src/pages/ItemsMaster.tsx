@@ -14,6 +14,7 @@ import { ItemFormDialog } from '@/components/boxes/items/ItemFormDialog';
 import { Library, Plus, Search, Edit, Trash2, Eye, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ImageIcon } from 'lucide-react';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -110,18 +111,45 @@ export default function ItemsMaster() {
                   return (
                     <TableRow key={item.id}>
                       <TableCell>
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/boxes/items/${item.id}`)}
-                          className="w-10 h-10 rounded-md border bg-muted/30 overflow-hidden flex items-center justify-center hover:ring-2 hover:ring-primary/40 transition"
-                          title={t('view')}
-                        >
-                          {thumbUrl ? (
-                            <img src={thumbUrl} alt={item.part_no} className="w-full h-full object-cover" />
-                          ) : (
+                        {thumbUrl ? (
+                          <HoverCard openDelay={120} closeDelay={80}>
+                            <HoverCardTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => navigate(`/boxes/items/${item.id}`)}
+                                className="w-10 h-10 rounded-md border bg-muted/30 overflow-hidden flex items-center justify-center hover:ring-2 hover:ring-primary/40 transition"
+                                title={t('previewImage')}
+                              >
+                                <img
+                                  src={thumbUrl}
+                                  alt={item.part_no}
+                                  className="w-full h-full object-cover"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    const img = e.currentTarget as HTMLImageElement;
+                                    img.style.display = 'none';
+                                    img.parentElement?.classList.add('text-destructive');
+                                  }}
+                                />
+                              </button>
+                            </HoverCardTrigger>
+                            <HoverCardContent side="right" className="w-64 p-2">
+                              <div className="w-full aspect-square rounded-md overflow-hidden bg-muted/30">
+                                <img src={thumbUrl} alt={item.part_no} className="w-full h-full object-contain" />
+                              </div>
+                              <p className="text-xs font-mono text-center mt-1.5">{item.part_no}</p>
+                            </HoverCardContent>
+                          </HoverCard>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/boxes/items/${item.id}`)}
+                            className="w-10 h-10 rounded-md border border-dashed bg-muted/30 overflow-hidden flex items-center justify-center hover:ring-2 hover:ring-primary/40 transition"
+                            title={t('noImage')}
+                          >
                             <ImageIcon className="w-4 h-4 text-muted-foreground/60" />
-                          )}
-                        </button>
+                          </button>
+                        )}
                       </TableCell>
                       <TableCell className="font-mono text-xs">{item.part_no}</TableCell>
                       <TableCell className="max-w-xs truncate">{item.description}</TableCell>

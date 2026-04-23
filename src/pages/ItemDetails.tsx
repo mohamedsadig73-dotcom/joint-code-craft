@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Navigation } from '@/components/Navigation';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -12,14 +12,15 @@ import {
 import { useItemsMaster } from '@/hooks/useItemsMaster';
 import { supabase } from '@/integrations/supabase/client';
 import type { BoxReceipt } from '@/hooks/useBoxReceipts';
-import { ArrowLeft, Library, Loader2, ImageIcon } from 'lucide-react';
+import { ArrowLeft, Library, Loader2, ImageIcon, Info } from 'lucide-react';
 import { format } from 'date-fns';
+import { ItemImageUpload } from '@/components/boxes/items/ItemImageUpload';
 
 export default function ItemDetails() {
   const { id } = useParams<{ id: string }>();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const navigate = useNavigate();
-  const { items, loading: itemsLoading } = useItemsMaster();
+  const { items, loading: itemsLoading, updateItem } = useItemsMaster();
   const [receipts, setReceipts] = useState<BoxReceipt[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,6 +28,11 @@ export default function ItemDetails() {
   const imageUrl = item?.image_path
     ? supabase.storage.from('box-images').getPublicUrl(item.image_path).data.publicUrl
     : null;
+
+  const handleImageChange = async (path: string | null) => {
+    if (!item) return;
+    await updateItem(item.id, { image_path: path });
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -98,10 +104,18 @@ export default function ItemDetails() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="md:col-span-1">
-            <CardContent className="p-3">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">{t('itemImage')}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 pt-0 space-y-2">
               <div className="w-full aspect-square rounded-md bg-muted/30 border overflow-hidden flex items-center justify-center">
                 {imageUrl ? (
-                  <img src={imageUrl} alt={item.part_no} className="w-full h-full object-contain" />
+                  <img
+                    src={imageUrl}
+                    alt={item.part_no}
+                    className="w-full h-full object-contain"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  />
                 ) : (
                   <div className="flex flex-col items-center text-muted-foreground gap-1.5">
                     <ImageIcon className="w-10 h-10 opacity-40" />
@@ -109,6 +123,17 @@ export default function ItemDetails() {
                   </div>
                 )}
               </div>
+              <ItemImageUpload
+                partNo={item.part_no}
+                imagePath={item.image_path}
+                onChange={handleImageChange}
+                cleanupOnReplace
+                compact
+              />
+              <p className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                <span>{t('imageInheritedNote')}</span>
+              </p>
             </CardContent>
           </Card>
           <Card className="md:col-span-2 flex items-center justify-center">
