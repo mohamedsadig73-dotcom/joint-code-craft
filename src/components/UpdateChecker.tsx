@@ -58,6 +58,9 @@ type UpdateInfo =
 
 type Phase = 'idle' | 'downloading' | 'installing' | 'done' | 'error';
 
+const MAX_RETRIES = 3;
+const BACKOFF_MS = [2000, 5000, 10000]; // 2s, 5s, 10s
+
 export function UpdateChecker() {
   const { t, language } = useLanguage();
   const isAr = language === 'ar';
@@ -70,6 +73,9 @@ export function UpdateChecker() {
   const [shellOutdated, setShellOutdated] = useState(false);
   const [errorReason, setErrorReason] = useState<string | null>(null);
   const [installedShellVersion, setInstalledShellVersion] = useState<string>(LOCAL_VERSION);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [nextRetryIn, setNextRetryIn] = useState(0);
 
   const checkForUpdate = useCallback(async () => {
     try {
@@ -184,41 +190,9 @@ export function UpdateChecker() {
 
     if (updateInfo.type === 'desktop' && isElectron) {
       if (phase === 'done') {
-        // Restart to apply
         await window.electronAPI?.restartApp();
       } else if (phase === 'idle' || phase === 'error') {
-        // Start download + hot-swap
-        setPhase('downloading');
-        setProgress(0);
-        setErrorReason(null);
-        await log({
-          phase: 'download',
-          status: 'info',
-          targetVersion: updateInfo.version,
-          attemptedUrl: updateInfo.downloadUrl,
-        });
-        try {
-          await window.electronAPI?.downloadUpdate(updateInfo.downloadUrl);
-          setPhase('done');
-          await log({
-            phase: 'done',
-            status: 'success',
-            targetVersion: updateInfo.version,
-            attemptedUrl: updateInfo.downloadUrl,
-          });
-        } catch (err) {
-          console.error('[UpdateChecker] Update failed:', err);
-          setPhase('error');
-          const reason = err instanceof Error ? err.message : String(err);
-          setErrorReason(reason);
-          await log({
-            phase: 'failed',
-            status: 'error',
-            targetVersion: updateInfo.version,
-            attemptedUrl: updateInfo.downloadUrl,
-            errorMessage: reason,
-          });
-        }
+        await runDownloadWithRetry(updateInfo);
       }
     } else if (updateInfo.type === 'desktop' && window.electronAPI?.openExternal) {
       await window.electronAPI.openExternal(updateInfo.downloadUrl);
