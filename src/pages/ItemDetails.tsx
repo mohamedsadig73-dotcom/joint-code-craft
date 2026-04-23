@@ -231,6 +231,25 @@ export default function ItemDetails() {
                 <Info className="w-3 h-3 mt-0.5 shrink-0" />
                 <span>{t('imageSnapshotNote')}</span>
               </p>
+              <div className="pt-2 border-t space-y-1.5">
+                <label className="text-[11px] text-muted-foreground block">{t('recentWindow')}</label>
+                <Select
+                  value={String(recentWindowDays)}
+                  onValueChange={(v) => setRecentWindowDays(Number(v))}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RECENT_WINDOW_OPTIONS.map((d) => (
+                      <SelectItem key={d} value={String(d)} className="text-xs">
+                        {t(`days${d}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground leading-snug">{t('recentWindowHint')}</p>
+              </div>
             </CardContent>
           </Card>
           <Card className="md:col-span-2 flex items-center justify-center">
@@ -333,12 +352,37 @@ export default function ItemDetails() {
               <History className="w-4 h-4 text-muted-foreground" />
               {t('itemImageHistory')}
             </CardTitle>
+            <Dialog open={fullHistoryOpen} onOpenChange={setFullHistoryOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <ListVideo className="w-4 h-4" />
+                  {t('viewAll')}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <History className="w-5 h-5 text-muted-foreground" />
+                    {t('fullImageTimeline')} — {item.part_no}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 overflow-y-auto -mx-6 px-2">
+                  <ItemImageHistoryList
+                    entries={imgHistoryFull}
+                    loading={imgHistoryFullLoading}
+                    onRestore={handleRestore}
+                    currentImagePath={item.image_path}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
           </CardHeader>
           <CardContent className="p-0">
             <ItemImageHistoryList
               entries={imgHistory}
               loading={imgHistoryLoading}
               onRestore={handleRestore}
+              currentImagePath={item.image_path}
             />
           </CardContent>
         </Card>
