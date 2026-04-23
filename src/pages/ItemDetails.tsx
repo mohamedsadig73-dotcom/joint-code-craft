@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Navigation } from '@/components/Navigation';
@@ -15,13 +15,18 @@ import type { BoxReceipt } from '@/hooks/useBoxReceipts';
 import { ArrowLeft, Library, Loader2, ImageIcon, Info, History } from 'lucide-react';
 import { format } from 'date-fns';
 import { ItemImageUpload } from '@/components/boxes/items/ItemImageUpload';
-import { useItemImageHistory } from '@/hooks/useItemImageHistory';
+import { useItemImageHistory, type ItemImageHistoryEntry } from '@/hooks/useItemImageHistory';
 import { ItemImageHistoryList } from '@/components/boxes/items/ItemImageHistoryList';
+import { useToast } from '@/hooks/use-toast';
+
+/** Window during which a receipt is considered "recent" and protects the master image. */
+const RECENT_RECEIPT_DAYS = 30;
 
 export default function ItemDetails() {
   const { id } = useParams<{ id: string }>();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { items, loading: itemsLoading, updateItem } = useItemsMaster();
   const [receipts, setReceipts] = useState<BoxReceipt[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +45,42 @@ export default function ItemDetails() {
     if (!item) return;
     await updateItem(item.id, { image_path: path });
   };
+
+  /**
+   * Block image removal when there are recent receipts referencing the
+   * current master image. Replacement is still allowed (snapshots on
+   * existing receipts remain intact).
+   */
+  const guardRemoval = useCallback(async (): Promise<boolean> => {
+    if (!item?.image_path) return true;
+    const since = new Date();
+    since.setDate(since.getDate() - RECENT_RECEIPT_DAYS);
+    const { count } = await supabase
+      .from('box_receipts')
+      .select('id', { count: 'exact', head: true })
+      .eq('item_id', item.id)
+      .eq('image_path', item.image_path)
+      .gte('receipt_date', since.toISOString().slice(0, 10))
+      .is('deleted_at', null);
+    if ((count ?? 0) > 0) {
+      toast({
+        title: t('cannotRemoveImageInUse'),
+        description: t('cannotRemoveImageInUseDesc').replace('{count}', String(count)),
+        variant: 'destructive',
+      });
+      return false;
+    }
+    return true;
+  }, [item, t, toast]);
+
+  const handleRestore = useCallback(
+    async (_entry: ItemImageHistoryEntry, path: string) => {
+      if (!item) return;
+      await updateItem(item.id, { image_path: path });
+      toast({ title: t('success'), description: t('imageRestored') });
+    },
+    [item, updateItem, toast, t]
+  );
 
   useEffect(() => {
     if (!id) return;
@@ -136,6 +177,7 @@ export default function ItemDetails() {
                 onChange={handleImageChange}
                 cleanupOnReplace
                 compact
+                onBeforeRemove={guardRemoval}
               />
               <p className="text-[11px] text-muted-foreground flex items-start gap-1.5">
                 <Info className="w-3 h-3 mt-0.5 shrink-0" />
@@ -245,7 +287,11 @@ export default function ItemDetails() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <ItemImageHistoryList entries={imgHistory} loading={imgHistoryLoading} />
+            <ItemImageHistoryList
+              entries={imgHistory}
+              loading={imgHistoryLoading}
+              onRestore={handleRestore}
+            />
           </CardContent>
         </Card>
       </main>
