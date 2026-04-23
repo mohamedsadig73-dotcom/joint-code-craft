@@ -38,7 +38,7 @@ type TestResult = {
   ok: boolean;
   status?: number;
   error?: string;
-  data?: { desktop_shell_version?: string; min_shell_version?: string; download_url?: string; version?: string };
+  data?: { desktop_shell_version?: string; min_shell_version?: string; download_url?: string; full_download_url?: string; version?: string };
   size?: number;
 };
 

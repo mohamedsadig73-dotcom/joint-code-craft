@@ -18,6 +18,7 @@ type DesktopReleasePayload = {
   min_shell_version?: string;
   web_version: string;
   download_url: string;
+  full_download_url?: string;
   release_notes?: string;
   mandatory?: boolean;
 };
@@ -181,7 +182,7 @@ export function UpdateChecker() {
             setUpdateInfo({
               type: 'desktop',
               version: d.desktop_shell_version,
-              downloadUrl: d.download_url,
+              downloadUrl: d.full_download_url || d.download_url,
               releaseNotes: d.release_notes,
               mandatory: true,
             });
@@ -191,7 +192,7 @@ export function UpdateChecker() {
               status: 'error',
               targetVersion: d.desktop_shell_version,
               shellVersion: localShell,
-              attemptedUrl: d.download_url,
+              attemptedUrl: d.full_download_url || d.download_url,
               errorMessage: `Local shell v${localShell} < min required v${d.min_shell_version}`,
             });
             return;
