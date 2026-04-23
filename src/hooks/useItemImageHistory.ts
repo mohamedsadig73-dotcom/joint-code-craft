@@ -11,6 +11,7 @@ export interface ItemImageHistoryEntry {
   changed_at: string;
   changed_by_username?: string | null;
   item_part_no?: string | null;
+  notes?: string | null;
 }
 
 interface Options {
@@ -42,7 +43,7 @@ export function useItemImageHistory({
     let query = supabase
       .from('item_image_history' as never)
       .select(
-        `id, item_id, action, old_path, new_path, changed_by, changed_at,
+        `id, item_id, action, old_path, new_path, changed_by, changed_at, notes,
          items_master:item_id ( part_no ),
          profiles:changed_by ( username )` as never
       )
@@ -74,6 +75,7 @@ export function useItemImageHistory({
         new_path: string | null;
         changed_by: string | null;
         changed_at: string;
+        notes: string | null;
         items_master: { part_no: string } | null;
         profiles: { username: string } | null;
       }>).map((r) => ({
@@ -84,6 +86,7 @@ export function useItemImageHistory({
         new_path: r.new_path,
         changed_by: r.changed_by,
         changed_at: r.changed_at,
+        notes: r.notes,
         changed_by_username: r.profiles?.username ?? null,
         item_part_no: r.items_master?.part_no ?? null,
       }));
