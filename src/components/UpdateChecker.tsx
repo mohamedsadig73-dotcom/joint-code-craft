@@ -1,11 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Download, X, RefreshCw, ExternalLink, CheckCircle, Loader2, Package } from 'lucide-react';
+import { Download, X, RefreshCw, ExternalLink, CheckCircle, Loader2, Package, Copy, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { forceAppUpdate } from '@/components/ForceUpdateButton';
 import { useUpdateLogger } from '@/hooks/useUpdateLogger';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
+import { classifyUpdateError, compareVersions, sleep } from '@/utils/updateErrors';
 
 declare const __BUILD_VERSION__: string;
 declare const __APP_VERSION__: string;
@@ -32,17 +34,6 @@ function parseBuildNumber(value?: string) {
   if (!value) return null;
   const digits = value.replace(/\D/g, '');
   return digits ? Number(digits) : null;
-}
-
-function compareVersions(a?: string, b?: string) {
-  if (!a || !b) return 0;
-  const ra = a.split('.').map(Number);
-  const rb = b.split('.').map(Number);
-  for (let i = 0; i < Math.max(ra.length, rb.length); i++) {
-    const diff = (ra[i] ?? 0) - (rb[i] ?? 0);
-    if (diff !== 0) return diff > 0 ? 1 : -1;
-  }
-  return 0;
 }
 
 function isRemoteUpdateAvailable(data: PublishedVersionPayload) {
