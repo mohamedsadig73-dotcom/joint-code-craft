@@ -32,6 +32,13 @@ export function ReceiptsTable({ receipts, onEdit, onDelete, canModify }: Props) 
     );
   }, [receipts]);
 
+  // Sticky column classes — actions column stays pinned on the inline-end edge
+  // so users can always reach Edit/Delete without horizontal scrolling.
+  const stickyActions =
+    'sticky end-0 z-20 bg-background shadow-[-4px_0_6px_-4px_hsl(var(--border))] rtl:shadow-[4px_0_6px_-4px_hsl(var(--border))]';
+  const stickyActionsHead =
+    'sticky end-0 z-30 bg-muted/95 backdrop-blur shadow-[-4px_0_6px_-4px_hsl(var(--border))] rtl:shadow-[4px_0_6px_-4px_hsl(var(--border))]';
+
   return (
     <div className="rounded-lg border border-border overflow-hidden">
       <div className="overflow-x-auto">
@@ -50,7 +57,7 @@ export function ReceiptsTable({ receipts, onEdit, onDelete, canModify }: Props) 
               <TableHead>{t('boxNo')}</TableHead>
               <TableHead>{t('date')}</TableHead>
               <TableHead>{t('status')}</TableHead>
-              <TableHead className="w-24 text-center">{t('actions')}</TableHead>
+              <TableHead className={cn('w-24 text-center', stickyActionsHead)}>{t('actions')}</TableHead>
             </TableRow>
             <TableRow className="bg-primary/5 font-semibold">
               <TableCell className="text-center">∑</TableCell>
@@ -59,7 +66,8 @@ export function ReceiptsTable({ receipts, onEdit, onDelete, canModify }: Props) 
                 {t('totalRows')}: {totals.rows.toLocaleString('en-US')}
               </TableCell>
               <TableCell className="text-center">{totals.qty.toLocaleString('en-US')}</TableCell>
-              <TableCell colSpan={7} />
+              <TableCell colSpan={6} />
+              <TableCell className={cn(stickyActions, 'bg-primary/5')} />
             </TableRow>
           </TableHeader>
           <TableBody>
