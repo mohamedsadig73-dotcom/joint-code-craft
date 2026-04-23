@@ -15,23 +15,45 @@ interface Props {
   compact?: boolean;
   /** When true, attempts to remove the previous storage object on replace/remove. */
   cleanupOnReplace?: boolean;
+  /**
+   * Optional guard invoked before the user removes the current image.
+   * Return `true` to allow removal, `false` to cancel.
+   * Useful to block deletions when recent receipts reference the image.
+   */
+  onBeforeRemove?: () => Promise<boolean> | boolean;
 }
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED = ['image/jpeg', 'image/jpg', 'image/png'];
 const ALLOWED_EXT = ['jpg', 'jpeg', 'png'];
+const MAX_RETRIES = 3;
+const RETRY_BASE_DELAY = 800; // ms
+
+function isLikelyNetworkError(message: string): boolean {
+  const m = message.toLowerCase();
+  return (
+    m.includes('network') ||
+    m.includes('failed to fetch') ||
+    m.includes('load failed') ||
+    m.includes('timeout') ||
+    m.includes('econn') ||
+    m.includes('temporarily') ||
+    m.includes('offline')
+  );
+}
 
 /**
  * Image upload optimized for Items Master.
  * Supports: click to pick, drag-and-drop, paste from clipboard.
  * No required external fields — works for new items too.
  */
-export function ItemImageUpload({ partNo, imagePath, onChange, compact, cleanupOnReplace }: Props) {
+export function ItemImageUpload({ partNo, imagePath, onChange, compact, cleanupOnReplace, onBeforeRemove }: Props) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [retryAttempt, setRetryAttempt] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
 
@@ -62,13 +84,36 @@ export function ItemImageUpload({ partNo, imagePath, onChange, compact, cleanupO
       const path = `items/${safeKey}-${Date.now()}.${ext}`;
       const previousPath = imagePath;
 
-      const { error } = await supabase.storage
-        .from('box-images')
-        .upload(path, file, { cacheControl: '3600', upsert: true });
-
+      // Retry loop — handles transient network/connection failures.
+      let lastErr: { message: string } | null = null;
+      let success = false;
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        setRetryAttempt(attempt);
+        try {
+          const { error } = await supabase.storage
+            .from('box-images')
+            .upload(path, file, { cacheControl: '3600', upsert: true });
+          if (!error) {
+            success = true;
+            lastErr = null;
+            break;
+          }
+          lastErr = { message: error.message };
+          // Only retry network-like failures; permission/size/type errors won't recover.
+          if (!isLikelyNetworkError(error.message) || attempt === MAX_RETRIES) break;
+        } catch (e) {
+          lastErr = { message: (e as Error).message || 'Unknown error' };
+          if (!isLikelyNetworkError(lastErr.message) || attempt === MAX_RETRIES) break;
+        }
+        // exponential backoff: 800ms, 1600ms
+        await new Promise((r) => setTimeout(r, RETRY_BASE_DELAY * attempt));
+      }
       setUploading(false);
-      if (error) {
-        const msg = `${t('uploadFailed')}: ${error.message} (${path})`;
+      setRetryAttempt(0);
+      if (!success) {
+        const reason = lastErr?.message || 'unknown';
+        const networkHint = isLikelyNetworkError(reason) ? ` — ${t('checkConnection')}` : '';
+        const msg = `${t('uploadFailed')}: ${reason} (${path})${networkHint}`;
         setLastError(msg);
         toast({ title: t('uploadFailed'), description: msg, variant: 'destructive' });
         return;
