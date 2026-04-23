@@ -737,6 +737,7 @@ export type Database = {
           id: string
           item_id: string
           new_path: string | null
+          notes: string | null
           old_path: string | null
         }
         Insert: {
@@ -746,6 +747,7 @@ export type Database = {
           id?: string
           item_id: string
           new_path?: string | null
+          notes?: string | null
           old_path?: string | null
         }
         Update: {
@@ -755,6 +757,7 @@ export type Database = {
           id?: string
           item_id?: string
           new_path?: string | null
+          notes?: string | null
           old_path?: string | null
         }
         Relationships: [

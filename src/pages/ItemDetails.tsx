@@ -9,18 +9,25 @@ import { Button } from '@/components/ui/button';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { useItemsMaster } from '@/hooks/useItemsMaster';
 import { supabase } from '@/integrations/supabase/client';
 import type { BoxReceipt } from '@/hooks/useBoxReceipts';
-import { ArrowLeft, Library, Loader2, ImageIcon, Info, History } from 'lucide-react';
+import { ArrowLeft, Library, Loader2, ImageIcon, Info, History, ListVideo } from 'lucide-react';
 import { format } from 'date-fns';
 import { ItemImageUpload } from '@/components/boxes/items/ItemImageUpload';
-import { useItemImageHistory, type ItemImageHistoryEntry } from '@/hooks/useItemImageHistory';
+import { useItemImageHistory, logImageRestoreOutcome, type ItemImageHistoryEntry } from '@/hooks/useItemImageHistory';
 import { ItemImageHistoryList } from '@/components/boxes/items/ItemImageHistoryList';
 import { useToast } from '@/hooks/use-toast';
 
-/** Window during which a receipt is considered "recent" and protects the master image. */
-const RECENT_RECEIPT_DAYS = 30;
+/** Allowed configurable windows (days) for the "recent receipts" guard. */
+const RECENT_WINDOW_OPTIONS = [30, 60, 90] as const;
+const RECENT_WINDOW_STORAGE_KEY = 'itemDetails.recentWindowDays';
 
 export default function ItemDetails() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +37,20 @@ export default function ItemDetails() {
   const { items, loading: itemsLoading, updateItem } = useItemsMaster();
   const [receipts, setReceipts] = useState<BoxReceipt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [recentWindowDays, setRecentWindowDays] = useState<number>(() => {
+    if (typeof window === 'undefined') return 30;
+    const stored = Number(window.localStorage.getItem(RECENT_WINDOW_STORAGE_KEY));
+    return RECENT_WINDOW_OPTIONS.includes(stored as typeof RECENT_WINDOW_OPTIONS[number])
+      ? stored
+      : 30;
+  });
+  const [fullHistoryOpen, setFullHistoryOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(RECENT_WINDOW_STORAGE_KEY, String(recentWindowDays));
+    }
+  }, [recentWindowDays]);
 
   const item = useMemo(() => items.find((i) => i.id === id), [items, id]);
   const imageUrl = item?.image_path
@@ -39,6 +60,10 @@ export default function ItemDetails() {
   const { entries: imgHistory, loading: imgHistoryLoading } = useItemImageHistory({
     itemId: id,
     limit: 20,
+  });
+  const { entries: imgHistoryFull, loading: imgHistoryFullLoading } = useItemImageHistory({
+    itemId: fullHistoryOpen ? id : undefined,
+    limit: 500,
   });
 
   const handleImageChange = async (path: string | null) => {
@@ -54,7 +79,7 @@ export default function ItemDetails() {
   const guardRemoval = useCallback(async (): Promise<boolean> => {
     if (!item?.image_path) return true;
     const since = new Date();
-    since.setDate(since.getDate() - RECENT_RECEIPT_DAYS);
+    since.setDate(since.getDate() - recentWindowDays);
     const { count } = await supabase
       .from('box_receipts')
       .select('id', { count: 'exact', head: true })
@@ -71,13 +96,36 @@ export default function ItemDetails() {
       return false;
     }
     return true;
-  }, [item, t, toast]);
+  }, [item, t, toast, recentWindowDays]);
 
   const handleRestore = useCallback(
     async (_entry: ItemImageHistoryEntry, path: string) => {
       if (!item) return;
-      await updateItem(item.id, { image_path: path });
-      toast({ title: t('success'), description: t('imageRestored') });
+      const fromPath = item.image_path ?? null;
+      try {
+        await updateItem(item.id, { image_path: path });
+        await logImageRestoreOutcome({
+          itemId: item.id,
+          fromPath,
+          toPath: path,
+          success: true,
+        });
+        toast({ title: t('success'), description: t('restoreSucceeded') });
+      } catch (err) {
+        const reason = err instanceof Error ? err.message : 'unknown';
+        await logImageRestoreOutcome({
+          itemId: item.id,
+          fromPath,
+          toPath: path,
+          success: false,
+          reason,
+        }).catch(() => undefined);
+        toast({
+          title: t('restoreFailed'),
+          description: reason,
+          variant: 'destructive',
+        });
+      }
     },
     [item, updateItem, toast, t]
   );
@@ -183,6 +231,25 @@ export default function ItemDetails() {
                 <Info className="w-3 h-3 mt-0.5 shrink-0" />
                 <span>{t('imageSnapshotNote')}</span>
               </p>
+              <div className="pt-2 border-t space-y-1.5">
+                <label className="text-[11px] text-muted-foreground block">{t('recentWindow')}</label>
+                <Select
+                  value={String(recentWindowDays)}
+                  onValueChange={(v) => setRecentWindowDays(Number(v))}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RECENT_WINDOW_OPTIONS.map((d) => (
+                      <SelectItem key={d} value={String(d)} className="text-xs">
+                        {t(`days${d}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground leading-snug">{t('recentWindowHint')}</p>
+              </div>
             </CardContent>
           </Card>
           <Card className="md:col-span-2 flex items-center justify-center">
@@ -285,12 +352,37 @@ export default function ItemDetails() {
               <History className="w-4 h-4 text-muted-foreground" />
               {t('itemImageHistory')}
             </CardTitle>
+            <Dialog open={fullHistoryOpen} onOpenChange={setFullHistoryOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <ListVideo className="w-4 h-4" />
+                  {t('viewAll')}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <History className="w-5 h-5 text-muted-foreground" />
+                    {t('fullImageTimeline')} — {item.part_no}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 overflow-y-auto -mx-6 px-2">
+                  <ItemImageHistoryList
+                    entries={imgHistoryFull}
+                    loading={imgHistoryFullLoading}
+                    onRestore={handleRestore}
+                    currentImagePath={item.image_path}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
           </CardHeader>
           <CardContent className="p-0">
             <ItemImageHistoryList
               entries={imgHistory}
               loading={imgHistoryLoading}
               onRestore={handleRestore}
+              currentImagePath={item.image_path}
             />
           </CardContent>
         </Card>
