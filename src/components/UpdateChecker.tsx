@@ -77,6 +77,8 @@ export function UpdateChecker() {
   const [phase, setPhase] = useState<Phase>('idle');
   const [progress, setProgress] = useState(0);
   const [shellOutdated, setShellOutdated] = useState(false);
+  const [errorReason, setErrorReason] = useState<string | null>(null);
+  const [installedShellVersion, setInstalledShellVersion] = useState<string>(LOCAL_VERSION);
 
   const checkForUpdate = useCallback(async () => {
     try {
@@ -88,6 +90,7 @@ export function UpdateChecker() {
           if (window.electronAPI?.getShellVersion) {
             try { localShell = await window.electronAPI.getShellVersion(); } catch { /* ignore */ }
           }
+          setInstalledShellVersion(localShell);
           if (d.min_shell_version && compareVersions(localShell, d.min_shell_version) < 0) {
             setShellOutdated(true);
             setUpdateInfo({
@@ -108,7 +111,8 @@ export function UpdateChecker() {
             });
             return;
           }
-          if (compareVersions(d.desktop_shell_version, LOCAL_VERSION) > 0) {
+          // Compare against installed shell version (not bundled web LOCAL_VERSION)
+          if (compareVersions(d.desktop_shell_version, localShell) > 0) {
             setUpdateInfo({
               type: 'desktop',
               version: d.desktop_shell_version,
