@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
@@ -6,10 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Plus, Search, Download, Upload, Loader2, Package, PackageOpen, Layers } from 'lucide-react';
+import {
+  Plus, Search, Download, Upload, Loader2, Package, PackageOpen, Layers,
+  Columns3, Trash2, X,
+} from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useBoxReceipts, type BoxReceipt, type BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { useBoxSummary } from '@/hooks/useBoxSummary';
-import { ReceiptsTable } from './ReceiptsTable';
+import { ReceiptsTable, ALL_RECEIPT_COLUMNS, type ReceiptColumnKey } from './ReceiptsTable';
 import { ReceiptMobileCard } from './ReceiptMobileCard';
 import { ReceiptFormDialog } from './ReceiptFormDialog';
 import { ReceiptsPrintPreview } from './ReceiptsPrintPreview';
@@ -21,6 +28,8 @@ import { exportBoxesToExcel, parseReceiptsFromExcel } from '@/utils/boxesExcelEx
 import { BOX_DESTINATIONS, BOX_STATUSES, PACKING_TYPES } from '@/utils/boxNumberValidation';
 import { ImportDuplicateDialog, type ImportResolution } from './ImportDuplicateDialog';
 import { findImportDuplicates, type ImportDuplicateMatch } from '@/utils/boxDuplicateAnalysis';
+
+const COLUMN_PREFS_KEY = 'receipts.visibleColumns.v1';
 
 export function ReceiptsTab() {
   const { user } = useAuth();
@@ -46,6 +55,35 @@ export function ReceiptsTab() {
   const [toDelete, setToDelete] = useState<BoxReceipt | null>(null);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Multi-select state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  // Column visibility (persisted)
+  const [visibleColumns, setVisibleColumns] = useState<ReceiptColumnKey[]>(() => {
+    try {
+      const raw = localStorage.getItem(COLUMN_PREFS_KEY);
+      if (raw) {
+        const arr = JSON.parse(raw) as ReceiptColumnKey[];
+        if (Array.isArray(arr) && arr.length > 0) {
+          return arr.filter((c) => ALL_RECEIPT_COLUMNS.includes(c));
+        }
+      }
+    } catch { /* noop */ }
+    return ALL_RECEIPT_COLUMNS;
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem(COLUMN_PREFS_KEY, JSON.stringify(visibleColumns)); } catch { /* noop */ }
+  }, [visibleColumns]);
+
+  const toggleColumn = (key: ReceiptColumnKey) => {
+    setVisibleColumns((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...ALL_RECEIPT_COLUMNS.filter((c) => prev.includes(c) || c === key)]
+    );
+  };
 
   // Import duplicate detection state
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -92,6 +130,67 @@ export function ReceiptsTab() {
       );
     });
   }, [receipts, search, destFilter, statusFilter, packingFilter]);
+
+  // Drop selections that no longer match the filter
+  useEffect(() => {
+    if (selectedIds.size === 0) return;
+    const visibleIds = new Set(filtered.map((r) => r.id));
+    let changed = false;
+    const next = new Set<string>();
+    selectedIds.forEach((id) => {
+      if (visibleIds.has(id)) next.add(id);
+      else changed = true;
+    });
+    if (changed) setSelectedIds(next);
+  }, [filtered, selectedIds]);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (filtered.every((r) => selectedIds.has(r.id))) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((r) => r.id)));
+    }
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const selectedReceipts = useMemo(
+    () => filtered.filter((r) => selectedIds.has(r.id)),
+    [filtered, selectedIds]
+  );
+
+  const handleBulkDelete = async () => {
+    if (selectedReceipts.length === 0) return;
+    setBulkDeleting(true);
+    try {
+      const allowed = selectedReceipts.filter(canModify);
+      let ok = 0;
+      for (const r of allowed) {
+        try { await deleteReceipt(r.id); ok++; } catch { /* continue */ }
+      }
+      toast({
+        title: t('success'),
+        description: `${ok}/${selectedReceipts.length} ${t('deleted')}`,
+      });
+      clearSelection();
+    } finally {
+      setBulkDeleting(false);
+      setBulkDeleteOpen(false);
+    }
+  };
+
+  const handleBulkExport = async () => {
+    await exportBoxesToExcel(selectedReceipts, summary, language);
+    toast({ title: t('success'), description: t('excelExported') });
+  };
 
   const handleAdd = () => {
     setEditing(null);
@@ -221,8 +320,8 @@ export function ReceiptsTab() {
         </ToggleGroupItem>
       </ToggleGroup>
 
-      {/* Toolbar */}
-      <div className="flex flex-col md:flex-row gap-2">
+      {/* Sticky toolbar */}
+      <div className="sticky top-0 z-20 -mx-2 px-2 py-2 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/60 flex flex-col md:flex-row gap-2">
         <div className="relative flex-1">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -253,7 +352,47 @@ export function ReceiptsTab() {
             {PACKING_TYPES.map((p) => <SelectItem key={p} value={p}>{t(p)}</SelectItem>)}
           </SelectContent>
         </Select>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-1.5">
+                <Columns3 className="w-4 h-4" />
+                <span className="hidden sm:inline">{t('columns')}</span>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  ({visibleColumns.length}/{ALL_RECEIPT_COLUMNS.length})
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>{t('toggleColumns')}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {ALL_RECEIPT_COLUMNS.map((col) => {
+                const labelKey =
+                  col === 'packing' ? 'packingType'
+                  : col === 'partNo' ? 'partNo'
+                  : col === 'boxNo' ? 'boxNo'
+                  : col;
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={col}
+                    checked={visibleColumns.includes(col)}
+                    onCheckedChange={() => toggleColumn(col)}
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    {t(labelKey)}
+                  </DropdownMenuCheckboxItem>
+                );
+              })}
+              <DropdownMenuSeparator />
+              <button
+                type="button"
+                className="w-full text-xs px-2 py-1.5 text-muted-foreground hover:bg-accent rounded-sm text-start"
+                onClick={() => setVisibleColumns(ALL_RECEIPT_COLUMNS)}
+              >
+                {t('resetColumns')}
+              </button>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" onClick={handleExport} disabled={receipts.length === 0}>
             <Download className="w-4 h-4 me-1.5" />
             {t('export')}
@@ -289,6 +428,34 @@ export function ReceiptsTab() {
         </div>
       </div>
 
+      {/* Bulk actions bar */}
+      {selectedIds.size > 0 && (
+        <div className="sticky top-[64px] z-20 flex flex-wrap items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm animate-in slide-in-from-top-2 fade-in duration-200">
+          <span className="font-semibold">
+            {selectedIds.size} {t('selected')}
+          </span>
+          <div className="ms-auto flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={handleBulkExport}>
+              <Download className="w-3.5 h-3.5 me-1.5" />
+              {t('export')}
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => setBulkDeleteOpen(true)}
+              disabled={!selectedReceipts.some(canModify)}
+            >
+              <Trash2 className="w-3.5 h-3.5 me-1.5" />
+              {t('delete')}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={clearSelection}>
+              <X className="w-3.5 h-3.5 me-1.5" />
+              {t('clear')}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center py-12 text-muted-foreground">
@@ -297,15 +464,19 @@ export function ReceiptsTab() {
         </div>
       ) : (
         <>
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <ReceiptsTable
               receipts={filtered}
               onEdit={handleEdit}
               onDelete={setToDelete}
               canModify={canModify}
+              visibleColumns={visibleColumns}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onToggleSelectAll={toggleSelectAll}
             />
           </div>
-          <div className="md:hidden space-y-2">
+          <div className="lg:hidden space-y-2">
             {filtered.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground text-sm">{t('noReceiptsYet')}</div>
             ) : (
@@ -342,6 +513,27 @@ export function ReceiptsTab() {
             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {t('delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('bulkDelete')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('bulkDeleteConfirm').replace('{count}', String(selectedReceipts.filter(canModify).length))}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {bulkDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : t('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
