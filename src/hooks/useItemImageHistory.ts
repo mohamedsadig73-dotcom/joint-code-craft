@@ -16,9 +16,24 @@ export interface ItemImageHistoryEntry {
 interface Options {
   itemId?: string;
   limit?: number;
+  /** Filter by changer user id (profiles.id). */
+  userId?: string;
+  /** Filter by action type. */
+  action?: 'upload' | 'replace' | 'remove';
+  /** Inclusive ISO date (yyyy-mm-dd) — entries on/after this date. */
+  fromDate?: string;
+  /** Inclusive ISO date (yyyy-mm-dd) — entries on/before this date. */
+  toDate?: string;
 }
 
-export function useItemImageHistory({ itemId, limit = 100 }: Options = {}) {
+export function useItemImageHistory({
+  itemId,
+  limit = 100,
+  userId,
+  action,
+  fromDate,
+  toDate,
+}: Options = {}) {
   const [entries, setEntries] = useState<ItemImageHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +51,18 @@ export function useItemImageHistory({ itemId, limit = 100 }: Options = {}) {
 
     if (itemId) {
       query = (query as ReturnType<typeof query.eq>).eq('item_id', itemId);
+    }
+    if (userId) {
+      query = (query as ReturnType<typeof query.eq>).eq('changed_by', userId);
+    }
+    if (action) {
+      query = (query as ReturnType<typeof query.eq>).eq('action', action);
+    }
+    if (fromDate) {
+      query = (query as ReturnType<typeof query.gte>).gte('changed_at', `${fromDate}T00:00:00`);
+    }
+    if (toDate) {
+      query = (query as ReturnType<typeof query.lte>).lte('changed_at', `${toDate}T23:59:59`);
     }
     const { data, error } = await query;
     if (!error && data) {
@@ -63,7 +90,7 @@ export function useItemImageHistory({ itemId, limit = 100 }: Options = {}) {
       setEntries(rows);
     }
     setLoading(false);
-  }, [itemId, limit]);
+  }, [itemId, limit, userId, action, fromDate, toDate]);
 
   useEffect(() => {
     fetchEntries();
