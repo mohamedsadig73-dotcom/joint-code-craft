@@ -1,12 +1,13 @@
 {
   "name": "vite_react_shadcn_ts",
   "private": true,
-  "version": "0.0.0",
+  "version": "4.4.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "desktop:stage": "rm -rf desktop-stage && mkdir -p desktop-stage && cp -R dist electron package.json package-lock.json node_modules desktop-stage/",
     "lint": "eslint .",
     "preview": "vite preview"
   },
