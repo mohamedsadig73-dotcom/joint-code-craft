@@ -7,7 +7,12 @@ import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { X, Download, Search } from 'lucide-react';
+import { X, Download, Search, FileText, Settings2 } from 'lucide-react';
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import {
   useItemImageHistory,
@@ -15,9 +20,53 @@ import {
 } from '@/hooks/useItemImageHistory';
 import { ItemImageHistoryList } from './ItemImageHistoryList';
 import { supabase } from '@/integrations/supabase/client';
+import { exportImageHistoryPdf } from '@/utils/imageHistoryPdf';
+import { useImageDownloadLog } from '@/hooks/useImageDownloadLog';
 
 const ALL = '__all__';
 type ActionFilter = 'upload' | 'replace' | 'remove' | typeof ALL;
+
+/** Available CSV columns (key + i18n label-key). */
+const CSV_COLUMNS = [
+  { key: 'user', labelKey: 'csvUser' },
+  { key: 'date', labelKey: 'csvDate' },
+  { key: 'action', labelKey: 'csvAction' },
+  { key: 'partNo', labelKey: 'csvPartNo' },
+  { key: 'fileName', labelKey: 'csvFileName' },
+  { key: 'currentPath', labelKey: 'csvCurrentPath' },
+  { key: 'previousPath', labelKey: 'csvPreviousPath' },
+  { key: 'outcome', labelKey: 'csvOutcome' },
+  { key: 'reason', labelKey: 'csvReason' },
+] as const;
+type CsvColKey = typeof CSV_COLUMNS[number]['key'];
+const DEFAULT_COLS: CsvColKey[] = CSV_COLUMNS.map((c) => c.key);
+
+interface PersistedFilters {
+  userId: string;
+  actionFilter: ActionFilter;
+  fromDate: string;
+  toDate: string;
+  search: string;
+  csvCols: CsvColKey[];
+}
+
+const FILTER_STORAGE_PREFIX = 'image_history_viewer_filters_v1:';
+
+function readFilters(scope: string): Partial<PersistedFilters> | null {
+  try {
+    const raw = localStorage.getItem(`${FILTER_STORAGE_PREFIX}${scope}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+function writeFilters(scope: string, value: PersistedFilters) {
+  try {
+    localStorage.setItem(`${FILTER_STORAGE_PREFIX}${scope}`, JSON.stringify(value));
+  } catch {
+    /* quota — ignore */
+  }
+}
 
 interface Props {
   /** When provided, restricts history to a single item. */
@@ -48,13 +97,28 @@ export function ItemImageHistoryViewer({
   compact,
 }: Props) {
   const { t, language } = useLanguage();
+  const { toast } = useToast();
+  const { log: logDownload } = useImageDownloadLog();
+  const scope = itemId ?? 'all';
+  const persisted = useMemo(() => readFilters(scope), [scope]);
 
-  const [userId, setUserId] = useState<string>(ALL);
-  const [actionFilter, setActionFilter] = useState<ActionFilter>(ALL);
-  const [fromDate, setFromDate] = useState<string>('');
-  const [toDate, setToDate] = useState<string>('');
-  const [search, setSearch] = useState<string>('');
+  const [userId, setUserId] = useState<string>(persisted?.userId ?? ALL);
+  const [actionFilter, setActionFilter] = useState<ActionFilter>(
+    (persisted?.actionFilter as ActionFilter) ?? ALL,
+  );
+  const [fromDate, setFromDate] = useState<string>(persisted?.fromDate ?? '');
+  const [toDate, setToDate] = useState<string>(persisted?.toDate ?? '');
+  const [search, setSearch] = useState<string>(persisted?.search ?? '');
+  const [csvCols, setCsvCols] = useState<CsvColKey[]>(
+    persisted?.csvCols && persisted.csvCols.length > 0 ? persisted.csvCols : DEFAULT_COLS,
+  );
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [users, setUsers] = useState<Array<{ id: string; username: string }>>([]);
+
+  // Persist filters whenever any control changes (per scope).
+  useEffect(() => {
+    writeFilters(scope, { userId, actionFilter, fromDate, toDate, search, csvCols });
+  }, [scope, userId, actionFilter, fromDate, toDate, search, csvCols]);
 
   const { entries, loading } = useItemImageHistory({
     itemId,
@@ -111,18 +175,24 @@ export function ItemImageHistoryViewer({
     setSearch('');
   };
 
+  const toggleCol = (key: CsvColKey) => {
+    setCsvCols((curr) =>
+      curr.includes(key) ? curr.filter((k) => k !== key) : [...curr, key],
+    );
+  };
+
   const exportCsv = () => {
-    const headers = [
-      t('csvUser'),
-      t('csvDate'),
-      t('csvAction'),
-      t('csvPartNo'),
-      t('csvFileName'),
-      t('csvCurrentPath'),
-      t('csvPreviousPath'),
-      t('csvOutcome'),
-      t('csvReason'),
-    ];
+    // Maintain canonical column order regardless of toggle order.
+    const activeCols = CSV_COLUMNS.filter((c) => csvCols.includes(c.key));
+    if (activeCols.length === 0) {
+      toast({
+        title: t('exportCsv'),
+        description: t('csvSelectAtLeastOne'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    const headers = activeCols.map((c) => t(c.labelKey));
     const rows = filteredEntries.map((e) => {
       // Derive outcome / reason from notes (set by logImageRestoreOutcome)
       let outcome = '';
@@ -139,17 +209,18 @@ export function ItemImageHistoryViewer({
         }
       }
       const fileName = (e.new_path ?? e.old_path ?? '').split('/').pop() ?? '';
-      return [
-        e.changed_by_username ?? '',
-        format(new Date(e.changed_at), 'yyyy-MM-dd HH:mm:ss'),
-        e.action,
-        e.item_part_no ?? '',
+      const map: Record<CsvColKey, string> = {
+        user: e.changed_by_username ?? '',
+        date: format(new Date(e.changed_at), 'dd/MM/yyyy HH:mm:ss'),
+        action: e.action,
+        partNo: e.item_part_no ?? '',
         fileName,
-        e.new_path ?? '',
-        e.old_path ?? '',
+        currentPath: e.new_path ?? '',
+        previousPath: e.old_path ?? '',
         outcome,
         reason,
-      ];
+      };
+      return activeCols.map((c) => map[c.key]);
     });
     const escape = (val: string) => {
       const v = String(val ?? '');
@@ -170,6 +241,52 @@ export function ItemImageHistoryViewer({
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+  };
+
+  const exportPdf = async () => {
+    if (filteredEntries.length === 0) return;
+    setPdfBusy(true);
+    try {
+      await exportImageHistoryPdf(filteredEntries, {
+        title: t('itemImageHistory'),
+        subtitle: format(new Date(), 'dd/MM/yyyy HH:mm'),
+      });
+      toast({ title: t('pdfExportReady') });
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : 'unknown';
+      toast({
+        title: t('pdfExportFailed'),
+        description: reason,
+        variant: 'destructive',
+      });
+    } finally {
+      setPdfBusy(false);
+    }
+  };
+
+  const handleDownloaded = async (info: {
+    kind: 'current' | 'previous';
+    fileName: string;
+    path: string;
+    entry: ItemImageHistoryEntry;
+  }) => {
+    const logged = await logDownload({
+      kind: info.kind,
+      fileName: info.fileName,
+      path: info.path,
+      itemId: info.entry.item_id,
+      partNo: info.entry.item_part_no ?? null,
+    });
+    toast({
+      title:
+        info.kind === 'current'
+          ? t('downloadedCurrentToast')
+          : t('downloadedPreviousToast'),
+      description: `${info.fileName} · ${logged.username ?? '—'} · ${format(
+        new Date(logged.at),
+        'dd/MM/yyyy HH:mm',
+      )}`,
+    });
   };
 
   return (
@@ -254,15 +371,63 @@ export function ItemImageHistoryViewer({
                 <X className="w-4 h-4" />
                 {t('clearFilters')}
               </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    title={t('csvColumns')}
+                  >
+                    <Settings2 className="w-4 h-4" />
+                    {t('csvColumns')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-60 p-3">
+                  <div className="space-y-2">
+                    <div className="text-xs font-medium">{t('csvColumns')}</div>
+                    <p className="text-[11px] text-muted-foreground">{t('csvColumnsHint')}</p>
+                    <div className="space-y-1.5 pt-1">
+                      {CSV_COLUMNS.map((c) => {
+                        const checked = csvCols.includes(c.key);
+                        return (
+                          <label
+                            key={c.key}
+                            className="flex items-center gap-2 text-xs cursor-pointer"
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={() => toggleCol(c.key)}
+                            />
+                            <span>{t(c.labelKey)}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <Button
                 type="button"
                 size="sm"
                 onClick={exportCsv}
                 disabled={filteredEntries.length === 0}
                 className="gap-1.5"
+                variant="outline"
               >
                 <Download className="w-4 h-4" />
                 {t('exportCsv')}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={exportPdf}
+                disabled={filteredEntries.length === 0 || pdfBusy}
+                className="gap-1.5"
+              >
+                <FileText className="w-4 h-4" />
+                {pdfBusy ? `${t('loading')}…` : t('exportPdfSummary')}
               </Button>
             </div>
           </div>
@@ -277,6 +442,7 @@ export function ItemImageHistoryViewer({
             showItem={showItem}
             onRestore={onRestore}
             currentImagePath={currentImagePath}
+            onDownloaded={handleDownloaded}
           />
         </CardContent>
       </Card>
