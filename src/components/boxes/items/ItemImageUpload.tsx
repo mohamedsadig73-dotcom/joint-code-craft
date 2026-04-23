@@ -13,6 +13,8 @@ interface Props {
   onChange: (path: string | null) => void;
   /** Optional smaller height for compact layouts. */
   compact?: boolean;
+  /** When true, attempts to remove the previous storage object on replace/remove. */
+  cleanupOnReplace?: boolean;
 }
 
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -23,11 +25,12 @@ const ALLOWED = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
  * Supports: click to pick, drag-and-drop, paste from clipboard.
  * No required external fields — works for new items too.
  */
-export function ItemImageUpload({ partNo, imagePath, onChange, compact }: Props) {
+export function ItemImageUpload({ partNo, imagePath, onChange, compact, cleanupOnReplace }: Props) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
 
@@ -47,9 +50,11 @@ export function ItemImageUpload({ partNo, imagePath, onChange, compact }: Props)
       }
 
       setUploading(true);
+      setLastError(null);
       const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const safeKey = (partNo?.trim() || 'item').replace(/[^a-zA-Z0-9._-]/g, '_');
       const path = `items/${safeKey}-${Date.now()}.${ext}`;
+      const previousPath = imagePath;
 
       const { error } = await supabase.storage
         .from('box-images')
@@ -57,13 +62,19 @@ export function ItemImageUpload({ partNo, imagePath, onChange, compact }: Props)
 
       setUploading(false);
       if (error) {
-        toast({ title: t('error'), description: error.message, variant: 'destructive' });
+        const msg = `${t('uploadFailed')}: ${error.message} (${path})`;
+        setLastError(msg);
+        toast({ title: t('uploadFailed'), description: msg, variant: 'destructive' });
         return;
+      }
+      // Clean previous storage object if requested and it lives under items/
+      if (cleanupOnReplace && previousPath && previousPath !== path && previousPath.startsWith('items/')) {
+        await supabase.storage.from('box-images').remove([previousPath]);
       }
       onChange(path);
       toast({ title: t('success'), description: t('imageUploaded') });
     },
-    [partNo, onChange, toast, t]
+    [partNo, onChange, toast, t, imagePath, cleanupOnReplace]
   );
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,11 +90,16 @@ export function ItemImageUpload({ partNo, imagePath, onChange, compact }: Props)
     if (file) upload(file);
   };
 
-  // Paste from clipboard (Ctrl/Cmd+V) when the drop zone is focused/hovered.
+  // Paste from clipboard (Ctrl/Cmd+V) — only active while pointer is over the drop zone
+  // to avoid hijacking pastes elsewhere on the page.
   useEffect(() => {
     const el = dropRef.current;
     if (!el) return;
-    const handler = (e: ClipboardEvent) => {
+    let active = false;
+    const onEnter = () => { active = true; };
+    const onLeave = () => { active = false; };
+    const onPaste = (e: ClipboardEvent) => {
+      if (!active) return;
       const item = Array.from(e.clipboardData?.items || []).find((i) => i.type.startsWith('image/'));
       if (!item) return;
       const file = item.getAsFile();
@@ -92,15 +108,23 @@ export function ItemImageUpload({ partNo, imagePath, onChange, compact }: Props)
         upload(file);
       }
     };
-    window.addEventListener('paste', handler);
-    return () => window.removeEventListener('paste', handler);
+    el.addEventListener('mouseenter', onEnter);
+    el.addEventListener('mouseleave', onLeave);
+    window.addEventListener('paste', onPaste);
+    return () => {
+      el.removeEventListener('mouseenter', onEnter);
+      el.removeEventListener('mouseleave', onLeave);
+      window.removeEventListener('paste', onPaste);
+    };
   }, [upload]);
 
   const handleRemove = async () => {
-    if (imagePath) {
+    if (imagePath && cleanupOnReplace && imagePath.startsWith('items/')) {
       await supabase.storage.from('box-images').remove([imagePath]);
     }
     onChange(null);
+    setLastError(null);
+    toast({ title: t('success'), description: t('imageRemoved') });
   };
 
   return (
