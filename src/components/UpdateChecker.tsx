@@ -414,6 +414,16 @@ export function UpdateChecker() {
             >
               {t('updateLog')}
             </Button>
+            {phase === 'error' && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10"
+                onClick={() => navigate('/update-diagnostics')}
+              >
+                {t('runDiagnostics')}
+              </Button>
+            )}
           </div>
         </div>
       </div>
