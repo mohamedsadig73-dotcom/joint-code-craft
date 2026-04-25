@@ -1052,6 +1052,8 @@ const translations = {
     noItemsFound: 'No items found',
     createItem: 'Create item',
     pickItemFromMaster: 'Pick from items master, or type to create a new one',
+    useExisting: 'Use existing item',
+    saveAndUse: 'Save and use',
     deleteReceiptConfirm: 'Are you sure you want to delete this receipt? This action moves it to the trash.',
     receiptCreated: 'Receipt created successfully',
     receiptUpdated: 'Receipt updated successfully',
