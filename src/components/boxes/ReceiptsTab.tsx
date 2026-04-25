@@ -786,6 +786,8 @@ export function ReceiptsTab() {
         open={bulkEditOpen}
         onOpenChange={setBulkEditOpen}
         selected={selectedReceipts.filter(canModify)}
+        totalSelected={selectedReceipts.length}
+        shippedExcludedCount={shippedExcludedCount}
         existingSuppliers={existingSuppliers}
         onApply={handleBulkEditApply}
       />
@@ -797,8 +799,25 @@ export function ReceiptsTab() {
         submitting={previewSubmitting}
         onConfirm={async () => { await pendingEdit?.apply(); }}
       />
+
+      <LockPolicyDialog open={lockPolicyOpen} onOpenChange={setLockPolicyOpen} />
     </div>
   );
+}
+
+/**
+ * Extract the subset of fields that were modified in the patch and return their
+ * previous values from the receipt — used as a snapshot for the Undo action.
+ */
+function extractUndoFields(
+  prev: BoxReceipt,
+  patch: Partial<BoxReceiptInput>,
+): Partial<BoxReceiptInput> {
+  const old: Record<string, unknown> = {};
+  for (const key of Object.keys(patch)) {
+    old[key] = (prev as unknown as Record<string, unknown>)[key];
+  }
+  return old as Partial<BoxReceiptInput>;
 }
 
 /**
