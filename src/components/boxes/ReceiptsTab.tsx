@@ -134,7 +134,8 @@ export function ReceiptsTab() {
         r.supplier.toLowerCase().includes(q) ||
         r.part_no.toLowerCase().includes(q) ||
         r.description.toLowerCase().includes(q) ||
-        (r.box_no?.toLowerCase().includes(q) ?? false)
+        (r.box_no?.toLowerCase().includes(q) ?? false) ||
+        (r.invoice_number?.toLowerCase().includes(q) ?? false)
       );
     });
   }, [receipts, search, destFilter, statusFilter, packingFilter]);
