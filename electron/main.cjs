@@ -318,24 +318,17 @@ function extractWithPowerShell(zipPath) {
         return;
       }
 
-      // Backup current dist
-      const backupDir = path.join(UPDATE_DIR, 'dist-backup');
-      if (fs.existsSync(backupDir)) {
-        fs.rmSync(backupDir, { recursive: true, force: true });
+      // Stage update outside the read-only packaged app area, then apply on restart.
+      if (fs.existsSync(PENDING_DIST)) {
+        fs.rmSync(PENDING_DIST, { recursive: true, force: true });
       }
-      if (fs.existsSync(DIST_DIR)) {
-        fs.cpSync(DIST_DIR, backupDir, { recursive: true });
-      }
-
-      // Replace dist
-      fs.rmSync(DIST_DIR, { recursive: true, force: true });
-      fs.cpSync(distSource, DIST_DIR, { recursive: true });
+      fs.cpSync(distSource, PENDING_DIST, { recursive: true });
 
       // Cleanup
       fs.rmSync(tempExtract, { recursive: true, force: true });
       try { fs.unlinkSync(zipPath); } catch (_) {}
 
-      console.log('[Electron] ✓ dist/ replaced via PowerShell');
+      console.log('[Electron] ✓ dist/ staged via PowerShell');
       resolve({ success: true });
     } catch (err) {
       reject(err);
