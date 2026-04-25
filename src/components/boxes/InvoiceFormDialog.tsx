@@ -16,6 +16,7 @@ import type { BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { useItemsMaster } from '@/hooks/useItemsMaster';
 import { Loader2, Plus, Trash2, Package, PackageOpen, FileText } from 'lucide-react';
 import { ItemPickerCombobox } from './items/ItemPickerCombobox';
+import { QuickAddItemDialog } from './items/QuickAddItemDialog';
 
 interface Props {
   open: boolean;
@@ -77,6 +78,11 @@ export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppli
   const [lines, setLines] = useState<InvoiceLine[]>([makeEmptyLine()]);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ supplier?: string; lines?: Record<string, string> }>({});
+  const [quickAdd, setQuickAdd] = useState<{ open: boolean; lineKey: string | null; partNo: string }>({
+    open: false,
+    lineKey: null,
+    partNo: '',
+  });
 
   useEffect(() => {
     if (open) {
@@ -114,6 +120,16 @@ export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppli
     // If header supplier is empty and item has a default supplier, suggest it
     if (!header.supplier && item.default_supplier) {
       setHeader((h) => ({ ...h, supplier: item.default_supplier as string }));
+    }
+  };
+
+  const openQuickAdd = (lineKey: string, partNo: string) => {
+    setQuickAdd({ open: true, lineKey, partNo });
+  };
+
+  const handleQuickAddCreated = (item: { id: string; part_no: string; description: string; default_unit: BoxReceiptInput['unit']; default_supplier: string | null }) => {
+    if (quickAdd.lineKey) {
+      handleSelectItem(quickAdd.lineKey, item);
     }
   };
 
@@ -337,15 +353,8 @@ export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppli
                         items={items}
                         value={line.selectedItemId}
                         onSelect={(item) => handleSelectItem(line.key, item)}
+                        onCreateNew={(partNo) => openQuickAdd(line.key, partNo)}
                       />
-                      {!line.selectedItemId && (
-                        <Input
-                          className="mt-1.5 h-9 font-mono text-xs"
-                          value={line.part_no}
-                          onChange={(e) => updateLine(line.key, { part_no: e.target.value })}
-                          placeholder={t('partNo')}
-                        />
-                      )}
                     </td>
                     <td className="py-2 px-2">
                       <Input
@@ -424,6 +433,13 @@ export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppli
           </Button>
         </DialogFooter>
       </DialogContent>
+      <QuickAddItemDialog
+        open={quickAdd.open}
+        onOpenChange={(open) => setQuickAdd((q) => ({ ...q, open }))}
+        initialPartNo={quickAdd.partNo}
+        initialSupplier={header.supplier}
+        onCreated={handleQuickAddCreated}
+      />
     </Dialog>
   );
 }
