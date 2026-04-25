@@ -2339,6 +2339,8 @@ const translations = {
     noItemsFound: 'لم يتم العثور على أصناف',
     createItem: 'إنشاء صنف',
     pickItemFromMaster: 'اختر من قاموس الأصناف، أو اكتب لإنشاء صنف جديد',
+    useExisting: 'استخدم الصنف الموجود',
+    saveAndUse: 'حفظ واستخدام',
     receiptsLog: 'سجل الاستلام',
     receiptsLogShort: 'الاستلام',
     boxesSummary: 'ملخص الصناديق',
