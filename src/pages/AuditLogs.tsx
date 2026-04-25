@@ -280,8 +280,8 @@ export default function AuditLogs() {
           <div className="flex flex-col gap-4">
             {/* Row 1: Search + Export buttons */}
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-              <div className="flex-1 w-full md:max-w-md">
-                <div className="relative">
+              <div className="flex-1 w-full md:max-w-2xl flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="بحث بالمعرف أو المستخدم..."
@@ -290,6 +290,12 @@ export default function AuditLogs() {
                     className="pr-10"
                   />
                 </div>
+                <Input
+                  placeholder="فلترة برقم القطعة..."
+                  value={partNoFilter}
+                  onChange={(e) => setPartNoFilter(e.target.value)}
+                  className="font-mono sm:max-w-[200px]"
+                />
               </div>
               <div className="flex gap-2 flex-wrap">
                 <Button 
