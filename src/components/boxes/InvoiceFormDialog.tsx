@@ -14,6 +14,7 @@ import {
 } from '@/utils/boxNumberValidation';
 import type { BoxReceipt, BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { useItemsMaster } from '@/hooks/useItemsMaster';
+import { useBoxReceipts } from '@/hooks/useBoxReceipts';
 import { Loader2, Plus, Trash2, Package, PackageOpen, FileText } from 'lucide-react';
 import { ItemPickerCombobox } from './items/ItemPickerCombobox';
 import { QuickAddItemDialog } from './items/QuickAddItemDialog';
@@ -89,6 +90,7 @@ export function InvoiceFormDialog({
   const { t } = useLanguage();
   const { toast } = useToast();
   const { items } = useItemsMaster();
+  const { receipts: allReceipts } = useBoxReceipts();
 
   const [header, setHeader] = useState<InvoiceHeader>(HEADER_DEFAULT);
   const [lines, setLines] = useState<InvoiceLine[]>([makeEmptyLine()]);
@@ -538,6 +540,28 @@ export function InvoiceFormDialog({
         suggestedUnit={
           lines.find((l) => l.key === quickAdd.lineKey)?.unit ?? 'PCS'
         }
+        isContextDuplicate={(pn) => {
+          const candidate = pn.trim().toLowerCase();
+          if (!candidate) return false;
+          // Existing receipts already in DB matching supplier + destination + date
+          const inDb = allReceipts.some(
+            (r) =>
+              r.part_no.trim().toLowerCase() === candidate &&
+              r.supplier === header.supplier &&
+              r.destination === header.destination &&
+              r.receipt_date === header.receipt_date &&
+              // Allow editing the same line in edit mode
+              r.id !== editing?.receipts.find((er) => er.part_no.trim().toLowerCase() === candidate)?.id,
+          );
+          if (inDb) return true;
+          // Other unsaved lines in the current invoice
+          const inOtherLines = lines.some(
+            (l) =>
+              l.key !== quickAdd.lineKey &&
+              l.part_no.trim().toLowerCase() === candidate,
+          );
+          return inOtherLines;
+        }}
         onCreated={handleQuickAddCreated}
       />
     </Dialog>
