@@ -530,6 +530,16 @@ export function ReceiptsTab() {
               <Download className="w-3.5 h-3.5 me-1.5" />
               {t('export')}
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setBulkEditOpen(true)}
+              disabled={!selectedReceipts.some(canModify)}
+              className="gap-1.5"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              {t('bulkEdit')}
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
