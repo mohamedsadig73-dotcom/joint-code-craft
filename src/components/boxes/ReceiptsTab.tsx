@@ -694,6 +694,53 @@ export function ReceiptsTab() {
         uniqueCount={pendingUniques.length}
         onResolve={handleResolveImport}
       />
+
+      <BulkEditReceiptsDialog
+        open={bulkEditOpen}
+        onOpenChange={setBulkEditOpen}
+        selected={selectedReceipts.filter(canModify)}
+        existingSuppliers={existingSuppliers}
+        onApply={handleBulkEditApply}
+      />
+
+      <EditPreviewDialog
+        open={!!pendingEdit}
+        onOpenChange={(o) => { if (!o) setPendingEdit(null); }}
+        diffs={pendingEdit?.diffs ?? []}
+        submitting={previewSubmitting}
+        onConfirm={async () => { await pendingEdit?.apply(); }}
+      />
     </div>
   );
+}
+
+/**
+ * Build a list of human-readable field diffs between an existing receipt and
+ * an incoming form values payload, used to drive the edit preview dialog.
+ */
+function computeReceiptDiffs(
+  existing: BoxReceipt,
+  next: BoxReceiptInput,
+  t: (k: string) => string,
+): FieldDiff[] {
+  const diffs: FieldDiff[] = [];
+  const push = (label: string, oldV: unknown, newV: unknown) => {
+    const o = oldV == null ? '' : String(oldV);
+    const n = newV == null ? '' : String(newV);
+    if (o !== n) diffs.push({ label, oldValue: o, newValue: n });
+  };
+  push(t('supplier'), existing.supplier, next.supplier);
+  push(t('partNo'), existing.part_no, next.part_no);
+  push(t('description'), existing.description, next.description);
+  push(t('qty'), existing.qty, next.qty);
+  push(t('unit'), existing.unit, next.unit);
+  push(t('destination'), t(`dest_${existing.destination}`), t(`dest_${next.destination}`));
+  push(t('packingType'), t(existing.packing_type), t(next.packing_type));
+  push(t('boxNo'), existing.box_no ?? '', next.box_no ?? '');
+  push(t('place'), existing.place ?? '', next.place ?? '');
+  push(t('receiptDate'), existing.receipt_date, next.receipt_date);
+  push(t('status'), t(`boxStatus_${existing.status}`), t(`boxStatus_${next.status}`));
+  push(t('notes'), existing.notes ?? '', next.notes ?? '');
+  push(t('invoiceNumber'), existing.invoice_number ?? '', next.invoice_number ?? '');
+  return diffs;
 }
