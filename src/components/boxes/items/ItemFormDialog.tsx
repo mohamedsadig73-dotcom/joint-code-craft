@@ -56,13 +56,14 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
   }, [open, initial, initialPartNo]);
 
   useEffect(() => {
-    if (!values.part_no || initial) {
+    if (!values.part_no) {
       setDuplicateWarning(false);
       return;
     }
     const norm = values.part_no.trim().toLowerCase();
+    // existingPartNos is already filtered to exclude the current item being edited
     setDuplicateWarning(existingPartNos.some((p) => p.trim().toLowerCase() === norm));
-  }, [values.part_no, existingPartNos, initial]);
+  }, [values.part_no, existingPartNos]);
 
   const setField = <K extends keyof ItemMasterInput>(key: K, value: ItemMasterInput[K]) => {
     setValues((v) => ({ ...v, [key]: value }));
@@ -90,7 +91,6 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
             <Input
               value={values.part_no}
               onChange={(e) => setField('part_no', e.target.value)}
-              disabled={!!initial}
             />
             {duplicateWarning && (
               <p className="text-xs text-destructive flex items-center gap-1">
