@@ -20,6 +20,7 @@ import { ReceiptsTable, ALL_RECEIPT_COLUMNS, type ReceiptColumnKey } from './Rec
 import { ReceiptMobileCard } from './ReceiptMobileCard';
 import { ReceiptFormDialog } from './ReceiptFormDialog';
 import { InvoiceFormDialog } from './InvoiceFormDialog';
+import { InvoicePickerDialog } from './InvoicePickerDialog';
 import { ReceiptsPrintPreview } from './ReceiptsPrintPreview';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -54,6 +55,11 @@ export function ReceiptsTab() {
   const [editing, setEditing] = useState<BoxReceipt | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [invoicePickerOpen, setInvoicePickerOpen] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<{
+    invoiceNumber: string;
+    receipts: BoxReceipt[];
+  } | null>(null);
   const [toDelete, setToDelete] = useState<BoxReceipt | null>(null);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
