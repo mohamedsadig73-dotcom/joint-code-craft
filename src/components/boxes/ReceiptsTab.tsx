@@ -232,6 +232,19 @@ export function ReceiptsTab() {
     }
   };
 
+  const handleBulkEditApply = async (ids: string[], patch: BulkEditPatch): Promise<number> => {
+    // Filter to only modifiable rows (in case admin/manager status changed mid-flow)
+    const idSet = new Set(ids);
+    const allowed = selectedReceipts.filter((r) => idSet.has(r.id) && canModify(r));
+    if (allowed.length === 0) return 0;
+    const updated = await bulkUpdateFields(
+      allowed.map((r) => r.id),
+      patch as Partial<BoxReceiptInput>,
+    );
+    if (updated > 0) clearSelection();
+    return updated;
+  };
+
   const handleAdd = () => {
     setEditing(null);
     setFormOpen(true);
