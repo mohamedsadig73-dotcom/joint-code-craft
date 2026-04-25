@@ -8,51 +8,10 @@ app.disableHardwareAcceleration();
 
 // ── Paths ──────────────────────────────────────────────
 const APP_ROOT = path.join(__dirname, '..');
-const BUNDLED_DIST_DIR = path.join(APP_ROOT, 'dist');
-const USER_DIST_DIR = path.join(app.getPath('userData'), 'dist-current');
+const DIST_DIR = path.join(APP_ROOT, 'dist');
+const LOCAL_INDEX = path.join(DIST_DIR, 'index.html');
 const PUBLISHED_URL = 'https://dts-store-qatar-2026.lovable.app';
 const UPDATE_DIR = path.join(app.getPath('userData'), 'updates');
-const LOCK_FILE = path.join(UPDATE_DIR, 'update.lock');
-const PENDING_DIST = path.join(UPDATE_DIR, 'dist-pending');
-
-function hasIndex(dir) {
-  return fs.existsSync(path.join(dir, 'index.html'));
-}
-
-function getActiveDistDir() {
-  return hasIndex(USER_DIST_DIR) ? USER_DIST_DIR : BUNDLED_DIST_DIR;
-}
-
-function getActiveIndex() {
-  return path.join(getActiveDistDir(), 'index.html');
-}
-
-// Read shell version from package.json
-function getShellVersion() {
-  try {
-    const pkg = JSON.parse(fs.readFileSync(path.join(APP_ROOT, 'package.json'), 'utf-8'));
-    return pkg.version || '0.0.0';
-  } catch {
-    return '0.0.0';
-  }
-}
-
-// Apply pending update on startup if it exists
-function applyPendingUpdateIfAny() {
-  try {
-    if (!fs.existsSync(PENDING_DIST)) return;
-    console.log('[Electron] Applying pending update from previous session...');
-    if (fs.existsSync(USER_DIST_DIR)) {
-      fs.rmSync(USER_DIST_DIR, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
-    }
-    fs.cpSync(PENDING_DIST, USER_DIST_DIR, { recursive: true });
-    fs.rmSync(PENDING_DIST, { recursive: true, force: true });
-    try { fs.unlinkSync(LOCK_FILE); } catch (_) {}
-    console.log('[Electron] ✓ Pending update applied');
-  } catch (err) {
-    console.error('[Electron] Failed to apply pending update:', err);
-  }
-}
 
 let mainWindow = null;
 
@@ -75,10 +34,9 @@ function createWindow() {
   });
 
   // ── Load local dist directly (v5 standard) ──
-  const activeIndex = getActiveIndex();
-  if (fs.existsSync(activeIndex)) {
+  if (fs.existsSync(LOCAL_INDEX)) {
     console.log('[Electron] Loading local dist/index.html...');
-    mainWindow.loadFile(activeIndex).then(() => {
+    mainWindow.loadFile(LOCAL_INDEX).then(() => {
       mainWindow.show();
       setupRuntimeRecovery();
     }).catch((err) => {
@@ -120,7 +78,7 @@ function setupRuntimeRecovery() {
     if (errorCode === -3) return;
     setTimeout(() => {
       if (!mainWindow.isDestroyed()) {
-        mainWindow.loadFile(getActiveIndex()).catch(() => showErrorPage());
+        mainWindow.loadFile(LOCAL_INDEX).catch(() => showErrorPage());
       }
     }, 2000);
   });
@@ -131,73 +89,86 @@ function setupRuntimeRecovery() {
 }
 
 // ── IPC: Print HTML ────────────────────────────────────
-ipcMain.handle('print-html', async (_event, htmlContent) => {
-  return new Promise((resolve, reject) => {
-    // Write HTML to a temp file to avoid data: URL limitations
-    const tmpFile = path.join(app.getPath('temp'), `dts-print-${Date.now()}.html`);
-    fs.writeFileSync(tmpFile, htmlContent, 'utf-8');
+function sanitizePrintFileName(value) {
+  return (value || 'DTS-Store-Print')
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 120) || 'DTS-Store-Print';
+}
 
-    const printWin = new BrowserWindow({
-      width: 800, height: 600, show: false,
-      webPreferences: { contextIsolation: true, nodeIntegration: false },
-    });
-
-    printWin.loadFile(tmpFile);
-    printWin.webContents.once('did-finish-load', () => {
-      setTimeout(() => {
-        printWin.webContents.print({ silent: false, printBackground: true }, (success, reason) => {
-          printWin.close();
-          try { fs.unlinkSync(tmpFile); } catch (_) {}
-          success ? resolve(true) : reject(new Error(reason || 'Print cancelled'));
+async function waitForPrintContent(printWin) {
+  try {
+    await printWin.webContents.executeJavaScript(`
+      new Promise((resolve) => {
+        const fontsReady = document.fonts?.ready ?? Promise.resolve();
+        const imagePromises = Array.from(document.images || []).map((img) => (
+          img.complete
+            ? Promise.resolve()
+            : new Promise((done) => {
+                img.addEventListener('load', done, { once: true });
+                img.addEventListener('error', done, { once: true });
+              })
+        ));
+        Promise.allSettled([fontsReady, ...imagePromises]).then(() => {
+          setTimeout(resolve, 300);
         });
-      }, 800);
-    });
+      });
+    `, true);
+  } catch (_) {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+  }
+}
+
+ipcMain.handle('print-html', async (_event, htmlContent) => {
+  const tempDir = path.join(app.getPath('temp'), 'dts-print-jobs');
+  fs.mkdirSync(tempDir, { recursive: true });
+
+  const stamp = Date.now();
+  const titleMatch = htmlContent.match(/<title>(.*?)<\/title>/i);
+  const fileBaseName = sanitizePrintFileName(titleMatch?.[1]);
+  const htmlPath = path.join(tempDir, `${fileBaseName}-${stamp}.html`);
+  fs.writeFileSync(htmlPath, htmlContent, 'utf-8');
+
+  const printWin = new BrowserWindow({
+    width: 900,
+    height: 1200,
+    show: false,
+    backgroundColor: '#ffffff',
+    webPreferences: { contextIsolation: true, nodeIntegration: false },
   });
+
+  try {
+    await printWin.loadFile(htmlPath);
+    await waitForPrintContent(printWin);
+
+    if (process.platform === 'win32') {
+      const pdfPath = path.join(tempDir, `${fileBaseName}-${stamp}.pdf`);
+      const pdfBuffer = await printWin.webContents.printToPDF({
+        printBackground: true,
+        preferCSSPageSize: true,
+      });
+
+      fs.writeFileSync(pdfPath, pdfBuffer);
+      const openError = await shell.openPath(pdfPath);
+      if (openError) throw new Error(openError);
+      return true;
+    }
+
+    return await new Promise((resolve, reject) => {
+      printWin.webContents.print({ silent: false, printBackground: true }, (success, reason) => {
+        success ? resolve(true) : reject(new Error(reason || 'Print cancelled'));
+      });
+    });
+  } finally {
+    if (!printWin.isDestroyed()) printWin.close();
+    try { fs.unlinkSync(htmlPath); } catch (_) {}
+  }
 });
 
 // ── IPC: Open external URL ─────────────────────────────
 ipcMain.handle('open-external', async (_event, url) => {
   await shell.openExternal(url);
-});
-
-// ── IPC: Fetch remote JSON from main process (avoids renderer CORS) ──
-function fetchJson(url) {
-  return new Promise((resolve, reject) => {
-    const doRequest = (reqUrl) => {
-      const proto = reqUrl.startsWith('https') ? https : http;
-      proto.get(reqUrl, (response) => {
-        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-          doRequest(response.headers.location);
-          return;
-        }
-
-        if (response.statusCode !== 200) {
-          reject(new Error(`HTTP ${response.statusCode}`));
-          return;
-        }
-
-        let raw = '';
-        response.setEncoding('utf8');
-        response.on('data', (chunk) => {
-          raw += chunk;
-        });
-        response.on('end', () => {
-          try {
-            resolve(JSON.parse(raw));
-          } catch (error) {
-            reject(error);
-          }
-        });
-        response.on('error', reject);
-      }).on('error', reject);
-    };
-
-    doRequest(url);
-  });
-}
-
-ipcMain.handle('fetch-json', async (_event, url) => {
-  return fetchJson(url);
 });
 
 // ── Helper: Download file with progress ────────────────
@@ -279,17 +250,24 @@ function extractWithAdmZip(AdmZip, zipPath) {
         return;
       }
 
-      // Stage update outside the read-only packaged app area, then apply on restart.
-      if (fs.existsSync(PENDING_DIST)) {
-        fs.rmSync(PENDING_DIST, { recursive: true, force: true });
+      // Backup current dist
+      const backupDir = path.join(UPDATE_DIR, 'dist-backup');
+      if (fs.existsSync(backupDir)) {
+        fs.rmSync(backupDir, { recursive: true, force: true });
       }
-      fs.cpSync(distSource, PENDING_DIST, { recursive: true });
+      if (fs.existsSync(DIST_DIR)) {
+        fs.cpSync(DIST_DIR, backupDir, { recursive: true });
+      }
+
+      // Replace dist
+      fs.rmSync(DIST_DIR, { recursive: true, force: true });
+      fs.cpSync(distSource, DIST_DIR, { recursive: true });
 
       // Cleanup
       fs.rmSync(tempExtract, { recursive: true, force: true });
       try { fs.unlinkSync(zipPath); } catch (_) {}
 
-      console.log('[Electron] ✓ dist/ staged successfully');
+      console.log('[Electron] ✓ dist/ replaced successfully');
       resolve({ success: true });
     } catch (err) {
       reject(err);
@@ -318,17 +296,24 @@ function extractWithPowerShell(zipPath) {
         return;
       }
 
-      // Stage update outside the read-only packaged app area, then apply on restart.
-      if (fs.existsSync(PENDING_DIST)) {
-        fs.rmSync(PENDING_DIST, { recursive: true, force: true });
+      // Backup current dist
+      const backupDir = path.join(UPDATE_DIR, 'dist-backup');
+      if (fs.existsSync(backupDir)) {
+        fs.rmSync(backupDir, { recursive: true, force: true });
       }
-      fs.cpSync(distSource, PENDING_DIST, { recursive: true });
+      if (fs.existsSync(DIST_DIR)) {
+        fs.cpSync(DIST_DIR, backupDir, { recursive: true });
+      }
+
+      // Replace dist
+      fs.rmSync(DIST_DIR, { recursive: true, force: true });
+      fs.cpSync(distSource, DIST_DIR, { recursive: true });
 
       // Cleanup
       fs.rmSync(tempExtract, { recursive: true, force: true });
       try { fs.unlinkSync(zipPath); } catch (_) {}
 
-      console.log('[Electron] ✓ dist/ staged via PowerShell');
+      console.log('[Electron] ✓ dist/ replaced via PowerShell');
       resolve({ success: true });
     } catch (err) {
       reject(err);
@@ -421,56 +406,8 @@ ipcMain.handle('restart-app', () => {
   app.exit(0);
 });
 
-// ── IPC: Get shell version ────────────────────────────
-ipcMain.handle('get-shell-version', () => getShellVersion());
-
-// ── IPC: Test update channel connectivity ─────────────
-function headRequest(url) {
-  return new Promise((resolve) => {
-    const doRequest = (reqUrl, redirects = 0) => {
-      if (redirects > 5) return resolve({ ok: false, error: 'Too many redirects' });
-      const proto = reqUrl.startsWith('https') ? https : http;
-      const req = proto.request(reqUrl, { method: 'HEAD' }, (response) => {
-        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-          return doRequest(response.headers.location, redirects + 1);
-        }
-        const size = parseInt(response.headers['content-length'] || '0', 10);
-        resolve({ ok: response.statusCode === 200, status: response.statusCode, size });
-      });
-      req.on('error', (err) => resolve({ ok: false, error: err.message }));
-      req.end();
-    };
-    doRequest(url);
-  });
-}
-
-ipcMain.handle('test-update-channel', async (_event, urls) => {
-  const result = { versionJson: { ok: false }, releaseJson: { ok: false }, downloadHead: { ok: false } };
-  try {
-    const v = await fetchJson(`${urls.versionUrl}?_t=${Date.now()}`);
-    result.versionJson = { ok: true, status: 200, data: v };
-  } catch (err) {
-    result.versionJson = { ok: false, error: err.message };
-  }
-  try {
-    const r = await fetchJson(`${urls.releaseUrl}?_t=${Date.now()}`);
-    result.releaseJson = { ok: true, status: 200, data: r };
-    if (!urls.downloadUrl && r && r.download_url) urls.downloadUrl = r.download_url;
-  } catch (err) {
-    result.releaseJson = { ok: false, error: err.message };
-  }
-  if (urls.downloadUrl) {
-    result.downloadHead = await headRequest(urls.downloadUrl);
-  } else {
-    result.downloadHead = { ok: false, error: 'No download URL available' };
-  }
-  return result;
-});
-
 // ── App lifecycle ──────────────────────────────────────
 app.whenReady().then(() => {
-  if (!fs.existsSync(UPDATE_DIR)) fs.mkdirSync(UPDATE_DIR, { recursive: true });
-  applyPendingUpdateIfAny();
   session.defaultSession.clearCache().then(() => createWindow()).catch(() => createWindow());
 });
 
