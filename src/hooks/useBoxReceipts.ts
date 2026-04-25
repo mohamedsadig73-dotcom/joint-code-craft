@@ -20,6 +20,8 @@ export interface BoxReceipt {
   status: 'received' | 'sorted' | 'packed' | 'shipped';
   notes: string | null;
   image_path: string | null;
+  invoice_number: string | null;
+  item_id: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
