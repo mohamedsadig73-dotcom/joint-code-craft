@@ -241,6 +241,27 @@ export function useBoxReceipts() {
     [user?.id, toast, t]
   );
 
+  /**
+   * Bulk-update arbitrary editable fields (supplier / destination / receipt_date)
+   * across multiple receipts in a single round-trip.
+   */
+  const bulkUpdateFields = useCallback(
+    async (ids: string[], patch: Partial<BoxReceiptInput>) => {
+      if (!user?.id || ids.length === 0 || Object.keys(patch).length === 0) return 0;
+      const { data, error } = await supabase
+        .from('box_receipts')
+        .update(patch)
+        .in('id', ids)
+        .select('id');
+      if (error) {
+        toast({ title: t('error'), description: error.message, variant: 'destructive' });
+        return 0;
+      }
+      return data?.length ?? 0;
+    },
+    [user?.id, toast, t]
+  );
+
   return {
     receipts,
     loading,
@@ -252,5 +273,6 @@ export function useBoxReceipts() {
     mergeReceipts,
     bulkAddQuantity,
     bulkUpdatePackingType,
+    bulkUpdateFields,
   };
 }
