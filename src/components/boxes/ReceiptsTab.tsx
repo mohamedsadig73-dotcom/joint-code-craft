@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Plus, Search, Download, Upload, Loader2, Package, PackageOpen, Layers,
-  Columns3, Trash2, X, FileText,
+  Columns3, Trash2, X, FileText, Edit3,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent,
@@ -22,6 +22,8 @@ import { ReceiptFormDialog } from './ReceiptFormDialog';
 import { InvoiceFormDialog } from './InvoiceFormDialog';
 import { InvoicePickerDialog } from './InvoicePickerDialog';
 import { ReceiptsPrintPreview } from './ReceiptsPrintPreview';
+import { BulkEditReceiptsDialog, type BulkEditPatch } from './BulkEditReceiptsDialog';
+import { EditPreviewDialog, type FieldDiff } from './EditPreviewDialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -46,6 +48,7 @@ export function ReceiptsTab() {
     bulkInsertReceipts,
     bulkAddQuantity,
     bulkUpdatePackingType,
+    bulkUpdateFields,
   } = useBoxReceipts();
   const { summary } = useBoxSummary();
 
@@ -70,6 +73,14 @@ export function ReceiptsTab() {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [bulkRepacking, setBulkRepacking] = useState(false);
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+
+  // Edit preview state
+  const [pendingEdit, setPendingEdit] = useState<{
+    diffs: FieldDiff[];
+    apply: () => Promise<unknown>;
+  } | null>(null);
+  const [previewSubmitting, setPreviewSubmitting] = useState(false);
 
   // Column visibility (persisted)
   const [visibleColumns, setVisibleColumns] = useState<ReceiptColumnKey[]>(() => {
@@ -104,7 +115,10 @@ export function ReceiptsTab() {
   const isManager = user?.role === 'manager';
 
   const canModify = (r: BoxReceipt) =>
-    isAdmin || isManager || r.created_by === user?.id;
+    // Shipped receipts are locked for everyone (except admin) to preserve audit integrity
+    r.status === 'shipped'
+      ? isAdmin
+      : (isAdmin || isManager || r.created_by === user?.id);
 
   const existingSuppliers = useMemo(
     () => Array.from(new Set(receipts.map((r) => r.supplier))).sort(),
