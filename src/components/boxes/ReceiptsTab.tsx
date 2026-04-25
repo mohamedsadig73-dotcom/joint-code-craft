@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useBoxReceipts, type BoxReceipt, type BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { useBoxSummary } from '@/hooks/useBoxSummary';
@@ -45,6 +45,7 @@ export function ReceiptsTab() {
     deleteReceipt,
     bulkInsertReceipts,
     bulkAddQuantity,
+    bulkUpdatePackingType,
   } = useBoxReceipts();
   const { summary } = useBoxSummary();
 
@@ -68,6 +69,7 @@ export function ReceiptsTab() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkRepacking, setBulkRepacking] = useState(false);
 
   // Column visibility (persisted)
   const [visibleColumns, setVisibleColumns] = useState<ReceiptColumnKey[]>(() => {
@@ -199,6 +201,21 @@ export function ReceiptsTab() {
   const handleBulkExport = async () => {
     await exportBoxesToExcel(selectedReceipts, summary, language);
     toast({ title: t('success'), description: t('excelExported') });
+  };
+
+  const handleBulkChangePacking = async (target: 'boxed' | 'loose') => {
+    const allowed = selectedReceipts.filter(canModify).filter((r) => r.packing_type !== target);
+    if (allowed.length === 0) {
+      toast({ title: t('info'), description: t('noEligibleRows') });
+      return;
+    }
+    setBulkRepacking(true);
+    try {
+      await bulkUpdatePackingType(allowed.map((r) => r.id), target);
+      clearSelection();
+    } finally {
+      setBulkRepacking(false);
+    }
   };
 
   const handleAdd = () => {
@@ -463,6 +480,35 @@ export function ReceiptsTab() {
               <Download className="w-3.5 h-3.5 me-1.5" />
               {t('export')}
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={bulkRepacking || !selectedReceipts.some(canModify)}
+                  className="gap-1.5"
+                >
+                  {bulkRepacking ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Package className="w-3.5 h-3.5" />
+                  )}
+                  {t('changePackingType')}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>{t('changeTo')}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => handleBulkChangePacking('loose')}>
+                  <PackageOpen className="w-3.5 h-3.5 me-2" />
+                  {t('loose')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => handleBulkChangePacking('boxed')}>
+                  <Package className="w-3.5 h-3.5 me-2" />
+                  {t('boxed')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               size="sm"
               variant="destructive"
