@@ -75,9 +75,10 @@ function createWindow() {
   });
 
   // ── Load local dist directly (v5 standard) ──
-  if (fs.existsSync(LOCAL_INDEX)) {
+  const activeIndex = getActiveIndex();
+  if (fs.existsSync(activeIndex)) {
     console.log('[Electron] Loading local dist/index.html...');
-    mainWindow.loadFile(LOCAL_INDEX).then(() => {
+    mainWindow.loadFile(activeIndex).then(() => {
       mainWindow.show();
       setupRuntimeRecovery();
     }).catch((err) => {
@@ -119,7 +120,7 @@ function setupRuntimeRecovery() {
     if (errorCode === -3) return;
     setTimeout(() => {
       if (!mainWindow.isDestroyed()) {
-        mainWindow.loadFile(LOCAL_INDEX).catch(() => showErrorPage());
+        mainWindow.loadFile(getActiveIndex()).catch(() => showErrorPage());
       }
     }, 2000);
   });
