@@ -326,7 +326,7 @@ export function QuickAddItemDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
               {t('cancel')}
             </Button>
-            <Button onClick={handleSave} disabled={submitting || !!duplicate}>
+            <Button onClick={handleSave} disabled={submitting || !!duplicate || contextDuplicate}>
               {submitting && <Loader2 className="w-4 h-4 me-1.5 animate-spin" />}
               {t('saveAndUse')}
             </Button>
