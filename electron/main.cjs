@@ -8,12 +8,24 @@ app.disableHardwareAcceleration();
 
 // ── Paths ──────────────────────────────────────────────
 const APP_ROOT = path.join(__dirname, '..');
-const DIST_DIR = path.join(APP_ROOT, 'dist');
-const LOCAL_INDEX = path.join(DIST_DIR, 'index.html');
+const BUNDLED_DIST_DIR = path.join(APP_ROOT, 'dist');
+const USER_DIST_DIR = path.join(app.getPath('userData'), 'dist-current');
 const PUBLISHED_URL = 'https://dts-store-qatar-2026.lovable.app';
 const UPDATE_DIR = path.join(app.getPath('userData'), 'updates');
 const LOCK_FILE = path.join(UPDATE_DIR, 'update.lock');
 const PENDING_DIST = path.join(UPDATE_DIR, 'dist-pending');
+
+function hasIndex(dir) {
+  return fs.existsSync(path.join(dir, 'index.html'));
+}
+
+function getActiveDistDir() {
+  return hasIndex(USER_DIST_DIR) ? USER_DIST_DIR : BUNDLED_DIST_DIR;
+}
+
+function getActiveIndex() {
+  return path.join(getActiveDistDir(), 'index.html');
+}
 
 // Read shell version from package.json
 function getShellVersion() {
@@ -30,10 +42,10 @@ function applyPendingUpdateIfAny() {
   try {
     if (!fs.existsSync(PENDING_DIST)) return;
     console.log('[Electron] Applying pending update from previous session...');
-    if (fs.existsSync(DIST_DIR)) {
-      fs.rmSync(DIST_DIR, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
+    if (fs.existsSync(USER_DIST_DIR)) {
+      fs.rmSync(USER_DIST_DIR, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
     }
-    fs.cpSync(PENDING_DIST, DIST_DIR, { recursive: true });
+    fs.cpSync(PENDING_DIST, USER_DIST_DIR, { recursive: true });
     fs.rmSync(PENDING_DIST, { recursive: true, force: true });
     try { fs.unlinkSync(LOCK_FILE); } catch (_) {}
     console.log('[Electron] ✓ Pending update applied');
