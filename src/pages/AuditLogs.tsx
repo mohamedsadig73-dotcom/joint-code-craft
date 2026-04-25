@@ -12,6 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { FileText, Shield, RefreshCw, Search, Download, FileSpreadsheet, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { useSearchParams } from 'react-router-dom';
 import { EmptyState } from '@/components/EmptyState';
 import { TableSkeleton, CardSkeleton } from '@/components/ui/TableSkeleton';
 import { VirtualizedList } from '@/components/VirtualizedList';
@@ -44,14 +45,15 @@ interface AuditLog {
 export default function AuditLogs() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const [searchParams] = useSearchParams();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState<'excel' | 'pdf' | null>(null);
   const [filterAction, setFilterAction] = useState<string>('all');
-  const [filterTable, setFilterTable] = useState<string>('all');
+  const [filterTable, setFilterTable] = useState<string>(searchParams.get('table') || 'all');
   const [filterUser, setFilterUser] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [partNoFilter, setPartNoFilter] = useState('');
+  const [partNoFilter, setPartNoFilter] = useState(searchParams.get('partNo') || '');
   const [dateFrom, setDateFrom] = useState<Date | undefined>(startOfMonth(new Date()));
   const [dateTo, setDateTo] = useState<Date | undefined>(endOfMonth(new Date()));
 
@@ -155,6 +157,7 @@ export default function AuditLogs() {
         action: log.action,
         table_name: log.table_name,
         record_id: log.record_id,
+        part_no: (log.new_values?.part_no ?? log.old_values?.part_no ?? null) as string | null,
         created_at: log.created_at,
         profiles: log.profiles,
       }));
@@ -177,6 +180,7 @@ export default function AuditLogs() {
         action: log.action,
         table_name: log.table_name,
         record_id: log.record_id,
+        part_no: (log.new_values?.part_no ?? log.old_values?.part_no ?? null) as string | null,
         created_at: log.created_at,
         profiles: log.profiles,
       }));
