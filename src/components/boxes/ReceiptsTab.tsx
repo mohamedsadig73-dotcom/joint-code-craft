@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Plus, Search, Download, Upload, Loader2, Package, PackageOpen, Layers,
-  Columns3, Trash2, X, FileText, Edit3,
+  Columns3, Trash2, X, FileText, Edit3, Undo2, Info,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent,
@@ -24,6 +24,8 @@ import { InvoicePickerDialog } from './InvoicePickerDialog';
 import { ReceiptsPrintPreview } from './ReceiptsPrintPreview';
 import { BulkEditReceiptsDialog, type BulkEditPatch } from './BulkEditReceiptsDialog';
 import { EditPreviewDialog, type FieldDiff } from './EditPreviewDialog';
+import { LockPolicyDialog } from './LockPolicyDialog';
+import { supabase } from '@/integrations/supabase/client';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -81,6 +83,19 @@ export function ReceiptsTab() {
     apply: () => Promise<unknown>;
   } | null>(null);
   const [previewSubmitting, setPreviewSubmitting] = useState(false);
+
+  // Undo state — tracks last set of UPDATE audit_log entries created by this user
+  // within the last 30 seconds.
+  const UNDO_WINDOW_MS = 30_000;
+  const [undoBatch, setUndoBatch] = useState<{
+    at: number;
+    entries: Array<{ id: string; old: Partial<BoxReceiptInput> }>;
+  } | null>(null);
+  const [undoSecondsLeft, setUndoSecondsLeft] = useState(0);
+  const [undoing, setUndoing] = useState(false);
+
+  // Lock policy info dialog
+  const [lockPolicyOpen, setLockPolicyOpen] = useState(false);
 
   // Column visibility (persisted)
   const [visibleColumns, setVisibleColumns] = useState<ReceiptColumnKey[]>(() => {
@@ -237,11 +252,19 @@ export function ReceiptsTab() {
     const idSet = new Set(ids);
     const allowed = selectedReceipts.filter((r) => idSet.has(r.id) && canModify(r));
     if (allowed.length === 0) return 0;
+    // Snapshot previous values for Undo before applying.
+    const snapshot = allowed.map((r) => ({
+      id: r.id,
+      old: extractUndoFields(r, patch),
+    }));
     const updated = await bulkUpdateFields(
       allowed.map((r) => r.id),
       patch as Partial<BoxReceiptInput>,
     );
-    if (updated > 0) clearSelection();
+    if (updated > 0) {
+      setUndoBatch({ at: Date.now(), entries: snapshot });
+      clearSelection();
+    }
     return updated;
   };
 
@@ -270,6 +293,13 @@ export function ReceiptsTab() {
             setPreviewSubmitting(true);
             try {
               const updated = await updateReceipt(editing.id, values);
+              if (updated) {
+                // Snapshot previous values for Undo
+                setUndoBatch({
+                  at: Date.now(),
+                  entries: [{ id: editing.id, old: extractUndoFields(editing, values) }],
+                });
+              }
               resolve(updated);
               setPendingEdit(null);
               setFormOpen(false);
@@ -371,6 +401,53 @@ export function ReceiptsTab() {
       setPendingUniques([]);
     }
   };
+
+  // Tick the Undo countdown
+  useEffect(() => {
+    if (!undoBatch) {
+      setUndoSecondsLeft(0);
+      return;
+    }
+    const tick = () => {
+      const remaining = Math.max(0, UNDO_WINDOW_MS - (Date.now() - undoBatch.at));
+      setUndoSecondsLeft(Math.ceil(remaining / 1000));
+      if (remaining <= 0) setUndoBatch(null);
+    };
+    tick();
+    const id = setInterval(tick, 500);
+    return () => clearInterval(id);
+  }, [undoBatch]);
+
+  const handleUndo = async () => {
+    if (!undoBatch || undoBatch.entries.length === 0) {
+      toast({ title: t('undoLastChange'), description: t('undoNothing') });
+      return;
+    }
+    setUndoing(true);
+    try {
+      let restored = 0;
+      for (const entry of undoBatch.entries) {
+        const { error } = await supabase
+          .from('box_receipts')
+          .update(entry.old)
+          .eq('id', entry.id);
+        if (!error) restored++;
+      }
+      if (restored > 0) {
+        toast({ title: t('success'), description: t('undoSuccess') });
+        setUndoBatch(null);
+      } else {
+        toast({ title: t('error'), description: t('undoFailed'), variant: 'destructive' });
+      }
+    } finally {
+      setUndoing(false);
+    }
+  };
+
+  const shippedExcludedCount = useMemo(
+    () => selectedReceipts.filter((r) => r.status === 'shipped' && !isAdmin).length,
+    [selectedReceipts, isAdmin],
+  );
 
   return (
     <div className="space-y-4">
@@ -516,8 +593,36 @@ export function ReceiptsTab() {
             <Plus className="w-4 h-4 me-1.5" />
             {t('addReceipt')}
           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setLockPolicyOpen(true)}
+            title={t('lockPolicyOpen')}
+            aria-label={t('lockPolicyOpen')}
+          >
+            <Info className="w-4 h-4" />
+          </Button>
         </div>
       </div>
+
+      {/* Undo last edit (30s window) */}
+      {undoBatch && undoSecondsLeft > 0 && (
+        <div className="flex items-center justify-between gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs">
+          <span className="text-foreground">
+            {t('undoAvailableSeconds').replace('{sec}', String(undoSecondsLeft))}
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleUndo}
+            disabled={undoing}
+            className="h-7 gap-1.5"
+          >
+            {undoing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Undo2 className="w-3.5 h-3.5" />}
+            {t('undoLastChange')}
+          </Button>
+        </div>
+      )}
 
       {/* Bulk actions bar */}
       {selectedIds.size > 0 && (
@@ -709,6 +814,8 @@ export function ReceiptsTab() {
         open={bulkEditOpen}
         onOpenChange={setBulkEditOpen}
         selected={selectedReceipts.filter(canModify)}
+        totalSelected={selectedReceipts.length}
+        shippedExcludedCount={shippedExcludedCount}
         existingSuppliers={existingSuppliers}
         onApply={handleBulkEditApply}
       />
@@ -720,8 +827,25 @@ export function ReceiptsTab() {
         submitting={previewSubmitting}
         onConfirm={async () => { await pendingEdit?.apply(); }}
       />
+
+      <LockPolicyDialog open={lockPolicyOpen} onOpenChange={setLockPolicyOpen} />
     </div>
   );
+}
+
+/**
+ * Extract the subset of fields that were modified in the patch and return their
+ * previous values from the receipt — used as a snapshot for the Undo action.
+ */
+function extractUndoFields(
+  prev: BoxReceipt,
+  patch: Partial<BoxReceiptInput>,
+): Partial<BoxReceiptInput> {
+  const old: Record<string, unknown> = {};
+  for (const key of Object.keys(patch)) {
+    old[key] = (prev as unknown as Record<string, unknown>)[key];
+  }
+  return old as Partial<BoxReceiptInput>;
 }
 
 /**

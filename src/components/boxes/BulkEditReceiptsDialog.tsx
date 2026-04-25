@@ -25,12 +25,16 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selected: BoxReceipt[];
+  /** Total selected (before filtering by canModify), used to show eligibility banner. */
+  totalSelected?: number;
+  /** Number of selected rows that were excluded because their status is 'shipped'. */
+  shippedExcludedCount?: number;
   existingSuppliers: string[];
   onApply: (ids: string[], patch: BulkEditPatch) => Promise<number>;
 }
 
 export function BulkEditReceiptsDialog({
-  open, onOpenChange, selected, existingSuppliers, onApply,
+  open, onOpenChange, selected, totalSelected, shippedExcludedCount, existingSuppliers, onApply,
 }: Props) {
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -69,7 +73,20 @@ export function BulkEditReceiptsDialog({
 
   const hasChanges = Object.keys(patch).length > 0;
 
+  const total = totalSelected ?? selected.length;
+  const eligible = selected.length;
+  const allLockedShipped = total > 0 && eligible === 0 && (shippedExcludedCount ?? 0) === total;
+  const noneEditable = total > 0 && eligible === 0 && !allLockedShipped;
+
   const handleNext = () => {
+    if (eligible === 0) {
+      toast({
+        title: t('error'),
+        description: allLockedShipped ? t('bulkEditAllLockedShipped') : t('bulkEditNoneEditable'),
+        variant: 'destructive',
+      });
+      return;
+    }
     if (!hasChanges) {
       toast({ title: t('error'), description: t('bulkEditNoChange'), variant: 'destructive' });
       return;
@@ -97,9 +114,28 @@ export function BulkEditReceiptsDialog({
         <DialogHeader>
           <DialogTitle>{t('bulkEditTitle')}</DialogTitle>
           <DialogDescription>
-            {t('bulkEditDescription')} — {selected.length} {t('selected')}
+            {t('bulkEditDescription')}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Eligibility banner */}
+        <div
+          className={`rounded-md border px-3 py-2 text-xs ${
+            allLockedShipped || noneEditable
+              ? 'border-destructive/40 bg-destructive/10 text-destructive'
+              : eligible < total
+                ? 'border-warning/40 bg-warning/10 text-foreground'
+                : 'border-border bg-muted/40 text-muted-foreground'
+          }`}
+        >
+          {allLockedShipped
+            ? t('bulkEditAllLockedShipped')
+            : noneEditable
+              ? t('bulkEditNoneEditable')
+              : t('bulkEditEligible')
+                  .replace('{eligible}', String(eligible))
+                  .replace('{total}', String(total))}
+        </div>
 
         {step === 'edit' ? (
           <div className="space-y-4">

@@ -19,6 +19,13 @@ interface Props {
   initialSupplier?: string;
   /** Suggested unit (from item picker / line). Falls back to PCS. */
   suggestedUnit?: ItemMaster['default_unit'];
+  /**
+   * Optional check invoked with the trimmed part number; should return true if
+   * a row with the same part_no already exists for the current supplier +
+   * destination + date context. When true, we surface a warning and block
+   * "use existing" to encourage the user to fix the line instead.
+   */
+  isContextDuplicate?: (partNo: string) => boolean;
   onCreated: (item: ItemMaster) => void;
 }
 
@@ -28,6 +35,7 @@ export function QuickAddItemDialog({
   initialPartNo,
   initialSupplier,
   suggestedUnit,
+  isContextDuplicate,
   onCreated,
 }: Props) {
   const { t } = useLanguage();
@@ -63,6 +71,11 @@ export function QuickAddItemDialog({
     [partNo, findByPartNo]
   );
 
+  const contextDuplicate = useMemo(
+    () => !!(partNo.trim() && isContextDuplicate?.(partNo.trim())),
+    [partNo, isContextDuplicate],
+  );
+
   const partNoError = touched.partNo && !partNo.trim();
   const descriptionError = touched.description && !description.trim() && !duplicate;
 
@@ -94,6 +107,10 @@ export function QuickAddItemDialog({
     setTouched({ partNo: true, description: true });
     if (!partNo.trim()) {
       toast({ title: t('error'), description: t('partNoRequired'), variant: 'destructive' });
+      return;
+    }
+    if (contextDuplicate) {
+      toast({ title: t('error'), description: t('duplicateInContextDesc'), variant: 'destructive' });
       return;
     }
     if (duplicate) {
@@ -230,6 +247,16 @@ export function QuickAddItemDialog({
               </div>
             )}
 
+            {contextDuplicate && (
+              <div className="rounded-md border border-destructive/40 bg-destructive/10 p-2.5 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <div className="text-xs space-y-0.5">
+                  <p className="font-medium text-destructive">{t('duplicateInContextTitle')}</p>
+                  <p className="text-muted-foreground">{t('duplicateInContextDesc')}</p>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label htmlFor="qa-desc" className="text-xs">
                 {t('description')} <span className="text-destructive">*</span>
@@ -299,7 +326,7 @@ export function QuickAddItemDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
               {t('cancel')}
             </Button>
-            <Button onClick={handleSave} disabled={submitting || !!duplicate}>
+            <Button onClick={handleSave} disabled={submitting || !!duplicate || contextDuplicate}>
               {submitting && <Loader2 className="w-4 h-4 me-1.5 animate-spin" />}
               {t('saveAndUse')}
             </Button>
