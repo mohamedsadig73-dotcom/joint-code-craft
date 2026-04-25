@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Plus, Search, Download, Upload, Loader2, Package, PackageOpen, Layers,
-  Columns3, Trash2, X, FileText,
+  Columns3, Trash2, X, FileText, Edit3,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent,
@@ -22,6 +22,8 @@ import { ReceiptFormDialog } from './ReceiptFormDialog';
 import { InvoiceFormDialog } from './InvoiceFormDialog';
 import { InvoicePickerDialog } from './InvoicePickerDialog';
 import { ReceiptsPrintPreview } from './ReceiptsPrintPreview';
+import { BulkEditReceiptsDialog, type BulkEditPatch } from './BulkEditReceiptsDialog';
+import { EditPreviewDialog, type FieldDiff } from './EditPreviewDialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -46,6 +48,7 @@ export function ReceiptsTab() {
     bulkInsertReceipts,
     bulkAddQuantity,
     bulkUpdatePackingType,
+    bulkUpdateFields,
   } = useBoxReceipts();
   const { summary } = useBoxSummary();
 
@@ -70,6 +73,14 @@ export function ReceiptsTab() {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [bulkRepacking, setBulkRepacking] = useState(false);
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+
+  // Edit preview state
+  const [pendingEdit, setPendingEdit] = useState<{
+    diffs: FieldDiff[];
+    apply: () => Promise<unknown>;
+  } | null>(null);
+  const [previewSubmitting, setPreviewSubmitting] = useState(false);
 
   // Column visibility (persisted)
   const [visibleColumns, setVisibleColumns] = useState<ReceiptColumnKey[]>(() => {
@@ -104,7 +115,10 @@ export function ReceiptsTab() {
   const isManager = user?.role === 'manager';
 
   const canModify = (r: BoxReceipt) =>
-    isAdmin || isManager || r.created_by === user?.id;
+    // Shipped receipts are locked for everyone (except admin) to preserve audit integrity
+    r.status === 'shipped'
+      ? isAdmin
+      : (isAdmin || isManager || r.created_by === user?.id);
 
   const existingSuppliers = useMemo(
     () => Array.from(new Set(receipts.map((r) => r.supplier))).sort(),
@@ -218,6 +232,19 @@ export function ReceiptsTab() {
     }
   };
 
+  const handleBulkEditApply = async (ids: string[], patch: BulkEditPatch): Promise<number> => {
+    // Filter to only modifiable rows (in case admin/manager status changed mid-flow)
+    const idSet = new Set(ids);
+    const allowed = selectedReceipts.filter((r) => idSet.has(r.id) && canModify(r));
+    if (allowed.length === 0) return 0;
+    const updated = await bulkUpdateFields(
+      allowed.map((r) => r.id),
+      patch as Partial<BoxReceiptInput>,
+    );
+    if (updated > 0) clearSelection();
+    return updated;
+  };
+
   const handleAdd = () => {
     setEditing(null);
     setFormOpen(true);
@@ -229,7 +256,30 @@ export function ReceiptsTab() {
   };
 
   const handleSubmit = async (values: BoxReceiptInput) => {
-    if (editing) return updateReceipt(editing.id, values);
+    if (editing) {
+      // Build diffs and surface a confirmation preview before persisting
+      const diffs = computeReceiptDiffs(editing, values, t);
+      if (diffs.length === 0) {
+        // No actual change — short-circuit and close the form
+        return editing as unknown as BoxReceipt;
+      }
+      return new Promise<BoxReceipt | null>((resolve) => {
+        setPendingEdit({
+          diffs,
+          apply: async () => {
+            setPreviewSubmitting(true);
+            try {
+              const updated = await updateReceipt(editing.id, values);
+              resolve(updated);
+              setPendingEdit(null);
+              setFormOpen(false);
+            } finally {
+              setPreviewSubmitting(false);
+            }
+          },
+        });
+      });
+    }
     return createReceipt(values);
   };
 
@@ -480,6 +530,16 @@ export function ReceiptsTab() {
               <Download className="w-3.5 h-3.5 me-1.5" />
               {t('export')}
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setBulkEditOpen(true)}
+              disabled={!selectedReceipts.some(canModify)}
+              className="gap-1.5"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              {t('bulkEdit')}
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -644,6 +704,53 @@ export function ReceiptsTab() {
         uniqueCount={pendingUniques.length}
         onResolve={handleResolveImport}
       />
+
+      <BulkEditReceiptsDialog
+        open={bulkEditOpen}
+        onOpenChange={setBulkEditOpen}
+        selected={selectedReceipts.filter(canModify)}
+        existingSuppliers={existingSuppliers}
+        onApply={handleBulkEditApply}
+      />
+
+      <EditPreviewDialog
+        open={!!pendingEdit}
+        onOpenChange={(o) => { if (!o) setPendingEdit(null); }}
+        diffs={pendingEdit?.diffs ?? []}
+        submitting={previewSubmitting}
+        onConfirm={async () => { await pendingEdit?.apply(); }}
+      />
     </div>
   );
+}
+
+/**
+ * Build a list of human-readable field diffs between an existing receipt and
+ * an incoming form values payload, used to drive the edit preview dialog.
+ */
+function computeReceiptDiffs(
+  existing: BoxReceipt,
+  next: BoxReceiptInput,
+  t: (k: string) => string,
+): FieldDiff[] {
+  const diffs: FieldDiff[] = [];
+  const push = (label: string, oldV: unknown, newV: unknown) => {
+    const o = oldV == null ? '' : String(oldV);
+    const n = newV == null ? '' : String(newV);
+    if (o !== n) diffs.push({ label, oldValue: o, newValue: n });
+  };
+  push(t('supplier'), existing.supplier, next.supplier);
+  push(t('partNo'), existing.part_no, next.part_no);
+  push(t('description'), existing.description, next.description);
+  push(t('qty'), existing.qty, next.qty);
+  push(t('unit'), existing.unit, next.unit);
+  push(t('destination'), t(`dest_${existing.destination}`), t(`dest_${next.destination}`));
+  push(t('packingType'), t(existing.packing_type), t(next.packing_type));
+  push(t('boxNo'), existing.box_no ?? '', next.box_no ?? '');
+  push(t('place'), existing.place ?? '', next.place ?? '');
+  push(t('receiptDate'), existing.receipt_date, next.receipt_date);
+  push(t('status'), t(`boxStatus_${existing.status}`), t(`boxStatus_${next.status}`));
+  push(t('notes'), existing.notes ?? '', next.notes ?? '');
+  push(t('invoiceNumber'), existing.invoice_number ?? '', next.invoice_number ?? '');
+  return diffs;
 }
