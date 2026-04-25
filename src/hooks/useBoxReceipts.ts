@@ -214,6 +214,33 @@ export function useBoxReceipts() {
     [user?.id, receipts]
   );
 
+  /**
+   * Bulk-change the packing_type of multiple receipts.
+   * When switching to 'loose', the box_no is cleared automatically.
+   */
+  const bulkUpdatePackingType = useCallback(
+    async (ids: string[], packingType: 'boxed' | 'loose') => {
+      if (!user?.id || ids.length === 0) return 0;
+      const patch: Partial<BoxReceiptInput> =
+        packingType === 'loose'
+          ? { packing_type: 'loose', box_no: null }
+          : { packing_type: 'boxed' };
+      const { data, error } = await supabase
+        .from('box_receipts')
+        .update(patch)
+        .in('id', ids)
+        .select('id');
+      if (error) {
+        toast({ title: t('error'), description: error.message, variant: 'destructive' });
+        return 0;
+      }
+      const updated = data?.length ?? 0;
+      toast({ title: t('success'), description: `${updated} ${t('packingTypeUpdated')}` });
+      return updated;
+    },
+    [user?.id, toast, t]
+  );
+
   return {
     receipts,
     loading,
@@ -224,5 +251,6 @@ export function useBoxReceipts() {
     bulkInsertReceipts,
     mergeReceipts,
     bulkAddQuantity,
+    bulkUpdatePackingType,
   };
 }
