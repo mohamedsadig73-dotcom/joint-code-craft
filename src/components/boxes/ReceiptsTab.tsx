@@ -423,6 +423,11 @@ export function ReceiptsTab() {
             className="hidden"
             onChange={handleImportFile}
           />
+          <Button variant="outline" onClick={() => setInvoiceOpen(true)} className="gap-1.5">
+            <FileText className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('addFullInvoice')}</span>
+            <span className="sm:hidden">{t('invoice')}</span>
+          </Button>
           <Button onClick={handleAdd}>
             <Plus className="w-4 h-4 me-1.5" />
             {t('addReceipt')}
@@ -503,6 +508,13 @@ export function ReceiptsTab() {
         onSubmit={handleSubmit}
         existingSuppliers={existingSuppliers}
         existingBoxes={existingBoxes}
+      />
+
+      <InvoiceFormDialog
+        open={invoiceOpen}
+        onOpenChange={setInvoiceOpen}
+        onSubmit={bulkInsertReceipts}
+        existingSuppliers={existingSuppliers}
       />
 
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
