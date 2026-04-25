@@ -247,6 +247,16 @@ export function QuickAddItemDialog({
               </div>
             )}
 
+            {contextDuplicate && (
+              <div className="rounded-md border border-destructive/40 bg-destructive/10 p-2.5 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <div className="text-xs space-y-0.5">
+                  <p className="font-medium text-destructive">{t('duplicateInContextTitle')}</p>
+                  <p className="text-muted-foreground">{t('duplicateInContextDesc')}</p>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label htmlFor="qa-desc" className="text-xs">
                 {t('description')} <span className="text-destructive">*</span>
