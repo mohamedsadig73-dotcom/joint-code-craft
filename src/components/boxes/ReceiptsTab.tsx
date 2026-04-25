@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Plus, Search, Download, Upload, Loader2, Package, PackageOpen, Layers,
-  Columns3, Trash2, X,
+  Columns3, Trash2, X, FileText,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent,
@@ -19,6 +19,7 @@ import { useBoxSummary } from '@/hooks/useBoxSummary';
 import { ReceiptsTable, ALL_RECEIPT_COLUMNS, type ReceiptColumnKey } from './ReceiptsTable';
 import { ReceiptMobileCard } from './ReceiptMobileCard';
 import { ReceiptFormDialog } from './ReceiptFormDialog';
+import { InvoiceFormDialog } from './InvoiceFormDialog';
 import { ReceiptsPrintPreview } from './ReceiptsPrintPreview';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -52,6 +53,7 @@ export function ReceiptsTab() {
   const [packingFilter, setPackingFilter] = useState<string>('all');
   const [editing, setEditing] = useState<BoxReceipt | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [toDelete, setToDelete] = useState<BoxReceipt | null>(null);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
