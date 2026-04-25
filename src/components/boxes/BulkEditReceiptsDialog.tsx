@@ -170,7 +170,7 @@ export function BulkEditReceiptsDialog({
         <DialogFooter className="gap-2 sm:gap-2">
           {step === 'review' && (
             <Button variant="outline" onClick={() => setStep('edit')} disabled={submitting}>
-              {t('back') || '←'}
+              ← {t('cancel')}
             </Button>
           )}
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
