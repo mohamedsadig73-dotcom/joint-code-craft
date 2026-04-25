@@ -12,7 +12,7 @@ import {
   BOX_STATUSES,
   normalizeBoxNo,
 } from '@/utils/boxNumberValidation';
-import type { BoxReceiptInput } from '@/hooks/useBoxReceipts';
+import type { BoxReceipt, BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { useItemsMaster } from '@/hooks/useItemsMaster';
 import { Loader2, Plus, Trash2, Package, PackageOpen, FileText } from 'lucide-react';
 import { ItemPickerCombobox } from './items/ItemPickerCombobox';
@@ -23,10 +23,18 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   onSubmit: (rows: BoxReceiptInput[]) => Promise<{ inserted: number; failed: number }>;
   existingSuppliers: string[];
+  /** When set, dialog opens in EDIT mode and loads these receipts as lines. */
+  editing?: { invoiceNumber: string; receipts: BoxReceipt[] } | null;
+  /** Called in edit mode to update an existing line (receipt) by id. */
+  onUpdateLine?: (id: string, patch: Partial<BoxReceiptInput>) => Promise<unknown>;
+  /** Called in edit mode to delete an existing line (soft delete). */
+  onDeleteLine?: (id: string) => Promise<unknown>;
 }
 
 interface InvoiceLine {
   key: string;
+  /** Existing receipt id when this line was loaded from DB (edit mode). */
+  existingId?: string;
   selectedItemId: string | null;
   part_no: string;
   description: string;
@@ -69,7 +77,15 @@ function makeEmptyLine(): InvoiceLine {
   };
 }
 
-export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppliers }: Props) {
+export function InvoiceFormDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  existingSuppliers,
+  editing,
+  onUpdateLine,
+  onDeleteLine,
+}: Props) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const { items } = useItemsMaster();
@@ -86,12 +102,39 @@ export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppli
 
   useEffect(() => {
     if (open) {
-      setHeader(HEADER_DEFAULT);
-      setLines([makeEmptyLine()]);
+      if (editing && editing.receipts.length > 0) {
+        // Hydrate header from the first receipt
+        const first = editing.receipts[0];
+        setHeader({
+          supplier: first.supplier,
+          receipt_date: first.receipt_date,
+          invoice_number: editing.invoiceNumber,
+          destination: first.destination,
+          packing_type: first.packing_type ?? 'boxed',
+          box_no: first.box_no ?? 'B-01',
+          place: first.place ?? 'مخزنة بالمخزن (B)',
+          status: first.status,
+        });
+        setLines(
+          editing.receipts.map((r, i) => ({
+            key: `${r.id}-${i}`,
+            existingId: r.id,
+            selectedItemId: r.item_id ?? null,
+            part_no: r.part_no,
+            description: r.description,
+            qty: r.qty,
+            unit: r.unit,
+            notes: r.notes ?? '',
+          }))
+        );
+      } else {
+        setHeader(HEADER_DEFAULT);
+        setLines([makeEmptyLine()]);
+      }
       setErrors({});
       setSubmitting(false);
     }
-  }, [open]);
+  }, [open, editing]);
 
   const totals = useMemo(() => {
     const totalQty = lines.reduce((s, l) => s + (Number(l.qty) || 0), 0);
@@ -102,7 +145,12 @@ export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppli
     setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   };
 
-  const removeLine = (key: string) => {
+  const removeLine = async (key: string) => {
+    const target = lines.find((l) => l.key === key);
+    // In edit mode, deleting an existing line should soft-delete in DB
+    if (target?.existingId && onDeleteLine) {
+      await onDeleteLine(target.existingId);
+    }
     setLines((prev) => (prev.length === 1 ? prev : prev.filter((l) => l.key !== key)));
   };
 
@@ -156,24 +204,73 @@ export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppli
     }
 
     setSubmitting(true);
-    const invoicePrefix = header.invoice_number.trim()
-      ? `[${t('invoiceNumber')}: ${header.invoice_number.trim()}] `
-      : '';
-
-    const rows: BoxReceiptInput[] = lines.map((l) => ({
+    const invoiceNumber = header.invoice_number.trim() || null;
+    const headerPatch = {
       supplier: header.supplier.trim(),
-      part_no: l.part_no.trim(),
-      description: l.description.trim(),
-      qty: Number(l.qty),
-      unit: l.unit,
       destination: header.destination,
       packing_type: header.packing_type,
       place: header.packing_type === 'boxed' ? header.place.trim() || null : null,
       box_no: header.packing_type === 'boxed' ? normalizeBoxNo(header.box_no) : null,
       receipt_date: header.receipt_date,
       status: header.status,
-      notes: `${invoicePrefix}${l.notes.trim()}`.trim() || null,
+      invoice_number: invoiceNumber,
+    };
+
+    if (editing && onUpdateLine) {
+      // EDIT MODE: update existing lines, insert new ones
+      const existingLines = lines.filter((l) => l.existingId);
+      const newLines = lines.filter((l) => !l.existingId);
+
+      let failed = 0;
+      for (const l of existingLines) {
+        try {
+          await onUpdateLine(l.existingId as string, {
+            ...headerPatch,
+            part_no: l.part_no.trim(),
+            description: l.description.trim(),
+            qty: Number(l.qty),
+            unit: l.unit,
+            notes: l.notes.trim() || null,
+            item_id: l.selectedItemId,
+          });
+        } catch {
+          failed++;
+        }
+      }
+
+      if (newLines.length > 0) {
+        const newRows: BoxReceiptInput[] = newLines.map((l) => ({
+          ...headerPatch,
+          part_no: l.part_no.trim(),
+          description: l.description.trim(),
+          qty: Number(l.qty),
+          unit: l.unit,
+          notes: l.notes.trim() || null,
+          image_path: null,
+          item_id: l.selectedItemId,
+        }));
+        const result = await onSubmit(newRows);
+        failed += result.failed;
+      }
+
+      setSubmitting(false);
+      if (failed === 0) {
+        toast({ title: t('success'), description: t('invoiceUpdated') });
+        onOpenChange(false);
+      }
+      return;
+    }
+
+    // CREATE MODE: bulk insert all rows
+    const rows: BoxReceiptInput[] = lines.map((l) => ({
+      ...headerPatch,
+      part_no: l.part_no.trim(),
+      description: l.description.trim(),
+      qty: Number(l.qty),
+      unit: l.unit,
+      notes: l.notes.trim() || null,
       image_path: null,
+      item_id: l.selectedItemId,
     }));
 
     const result = await onSubmit(rows);
@@ -190,7 +287,7 @@ export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppli
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary" />
-            {t('addFullInvoice')}
+            {editing ? t('editFullInvoice') : t('addFullInvoice')}
           </DialogTitle>
         </DialogHeader>
 
