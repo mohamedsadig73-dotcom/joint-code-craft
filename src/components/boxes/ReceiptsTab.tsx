@@ -529,9 +529,29 @@ export function ReceiptsTab() {
 
       <InvoiceFormDialog
         open={invoiceOpen}
-        onOpenChange={setInvoiceOpen}
+        onOpenChange={(o) => {
+          setInvoiceOpen(o);
+          if (!o) setEditingInvoice(null);
+        }}
         onSubmit={bulkInsertReceipts}
         existingSuppliers={existingSuppliers}
+        editing={editingInvoice}
+        onUpdateLine={(id, patch) => updateReceipt(id, patch)}
+        onDeleteLine={(id) => deleteReceipt(id)}
+      />
+
+      <InvoicePickerDialog
+        open={invoicePickerOpen}
+        onOpenChange={setInvoicePickerOpen}
+        receipts={receipts}
+        onPick={(invoiceNumber) => {
+          const matched = receipts.filter(
+            (r) => (r.invoice_number ?? '').trim() === invoiceNumber
+          );
+          if (matched.length === 0) return;
+          setEditingInvoice({ invoiceNumber, receipts: matched });
+          setInvoiceOpen(true);
+        }}
       />
 
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
