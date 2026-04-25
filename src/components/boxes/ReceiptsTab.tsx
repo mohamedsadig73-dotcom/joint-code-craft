@@ -437,6 +437,14 @@ export function ReceiptsTab() {
             <span className="hidden sm:inline">{t('addFullInvoice')}</span>
             <span className="sm:hidden">{t('invoice')}</span>
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => setInvoicePickerOpen(true)}
+            className="gap-1.5"
+          >
+            <FileText className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('editFullInvoice')}</span>
+          </Button>
           <Button onClick={handleAdd}>
             <Plus className="w-4 h-4 me-1.5" />
             {t('addReceipt')}
