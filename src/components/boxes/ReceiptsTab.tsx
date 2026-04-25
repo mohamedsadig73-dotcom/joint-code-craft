@@ -480,6 +480,35 @@ export function ReceiptsTab() {
               <Download className="w-3.5 h-3.5 me-1.5" />
               {t('export')}
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={bulkRepacking || !selectedReceipts.some(canModify)}
+                  className="gap-1.5"
+                >
+                  {bulkRepacking ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Package className="w-3.5 h-3.5" />
+                  )}
+                  {t('changePackingType')}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>{t('changeTo')}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => handleBulkChangePacking('loose')}>
+                  <PackageOpen className="w-3.5 h-3.5 me-2" />
+                  {t('loose')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => handleBulkChangePacking('boxed')}>
+                  <Package className="w-3.5 h-3.5 me-2" />
+                  {t('boxed')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               size="sm"
               variant="destructive"
