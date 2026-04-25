@@ -38,6 +38,8 @@ const DEFAULT: BoxReceiptInput = {
   status: 'received',
   notes: '',
   image_path: null,
+  invoice_number: null,
+  item_id: null,
 };
 
 export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, existingSuppliers, existingBoxes }: Props) {
@@ -67,11 +69,13 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
           status: initial.status,
           notes: initial.notes,
           image_path: initial.image_path,
+          invoice_number: initial.invoice_number ?? null,
+          item_id: initial.item_id ?? null,
         });
         const found = items.find(
           (i) => i.part_no.trim().toLowerCase() === initial.part_no.trim().toLowerCase()
         );
-        setSelectedItemId(found?.id ?? null);
+        setSelectedItemId(initial.item_id ?? found?.id ?? null);
       } else {
         setValues(DEFAULT);
         setSelectedItemId(null);
@@ -93,6 +97,7 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
       supplier: item.default_supplier || v.supplier,
       unit: item.default_unit,
       image_path: item.image_path ?? v.image_path,
+      item_id: item.id,
     }));
     setErrors((e) => ({ ...e, part_no: '', description: '', supplier: '' }));
   };
@@ -188,11 +193,15 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
               value={selectedItemId}
               onSelect={handleSelectItem}
               onCreateNew={handleCreateItemRequest}
-              disabled={!!initial}
             />
             {errors.part_no && <p className="text-xs text-destructive">{errors.part_no}</p>}
-            {!selectedItemId && !initial && (
+            {!selectedItemId && (
               <p className="text-xs text-muted-foreground">{t('pickItemFromMaster')}</p>
+            )}
+            {initial && selectedItemId && initial.part_no !== values.part_no && (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                {t('partNoChangedNotice')}
+              </p>
             )}
           </div>
 

@@ -99,6 +99,7 @@ export type Database = {
           destination: Database["public"]["Enums"]["box_destination"]
           id: string
           image_path: string | null
+          invoice_number: string | null
           item_id: string | null
           notes: string | null
           packing_type: Database["public"]["Enums"]["packing_type"]
@@ -122,6 +123,7 @@ export type Database = {
           destination?: Database["public"]["Enums"]["box_destination"]
           id?: string
           image_path?: string | null
+          invoice_number?: string | null
           item_id?: string | null
           notes?: string | null
           packing_type?: Database["public"]["Enums"]["packing_type"]
@@ -145,6 +147,7 @@ export type Database = {
           destination?: Database["public"]["Enums"]["box_destination"]
           id?: string
           image_path?: string | null
+          invoice_number?: string | null
           item_id?: string | null
           notes?: string | null
           packing_type?: Database["public"]["Enums"]["packing_type"]

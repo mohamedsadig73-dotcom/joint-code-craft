@@ -20,6 +20,7 @@ import { ReceiptsTable, ALL_RECEIPT_COLUMNS, type ReceiptColumnKey } from './Rec
 import { ReceiptMobileCard } from './ReceiptMobileCard';
 import { ReceiptFormDialog } from './ReceiptFormDialog';
 import { InvoiceFormDialog } from './InvoiceFormDialog';
+import { InvoicePickerDialog } from './InvoicePickerDialog';
 import { ReceiptsPrintPreview } from './ReceiptsPrintPreview';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -54,6 +55,11 @@ export function ReceiptsTab() {
   const [editing, setEditing] = useState<BoxReceipt | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [invoicePickerOpen, setInvoicePickerOpen] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<{
+    invoiceNumber: string;
+    receipts: BoxReceipt[];
+  } | null>(null);
   const [toDelete, setToDelete] = useState<BoxReceipt | null>(null);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -128,7 +134,8 @@ export function ReceiptsTab() {
         r.supplier.toLowerCase().includes(q) ||
         r.part_no.toLowerCase().includes(q) ||
         r.description.toLowerCase().includes(q) ||
-        (r.box_no?.toLowerCase().includes(q) ?? false)
+        (r.box_no?.toLowerCase().includes(q) ?? false) ||
+        (r.invoice_number?.toLowerCase().includes(q) ?? false)
       );
     });
   }, [receipts, search, destFilter, statusFilter, packingFilter]);
@@ -250,6 +257,8 @@ export function ReceiptsTab() {
           status: 'received',
           notes: null,
           image_path: null,
+          invoice_number: null,
+          item_id: null,
         });
       }
       if (inputs.length === 0) {
@@ -428,6 +437,14 @@ export function ReceiptsTab() {
             <span className="hidden sm:inline">{t('addFullInvoice')}</span>
             <span className="sm:hidden">{t('invoice')}</span>
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => setInvoicePickerOpen(true)}
+            className="gap-1.5"
+          >
+            <FileText className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('editFullInvoice')}</span>
+          </Button>
           <Button onClick={handleAdd}>
             <Plus className="w-4 h-4 me-1.5" />
             {t('addReceipt')}
@@ -512,9 +529,29 @@ export function ReceiptsTab() {
 
       <InvoiceFormDialog
         open={invoiceOpen}
-        onOpenChange={setInvoiceOpen}
+        onOpenChange={(o) => {
+          setInvoiceOpen(o);
+          if (!o) setEditingInvoice(null);
+        }}
         onSubmit={bulkInsertReceipts}
         existingSuppliers={existingSuppliers}
+        editing={editingInvoice}
+        onUpdateLine={(id, patch) => updateReceipt(id, patch)}
+        onDeleteLine={(id) => deleteReceipt(id)}
+      />
+
+      <InvoicePickerDialog
+        open={invoicePickerOpen}
+        onOpenChange={setInvoicePickerOpen}
+        receipts={receipts}
+        onPick={(invoiceNumber) => {
+          const matched = receipts.filter(
+            (r) => (r.invoice_number ?? '').trim() === invoiceNumber
+          );
+          if (matched.length === 0) return;
+          setEditingInvoice({ invoiceNumber, receipts: matched });
+          setInvoiceOpen(true);
+        }}
       />
 
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
