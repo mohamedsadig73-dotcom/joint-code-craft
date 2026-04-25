@@ -15,7 +15,7 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   receipts: BoxReceipt[];
-  onPick: (invoiceNumber: string) => void;
+  onPick: (selection: { invoiceNumber: string; receiptIds: string[] }) => void;
 }
 
 function fmtDate(d: string) {
@@ -32,23 +32,26 @@ export function InvoicePickerDialog({ open, onOpenChange, receipts, onPick }: Pr
   const invoices = useMemo(() => {
     const map = new Map<
       string,
-      { invoiceNumber: string; supplier: string; date: string; count: number; totalQty: number }
+      { invoiceNumber: string; supplier: string; date: string; count: number; totalQty: number; receiptIds: string[]; unnumbered: boolean }
     >();
     for (const r of receipts) {
       const inv = (r.invoice_number ?? '').trim();
-      if (!inv) continue;
-      const cur = map.get(inv);
+      const key = inv || `__batch__:${r.created_at}:${r.supplier}:${r.receipt_date}`;
+      const cur = map.get(key);
       if (cur) {
         cur.count += 1;
         cur.totalQty += r.qty;
+        cur.receiptIds.push(r.id);
         if (r.receipt_date > cur.date) cur.date = r.receipt_date;
       } else {
-        map.set(inv, {
+        map.set(key, {
           invoiceNumber: inv,
           supplier: r.supplier,
           date: r.receipt_date,
           count: 1,
           totalQty: r.qty,
+          receiptIds: [r.id],
+          unnumbered: !inv,
         });
       }
     }
@@ -95,12 +98,12 @@ export function InvoicePickerDialog({ open, onOpenChange, receipts, onPick }: Pr
                   variant="outline"
                   className="w-full justify-between h-auto py-3 px-4"
                   onClick={() => {
-                    onPick(inv.invoiceNumber);
+                    onPick({ invoiceNumber: inv.invoiceNumber, receiptIds: inv.receiptIds });
                     onOpenChange(false);
                   }}
                 >
                   <div className="flex flex-col items-start gap-0.5">
-                    <span className="font-mono font-bold text-sm">{inv.invoiceNumber}</span>
+                    <span className="font-mono font-bold text-sm">{inv.invoiceNumber || t('unnumberedInvoice')}</span>
                     <span className="text-xs text-muted-foreground">{inv.supplier}</span>
                   </div>
                   <div className="flex flex-col items-end gap-0.5 text-xs text-muted-foreground tabular-nums">
