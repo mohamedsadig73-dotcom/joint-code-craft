@@ -593,8 +593,36 @@ export function ReceiptsTab() {
             <Plus className="w-4 h-4 me-1.5" />
             {t('addReceipt')}
           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setLockPolicyOpen(true)}
+            title={t('lockPolicyOpen')}
+            aria-label={t('lockPolicyOpen')}
+          >
+            <Info className="w-4 h-4" />
+          </Button>
         </div>
       </div>
+
+      {/* Undo last edit (30s window) */}
+      {undoBatch && undoSecondsLeft > 0 && (
+        <div className="flex items-center justify-between gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs">
+          <span className="text-foreground">
+            {t('undoAvailableSeconds').replace('{sec}', String(undoSecondsLeft))}
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleUndo}
+            disabled={undoing}
+            className="h-7 gap-1.5"
+          >
+            {undoing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Undo2 className="w-3.5 h-3.5" />}
+            {t('undoLastChange')}
+          </Button>
+        </div>
+      )}
 
       {/* Bulk actions bar */}
       {selectedIds.size > 0 && (
