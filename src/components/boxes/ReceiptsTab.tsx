@@ -250,6 +250,8 @@ export function ReceiptsTab() {
           status: 'received',
           notes: null,
           image_path: null,
+          invoice_number: null,
+          item_id: null,
         });
       }
       if (inputs.length === 0) {
