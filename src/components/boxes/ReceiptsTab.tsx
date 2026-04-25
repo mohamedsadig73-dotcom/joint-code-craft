@@ -420,7 +420,7 @@ export function ReceiptsTab() {
 
   const handleUndo = async () => {
     if (!undoBatch || undoBatch.entries.length === 0) {
-      toast({ title: t('info'), description: t('undoNothing') });
+      toast({ title: t('undoLastChange'), description: t('undoNothing') });
       return;
     }
     setUndoing(true);
