@@ -544,9 +544,10 @@ export function ReceiptsTab() {
         open={invoicePickerOpen}
         onOpenChange={setInvoicePickerOpen}
         receipts={receipts}
-        onPick={(invoiceNumber) => {
+        onPick={({ invoiceNumber, receiptIds }) => {
+          const ids = new Set(receiptIds);
           const matched = receipts.filter(
-            (r) => (r.invoice_number ?? '').trim() === invoiceNumber
+            (r) => ids.has(r.id)
           );
           if (matched.length === 0) return;
           setEditingInvoice({ invoiceNumber, receipts: matched });
