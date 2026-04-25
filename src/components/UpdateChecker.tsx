@@ -216,6 +216,13 @@ export function UpdateChecker() {
             console.log('[UpdateChecker] Desktop update:', d.desktop_shell_version);
             return;
           }
+
+          await log({
+            phase: 'check',
+            status: 'success',
+            targetVersion: d.desktop_shell_version,
+            attemptedUrl: DESKTOP_RELEASE_URL,
+          });
         } catch (err) {
           await log({
             phase: 'check',
@@ -224,6 +231,8 @@ export function UpdateChecker() {
             errorMessage: err instanceof Error ? err.message : String(err),
           });
         }
+
+        return;
       }
 
       const data = await fetchJSON<PublishedVersionPayload>(VERSION_URL);
