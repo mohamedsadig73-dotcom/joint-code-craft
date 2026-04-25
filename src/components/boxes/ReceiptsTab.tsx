@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useBoxReceipts, type BoxReceipt, type BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { useBoxSummary } from '@/hooks/useBoxSummary';
@@ -45,6 +45,7 @@ export function ReceiptsTab() {
     deleteReceipt,
     bulkInsertReceipts,
     bulkAddQuantity,
+    bulkUpdatePackingType,
   } = useBoxReceipts();
   const { summary } = useBoxSummary();
 
@@ -68,6 +69,7 @@ export function ReceiptsTab() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkRepacking, setBulkRepacking] = useState(false);
 
   // Column visibility (persisted)
   const [visibleColumns, setVisibleColumns] = useState<ReceiptColumnKey[]>(() => {
@@ -199,6 +201,21 @@ export function ReceiptsTab() {
   const handleBulkExport = async () => {
     await exportBoxesToExcel(selectedReceipts, summary, language);
     toast({ title: t('success'), description: t('excelExported') });
+  };
+
+  const handleBulkChangePacking = async (target: 'boxed' | 'loose') => {
+    const allowed = selectedReceipts.filter(canModify).filter((r) => r.packing_type !== target);
+    if (allowed.length === 0) {
+      toast({ title: t('info'), description: t('noEligibleRows') });
+      return;
+    }
+    setBulkRepacking(true);
+    try {
+      await bulkUpdatePackingType(allowed.map((r) => r.id), target);
+      clearSelection();
+    } finally {
+      setBulkRepacking(false);
+    }
   };
 
   const handleAdd = () => {
