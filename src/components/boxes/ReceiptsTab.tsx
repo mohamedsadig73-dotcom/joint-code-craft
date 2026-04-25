@@ -256,7 +256,30 @@ export function ReceiptsTab() {
   };
 
   const handleSubmit = async (values: BoxReceiptInput) => {
-    if (editing) return updateReceipt(editing.id, values);
+    if (editing) {
+      // Build diffs and surface a confirmation preview before persisting
+      const diffs = computeReceiptDiffs(editing, values, t);
+      if (diffs.length === 0) {
+        // No actual change — short-circuit and close the form
+        return editing as unknown as BoxReceipt;
+      }
+      return new Promise<BoxReceipt | null>((resolve) => {
+        setPendingEdit({
+          diffs,
+          apply: async () => {
+            setPreviewSubmitting(true);
+            try {
+              const updated = await updateReceipt(editing.id, values);
+              resolve(updated);
+              setPendingEdit(null);
+              setFormOpen(false);
+            } finally {
+              setPreviewSubmitting(false);
+            }
+          },
+        });
+      });
+    }
     return createReceipt(values);
   };
 
