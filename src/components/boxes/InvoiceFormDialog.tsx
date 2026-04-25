@@ -535,6 +535,9 @@ export function InvoiceFormDialog({
         onOpenChange={(open) => setQuickAdd((q) => ({ ...q, open }))}
         initialPartNo={quickAdd.partNo}
         initialSupplier={header.supplier}
+        suggestedUnit={
+          lines.find((l) => l.key === quickAdd.lineKey)?.unit ?? 'PCS'
+        }
         onCreated={handleQuickAddCreated}
       />
     </Dialog>
