@@ -3622,6 +3622,44 @@ export type Database = {
         }
         Relationships: []
       }
+      user_2fa_status: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          is_enabled: boolean | null
+          last_verified_at: string | null
+          method: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          is_enabled?: boolean | null
+          last_verified_at?: string | null
+          method?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          is_enabled?: boolean | null
+          last_verified_at?: string | null
+          method?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_2fa_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       check_admin_office_notifications: { Args: never; Returns: undefined }
