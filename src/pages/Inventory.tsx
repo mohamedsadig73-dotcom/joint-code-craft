@@ -1,8 +1,10 @@
+import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Navigation } from '@/components/Navigation';
-import { Warehouse, FolderTree, Tags, Ruler, Truck, Building2, Briefcase } from 'lucide-react';
+import { Warehouse, FolderTree, Tags, Ruler, Truck, Building2, Briefcase, ArrowLeftRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { ReferenceCrudTab } from '@/components/inventory/ReferenceCrudTab';
 
 export default function Inventory() {
@@ -16,6 +18,14 @@ export default function Inventory() {
           title={t('inventoryManagement')}
           subtitle={t('inventoryDesc')}
           icon={Warehouse}
+          actions={
+            <Button asChild>
+              <Link to="/inventory/movements">
+                <ArrowLeftRight className="w-4 h-4 me-1.5" />
+                {t('stockMovements')}
+              </Link>
+            </Button>
+          }
         />
 
         <Tabs defaultValue="warehouses" className="mt-4">
