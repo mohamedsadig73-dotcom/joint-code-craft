@@ -228,6 +228,14 @@ export function InvoiceFormDialog({
       return;
     }
 
+    // Warn-and-confirm when duplicate part numbers exist within the same invoice
+    if (duplicateLineKeys.size > 0) {
+      const proceed = window.confirm(
+        `${t('duplicateInContextTitle')}\n\n${t('duplicateInContextDesc')}\n\n${t('confirmAction') || 'OK?'}`
+      );
+      if (!proceed) return;
+    }
+
     setSubmitting(true);
     const invoiceNumber = header.invoice_number.trim() || null;
     const headerPatch = {
