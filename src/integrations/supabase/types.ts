@@ -493,6 +493,45 @@ export type Database = {
           },
         ]
       }
+      departments: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          manager_id: string | null
+          name_ar: string
+          name_en: string | null
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          manager_id?: string | null
+          name_ar: string
+          name_en?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          manager_id?: string | null
+          name_ar?: string
+          name_en?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gdpr_requests: {
         Row: {
           created_at: string | null
@@ -732,6 +771,94 @@ export type Database = {
           },
         ]
       }
+      item_categories: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string | null
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en?: string | null
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string | null
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "item_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      item_groups: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string | null
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en?: string | null
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string | null
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_groups_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "item_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       item_image_history: {
         Row: {
           action: string
@@ -782,50 +909,117 @@ export type Database = {
       }
       items_master: {
         Row: {
+          avg_cost: number | null
+          barcode: string | null
+          brand: string | null
+          category_id: string | null
           created_at: string
           created_by: string | null
           default_supplier: string | null
           default_unit: Database["public"]["Enums"]["box_unit"]
           description: string
+          expiry_date: string | null
+          group_id: string | null
           id: string
           image_path: string | null
           is_active: boolean
+          last_cost: number | null
+          max_qty: number | null
+          min_qty: number | null
+          model_no: string | null
           notes: string | null
           part_no: string
+          reorder_qty: number | null
+          supplier_id: string | null
+          uom_id: string | null
           updated_at: string
         }
         Insert: {
+          avg_cost?: number | null
+          barcode?: string | null
+          brand?: string | null
+          category_id?: string | null
           created_at?: string
           created_by?: string | null
           default_supplier?: string | null
           default_unit?: Database["public"]["Enums"]["box_unit"]
           description?: string
+          expiry_date?: string | null
+          group_id?: string | null
           id?: string
           image_path?: string | null
           is_active?: boolean
+          last_cost?: number | null
+          max_qty?: number | null
+          min_qty?: number | null
+          model_no?: string | null
           notes?: string | null
           part_no: string
+          reorder_qty?: number | null
+          supplier_id?: string | null
+          uom_id?: string | null
           updated_at?: string
         }
         Update: {
+          avg_cost?: number | null
+          barcode?: string | null
+          brand?: string | null
+          category_id?: string | null
           created_at?: string
           created_by?: string | null
           default_supplier?: string | null
           default_unit?: Database["public"]["Enums"]["box_unit"]
           description?: string
+          expiry_date?: string | null
+          group_id?: string | null
           id?: string
           image_path?: string | null
           is_active?: boolean
+          last_cost?: number | null
+          max_qty?: number | null
+          min_qty?: number | null
+          model_no?: string | null
           notes?: string | null
           part_no?: string
+          reorder_qty?: number | null
+          supplier_id?: string | null
+          uom_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "items_master_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "item_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "items_master_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_master_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "item_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_master_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_master_uom_id_fkey"
+            columns: ["uom_id"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
             referencedColumns: ["id"]
           },
         ]
@@ -1707,6 +1901,54 @@ export type Database = {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string | null
+          notes: string | null
+          start_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en?: string | null
+          notes?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string | null
+          notes?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rate_limit_tracking: {
         Row: {
           created_at: string
@@ -1793,6 +2035,104 @@ export type Database = {
             columns: ["deleted_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          code: string
+          contact_person: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string | null
+          notes: string | null
+          phone: string | null
+          tax_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          code: string
+          contact_person?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en?: string | null
+          notes?: string | null
+          phone?: string | null
+          tax_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          code?: string
+          contact_person?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string | null
+          notes?: string | null
+          phone?: string | null
+          tax_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      units_of_measure: {
+        Row: {
+          base_unit_id: string | null
+          code: string
+          conversion_factor: number
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          base_unit_id?: string | null
+          code: string
+          conversion_factor?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          base_unit_id?: string | null
+          code?: string
+          conversion_factor?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "units_of_measure_base_unit_id_fkey"
+            columns: ["base_unit_id"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
             referencedColumns: ["id"]
           },
         ]
@@ -1963,6 +2303,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      warehouses: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          location: string | null
+          manager_id: string | null
+          name_ar: string
+          name_en: string | null
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          manager_id?: string | null
+          name_ar: string
+          name_en?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          manager_id?: string | null
+          name_ar?: string
+          name_en?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       wms_3pl_tenants: {
         Row: {
