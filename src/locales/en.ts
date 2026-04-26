@@ -1,5 +1,4 @@
 // Auto-extracted from LanguageContext.tsx for lazy loading
-// English translations
 const en = {
     // Navigation
     dashboard: 'Dashboard',
@@ -1393,7 +1392,6 @@ const en = {
 
     // Last item marker
     _lastEn: '',
-  },
 };
 
 export default en;

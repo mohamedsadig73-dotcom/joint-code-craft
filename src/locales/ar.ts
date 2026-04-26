@@ -1,5 +1,4 @@
 // Auto-extracted from LanguageContext.tsx for lazy loading
-// Arabic translations
 const ar = {
     // Navigation
     dashboard: 'لوحة التحكم',
@@ -1392,7 +1391,6 @@ const ar = {
     container: 'كونتينر',
 
     _lastAr: '',
-  },
 };
 
 export default ar;
