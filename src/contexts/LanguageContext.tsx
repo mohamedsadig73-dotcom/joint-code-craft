@@ -30,7 +30,16 @@ function loadArabic(): Promise<Translations> {
   return arabicLoadingPromise;
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+// Cache the context on globalThis so HMR reloads of this module reuse the same
+// React context object. Otherwise, after an HMR update the Provider (mounted by
+// App.tsx, which is NOT reloaded) keeps the old context while consumers read
+// from a new context object — causing "useLanguage must be used within
+// LanguageProvider" errors on the live preview.
+const __LC_KEY = '__DTS_LANGUAGE_CONTEXT__';
+const __g = globalThis as unknown as Record<string, unknown>;
+const LanguageContext: React.Context<LanguageContextType | undefined> =
+  (__g[__LC_KEY] as React.Context<LanguageContextType | undefined>) ??
+  (__g[__LC_KEY] = createContext<LanguageContextType | undefined>(undefined));
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>(() => {
