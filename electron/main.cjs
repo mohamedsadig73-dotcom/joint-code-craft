@@ -14,6 +14,32 @@ const PUBLISHED_URL = 'https://dts-store-qatar-2026.lovable.app';
 const UPDATE_DIR = path.join(app.getPath('userData'), 'updates');
 const LOCK_FILE = path.join(UPDATE_DIR, 'update.lock');
 const PENDING_DIST = path.join(UPDATE_DIR, 'dist-pending');
+const STATUS_FILE = path.join(UPDATE_DIR, 'update-status.json');
+
+// ── Status tracking (persists across restarts for diagnostics) ──
+function writeStatus(phase, details = {}) {
+  try {
+    if (!fs.existsSync(UPDATE_DIR)) fs.mkdirSync(UPDATE_DIR, { recursive: true });
+    const payload = {
+      phase,
+      timestamp: new Date().toISOString(),
+      ...details,
+    };
+    fs.writeFileSync(STATUS_FILE, JSON.stringify(payload, null, 2), 'utf-8');
+    console.log(`[Electron][Update] ${phase}`, details);
+  } catch (err) {
+    console.error('[Electron][Update] Failed to write status:', err);
+  }
+}
+
+function readStatus() {
+  try {
+    if (!fs.existsSync(STATUS_FILE)) return null;
+    return JSON.parse(fs.readFileSync(STATUS_FILE, 'utf-8'));
+  } catch {
+    return null;
+  }
+}
 
 function hasIndex(dir) {
   return fs.existsSync(path.join(dir, 'index.html'));
@@ -41,6 +67,7 @@ function getShellVersion() {
 function applyPendingUpdateIfAny() {
   try {
     if (!fs.existsSync(PENDING_DIST)) return;
+    writeStatus('applying', { source: PENDING_DIST, target: USER_DIST_DIR });
     console.log('[Electron] Applying pending update from previous session...');
     if (fs.existsSync(USER_DIST_DIR)) {
       fs.rmSync(USER_DIST_DIR, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
@@ -48,8 +75,10 @@ function applyPendingUpdateIfAny() {
     fs.cpSync(PENDING_DIST, USER_DIST_DIR, { recursive: true });
     fs.rmSync(PENDING_DIST, { recursive: true, force: true });
     try { fs.unlinkSync(LOCK_FILE); } catch (_) {}
+    writeStatus('applied', { activeDir: USER_DIST_DIR });
     console.log('[Electron] ✓ Pending update applied');
   } catch (err) {
+    writeStatus('apply_failed', { error: err.message, stack: err.stack });
     console.error('[Electron] Failed to apply pending update:', err);
   }
 }
@@ -262,17 +291,19 @@ function downloadFile(url, destPath, progressCallback) {
 
 // ── Helper: Extract ZIP and replace dist/ ──────────────
 function extractAndReplaceDist(zipPath) {
-  // Use Node.js built-in zlib + manual ZIP parsing
-  // For simplicity and reliability, use the 'unzip' approach with AdmZip-like logic
   const AdmZip = (() => {
-    try { return require('adm-zip'); } catch (_) { return null; }
+    try { return require('adm-zip'); } catch (err) {
+      writeStatus('admzip_unavailable', { error: err.message });
+      return null;
+    }
   })();
 
   if (AdmZip) {
+    writeStatus('extracting', { method: 'adm-zip', zipPath });
     return extractWithAdmZip(AdmZip, zipPath);
   }
 
-  // Fallback: use PowerShell on Windows to extract
+  writeStatus('extracting', { method: 'powershell-fallback', zipPath });
   return extractWithPowerShell(zipPath);
 }
 
@@ -401,36 +432,52 @@ ipcMain.handle('download-update', async (_event, downloadUrl) => {
 
   const zipPath = path.join(UPDATE_DIR, 'update.zip');
 
-  // Step 1: Download
-  console.log('[Electron] Downloading update from:', downloadUrl);
-  await downloadFile(downloadUrl, zipPath, (progress, downloaded, total) => {
-    mainWindow?.webContents?.send('download-progress', {
-      phase: 'downloading',
-      progress,
-      downloaded,
-      total,
+  try {
+    // Step 1: Download
+    writeStatus('download_start', { url: downloadUrl, zipPath });
+    console.log('[Electron] Downloading update from:', downloadUrl);
+    await downloadFile(downloadUrl, zipPath, (progress, downloaded, total) => {
+      mainWindow?.webContents?.send('download-progress', {
+        phase: 'downloading',
+        progress,
+        downloaded,
+        total,
+      });
     });
-  });
+    const zipSize = fs.existsSync(zipPath) ? fs.statSync(zipPath).size : 0;
+    writeStatus('download_complete', { zipPath, zipSize });
 
-  // Step 2: Extract and replace dist/
-  console.log('[Electron] Extracting and replacing dist/...');
-  mainWindow?.webContents?.send('download-progress', {
-    phase: 'installing',
-    progress: 100,
-    downloaded: 0,
-    total: 0,
-  });
+    // Step 2: Extract and stage to PENDING_DIST
+    console.log('[Electron] Extracting and replacing dist/...');
+    mainWindow?.webContents?.send('download-progress', {
+      phase: 'installing',
+      progress: 100,
+      downloaded: 0,
+      total: 0,
+    });
 
-  await extractAndReplaceDist(zipPath);
+    await extractAndReplaceDist(zipPath);
 
-  mainWindow?.webContents?.send('download-progress', {
-    phase: 'done',
-    progress: 100,
-    downloaded: 0,
-    total: 0,
-  });
+    const pendingExists = fs.existsSync(PENDING_DIST) && fs.existsSync(path.join(PENDING_DIST, 'index.html'));
+    writeStatus('staged', { pendingDist: PENDING_DIST, ready: pendingExists });
 
-  return { success: true };
+    if (!pendingExists) {
+      throw new Error('Extraction completed but PENDING_DIST/index.html missing');
+    }
+
+    mainWindow?.webContents?.send('download-progress', {
+      phase: 'done',
+      progress: 100,
+      downloaded: 0,
+      total: 0,
+    });
+
+    return { success: true };
+  } catch (err) {
+    writeStatus('download_failed', { error: err.message, stack: err.stack });
+    console.error('[Electron] download-update failed:', err);
+    throw err;
+  }
 });
 
 // ── IPC: Restart app ───────────────────────────────────
@@ -441,6 +488,9 @@ ipcMain.handle('restart-app', () => {
 
 // ── IPC: Get shell version ────────────────────────────
 ipcMain.handle('get-shell-version', () => getShellVersion());
+
+// ── IPC: Read last update status (for diagnostics UI) ──
+ipcMain.handle('get-update-status', () => readStatus());
 
 // ── IPC: Test update channel connectivity ─────────────
 function headRequest(url) {
