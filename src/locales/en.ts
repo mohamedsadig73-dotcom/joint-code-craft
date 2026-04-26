@@ -1571,7 +1571,6 @@ const en = {
     last30DaysMovements: 'Last 30 Days Movements',
     topMovedItems: 'Top 10 Moved Items',
     warehouseDistribution: 'Inventory by Warehouse',
-    quickActions: 'Quick Actions',
 
     // Last item marker
     _lastEn: '',

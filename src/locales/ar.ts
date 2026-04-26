@@ -1579,7 +1579,6 @@ const ar = {
     last30DaysMovements: 'حركات آخر 30 يوماً',
     topMovedItems: 'أعلى 10 أصناف حركة',
     warehouseDistribution: 'توزيع المخزون على المخازن',
-    quickActions: 'إجراءات سريعة',
 
     _lastAr: '',
 };
