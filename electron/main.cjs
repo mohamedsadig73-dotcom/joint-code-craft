@@ -132,45 +132,27 @@ function setupRuntimeRecovery() {
 
 // ── IPC: Print HTML ────────────────────────────────────
 ipcMain.handle('print-html', async (_event, htmlContent) => {
-  const stamp = Date.now();
-  const tmpHtml = path.join(app.getPath('temp'), `dts-print-${stamp}.html`);
-  const tmpPdf = path.join(app.getPath('temp'), `DTS-Store-Print-${stamp}.pdf`);
-  const activeDist = getActiveDistDir();
-  const baseHref = `file://${activeDist.replace(/\\/g, '/')}/`;
-  const printableHtml = htmlContent.includes('<base ')
-    ? htmlContent
-    : htmlContent.replace(/<head>/i, `<head><base href="${baseHref}">`);
+  return new Promise((resolve, reject) => {
+    // Write HTML to a temp file to avoid data: URL limitations
+    const tmpFile = path.join(app.getPath('temp'), `dts-print-${Date.now()}.html`);
+    fs.writeFileSync(tmpFile, htmlContent, 'utf-8');
 
-  let printWin = null;
-  try {
-    fs.writeFileSync(tmpHtml, printableHtml, 'utf-8');
-    printWin = new BrowserWindow({
-      width: 900,
-      height: 1200,
-      show: false,
-      parent: mainWindow || undefined,
-      backgroundColor: '#ffffff',
+    const printWin = new BrowserWindow({
+      width: 800, height: 600, show: false,
       webPreferences: { contextIsolation: true, nodeIntegration: false },
-      autoHideMenuBar: true,
     });
 
-    await printWin.loadFile(tmpHtml);
-    await new Promise((resolve) => setTimeout(resolve, 450));
-    const pdf = await printWin.webContents.printToPDF({
-      printBackground: true,
-      preferCSSPageSize: true,
+    printWin.loadFile(tmpFile);
+    printWin.webContents.once('did-finish-load', () => {
+      setTimeout(() => {
+        printWin.webContents.print({ silent: false, printBackground: true }, (success, reason) => {
+          printWin.close();
+          try { fs.unlinkSync(tmpFile); } catch (_) {}
+          success ? resolve(true) : reject(new Error(reason || 'Print cancelled'));
+        });
+      }, 800);
     });
-    fs.writeFileSync(tmpPdf, pdf);
-    const openError = await shell.openPath(tmpPdf);
-    if (openError) throw new Error(openError);
-    return { success: true, path: tmpPdf };
-  } catch (err) {
-    console.error('[Electron] printToPDF failed:', err);
-    throw err;
-  } finally {
-    if (printWin && !printWin.isDestroyed()) printWin.destroy();
-    try { fs.unlinkSync(tmpHtml); } catch (_) {}
-  }
+  });
 });
 
 // ── IPC: Open external URL ─────────────────────────────

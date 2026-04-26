@@ -8,11 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Plus, Search, Download, Upload, Loader2, Package, PackageOpen, Layers,
-  Columns3, Trash2, X, FileText, Edit3, Undo2, Info,
+  Columns3, Trash2, X, FileText,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent,
-  DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useBoxReceipts, type BoxReceipt, type BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { useBoxSummary } from '@/hooks/useBoxSummary';
@@ -20,12 +20,7 @@ import { ReceiptsTable, ALL_RECEIPT_COLUMNS, type ReceiptColumnKey } from './Rec
 import { ReceiptMobileCard } from './ReceiptMobileCard';
 import { ReceiptFormDialog } from './ReceiptFormDialog';
 import { InvoiceFormDialog } from './InvoiceFormDialog';
-import { InvoicePickerDialog } from './InvoicePickerDialog';
 import { ReceiptsPrintPreview } from './ReceiptsPrintPreview';
-import { BulkEditReceiptsDialog, type BulkEditPatch } from './BulkEditReceiptsDialog';
-import { EditPreviewDialog, type FieldDiff } from './EditPreviewDialog';
-import { LockPolicyDialog } from './LockPolicyDialog';
-import { supabase } from '@/integrations/supabase/client';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -49,8 +44,6 @@ export function ReceiptsTab() {
     deleteReceipt,
     bulkInsertReceipts,
     bulkAddQuantity,
-    bulkUpdatePackingType,
-    bulkUpdateFields,
   } = useBoxReceipts();
   const { summary } = useBoxSummary();
 
@@ -61,11 +54,6 @@ export function ReceiptsTab() {
   const [editing, setEditing] = useState<BoxReceipt | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
-  const [invoicePickerOpen, setInvoicePickerOpen] = useState(false);
-  const [editingInvoice, setEditingInvoice] = useState<{
-    invoiceNumber: string;
-    receipts: BoxReceipt[];
-  } | null>(null);
   const [toDelete, setToDelete] = useState<BoxReceipt | null>(null);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,28 +62,6 @@ export function ReceiptsTab() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
-  const [bulkRepacking, setBulkRepacking] = useState(false);
-  const [bulkEditOpen, setBulkEditOpen] = useState(false);
-
-  // Edit preview state
-  const [pendingEdit, setPendingEdit] = useState<{
-    diffs: FieldDiff[];
-    apply: () => Promise<unknown>;
-  } | null>(null);
-  const [previewSubmitting, setPreviewSubmitting] = useState(false);
-
-  // Undo state — tracks last set of UPDATE audit_log entries created by this user
-  // within the last 30 seconds.
-  const UNDO_WINDOW_MS = 30_000;
-  const [undoBatch, setUndoBatch] = useState<{
-    at: number;
-    entries: Array<{ id: string; old: Partial<BoxReceiptInput> }>;
-  } | null>(null);
-  const [undoSecondsLeft, setUndoSecondsLeft] = useState(0);
-  const [undoing, setUndoing] = useState(false);
-
-  // Lock policy info dialog
-  const [lockPolicyOpen, setLockPolicyOpen] = useState(false);
 
   // Column visibility (persisted)
   const [visibleColumns, setVisibleColumns] = useState<ReceiptColumnKey[]>(() => {
@@ -130,10 +96,7 @@ export function ReceiptsTab() {
   const isManager = user?.role === 'manager';
 
   const canModify = (r: BoxReceipt) =>
-    // Shipped receipts are locked for everyone (except admin) to preserve audit integrity
-    r.status === 'shipped'
-      ? isAdmin
-      : (isAdmin || isManager || r.created_by === user?.id);
+    isAdmin || isManager || r.created_by === user?.id;
 
   const existingSuppliers = useMemo(
     () => Array.from(new Set(receipts.map((r) => r.supplier))).sort(),
@@ -165,8 +128,7 @@ export function ReceiptsTab() {
         r.supplier.toLowerCase().includes(q) ||
         r.part_no.toLowerCase().includes(q) ||
         r.description.toLowerCase().includes(q) ||
-        (r.box_no?.toLowerCase().includes(q) ?? false) ||
-        (r.invoice_number?.toLowerCase().includes(q) ?? false)
+        (r.box_no?.toLowerCase().includes(q) ?? false)
       );
     });
   }, [receipts, search, destFilter, statusFilter, packingFilter]);
@@ -232,42 +194,6 @@ export function ReceiptsTab() {
     toast({ title: t('success'), description: t('excelExported') });
   };
 
-  const handleBulkChangePacking = async (target: 'boxed' | 'loose') => {
-    const allowed = selectedReceipts.filter(canModify).filter((r) => r.packing_type !== target);
-    if (allowed.length === 0) {
-      toast({ title: t('info'), description: t('noEligibleRows') });
-      return;
-    }
-    setBulkRepacking(true);
-    try {
-      await bulkUpdatePackingType(allowed.map((r) => r.id), target);
-      clearSelection();
-    } finally {
-      setBulkRepacking(false);
-    }
-  };
-
-  const handleBulkEditApply = async (ids: string[], patch: BulkEditPatch): Promise<number> => {
-    // Filter to only modifiable rows (in case admin/manager status changed mid-flow)
-    const idSet = new Set(ids);
-    const allowed = selectedReceipts.filter((r) => idSet.has(r.id) && canModify(r));
-    if (allowed.length === 0) return 0;
-    // Snapshot previous values for Undo before applying.
-    const snapshot = allowed.map((r) => ({
-      id: r.id,
-      old: extractUndoFields(r, patch),
-    }));
-    const updated = await bulkUpdateFields(
-      allowed.map((r) => r.id),
-      patch as Partial<BoxReceiptInput>,
-    );
-    if (updated > 0) {
-      setUndoBatch({ at: Date.now(), entries: snapshot });
-      clearSelection();
-    }
-    return updated;
-  };
-
   const handleAdd = () => {
     setEditing(null);
     setFormOpen(true);
@@ -279,37 +205,7 @@ export function ReceiptsTab() {
   };
 
   const handleSubmit = async (values: BoxReceiptInput) => {
-    if (editing) {
-      // Build diffs and surface a confirmation preview before persisting
-      const diffs = computeReceiptDiffs(editing, values, t);
-      if (diffs.length === 0) {
-        // No actual change — short-circuit and close the form
-        return editing as unknown as BoxReceipt;
-      }
-      return new Promise<BoxReceipt | null>((resolve) => {
-        setPendingEdit({
-          diffs,
-          apply: async () => {
-            setPreviewSubmitting(true);
-            try {
-              const updated = await updateReceipt(editing.id, values);
-              if (updated) {
-                // Snapshot previous values for Undo
-                setUndoBatch({
-                  at: Date.now(),
-                  entries: [{ id: editing.id, old: extractUndoFields(editing, values) }],
-                });
-              }
-              resolve(updated);
-              setPendingEdit(null);
-              setFormOpen(false);
-            } finally {
-              setPreviewSubmitting(false);
-            }
-          },
-        });
-      });
-    }
+    if (editing) return updateReceipt(editing.id, values);
     return createReceipt(values);
   };
 
@@ -354,8 +250,6 @@ export function ReceiptsTab() {
           status: 'received',
           notes: null,
           image_path: null,
-          invoice_number: null,
-          item_id: null,
         });
       }
       if (inputs.length === 0) {
@@ -401,53 +295,6 @@ export function ReceiptsTab() {
       setPendingUniques([]);
     }
   };
-
-  // Tick the Undo countdown
-  useEffect(() => {
-    if (!undoBatch) {
-      setUndoSecondsLeft(0);
-      return;
-    }
-    const tick = () => {
-      const remaining = Math.max(0, UNDO_WINDOW_MS - (Date.now() - undoBatch.at));
-      setUndoSecondsLeft(Math.ceil(remaining / 1000));
-      if (remaining <= 0) setUndoBatch(null);
-    };
-    tick();
-    const id = setInterval(tick, 500);
-    return () => clearInterval(id);
-  }, [undoBatch]);
-
-  const handleUndo = async () => {
-    if (!undoBatch || undoBatch.entries.length === 0) {
-      toast({ title: t('undoLastChange'), description: t('undoNothing') });
-      return;
-    }
-    setUndoing(true);
-    try {
-      let restored = 0;
-      for (const entry of undoBatch.entries) {
-        const { error } = await supabase
-          .from('box_receipts')
-          .update(entry.old)
-          .eq('id', entry.id);
-        if (!error) restored++;
-      }
-      if (restored > 0) {
-        toast({ title: t('success'), description: t('undoSuccess') });
-        setUndoBatch(null);
-      } else {
-        toast({ title: t('error'), description: t('undoFailed'), variant: 'destructive' });
-      }
-    } finally {
-      setUndoing(false);
-    }
-  };
-
-  const shippedExcludedCount = useMemo(
-    () => selectedReceipts.filter((r) => r.status === 'shipped' && !isAdmin).length,
-    [selectedReceipts, isAdmin],
-  );
 
   return (
     <div className="space-y-4">
@@ -581,48 +428,12 @@ export function ReceiptsTab() {
             <span className="hidden sm:inline">{t('addFullInvoice')}</span>
             <span className="sm:hidden">{t('invoice')}</span>
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => setInvoicePickerOpen(true)}
-            className="gap-1.5"
-          >
-            <FileText className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('editFullInvoice')}</span>
-          </Button>
           <Button onClick={handleAdd}>
             <Plus className="w-4 h-4 me-1.5" />
             {t('addReceipt')}
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setLockPolicyOpen(true)}
-            title={t('lockPolicyOpen')}
-            aria-label={t('lockPolicyOpen')}
-          >
-            <Info className="w-4 h-4" />
-          </Button>
         </div>
       </div>
-
-      {/* Undo last edit (30s window) */}
-      {undoBatch && undoSecondsLeft > 0 && (
-        <div className="flex items-center justify-between gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs">
-          <span className="text-foreground">
-            {t('undoAvailableSeconds').replace('{sec}', String(undoSecondsLeft))}
-          </span>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleUndo}
-            disabled={undoing}
-            className="h-7 gap-1.5"
-          >
-            {undoing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Undo2 className="w-3.5 h-3.5" />}
-            {t('undoLastChange')}
-          </Button>
-        </div>
-      )}
 
       {/* Bulk actions bar */}
       {selectedIds.size > 0 && (
@@ -635,45 +446,6 @@ export function ReceiptsTab() {
               <Download className="w-3.5 h-3.5 me-1.5" />
               {t('export')}
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setBulkEditOpen(true)}
-              disabled={!selectedReceipts.some(canModify)}
-              className="gap-1.5"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-              {t('bulkEdit')}
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={bulkRepacking || !selectedReceipts.some(canModify)}
-                  className="gap-1.5"
-                >
-                  {bulkRepacking ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Package className="w-3.5 h-3.5" />
-                  )}
-                  {t('changePackingType')}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{t('changeTo')}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => handleBulkChangePacking('loose')}>
-                  <PackageOpen className="w-3.5 h-3.5 me-2" />
-                  {t('loose')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => handleBulkChangePacking('boxed')}>
-                  <Package className="w-3.5 h-3.5 me-2" />
-                  {t('boxed')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
             <Button
               size="sm"
               variant="destructive"
@@ -740,30 +512,9 @@ export function ReceiptsTab() {
 
       <InvoiceFormDialog
         open={invoiceOpen}
-        onOpenChange={(o) => {
-          setInvoiceOpen(o);
-          if (!o) setEditingInvoice(null);
-        }}
+        onOpenChange={setInvoiceOpen}
         onSubmit={bulkInsertReceipts}
         existingSuppliers={existingSuppliers}
-        editing={editingInvoice}
-        onUpdateLine={(id, patch) => updateReceipt(id, patch)}
-        onDeleteLine={(id) => deleteReceipt(id)}
-      />
-
-      <InvoicePickerDialog
-        open={invoicePickerOpen}
-        onOpenChange={setInvoicePickerOpen}
-        receipts={receipts}
-        onPick={({ invoiceNumber, receiptIds }) => {
-          const ids = new Set(receiptIds);
-          const matched = receipts.filter(
-            (r) => ids.has(r.id)
-          );
-          if (matched.length === 0) return;
-          setEditingInvoice({ invoiceNumber, receipts: matched });
-          setInvoiceOpen(true);
-        }}
       />
 
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
@@ -809,72 +560,6 @@ export function ReceiptsTab() {
         uniqueCount={pendingUniques.length}
         onResolve={handleResolveImport}
       />
-
-      <BulkEditReceiptsDialog
-        open={bulkEditOpen}
-        onOpenChange={setBulkEditOpen}
-        selected={selectedReceipts.filter(canModify)}
-        totalSelected={selectedReceipts.length}
-        shippedExcludedCount={shippedExcludedCount}
-        existingSuppliers={existingSuppliers}
-        onApply={handleBulkEditApply}
-      />
-
-      <EditPreviewDialog
-        open={!!pendingEdit}
-        onOpenChange={(o) => { if (!o) setPendingEdit(null); }}
-        diffs={pendingEdit?.diffs ?? []}
-        submitting={previewSubmitting}
-        onConfirm={async () => { await pendingEdit?.apply(); }}
-      />
-
-      <LockPolicyDialog open={lockPolicyOpen} onOpenChange={setLockPolicyOpen} />
     </div>
   );
-}
-
-/**
- * Extract the subset of fields that were modified in the patch and return their
- * previous values from the receipt — used as a snapshot for the Undo action.
- */
-function extractUndoFields(
-  prev: BoxReceipt,
-  patch: Partial<BoxReceiptInput>,
-): Partial<BoxReceiptInput> {
-  const old: Record<string, unknown> = {};
-  for (const key of Object.keys(patch)) {
-    old[key] = (prev as unknown as Record<string, unknown>)[key];
-  }
-  return old as Partial<BoxReceiptInput>;
-}
-
-/**
- * Build a list of human-readable field diffs between an existing receipt and
- * an incoming form values payload, used to drive the edit preview dialog.
- */
-function computeReceiptDiffs(
-  existing: BoxReceipt,
-  next: BoxReceiptInput,
-  t: (k: string) => string,
-): FieldDiff[] {
-  const diffs: FieldDiff[] = [];
-  const push = (label: string, oldV: unknown, newV: unknown) => {
-    const o = oldV == null ? '' : String(oldV);
-    const n = newV == null ? '' : String(newV);
-    if (o !== n) diffs.push({ label, oldValue: o, newValue: n });
-  };
-  push(t('supplier'), existing.supplier, next.supplier);
-  push(t('partNo'), existing.part_no, next.part_no);
-  push(t('description'), existing.description, next.description);
-  push(t('qty'), existing.qty, next.qty);
-  push(t('unit'), existing.unit, next.unit);
-  push(t('destination'), t(`dest_${existing.destination}`), t(`dest_${next.destination}`));
-  push(t('packingType'), t(existing.packing_type), t(next.packing_type));
-  push(t('boxNo'), existing.box_no ?? '', next.box_no ?? '');
-  push(t('place'), existing.place ?? '', next.place ?? '');
-  push(t('receiptDate'), existing.receipt_date, next.receipt_date);
-  push(t('status'), t(`boxStatus_${existing.status}`), t(`boxStatus_${next.status}`));
-  push(t('notes'), existing.notes ?? '', next.notes ?? '');
-  push(t('invoiceNumber'), existing.invoice_number ?? '', next.invoice_number ?? '');
-  return diffs;
 }

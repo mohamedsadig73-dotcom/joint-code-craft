@@ -11,7 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     await shell.openExternal(url);
   },
 
-  // Native print (renders to PDF and opens it with the system PDF viewer)
+  // Native print
   printHTML: async (html) => {
     return ipcRenderer.invoke('print-html', html);
   },

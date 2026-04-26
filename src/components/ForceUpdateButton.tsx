@@ -15,8 +15,7 @@
  } from '@/components/ui/alert-dialog';
  
 // Version must match RegisterSW.tsx
-declare const __APP_VERSION__: string;
-const CURRENT_VERSION = __APP_VERSION__;
+const CURRENT_VERSION = '4.4.5';
  
  export function ForceUpdateButton() {
    const { t } = useLanguage();

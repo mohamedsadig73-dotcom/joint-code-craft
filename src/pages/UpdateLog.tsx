@@ -30,9 +30,9 @@ import { forceAppUpdate } from '@/components/ForceUpdateButton';
 
 declare const __APP_VERSION__: string;
 
-const UPDATE_CHANNEL_URL = 'https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases';
-const VERSION_URL = `${UPDATE_CHANNEL_URL}/version.json`;
-const DESKTOP_RELEASE_URL = `${UPDATE_CHANNEL_URL}/desktop-release.json`;
+const PUBLISHED_URL = 'https://dts-store-qatar-2026.lovable.app';
+const VERSION_URL = `${PUBLISHED_URL}/version.json`;
+const DESKTOP_RELEASE_URL = `${PUBLISHED_URL}/desktop-release.json`;
 
 type UpdateLogRow = {
   id: string;

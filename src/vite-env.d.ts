@@ -12,7 +12,7 @@ interface Window {
   electronAPI?: {
     getPublishedVersion: <T = { version?: string; build?: string }>(url: string) => Promise<T>;
     openExternal: (url: string) => Promise<void>;
-    printHTML: (html: string) => Promise<boolean | { success: boolean; path?: string }>;
+    printHTML: (html: string) => Promise<boolean>;
     downloadUpdate: (downloadUrl: string) => Promise<{ success: boolean }>;
     onDownloadProgress: (callback: (data: DownloadProgressData) => void) => () => void;
     restartApp: () => Promise<void>;

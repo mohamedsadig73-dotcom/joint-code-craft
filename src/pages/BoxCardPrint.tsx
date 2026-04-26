@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { Printer, ChevronLeft, ChevronRight, ArrowLeft, Loader2, Stethoscope, Beaker } from 'lucide-react';
+import { Printer, ChevronLeft, ChevronRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useBoxReceipts } from '@/hooks/useBoxReceipts';
@@ -9,15 +9,6 @@ import { useBoxSummary } from '@/hooks/useBoxSummary';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { destinationBadgeClass } from '@/components/boxes/destinationStyles';
-import { toast } from 'sonner';
-import { printDocument, logPrintEvent, runPrintSelfTest } from '@/utils/printDocument';
-import { PrintPreviewDialog } from '@/components/print/PrintPreviewDialog';
-import {
-  PrintSettingsPopover,
-  loadPrintSettings,
-  savePrintSettings,
-  type PrintSettings,
-} from '@/components/print/PrintSettingsPopover';
 
 function formatDate(d: string) {
   if (!d) return '';
@@ -38,10 +29,6 @@ export default function BoxCardPrint() {
   const { receipts, loading } = useBoxReceipts();
   const { summary } = useBoxSummary();
   const [currentBox, setCurrentBox] = useState(boxNo);
-  const [printSettings, setPrintSettings] = useState<PrintSettings>(() => loadPrintSettings());
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewHtml, setPreviewHtml] = useState('');
-  const [previewReason, setPreviewReason] = useState<string | undefined>(undefined);
 
   useEffect(() => { setCurrentBox(boxNo); }, [boxNo]);
 
@@ -67,85 +54,14 @@ export default function BoxCardPrint() {
     }
   };
 
-  const handleSettingsChange = (next: PrintSettings) => {
-    setPrintSettings(next);
-    savePrintSettings(next);
+  const handlePrint = () => {
+    const original = document.title;
+    document.title = `Box-Card-${currentBox}`;
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => { document.title = original; }, 500);
+    }, 100);
   };
-
-  const handlePrint = async () => {
-    const sheet = document.querySelector('.print-sheet');
-    if (!sheet) {
-      toast.error(t('printError'), { description: 'print-sheet element not found' });
-      logPrintEvent({ level: 'error', message: 'print-sheet missing' });
-      return;
-    }
-    const fileName = `Box-Card-${currentBox}`;
-    const result = await printDocument(sheet.outerHTML, {
-      title: fileName,
-      paperSize: printSettings.paperSize,
-      orientation: printSettings.orientation,
-      marginMm: printSettings.marginMm,
-      windowsMode: printSettings.windowsMode,
-    });
-
-    if (result.ok === false) {
-      const failure = result;
-      // 'preview' mode is a deliberate fallback (not an error) — open silently.
-      if (failure.failedStep === 'preview') {
-        setPreviewHtml(failure.html);
-        setPreviewReason(undefined);
-        setPreviewOpen(true);
-        return;
-      }
-      // Real failure — show in-app preview AND offer the diagnostics screen.
-      toast.error(t('printFallbackTitle'), {
-        description: `${t('printFallbackBody')} — ${failure.reason}`,
-        action: {
-          label: t('openDiagnostics'),
-          onClick: () => navigate('/print-diagnostics'),
-        },
-      });
-      setPreviewHtml(failure.html);
-      setPreviewReason(`${t(`printStep_${failure.failedStep}`)} — ${failure.reason}`);
-      setPreviewOpen(true);
-    } else if (result.transport === 'electron' && result.safeMode) {
-      toast.success(t('printPdfOpened'), { description: t('printedInSafeMode') });
-    } else if (result.transport === 'electron') {
-      toast.success(t('printPdfOpened'));
-    }
-  };
-
-  const handleOpenPreview = () => {
-    const sheet = document.querySelector('.print-sheet');
-    if (!sheet) return;
-    // Build the doc directly (no IPC roundtrip) and show in-app preview.
-    import('@/utils/printDocument').then(({ buildPrintHTML }) => {
-      const html = buildPrintHTML(sheet.outerHTML, {
-        title: `Box-Card-${currentBox}`,
-        paperSize: printSettings.paperSize,
-        orientation: printSettings.orientation,
-        marginMm: printSettings.marginMm,
-      });
-      setPreviewHtml(html);
-      setPreviewReason(undefined);
-      setPreviewOpen(true);
-    });
-  };
-
-  const handleSelfTest = () => {
-    const res = runPrintSelfTest();
-    if (res.ok) {
-      toast.success(t('printSelfTestPassed'));
-    } else {
-      const failed = res.checks.filter((c) => !c.ok).map((c) => c.name).join(', ');
-      toast.error(t('printSelfTestFailed'), { description: failed });
-    }
-    setPreviewHtml(res.previewHtml);
-    setPreviewReason(undefined);
-    setPreviewOpen(true);
-  };
-
-  const isDev = import.meta.env.DEV;
 
   if (loading) {
     return (
@@ -177,28 +93,6 @@ export default function BoxCardPrint() {
           <Button variant="outline" size="icon" onClick={goNext} disabled={currentIdx < 0 || currentIdx >= allBoxNos.length - 1}>
             <ChevronLeft className="w-4 h-4 rtl:hidden" />
             <ChevronRight className="w-4 h-4 ltr:hidden" />
-          </Button>
-          <PrintSettingsPopover value={printSettings} onChange={handleSettingsChange} />
-          {isDev && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSelfTest}
-              title={t('printSelfTest')}
-            >
-              <Beaker className="w-4 h-4" />
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/print-diagnostics')}
-            title={t('printDiagnostics')}
-          >
-            <Stethoscope className="w-4 h-4" />
-          </Button>
-          <Button variant="outline" onClick={handleOpenPreview}>
-            {t('printPreview')}
           </Button>
           <Button onClick={handlePrint}>
             <Printer className="w-4 h-4 me-1.5" />{t('print')}
@@ -321,13 +215,6 @@ export default function BoxCardPrint() {
           tr { page-break-inside: avoid; }
         }
       `}</style>
-
-      <PrintPreviewDialog
-        open={previewOpen}
-        onOpenChange={setPreviewOpen}
-        html={previewHtml}
-        reason={previewReason}
-      />
     </div>
   );
 }

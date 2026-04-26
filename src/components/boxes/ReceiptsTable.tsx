@@ -209,7 +209,7 @@ export function ReceiptsTable({
                           onClick={() => onEdit(r)}
                           disabled={!allowed}
                           aria-label={t('edit')}
-                          title={!allowed && r.status === 'shipped' ? t('rowLockedShipped') : t('edit')}
+                          title={t('edit')}
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
@@ -220,7 +220,7 @@ export function ReceiptsTable({
                           onClick={() => onDelete(r)}
                           disabled={!allowed}
                           aria-label={t('delete')}
-                          title={!allowed && r.status === 'shipped' ? t('rowLockedShipped') : t('delete')}
+                          title={t('delete')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

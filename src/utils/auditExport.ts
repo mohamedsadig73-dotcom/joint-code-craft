@@ -10,8 +10,6 @@ export interface AuditLogExport {
   action: string;
   table_name: string;
   record_id: string | null;
-  /** Resolved part number from old/new values (box_receipts only). */
-  part_no?: string | null;
   created_at: string;
   profiles?: {
     username: string;
@@ -54,7 +52,6 @@ export const exportAuditLogsToExcel = async (
     { header: 'البريد الإلكتروني', key: 'email', width: 25 },
     { header: 'العملية', key: 'action', width: 15 },
     { header: 'الجدول', key: 'table', width: 18 },
-    { header: 'رقم القطعة', key: 'part_no', width: 20 },
     { header: 'معرف السجل', key: 'record_id', width: 40 },
   ];
 
@@ -71,7 +68,6 @@ export const exportAuditLogsToExcel = async (
       email: log.profiles?.email || '-',
       action: actionLabelsAr[log.action] || log.action,
       table: tableLabelsAr[log.table_name] || log.table_name,
-      part_no: log.part_no || '-',
       record_id: log.record_id || '-',
     });
   });
