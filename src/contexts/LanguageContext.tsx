@@ -379,6 +379,8 @@ const translations = {
     maintenance: 'Maintenance',
     installApp: 'Install App',
     auditLog: 'Audit Log',
+    recordsMenu: 'Logs',
+    advancedTools: 'Advanced Tools',
     checkingUpdates: 'Checking for updates',
     noUpdates: 'No updates available',
     updateAvailable: 'Update available',
