@@ -330,6 +330,17 @@ const translations = {
     save: 'Save',
     update: 'Update',
     confirm: 'Confirm',
+    printPreview: 'Print Preview',
+    printSettings: 'Print Settings',
+    printSettingsHint: 'Configure paper size, orientation and margins.',
+    paperSize: 'Paper Size',
+    orientation: 'Orientation',
+    portrait: 'Portrait',
+    landscape: 'Landscape',
+    margins: 'Margins',
+    printFallbackTitle: 'Native printer unavailable',
+    printFallbackBody: 'Showing in-app preview instead.',
+    printError: 'Print failed',
     
     // Manage
     declarations: 'Declarations',
