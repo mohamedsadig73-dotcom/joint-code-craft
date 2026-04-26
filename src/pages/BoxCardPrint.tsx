@@ -54,9 +54,52 @@ export default function BoxCardPrint() {
     }
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     const original = document.title;
-    document.title = `Box-Card-${currentBox}`;
+    const fileName = `Box-Card-${currentBox}`;
+    document.title = fileName;
+
+    // Build a self-contained HTML document for native printing (Electron) /
+    // fallback browser printing — avoids the blank "no preview" dialog in Electron.
+    const sheet = document.querySelector('.print-sheet');
+    const sheetHTML = sheet ? sheet.outerHTML : '';
+    // Collect all stylesheets (Tailwind generated + inline <style>) so the
+    // standalone HTML renders with the same look as the on-screen preview.
+    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map((el) => el.outerHTML)
+      .join('\n');
+
+    const printHTML = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+  <head>
+    <meta charset="utf-8" />
+    <title>${fileName}</title>
+    ${styles}
+    <style>
+      @page { size: A4 portrait; margin: 10mm; }
+      body { background: white !important; margin: 0; padding: 0; font-family: 'Segoe UI Arabic', 'Cairo', Arial, sans-serif; color: #000; }
+      .print-sheet { width: 100%; min-height: auto; padding: 0; margin: 0; box-sizing: border-box; }
+      thead { display: table-header-group; }
+      tr { page-break-inside: avoid; }
+      img { max-width: 100%; }
+    </style>
+  </head>
+  <body>${sheetHTML}</body>
+</html>`;
+
+    // Native Electron print (silent, with proper preview / printer dialog)
+    if (window.electronAPI?.printHTML) {
+      try {
+        await window.electronAPI.printHTML(printHTML);
+      } catch (e) {
+        console.warn('Electron print cancelled or failed:', e);
+      } finally {
+        document.title = original;
+      }
+      return;
+    }
+
+    // Browser fallback
     setTimeout(() => {
       window.print();
       setTimeout(() => { document.title = original; }, 500);
