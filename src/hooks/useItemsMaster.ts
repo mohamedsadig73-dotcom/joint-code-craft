@@ -9,7 +9,7 @@ export interface ItemMaster {
   part_no: string;
   description: string;
   default_supplier: string | null;
-  default_unit: 'PCS' | 'SET' | 'BOX' | 'KG' | 'MTR' | 'LTR' | 'PAIR';
+  default_unit: 'PCS' | 'SET' | 'BOX' | 'KG' | 'MTR' | 'LTR' | 'PAIR' | 'ROLL' | 'KIT' | 'BAG' | 'CTN' | 'DRUM' | 'PACK' | 'BTL' | 'M2' | 'M3';
   image_path: string | null;
   notes: string | null;
   is_active: boolean;
