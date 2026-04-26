@@ -42,6 +42,10 @@ const MovementDetails = lazy(() => import('@/pages/inventory/MovementDetails'));
 const StockBalances = lazy(() => import('@/pages/inventory/StockBalances'));
 const StockCard = lazy(() => import('@/pages/inventory/StockCard'));
 const LowStockReport = lazy(() => import('@/pages/inventory/LowStockReport'));
+const StockCounts = lazy(() => import('@/pages/inventory/StockCounts'));
+const NewStockCount = lazy(() => import('@/pages/inventory/NewStockCount'));
+const CountDetails = lazy(() => import('@/pages/inventory/CountDetails'));
+const InventoryDashboard = lazy(() => import('@/pages/inventory/InventoryDashboard'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -435,6 +439,46 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <LowStockReport />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/dashboard"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <InventoryDashboard />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/counts"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <StockCounts />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/counts/new"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                <PageTransition>
+                  <NewStockCount />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/counts/:id"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <CountDetails />
                 </PageTransition>
               </ProtectedRoute>
             }
