@@ -97,6 +97,33 @@ if (generatedRelease.web_version !== versionArg) {
 }
 ok(`Generated metadata pinned to v${versionArg}.`);
 
+// Sanity #2 (root cause fix): grep the built JS bundles for the version string.
+// This catches the case where vite.config.ts read package.json BEFORE the bump
+// (e.g. concurrent processes, stale cache) and baked the OLD version into the
+// bundle. Without this guard, the channel says v4.5.2 but the running app
+// still reports LOCAL_VERSION=4.5.1 — exactly the bug we just hit.
+const assetsDir = path.join(ROOT, 'dist', 'assets');
+const jsFiles = fs
+  .readdirSync(assetsDir)
+  .filter((f) => f.startsWith('index-') && f.endsWith('.js'));
+if (jsFiles.length === 0) die('No index-*.js bundle found in dist/assets.');
+let foundVersionInBundle = false;
+for (const f of jsFiles) {
+  const content = fs.readFileSync(path.join(assetsDir, f), 'utf-8');
+  // Match either "X.Y.Z" or 'X.Y.Z' near where __APP_VERSION__ would live.
+  if (content.includes(`"${versionArg}"`) || content.includes(`'${versionArg}'`)) {
+    foundVersionInBundle = true;
+    break;
+  }
+}
+if (!foundVersionInBundle) {
+  die(
+    `Built JS bundle does NOT contain version string "${versionArg}". ` +
+      `vite likely cached an older package.json. Re-run: rm -rf node_modules/.vite dist && node scripts/release-desktop.mjs ${versionArg}`
+  );
+}
+ok(`JS bundle contains __APP_VERSION__ = "${versionArg}".`);
+
 // ----- 3. Zip dist/ -----
 const zipName = `DTS-Store-v${versionArg}-dist.zip`;
 const zipPath = path.join(ROOT, zipName);
