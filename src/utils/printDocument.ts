@@ -14,6 +14,14 @@
 export type PaperSize = 'A4' | 'Letter';
 export type PaperOrientation = 'portrait' | 'landscape';
 
+/**
+ * Windows-specific print transport selector.
+ *  - 'auto'     : try Electron printHTML first, fall back to in-app preview.
+ *  - 'native'   : always use Electron printHTML (bypass in-app preview).
+ *  - 'preview'  : always use the in-app iframe preview (skip IPC bridge).
+ */
+export type WindowsPrintMode = 'auto' | 'native' | 'preview';
+
 export interface PrintOptions {
   /** Document <title> — also used for default save-as filename. */
   title: string;
@@ -27,6 +35,12 @@ export interface PrintOptions {
   dir?: 'rtl' | 'ltr';
   /** Document language. Defaults to 'ar'. */
   lang?: string;
+  /**
+   * "Safe mode" rebuilds the document with the absolute minimum of styles
+   * (page geometry + base table rules) instead of the full app stylesheets.
+   * Used as the automatic single retry when the rich document fails to print.
+   */
+  safeMode?: boolean;
 }
 
 /**
@@ -65,6 +79,24 @@ function collectEssentialStyles(): string {
 }
 
 /**
+ * Minimal stylesheet used by "safe mode" prints. Contains only the rules
+ * required to render a clean A4/Letter document — no Tailwind, no theme
+ * tokens. This is the recovery path when the full bundle causes a blank
+ * print preview (printer driver bug, missing fonts, CSS @layer issues, ...).
+ */
+const SAFE_MODE_CSS = `
+  * { box-sizing: border-box; }
+  body { margin: 0; color: #000; background: #fff; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 12px; line-height: 1.4; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #555; padding: 4px 6px; text-align: start; vertical-align: top; }
+  thead { display: table-header-group; background: #eee; }
+  tr { page-break-inside: avoid; }
+  h1, h2, h3 { margin: 0 0 8px; }
+  img { max-width: 100%; height: auto; }
+  .print\\:hidden, [data-print-hide="true"] { display: none !important; }
+`;
+
+/**
  * Build the final HTML document for printing.
  */
 export function buildPrintHTML(bodyHTML: string, opts: PrintOptions): string {
@@ -75,9 +107,10 @@ export function buildPrintHTML(bodyHTML: string, opts: PrintOptions): string {
     marginMm = 10,
     dir = 'rtl',
     lang = 'ar',
+    safeMode = false,
   } = opts;
 
-  const styles = collectEssentialStyles();
+  const styles = safeMode ? '' : collectEssentialStyles();
   // Clamp margin to a sane range to avoid printer-driver errors.
   const margin = Math.max(0, Math.min(40, Math.round(marginMm)));
 
@@ -90,7 +123,7 @@ export function buildPrintHTML(bodyHTML: string, opts: PrintOptions): string {
     <style>
       @page { size: ${paperSize} ${orientation}; margin: ${margin}mm; }
       html, body { background: white !important; margin: 0; padding: 0; }
-      body {
+      ${safeMode ? SAFE_MODE_CSS : `body {
         font-family: 'Segoe UI Arabic', 'Cairo', Arial, sans-serif;
         color: #000;
         -webkit-print-color-adjust: exact;
@@ -100,7 +133,7 @@ export function buildPrintHTML(bodyHTML: string, opts: PrintOptions): string {
       .print:hidden, [data-print-hide="true"] { display: none !important; }
       thead { display: table-header-group; }
       tr { page-break-inside: avoid; }
-      img { max-width: 100%; }
+      img { max-width: 100%; }`}
     </style>
   </head>
   <body>${bodyHTML}</body>
@@ -148,34 +181,102 @@ export function readPrintLog(): PrintLogEntry[] {
 }
 
 export type PrintResult =
-  | { ok: true; transport: 'electron' | 'browser' }
-  | { ok: false; reason: string; transport: 'electron' | 'browser'; html: string };
+  | { ok: true; transport: 'electron' | 'browser' | 'preview'; safeMode?: boolean }
+  | {
+      ok: false;
+      reason: string;
+      transport: 'electron' | 'browser' | 'preview';
+      html: string;
+      /** Step where the failure occurred — surfaced by the diagnostics screen. */
+      failedStep: 'bridge' | 'css' | 'printer' | 'preview' | 'unknown';
+      safeMode?: boolean;
+    };
+
+export interface PrintDocumentOpts extends PrintOptions {
+  /** Override transport selection (Windows mode). Defaults to 'auto'. */
+  windowsMode?: WindowsPrintMode;
+  /**
+   * If true (default), automatically retry once in safe mode when the first
+   * native print attempt fails.
+   */
+  autoSafeRetry?: boolean;
+}
 
 /**
- * Try Electron native print first, fall back to opening a hidden iframe
- * and triggering window.print() on the host page. Caller can use the
- * returned `html` to render an in-app preview when `ok` is false.
+ * Try Electron native print first (respecting `windowsMode`), and
+ * automatically retry once in "safe mode" if the rich document fails.
+ * Falls back to returning the failure (with html + failed step) so the
+ * caller can render an in-app preview / diagnostics dialog.
  */
-export async function printDocument(bodyHTML: string, opts: PrintOptions): Promise<PrintResult> {
-  const html = buildPrintHTML(bodyHTML, opts);
+export async function printDocument(
+  bodyHTML: string,
+  opts: PrintDocumentOpts,
+): Promise<PrintResult> {
+  const windowsMode: WindowsPrintMode = opts.windowsMode ?? 'auto';
+  const autoSafeRetry = opts.autoSafeRetry ?? true;
+  const isElectron = typeof window !== 'undefined' && Boolean(window.electronAPI?.printHTML);
+
+  // Mode 'preview': caller will show the in-app iframe instead of using the bridge.
+  if (isElectron && windowsMode === 'preview') {
+    const html = buildPrintHTML(bodyHTML, opts);
+    logPrintEvent({ level: 'info', message: `طباعة عبر المعاينة الداخلية: ${opts.title}` });
+    return { ok: false, reason: 'forced-preview-mode', transport: 'preview', html, failedStep: 'preview' };
+  }
 
   // Native Electron path.
-  if (typeof window !== 'undefined' && window.electronAPI?.printHTML) {
+  if (isElectron && (windowsMode === 'auto' || windowsMode === 'native')) {
+    const html = buildPrintHTML(bodyHTML, opts);
     try {
-      await window.electronAPI.printHTML(html);
-      logPrintEvent({ level: 'info', message: `طباعة ناجحة: ${opts.title}` });
+      await window.electronAPI!.printHTML!(html);
+      logPrintEvent({ level: 'info', message: `طباعة ناجحة: ${opts.title}`, detail: `mode=${windowsMode}` });
       return { ok: true, transport: 'electron' };
     } catch (e) {
       const reason = e instanceof Error ? e.message : String(e);
       logPrintEvent({
-        level: 'error',
-        message: `فشل الطباعة عبر تطبيق سطح المكتب`,
-        detail: reason,
+        level: 'warn',
+        message: `فشل الطباعة (المحاولة الأولى)`,
+        detail: `mode=${windowsMode} | ${reason}`,
       });
-      return { ok: false, reason, transport: 'electron', html };
+
+      // Auto safe-mode retry: rebuild with minimal CSS and try once more.
+      if (autoSafeRetry) {
+        const safeHtml = buildPrintHTML(bodyHTML, { ...opts, safeMode: true });
+        try {
+          await window.electronAPI!.printHTML!(safeHtml);
+          logPrintEvent({
+            level: 'info',
+            message: `نجحت الطباعة في الوضع الآمن: ${opts.title}`,
+          });
+          return { ok: true, transport: 'electron', safeMode: true };
+        } catch (e2) {
+          const r2 = e2 instanceof Error ? e2.message : String(e2);
+          logPrintEvent({
+            level: 'error',
+            message: `فشل الوضع الآمن أيضاً`,
+            detail: r2,
+          });
+          return {
+            ok: false,
+            reason: r2,
+            transport: 'electron',
+            html: safeHtml,
+            failedStep: classifyFailure(r2),
+            safeMode: true,
+          };
+        }
+      }
+
+      return {
+        ok: false,
+        reason,
+        transport: 'electron',
+        html,
+        failedStep: classifyFailure(reason),
+      };
     }
   }
 
+  const html = buildPrintHTML(bodyHTML, opts);
   // Browser path — let the host page run window.print(); the caller's
   // <body> is already on screen via the route, so this works without an iframe.
   try {
@@ -189,6 +290,64 @@ export async function printDocument(bodyHTML: string, opts: PrintOptions): Promi
   } catch (e) {
     const reason = e instanceof Error ? e.message : String(e);
     logPrintEvent({ level: 'error', message: 'فشل طباعة المتصفح', detail: reason });
-    return { ok: false, reason, transport: 'browser', html };
+    return { ok: false, reason, transport: 'browser', html, failedStep: classifyFailure(reason) };
   }
+}
+
+/** Best-effort classification of a printer/preview error for diagnostics UI. */
+function classifyFailure(reason: string): 'bridge' | 'css' | 'printer' | 'preview' | 'unknown' {
+  const r = reason.toLowerCase();
+  if (r.includes('ipc') || r.includes('bridge') || r.includes('handle') || r.includes('channel')) return 'bridge';
+  if (r.includes('printer') || r.includes('no devices') || r.includes('not found') || r.includes('device')) return 'printer';
+  if (r.includes('css') || r.includes('style') || r.includes('layer')) return 'css';
+  if (r.includes('window') || r.includes('preview') || r.includes('loadfile')) return 'preview';
+  return 'unknown';
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+ * Print self-test (dev mode)
+ * Builds a small synthetic invoice document, runs it through buildPrintHTML
+ * in both normal and safe modes, and verifies that the resulting HTML is
+ * non-empty and includes the expected page-geometry. This catches "blank
+ * white screen" regressions before they reach a release.
+ * ────────────────────────────────────────────────────────────────────── */
+
+export interface PrintSelfTestResult {
+  ok: boolean;
+  checks: Array<{ name: string; ok: boolean; detail?: string }>;
+  /** Standalone HTML for an internal preview of the synthetic invoice. */
+  previewHtml: string;
+}
+
+export function runPrintSelfTest(): PrintSelfTestResult {
+  const checks: PrintSelfTestResult['checks'] = [];
+  const sampleBody = `
+    <div class="print-sheet" style="padding:10mm">
+      <h1>فاتورة تجريبية — Sample Invoice</h1>
+      <table>
+        <thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Price</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Widget A</td><td>2</td><td>50.00</td></tr>
+          <tr><td>2</td><td>Widget B</td><td>1</td><td>75.50</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+
+  const normal = buildPrintHTML(sampleBody, { title: 'self-test-normal', paperSize: 'A4', orientation: 'portrait', marginMm: 10 });
+  checks.push({ name: 'normal-non-empty', ok: normal.length > 200, detail: `${normal.length} chars` });
+  checks.push({ name: 'normal-has-page-rule', ok: normal.includes('@page'), detail: '@page directive present' });
+  checks.push({ name: 'normal-has-body', ok: normal.includes('Sample Invoice'), detail: 'invoice body rendered' });
+
+  const safe = buildPrintHTML(sampleBody, { title: 'self-test-safe', paperSize: 'A4', orientation: 'portrait', marginMm: 10, safeMode: true });
+  checks.push({ name: 'safe-non-empty', ok: safe.length > 200, detail: `${safe.length} chars` });
+  checks.push({ name: 'safe-no-bundle-css', ok: !safe.includes('/assets/'), detail: 'no Vite asset links in safe mode' });
+  checks.push({ name: 'safe-has-page-rule', ok: safe.includes('@page'), detail: '@page directive present' });
+
+  const ok = checks.every((c) => c.ok);
+  logPrintEvent({
+    level: ok ? 'info' : 'error',
+    message: `Print self-test ${ok ? 'passed' : 'failed'}`,
+    detail: checks.map((c) => `${c.ok ? '✓' : '✗'} ${c.name}`).join(' | '),
+  });
+  return { ok, checks, previewHtml: normal };
 }
