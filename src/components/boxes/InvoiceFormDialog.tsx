@@ -143,6 +143,29 @@ export function InvoiceFormDialog({
     return { rows: lines.length, qty: totalQty };
   }, [lines]);
 
+  /**
+   * Detect duplicate part numbers within the current invoice (same dialog session).
+   * Returns a map of line.key -> info about the first occurrence it duplicates.
+   * This works in both CREATE and EDIT modes so the user is warned when adding
+   * a part number that already exists as another line of the SAME invoice.
+   */
+  const duplicateLineKeys = useMemo(() => {
+    const seen = new Map<string, string>(); // normalized part_no -> first line.key
+    const dups = new Map<string, { firstLineKey: string; lineNumber: number }>();
+    lines.forEach((l, idx) => {
+      const pn = l.part_no.trim().toLowerCase();
+      if (!pn) return;
+      if (seen.has(pn)) {
+        const firstKey = seen.get(pn)!;
+        const firstIdx = lines.findIndex((x) => x.key === firstKey);
+        dups.set(l.key, { firstLineKey: firstKey, lineNumber: firstIdx + 1 });
+      } else {
+        seen.set(pn, l.key);
+      }
+    });
+    return dups;
+  }, [lines]);
+
   const updateLine = (key: string, patch: Partial<InvoiceLine>) => {
     setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   };
