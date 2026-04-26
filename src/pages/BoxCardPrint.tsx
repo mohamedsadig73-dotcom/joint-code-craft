@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { Printer, ChevronLeft, ChevronRight, ArrowLeft, Loader2 } from 'lucide-react';
+import { Printer, ChevronLeft, ChevronRight, ArrowLeft, Loader2, Stethoscope, Beaker } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useBoxReceipts } from '@/hooks/useBoxReceipts';
@@ -10,7 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { destinationBadgeClass } from '@/components/boxes/destinationStyles';
 import { toast } from 'sonner';
-import { printDocument, logPrintEvent } from '@/utils/printDocument';
+import { printDocument, logPrintEvent, runPrintSelfTest } from '@/utils/printDocument';
 import { PrintPreviewDialog } from '@/components/print/PrintPreviewDialog';
 import {
   PrintSettingsPopover,
@@ -85,18 +85,31 @@ export default function BoxCardPrint() {
       paperSize: printSettings.paperSize,
       orientation: printSettings.orientation,
       marginMm: printSettings.marginMm,
+      windowsMode: printSettings.windowsMode,
     });
 
     if (result.ok === false) {
-      // Native print failed — show in-app preview as graceful fallback,
-      // and surface the reason via toast (not just console).
       const failure = result;
+      // 'preview' mode is a deliberate fallback (not an error) — open silently.
+      if (failure.failedStep === 'preview') {
+        setPreviewHtml(failure.html);
+        setPreviewReason(undefined);
+        setPreviewOpen(true);
+        return;
+      }
+      // Real failure — show in-app preview AND offer the diagnostics screen.
       toast.error(t('printFallbackTitle'), {
         description: `${t('printFallbackBody')} — ${failure.reason}`,
+        action: {
+          label: t('openDiagnostics'),
+          onClick: () => navigate('/print-diagnostics'),
+        },
       });
       setPreviewHtml(failure.html);
-      setPreviewReason(failure.reason);
+      setPreviewReason(`${t(`printStep_${failure.failedStep}`)} — ${failure.reason}`);
       setPreviewOpen(true);
+    } else if (result.transport === 'electron' && result.safeMode) {
+      toast.success(t('printPreviewOpened'), { description: t('printedInSafeMode') });
     } else if (result.transport === 'electron') {
       toast.success(t('printPreviewOpened'));
     }
@@ -118,6 +131,21 @@ export default function BoxCardPrint() {
       setPreviewOpen(true);
     });
   };
+
+  const handleSelfTest = () => {
+    const res = runPrintSelfTest();
+    if (res.ok) {
+      toast.success(t('printSelfTestPassed'));
+    } else {
+      const failed = res.checks.filter((c) => !c.ok).map((c) => c.name).join(', ');
+      toast.error(t('printSelfTestFailed'), { description: failed });
+    }
+    setPreviewHtml(res.previewHtml);
+    setPreviewReason(undefined);
+    setPreviewOpen(true);
+  };
+
+  const isDev = import.meta.env.DEV;
 
   if (loading) {
     return (
@@ -151,6 +179,24 @@ export default function BoxCardPrint() {
             <ChevronRight className="w-4 h-4 ltr:hidden" />
           </Button>
           <PrintSettingsPopover value={printSettings} onChange={handleSettingsChange} />
+          {isDev && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSelfTest}
+              title={t('printSelfTest')}
+            >
+              <Beaker className="w-4 h-4" />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/print-diagnostics')}
+            title={t('printDiagnostics')}
+          >
+            <Stethoscope className="w-4 h-4" />
+          </Button>
           <Button variant="outline" onClick={handleOpenPreview}>
             {t('printPreview')}
           </Button>
