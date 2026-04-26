@@ -1691,6 +1691,16 @@ const translations = {
     save: 'حفظ',
     update: 'تحديث',
     confirm: 'تأكيد',
+    printSettings: 'إعدادات الطباعة',
+    printSettingsHint: 'اضبط حجم الورق واتجاه الطباعة والهوامش.',
+    paperSize: 'حجم الورق',
+    orientation: 'الاتجاه',
+    portrait: 'عمودي',
+    landscape: 'أفقي',
+    margins: 'الهوامش',
+    printFallbackTitle: 'طابعة النظام غير متاحة',
+    printFallbackBody: 'يتم عرض المعاينة داخل التطبيق.',
+    printError: 'فشل الطباعة',
     
     // Manage
     declarations: 'الإقرارات',
