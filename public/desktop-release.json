@@ -1,9 +1,9 @@
 {
-  "desktop_shell_version": "4.5.0",
+  "desktop_shell_version": "4.5.1",
   "min_shell_version": "4.4.5",
-  "web_version": "4.5.0",
-  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.5.0-dist.zip",
+  "web_version": "4.5.1",
+  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.5.1-dist.zip",
   "full_download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.4.5.zip",
-  "release_notes": "v4.5.0",
+  "release_notes": "v4.5.1 — إصلاح طباعة بطاقة الصندوق على تطبيق سطح المكتب",
   "mandatory": false
 }
