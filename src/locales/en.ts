@@ -1404,7 +1404,6 @@ const en = {
     addWarehouse: 'Add Warehouse',
     editWarehouse: 'Edit Warehouse',
     warehouseCode: 'Warehouse Code',
-    warehouseName: 'Warehouse Name',
     warehouseLocation: 'Location',
     warehouseManagerLabel: 'Warehouse Manager',
     itemGroups: 'Groups',

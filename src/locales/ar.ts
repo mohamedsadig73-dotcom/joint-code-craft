@@ -1405,7 +1405,6 @@ const ar = {
     addWarehouse: 'إضافة مخزن',
     editWarehouse: 'تعديل مخزن',
     warehouseCode: 'كود المخزن',
-    warehouseName: 'اسم المخزن',
     warehouseLocation: 'الموقع',
     warehouseManagerLabel: 'مدير المخزن',
     // Item Groups
