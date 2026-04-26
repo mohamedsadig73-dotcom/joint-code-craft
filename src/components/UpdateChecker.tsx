@@ -26,9 +26,9 @@ type DesktopReleasePayload = {
 const LOCAL_BUILD = __BUILD_VERSION__;
 const LOCAL_VERSION = __APP_VERSION__;
 const CHECK_INTERVAL = 5 * 60 * 1000;
-const PUBLISHED_URL = 'https://dts-store-qatar-2026.lovable.app';
-const VERSION_URL = `${PUBLISHED_URL}/version.json`;
-const DESKTOP_RELEASE_URL = `${PUBLISHED_URL}/desktop-release.json`;
+const UPDATE_CHANNEL_URL = 'https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases';
+const VERSION_URL = `${UPDATE_CHANNEL_URL}/version.json`;
+const DESKTOP_RELEASE_URL = `${UPDATE_CHANNEL_URL}/desktop-release.json`;
 const isElectron = !!window.electronAPI;
 
 function parseBuildNumber(value?: string) {

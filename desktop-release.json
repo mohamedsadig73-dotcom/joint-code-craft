@@ -1,7 +1,9 @@
 {
-  "desktop_shell_version": "4.4.4",
-  "web_version": "4.4.4",
-  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.4.4-dist.zip",
-  "release_notes": "إصلاح جذري لطباعة ويندوز عبر PDF تلقائي بدلاً من معاينة Electron غير المدعومة",
+  "desktop_shell_version": "4.4.5",
+  "min_shell_version": "4.4.5",
+  "web_version": "4.4.5",
+  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.4.5-dist.zip",
+  "full_download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.4.5.zip",
+  "release_notes": "تحديث الواجهة إلى v4.4.5 - إصلاح ترقيم الإصدارات وتحسينات عامة",
   "mandatory": false
 }
