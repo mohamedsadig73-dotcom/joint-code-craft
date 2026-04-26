@@ -26,7 +26,7 @@ export const receiptSchema = z.object({
   part_no: z.string().trim().min(1, { message: 'required' }).max(100),
   description: z.string().trim().min(1, { message: 'required' }).max(500),
   qty: z.coerce.number().int().positive({ message: 'qtyMustBePositive' }),
-  unit: z.enum(['PCS', 'SET', 'BOX', 'KG', 'MTR', 'LTR', 'PAIR']),
+  unit: z.enum(['PCS', 'SET', 'BOX', 'KG', 'MTR', 'LTR', 'PAIR', 'ROLL', 'KIT', 'BAG', 'CTN', 'DRUM', 'PACK', 'BTL', 'M2', 'M3']),
   destination: z.enum(['morocco', 'uzbekistan', 'unspecified']),
   place: z.string().trim().max(100).optional().nullable(),
   packing_type: z.enum(['boxed', 'loose']).default('boxed'),
@@ -47,7 +47,7 @@ export const receiptSchema = z.object({
 
 export type ReceiptFormValues = z.infer<typeof receiptSchema>;
 
-export const BOX_UNITS = ['PCS', 'SET', 'BOX', 'KG', 'MTR', 'LTR', 'PAIR'] as const;
+export const BOX_UNITS = ['PCS', 'SET', 'BOX', 'KG', 'MTR', 'LTR', 'PAIR', 'ROLL', 'KIT', 'BAG', 'CTN', 'DRUM', 'PACK', 'BTL', 'M2', 'M3'] as const;
 export const BOX_DESTINATIONS = ['morocco', 'uzbekistan', 'unspecified'] as const;
 export const BOX_STATUSES = ['received', 'sorted', 'packed', 'shipped'] as const;
 export const PACKING_TYPES = ['boxed', 'loose'] as const;
