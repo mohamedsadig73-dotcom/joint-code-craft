@@ -3,7 +3,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Navigation } from '@/components/Navigation';
-import { Warehouse, FolderTree, Tags, Ruler, Truck, Building2, Briefcase, ArrowLeftRight, BarChart3, FileText, AlertTriangle } from 'lucide-react';
+import { Warehouse, FolderTree, Tags, Ruler, Truck, Building2, Briefcase, ArrowLeftRight, BarChart3, FileText, AlertTriangle, ClipboardCheck, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ReferenceCrudTab } from '@/components/inventory/ReferenceCrudTab';
 
@@ -20,10 +20,22 @@ export default function Inventory() {
           icon={Warehouse}
           actions={
             <div className="flex flex-wrap gap-2">
+              <Button variant="outline" asChild>
+                <Link to="/inventory/dashboard">
+                  <LayoutDashboard className="w-4 h-4 me-1.5" />
+                  {t('inventoryDashboard')}
+                </Link>
+              </Button>
               <Button asChild>
                 <Link to="/inventory/movements">
                   <ArrowLeftRight className="w-4 h-4 me-1.5" />
                   {t('stockMovements')}
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/inventory/counts">
+                  <ClipboardCheck className="w-4 h-4 me-1.5" />
+                  {t('stockCounts')}
                 </Link>
               </Button>
               <Button variant="outline" asChild>
