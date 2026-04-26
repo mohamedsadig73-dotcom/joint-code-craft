@@ -480,7 +480,7 @@ export function InvoiceFormDialog({
             </div>
           )}
 
-          <div className="overflow-x-auto">
+          <div className="overflow-auto max-h-[55vh] rounded-md border border-border/40">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-xs text-muted-foreground">
