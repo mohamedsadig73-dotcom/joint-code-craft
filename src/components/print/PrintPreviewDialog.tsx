@@ -35,10 +35,17 @@ export function PrintPreviewDialog({ open, onOpenChange, html, reason }: PrintPr
 
   const handlePrint = () => {
     const win = iframeRef.current?.contentWindow;
-    if (!win) return;
+    const doc = iframeRef.current?.contentDocument;
+    if (!win || !doc) return;
     try {
-      win.focus();
-      win.print();
+      const blob = new Blob([doc.documentElement.outerHTML], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const popup = window.open(url, '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+      if (!popup) {
+        win.focus();
+        win.print();
+      }
     } catch (e) {
       console.warn('Iframe print failed:', e);
     }

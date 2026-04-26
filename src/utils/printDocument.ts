@@ -6,9 +6,9 @@
  *    (Tailwind output + page-scoped <style> blocks). Avoid pulling extension
  *    or unrelated injected stylesheets so printing is faster and visually
  *    consistent.
- *  - Provide a robust fallback path: if Electron's `printHTML` IPC fails
- *    (no printer, user cancelled, IPC error) callers can fall back to an
- *    in-app preview (iframe) without losing the rendered content.
+ *  - Provide a robust fallback path: desktop printing generates a PDF first
+ *    and opens it in the OS viewer. This avoids Electron/Windows native print
+ *    preview, which is known to show "app doesn't support print preview".
  */
 
 export type PaperSize = 'A4' | 'Letter';
@@ -16,8 +16,8 @@ export type PaperOrientation = 'portrait' | 'landscape';
 
 /**
  * Windows-specific print transport selector.
- *  - 'auto'     : try Electron printHTML first, fall back to in-app preview.
- *  - 'native'   : always use Electron printHTML (bypass in-app preview).
+ *  - 'auto'     : generate PDF through Electron, fall back to in-app preview.
+ *  - 'native'   : generate PDF through Electron (bypass in-app preview).
  *  - 'preview'  : always use the in-app iframe preview (skip IPC bridge).
  */
 export type WindowsPrintMode = 'auto' | 'native' | 'preview';
@@ -181,7 +181,7 @@ export function readPrintLog(): PrintLogEntry[] {
 }
 
 export type PrintResult =
-  | { ok: true; transport: 'electron' | 'browser' | 'preview'; safeMode?: boolean }
+  | { ok: true; transport: 'electron' | 'browser' | 'preview'; safeMode?: boolean; path?: string }
   | {
       ok: false;
       reason: string;
@@ -227,9 +227,10 @@ export async function printDocument(
   if (isElectron && (windowsMode === 'auto' || windowsMode === 'native')) {
     const html = buildPrintHTML(bodyHTML, opts);
     try {
-      await window.electronAPI!.printHTML!(html);
-      logPrintEvent({ level: 'info', message: `طباعة ناجحة: ${opts.title}`, detail: `mode=${windowsMode}` });
-      return { ok: true, transport: 'electron' };
+      const response = await window.electronAPI!.printHTML!(html);
+      const pdfPath = typeof response === 'object' && response !== null ? response.path : undefined;
+      logPrintEvent({ level: 'info', message: `تم إنشاء ملف PDF للطباعة: ${opts.title}`, detail: `mode=${windowsMode}${pdfPath ? ` | ${pdfPath}` : ''}` });
+      return { ok: true, transport: 'electron', path: pdfPath };
     } catch (e) {
       const reason = e instanceof Error ? e.message : String(e);
       logPrintEvent({
@@ -242,12 +243,14 @@ export async function printDocument(
       if (autoSafeRetry) {
         const safeHtml = buildPrintHTML(bodyHTML, { ...opts, safeMode: true });
         try {
-          await window.electronAPI!.printHTML!(safeHtml);
+          const response = await window.electronAPI!.printHTML!(safeHtml);
+          const pdfPath = typeof response === 'object' && response !== null ? response.path : undefined;
           logPrintEvent({
             level: 'info',
-            message: `نجحت الطباعة في الوضع الآمن: ${opts.title}`,
+            message: `تم إنشاء PDF في الوضع الآمن: ${opts.title}`,
+            detail: pdfPath,
           });
-          return { ok: true, transport: 'electron', safeMode: true };
+          return { ok: true, transport: 'electron', safeMode: true, path: pdfPath };
         } catch (e2) {
           const r2 = e2 instanceof Error ? e2.message : String(e2);
           logPrintEvent({
