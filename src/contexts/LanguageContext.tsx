@@ -339,6 +339,7 @@ const translations = {
     margins: 'Margins',
     printFallbackTitle: 'Native printer unavailable',
     printFallbackBody: 'Showing in-app preview instead.',
+    printPreviewOpened: 'Print preview opened',
     printError: 'Print failed',
     
     // Manage
@@ -1700,6 +1701,7 @@ const translations = {
     margins: 'الهوامش',
     printFallbackTitle: 'طابعة النظام غير متاحة',
     printFallbackBody: 'يتم عرض المعاينة داخل التطبيق.',
+    printPreviewOpened: 'تم فتح معاينة الطباعة',
     printError: 'فشل الطباعة',
     
     // Manage
