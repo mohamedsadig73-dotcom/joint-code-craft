@@ -178,7 +178,7 @@ export default function InventoryDashboard() {
     }
   }
 
-  const trendOption = useMemo(() => {
+  const trendOption = useMemo<any>(() => {
     if (!data) return {};
     return {
       tooltip: { trigger: 'axis' },
@@ -205,7 +205,7 @@ export default function InventoryDashboard() {
     };
   }, [data, t]);
 
-  const topItemsOption = useMemo(() => {
+  const topItemsOption = useMemo<any>(() => {
     if (!data) return {};
     return {
       tooltip: { trigger: 'axis' },
@@ -222,7 +222,7 @@ export default function InventoryDashboard() {
     };
   }, [data]);
 
-  const whDistOption = useMemo(() => {
+  const whDistOption = useMemo<any>(() => {
     if (!data) return {};
     return {
       tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
