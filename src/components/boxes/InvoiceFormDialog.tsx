@@ -15,7 +15,7 @@ import {
 import type { BoxReceipt, BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { useItemsMaster } from '@/hooks/useItemsMaster';
 import { useBoxReceipts } from '@/hooks/useBoxReceipts';
-import { Loader2, Plus, Trash2, Package, PackageOpen, FileText } from 'lucide-react';
+import { Loader2, Plus, Trash2, Package, PackageOpen, FileText, AlertTriangle } from 'lucide-react';
 import { ItemPickerCombobox } from './items/ItemPickerCombobox';
 import { QuickAddItemDialog } from './items/QuickAddItemDialog';
 
@@ -143,6 +143,29 @@ export function InvoiceFormDialog({
     return { rows: lines.length, qty: totalQty };
   }, [lines]);
 
+  /**
+   * Detect duplicate part numbers within the current invoice (same dialog session).
+   * Returns a map of line.key -> info about the first occurrence it duplicates.
+   * This works in both CREATE and EDIT modes so the user is warned when adding
+   * a part number that already exists as another line of the SAME invoice.
+   */
+  const duplicateLineKeys = useMemo(() => {
+    const seen = new Map<string, string>(); // normalized part_no -> first line.key
+    const dups = new Map<string, { firstLineKey: string; lineNumber: number }>();
+    lines.forEach((l, idx) => {
+      const pn = l.part_no.trim().toLowerCase();
+      if (!pn) return;
+      if (seen.has(pn)) {
+        const firstKey = seen.get(pn)!;
+        const firstIdx = lines.findIndex((x) => x.key === firstKey);
+        dups.set(l.key, { firstLineKey: firstKey, lineNumber: firstIdx + 1 });
+      } else {
+        seen.set(pn, l.key);
+      }
+    });
+    return dups;
+  }, [lines]);
+
   const updateLine = (key: string, patch: Partial<InvoiceLine>) => {
     setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   };
@@ -203,6 +226,14 @@ export function InvoiceFormDialog({
     if (!validate()) {
       toast({ title: t('error'), description: t('fixValidationErrors'), variant: 'destructive' });
       return;
+    }
+
+    // Warn-and-confirm when duplicate part numbers exist within the same invoice
+    if (duplicateLineKeys.size > 0) {
+      const proceed = window.confirm(
+        `${t('duplicateInContextTitle')}\n\n${t('duplicateInContextDesc')}\n\n${t('confirmAction') || 'OK?'}`
+      );
+      if (!proceed) return;
     }
 
     setSubmitting(true);
@@ -430,6 +461,25 @@ export function InvoiceFormDialog({
             </div>
           </div>
 
+          {duplicateLineKeys.size > 0 && (
+            <div className="rounded-md border border-warning/40 bg-warning/10 p-3 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
+              <div className="text-xs space-y-1">
+                <p className="font-semibold text-foreground">{t('duplicateInContextTitle')}</p>
+                <p className="text-muted-foreground">
+                  {t('duplicatePartInBox')} —{' '}
+                  {Array.from(duplicateLineKeys.entries())
+                    .map(([key, info]) => {
+                      const idx = lines.findIndex((l) => l.key === key);
+                      const line = lines[idx];
+                      return `${t('row')} ${idx + 1} (${line?.part_no || '—'}) ↔ ${t('row')} ${info.lineNumber}`;
+                    })
+                    .join(' · ')}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -445,8 +495,23 @@ export function InvoiceFormDialog({
               </thead>
               <tbody>
                 {lines.map((line, idx) => (
-                  <tr key={line.key} className="border-b border-border/40 align-top">
-                    <td className="py-2 px-2 text-muted-foreground tabular-nums pt-3">{idx + 1}</td>
+                  <tr
+                    key={line.key}
+                    className={`border-b border-border/40 align-top ${
+                      duplicateLineKeys.has(line.key) ? 'bg-warning/5' : ''
+                    }`}
+                  >
+                    <td className="py-2 px-2 text-muted-foreground tabular-nums pt-3">
+                      <div className="flex items-center gap-1">
+                        <span>{idx + 1}</span>
+                        {duplicateLineKeys.has(line.key) && (
+                          <AlertTriangle
+                            className="w-3.5 h-3.5 text-warning"
+                            aria-label={t('duplicateInContextTitle')}
+                          />
+                        )}
+                      </div>
+                    </td>
                     <td className="py-2 px-2">
                       <ItemPickerCombobox
                         items={items}
