@@ -87,16 +87,16 @@ export default function BoxCardPrint() {
       marginMm: printSettings.marginMm,
     });
 
-    if (result.ok) return;
-
-    // Native print failed — show in-app preview as graceful fallback,
-    // and surface the reason via toast (not just console).
-    toast.error(t('printFallbackTitle'), {
-      description: `${t('printFallbackBody')} — ${result.reason}`,
-    });
-    setPreviewHtml(result.html);
-    setPreviewReason(result.reason);
-    setPreviewOpen(true);
+    if (!result.ok) {
+      // Native print failed — show in-app preview as graceful fallback,
+      // and surface the reason via toast (not just console).
+      toast.error(t('printFallbackTitle'), {
+        description: `${t('printFallbackBody')} — ${result.reason}`,
+      });
+      setPreviewHtml(result.html);
+      setPreviewReason(result.reason);
+      setPreviewOpen(true);
+    }
   };
 
   const handleOpenPreview = () => {
