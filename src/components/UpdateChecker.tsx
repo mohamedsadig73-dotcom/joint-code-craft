@@ -200,7 +200,8 @@ export function UpdateChecker() {
           // Compare web_version against the bundled LOCAL_VERSION (hot-swap updates dist only).
           // The shell version is handled separately via min_shell_version above.
           const remoteWeb = d.web_version || d.desktop_shell_version;
-          if (compareVersions(remoteWeb, LOCAL_VERSION) > 0) {
+          const webVersionDiff = compareVersions(remoteWeb, LOCAL_VERSION);
+          if (webVersionDiff > 0) {
             setUpdateInfo({
               type: 'desktop',
               version: remoteWeb,
@@ -222,6 +223,11 @@ export function UpdateChecker() {
           // Up-to-date: clear any stale banner
           setUpdateInfo(null);
           setShellOutdated(false);
+          setDismissed(false);
+          setPhase('idle');
+          setProgress(0);
+          setErrorReason(null);
+          console.log('[UpdateChecker] Desktop is up to date:', { remoteWeb, local: LOCAL_VERSION });
 
           await log({
             phase: 'check',
