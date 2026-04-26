@@ -11,7 +11,7 @@ export interface BoxReceipt {
   part_no: string;
   description: string;
   qty: number;
-  unit: 'PCS' | 'SET' | 'BOX' | 'KG' | 'MTR' | 'LTR' | 'PAIR';
+  unit: 'PCS' | 'SET' | 'BOX' | 'KG' | 'MTR' | 'LTR' | 'PAIR' | 'ROLL' | 'KIT' | 'BAG' | 'CTN' | 'DRUM' | 'PACK' | 'BTL' | 'M2' | 'M3';
   destination: 'morocco' | 'uzbekistan' | 'unspecified';
   packing_type: 'boxed' | 'loose';
   place: string | null;
