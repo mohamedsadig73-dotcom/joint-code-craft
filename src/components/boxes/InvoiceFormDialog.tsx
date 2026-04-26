@@ -15,7 +15,7 @@ import {
 import type { BoxReceipt, BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { useItemsMaster } from '@/hooks/useItemsMaster';
 import { useBoxReceipts } from '@/hooks/useBoxReceipts';
-import { Loader2, Plus, Trash2, Package, PackageOpen, FileText } from 'lucide-react';
+import { Loader2, Plus, Trash2, Package, PackageOpen, FileText, AlertTriangle } from 'lucide-react';
 import { ItemPickerCombobox } from './items/ItemPickerCombobox';
 import { QuickAddItemDialog } from './items/QuickAddItemDialog';
 
