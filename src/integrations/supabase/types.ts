@@ -2084,6 +2084,126 @@ export type Database = {
           },
         ]
       }
+      stock_count_lines: {
+        Row: {
+          book_qty: number
+          count_id: string
+          counted_qty: number
+          created_at: string
+          id: string
+          item_id: string
+          line_no: number
+          remarks: string | null
+          unit_cost: number
+          variance_qty: number | null
+        }
+        Insert: {
+          book_qty?: number
+          count_id: string
+          counted_qty?: number
+          created_at?: string
+          id?: string
+          item_id: string
+          line_no: number
+          remarks?: string | null
+          unit_cost?: number
+          variance_qty?: number | null
+        }
+        Update: {
+          book_qty?: number
+          count_id?: string
+          counted_qty?: number
+          created_at?: string
+          id?: string
+          item_id?: string
+          line_no?: number
+          remarks?: string | null
+          unit_cost?: number
+          variance_qty?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_count_lines_count_id_fkey"
+            columns: ["count_id"]
+            isOneToOne: false
+            referencedRelation: "stock_counts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_counts: {
+        Row: {
+          adjustment_movement_id: string | null
+          count_date: string
+          count_no: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          posted_at: string | null
+          posted_by: string | null
+          status: Database["public"]["Enums"]["stock_count_status"]
+          total_variance_qty: number
+          total_variance_value: number
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          adjustment_movement_id?: string | null
+          count_date?: string
+          count_no: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          status?: Database["public"]["Enums"]["stock_count_status"]
+          total_variance_qty?: number
+          total_variance_value?: number
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          adjustment_movement_id?: string | null
+          count_date?: string
+          count_no?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          status?: Database["public"]["Enums"]["stock_count_status"]
+          total_variance_qty?: number
+          total_variance_value?: number
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_counts_adjustment_movement_id_fkey"
+            columns: ["adjustment_movement_id"]
+            isOneToOne: false
+            referencedRelation: "stock_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_counts_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_movement_lines: {
         Row: {
           created_at: string
@@ -4326,6 +4446,7 @@ export type Database = {
             }
             Returns: string
           }
+      post_stock_count: { Args: { p_count_id: string }; Returns: string }
       reactivate_user: { Args: { target_user_id: string }; Returns: boolean }
       verify_backup_code: {
         Args: { _code: string; _user_id: string }
@@ -4385,6 +4506,7 @@ export type Database = {
       maintenance_status: "pending" | "done" | "not_required" | "overdue"
       packing_type: "boxed" | "loose"
       petty_cash_status: "open" | "closed" | "pending_approval" | "rejected"
+      stock_count_status: "draft" | "in_progress" | "posted" | "cancelled"
       stock_movement_status: "draft" | "posted" | "cancelled"
       stock_movement_type: "receipt" | "issue" | "transfer"
       wms_order_status:
@@ -4582,6 +4704,7 @@ export const Constants = {
       maintenance_status: ["pending", "done", "not_required", "overdue"],
       packing_type: ["boxed", "loose"],
       petty_cash_status: ["open", "closed", "pending_approval", "rejected"],
+      stock_count_status: ["draft", "in_progress", "posted", "cancelled"],
       stock_movement_status: ["draft", "posted", "cancelled"],
       stock_movement_type: ["receipt", "issue", "transfer"],
       wms_order_status: [
