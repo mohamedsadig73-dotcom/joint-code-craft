@@ -93,6 +93,7 @@ export default defineConfig(({ mode }) => ({
           'supabase': ['@supabase/supabase-js'],
           'excel-export': ['exceljs'],
           'date-utils': ['date-fns'],
+          'icons': ['lucide-react'],
         }
       }
     },
