@@ -1730,6 +1730,8 @@ const translations = {
     maintenance: 'الصيانة',
     installApp: 'تثبيت التطبيق',
     auditLog: 'سجل التدقيق',
+    recordsMenu: 'السجلات',
+    advancedTools: 'الأدوات المتقدمة',
     checkingUpdates: 'جاري التحقق من التحديثات',
     noUpdates: 'لا توجد تحديثات',
     updateAvailable: 'تحديث متاح',
