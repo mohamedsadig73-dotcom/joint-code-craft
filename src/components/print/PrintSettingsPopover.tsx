@@ -4,12 +4,14 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Settings2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import type { PaperSize, PaperOrientation } from '@/utils/printDocument';
+import type { PaperSize, PaperOrientation, WindowsPrintMode } from '@/utils/printDocument';
 
 export interface PrintSettings {
   paperSize: PaperSize;
   orientation: PaperOrientation;
   marginMm: number;
+  /** Windows-only transport selector. Defaults to 'auto'. */
+  windowsMode: WindowsPrintMode;
 }
 
 interface PrintSettingsPopoverProps {
@@ -95,6 +97,30 @@ export function PrintSettingsPopover({ value, onChange }: PrintSettingsPopoverPr
             ))}
           </RadioGroup>
         </div>
+
+        {/* Windows print mode */}
+        <div className="space-y-2">
+          <Label className="text-xs font-medium">{t('printMode')}</Label>
+          <p className="text-[11px] text-muted-foreground leading-snug">{t('printModeHint')}</p>
+          <RadioGroup
+            value={value.windowsMode}
+            onValueChange={(v) => onChange({ ...value, windowsMode: v as WindowsPrintMode })}
+            className="grid grid-cols-1 gap-1.5"
+          >
+            <Label className="flex items-center gap-2 border rounded-md p-2 cursor-pointer hover:bg-accent">
+              <RadioGroupItem value="auto" />
+              <span className="text-sm">{t('printModeAuto')}</span>
+            </Label>
+            <Label className="flex items-center gap-2 border rounded-md p-2 cursor-pointer hover:bg-accent">
+              <RadioGroupItem value="native" />
+              <span className="text-sm">{t('printModeNative')}</span>
+            </Label>
+            <Label className="flex items-center gap-2 border rounded-md p-2 cursor-pointer hover:bg-accent">
+              <RadioGroupItem value="preview" />
+              <span className="text-sm">{t('printModePreview')}</span>
+            </Label>
+          </RadioGroup>
+        </div>
       </PopoverContent>
     </Popover>
   );
@@ -102,7 +128,12 @@ export function PrintSettingsPopover({ value, onChange }: PrintSettingsPopoverPr
 
 /** Hook helper to persist settings across sessions. */
 const STORAGE_KEY = 'dts.print.settings';
-const DEFAULTS: PrintSettings = { paperSize: 'A4', orientation: 'portrait', marginMm: 10 };
+const DEFAULTS: PrintSettings = {
+  paperSize: 'A4',
+  orientation: 'portrait',
+  marginMm: 10,
+  windowsMode: 'auto',
+};
 
 export function loadPrintSettings(): PrintSettings {
   try {
@@ -113,6 +144,10 @@ export function loadPrintSettings(): PrintSettings {
       paperSize: parsed.paperSize === 'Letter' ? 'Letter' : 'A4',
       orientation: parsed.orientation === 'landscape' ? 'landscape' : 'portrait',
       marginMm: typeof parsed.marginMm === 'number' ? parsed.marginMm : 10,
+      windowsMode:
+        parsed.windowsMode === 'native' || parsed.windowsMode === 'preview'
+          ? parsed.windowsMode
+          : 'auto',
     };
   } catch {
     return DEFAULTS;
