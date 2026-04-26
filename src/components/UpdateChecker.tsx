@@ -293,12 +293,13 @@ export function UpdateChecker() {
   }, [updateInfo, phase, shellOutdated, log]);
 
   useEffect(() => {
+    if (!isElectron) return;
     const t1 = setTimeout(checkForUpdate, 3000);
     const iv = setInterval(checkForUpdate, CHECK_INTERVAL);
     return () => { clearTimeout(t1); clearInterval(iv); };
   }, [checkForUpdate]);
 
-  if (!updateInfo || dismissed) return null;
+  if (!isElectron || !updateInfo || dismissed) return null;
 
   const isDesktop = updateInfo.type === 'desktop';
 
