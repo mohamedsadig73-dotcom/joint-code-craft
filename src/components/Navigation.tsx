@@ -224,7 +224,7 @@ export function Navigation({ minimal = false }: { minimal?: boolean }) {
                           <RefreshCw className={`w-4 h-4 me-2 ${isUpdating ? 'animate-spin' : ''}`} />
                           {t('forceUpdate')}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate('/admin/update-diagnostics')}>
+                        <DropdownMenuItem onClick={() => navigate('/update-diagnostics')}>
                           <History className="w-4 h-4 me-2" />
                           {t('updateDiagnostics')}
                         </DropdownMenuItem>
