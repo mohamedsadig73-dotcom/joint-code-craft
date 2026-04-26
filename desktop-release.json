@@ -1,9 +1,9 @@
 {
-  "desktop_shell_version": "4.4.5",
+  "desktop_shell_version": "4.4.6",
   "min_shell_version": "4.4.5",
-  "web_version": "4.4.5",
-  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.4.5-dist.zip",
+  "web_version": "4.4.6",
+  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.4.6-dist.zip",
   "full_download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.4.5.zip",
-  "release_notes": "تحديث الواجهة إلى v4.4.5 - إصلاح ترقيم الإصدارات وتحسينات عامة",
+  "release_notes": "v4.4.6 - فاتورة كاملة، Bulk Edit، قفل بعد الشحن، تصدير سجل التدقيق، شريط تحديث محصور بسطح المكتب",
   "mandatory": false
 }
