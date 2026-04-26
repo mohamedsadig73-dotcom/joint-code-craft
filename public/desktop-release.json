@@ -1,9 +1,9 @@
 {
-  "desktop_shell_version": "4.5.4",
+  "desktop_shell_version": "4.5.5",
   "min_shell_version": "4.4.5",
-  "web_version": "4.5.4",
-  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.5.4-dist.zip",
+  "web_version": "4.5.5",
+  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.5.5-dist.zip",
   "full_download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.4.5.zip",
-  "release_notes": "إصلاح جذري لمسار طباعة سطح المكتب: فتح معاينة داخلية قابلة للطباعة بدلاً من مربع Windows الذي يعرض رسالة عدم دعم المعاينة.",
+  "release_notes": "تشخيص الطباعة + وضع آمن + اختيار وضع طابعة ويندوز + اختبار ذاتي",
   "mandatory": false
 }
