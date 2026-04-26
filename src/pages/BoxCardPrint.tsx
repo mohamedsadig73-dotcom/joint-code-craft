@@ -97,6 +97,8 @@ export default function BoxCardPrint() {
       setPreviewHtml(failure.html);
       setPreviewReason(failure.reason);
       setPreviewOpen(true);
+    } else if (result.transport === 'electron') {
+      toast.success(t('printPreviewOpened'));
     }
   };
 
