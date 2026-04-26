@@ -197,11 +197,13 @@ export function UpdateChecker() {
             });
             return;
           }
-          // Compare against installed shell version (not bundled web LOCAL_VERSION)
-          if (compareVersions(d.desktop_shell_version, localShell) > 0) {
+          // Compare web_version against the bundled LOCAL_VERSION (hot-swap updates dist only).
+          // The shell version is handled separately via min_shell_version above.
+          const remoteWeb = d.web_version || d.desktop_shell_version;
+          if (compareVersions(remoteWeb, LOCAL_VERSION) > 0) {
             setUpdateInfo({
               type: 'desktop',
-              version: d.desktop_shell_version,
+              version: remoteWeb,
               downloadUrl: d.download_url,
               releaseNotes: d.release_notes,
               mandatory: d.mandatory,
@@ -210,17 +212,21 @@ export function UpdateChecker() {
             await log({
               phase: 'check',
               status: 'success',
-              targetVersion: d.desktop_shell_version,
+              targetVersion: remoteWeb,
               attemptedUrl: DESKTOP_RELEASE_URL,
             });
-            console.log('[UpdateChecker] Desktop update:', d.desktop_shell_version);
+            console.log('[UpdateChecker] Desktop update:', remoteWeb, 'local:', LOCAL_VERSION);
             return;
           }
+
+          // Up-to-date: clear any stale banner
+          setUpdateInfo(null);
+          setShellOutdated(false);
 
           await log({
             phase: 'check',
             status: 'success',
-            targetVersion: d.desktop_shell_version,
+            targetVersion: remoteWeb,
             attemptedUrl: DESKTOP_RELEASE_URL,
           });
         } catch (err) {
