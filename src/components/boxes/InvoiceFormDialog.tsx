@@ -453,6 +453,25 @@ export function InvoiceFormDialog({
             </div>
           </div>
 
+          {duplicateLineKeys.size > 0 && (
+            <div className="rounded-md border border-warning/40 bg-warning/10 p-3 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
+              <div className="text-xs space-y-1">
+                <p className="font-semibold text-foreground">{t('duplicateInContextTitle')}</p>
+                <p className="text-muted-foreground">
+                  {t('duplicatePartInBox')} —{' '}
+                  {Array.from(duplicateLineKeys.entries())
+                    .map(([key, info]) => {
+                      const idx = lines.findIndex((l) => l.key === key);
+                      const line = lines[idx];
+                      return `${t('row')} ${idx + 1} (${line?.part_no || '—'}) ↔ ${t('row')} ${info.lineNumber}`;
+                    })
+                    .join(' · ')}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
