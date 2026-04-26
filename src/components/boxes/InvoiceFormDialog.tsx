@@ -487,8 +487,23 @@ export function InvoiceFormDialog({
               </thead>
               <tbody>
                 {lines.map((line, idx) => (
-                  <tr key={line.key} className="border-b border-border/40 align-top">
-                    <td className="py-2 px-2 text-muted-foreground tabular-nums pt-3">{idx + 1}</td>
+                  <tr
+                    key={line.key}
+                    className={`border-b border-border/40 align-top ${
+                      duplicateLineKeys.has(line.key) ? 'bg-warning/5' : ''
+                    }`}
+                  >
+                    <td className="py-2 px-2 text-muted-foreground tabular-nums pt-3">
+                      <div className="flex items-center gap-1">
+                        <span>{idx + 1}</span>
+                        {duplicateLineKeys.has(line.key) && (
+                          <AlertTriangle
+                            className="w-3.5 h-3.5 text-warning"
+                            aria-label={t('duplicateInContextTitle')}
+                          />
+                        )}
+                      </div>
+                    </td>
                     <td className="py-2 px-2">
                       <ItemPickerCombobox
                         items={items}
