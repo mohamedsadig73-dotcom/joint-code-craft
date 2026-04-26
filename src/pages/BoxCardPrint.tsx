@@ -109,9 +109,9 @@ export default function BoxCardPrint() {
       setPreviewReason(`${t(`printStep_${failure.failedStep}`)} — ${failure.reason}`);
       setPreviewOpen(true);
     } else if (result.transport === 'electron' && result.safeMode) {
-      toast.success(t('printPreviewOpened'), { description: t('printedInSafeMode') });
+      toast.success(t('printPdfOpened'), { description: t('printedInSafeMode') });
     } else if (result.transport === 'electron') {
-      toast.success(t('printPreviewOpened'));
+      toast.success(t('printPdfOpened'));
     }
   };
 
