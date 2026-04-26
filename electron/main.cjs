@@ -132,81 +132,45 @@ function setupRuntimeRecovery() {
 
 // ── IPC: Print HTML ────────────────────────────────────
 ipcMain.handle('print-html', async (_event, htmlContent) => {
-  return new Promise((resolve, reject) => {
-    const tmpFile = path.join(app.getPath('temp'), `dts-print-preview-${Date.now()}.html`);
-    const previewHTML = `<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head>
-  <meta charset="utf-8" />
-  <title>DTS-Store - Print Preview</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; background: #e5e7eb; font-family: "Segoe UI Arabic", "Segoe UI", Arial, sans-serif; }
-    .bar { height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px; background: #ffffff; border-bottom: 1px solid #d1d5db; }
-    .title { font-size: 14px; font-weight: 700; color: #111827; }
-    .actions { display: flex; align-items: center; gap: 8px; }
-    button { border: 1px solid #cbd5e1; background: #ffffff; color: #111827; border-radius: 6px; padding: 8px 16px; font: inherit; cursor: pointer; }
-    button.primary { background: #1a1f2c; color: #ffffff; border-color: #1a1f2c; }
-    iframe { display: block; width: 100%; height: calc(100vh - 56px); border: 0; background: #ffffff; }
-    @media print { .bar { display: none !important; } iframe { height: 100vh; } }
-  </style>
-</head>
-<body>
-  <div class="bar">
-    <div class="title">معاينة الطباعة</div>
-    <div class="actions">
-      <button type="button" onclick="window.close()">إغلاق</button>
-      <button type="button" class="primary" onclick="printFrame()">طباعة</button>
-    </div>
-  </div>
-  <iframe id="preview" title="Print preview"></iframe>
-  <script>
-    const printHtml = ${JSON.stringify(htmlContent)};
-    const frame = document.getElementById('preview');
-    frame.srcdoc = printHtml;
-    function printFrame() {
-      const win = frame.contentWindow;
-      if (!win) return;
-      win.focus();
-      setTimeout(() => win.print(), 150);
-    }
-  </script>
-</body>
-</html>`;
+  const stamp = Date.now();
+  const tmpHtml = path.join(app.getPath('temp'), `dts-print-${stamp}.html`);
+  const tmpPdf = path.join(app.getPath('temp'), `DTS-Store-Print-${stamp}.pdf`);
+  const activeDist = getActiveDistDir();
+  const baseHref = `file://${activeDist.replace(/\\/g, '/')}/`;
+  const printableHtml = htmlContent.includes('<base ')
+    ? htmlContent
+    : htmlContent.replace(/<head>/i, `<head><base href="${baseHref}">`);
 
-    try {
-      fs.writeFileSync(tmpFile, previewHTML, 'utf-8');
-    } catch (err) {
-      reject(err);
-      return;
-    }
-
-    const previewWin = new BrowserWindow({
-      width: 1120,
-      height: 780,
-      minWidth: 900,
-      minHeight: 650,
-      title: 'DTS-Store - Print Preview',
+  let printWin = null;
+  try {
+    fs.writeFileSync(tmpHtml, printableHtml, 'utf-8');
+    printWin = new BrowserWindow({
+      width: 900,
+      height: 1200,
       show: false,
       parent: mainWindow || undefined,
-      modal: false,
-      backgroundColor: '#e5e7eb',
+      backgroundColor: '#ffffff',
       webPreferences: { contextIsolation: true, nodeIntegration: false },
       autoHideMenuBar: true,
     });
 
-    previewWin.once('closed', () => {
-      try { fs.unlinkSync(tmpFile); } catch (_) {}
+    await printWin.loadFile(tmpHtml);
+    await new Promise((resolve) => setTimeout(resolve, 450));
+    const pdf = await printWin.webContents.printToPDF({
+      printBackground: true,
+      preferCSSPageSize: true,
     });
-
-    previewWin.loadFile(tmpFile).then(() => {
-      previewWin.show();
-      resolve(true);
-    }).catch((err) => {
-      try { fs.unlinkSync(tmpFile); } catch (_) {}
-      reject(err);
-    });
-  });
+    fs.writeFileSync(tmpPdf, pdf);
+    const openError = await shell.openPath(tmpPdf);
+    if (openError) throw new Error(openError);
+    return { success: true, path: tmpPdf };
+  } catch (err) {
+    console.error('[Electron] printToPDF failed:', err);
+    throw err;
+  } finally {
+    if (printWin && !printWin.isDestroyed()) printWin.destroy();
+    try { fs.unlinkSync(tmpHtml); } catch (_) {}
+  }
 });
 
 // ── IPC: Open external URL ─────────────────────────────
