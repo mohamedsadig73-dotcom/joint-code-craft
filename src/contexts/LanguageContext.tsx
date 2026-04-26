@@ -22,7 +22,7 @@ function loadArabic(): Promise<Translations> {
   if (loadedTranslations.ar) return Promise.resolve(loadedTranslations.ar);
   if (!arabicLoadingPromise) {
     arabicLoadingPromise = import('@/locales/ar').then((mod) => {
-      const ar = mod.default as Translations;
+      const ar = mod.default as unknown as Translations;
       loadedTranslations.ar = ar;
       return ar;
     });
