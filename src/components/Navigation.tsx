@@ -38,7 +38,8 @@ import {
   DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 
-const APP_VERSION = '4.4.5';
+declare const __APP_VERSION__: string;
+const APP_VERSION = __APP_VERSION__;
 
 export function Navigation({ minimal = false }: { minimal?: boolean }) {
   const location = useLocation();
