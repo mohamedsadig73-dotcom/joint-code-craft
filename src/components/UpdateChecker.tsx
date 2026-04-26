@@ -235,17 +235,10 @@ export function UpdateChecker() {
         return;
       }
 
-      const data = await fetchJSON<PublishedVersionPayload>(VERSION_URL);
-      if (isRemoteUpdateAvailable(data)) {
-        setUpdateInfo({ type: 'web', version: data.version || data.build || '' });
-        setDismissed(false);
-        await log({
-          phase: 'check',
-          status: 'success',
-          targetVersion: data.version,
-          attemptedUrl: VERSION_URL,
-        });
-      }
+      // Web/PWA: do not show the update banner. Updates apply automatically
+      // when the user reloads (no service worker is registered for this app).
+      // The desktop banner is reserved for the Electron shell only.
+      return;
     } catch (err) {
       await log({
         phase: 'check',
@@ -300,12 +293,13 @@ export function UpdateChecker() {
   }, [updateInfo, phase, shellOutdated, log]);
 
   useEffect(() => {
+    if (!isElectron) return;
     const t1 = setTimeout(checkForUpdate, 3000);
     const iv = setInterval(checkForUpdate, CHECK_INTERVAL);
     return () => { clearTimeout(t1); clearInterval(iv); };
   }, [checkForUpdate]);
 
-  if (!updateInfo || dismissed) return null;
+  if (!isElectron || !updateInfo || dismissed) return null;
 
   const isDesktop = updateInfo.type === 'desktop';
 
