@@ -36,6 +36,9 @@ const ItemDetails = lazy(() => import('@/pages/ItemDetails'));
 const ItemImageHistory = lazy(() => import('@/pages/ItemImageHistory'));
 const PrintDiagnostics = lazy(() => import('@/pages/PrintDiagnostics'));
 const Inventory = lazy(() => import('@/pages/Inventory'));
+const StockMovements = lazy(() => import('@/pages/inventory/StockMovements'));
+const NewStockMovement = lazy(() => import('@/pages/inventory/NewStockMovement'));
+const MovementDetails = lazy(() => import('@/pages/inventory/MovementDetails'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -369,6 +372,36 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <Inventory />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/movements"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <StockMovements />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/movements/new"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                <PageTransition>
+                  <NewStockMovement />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/movements/:id"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <MovementDetails />
                 </PageTransition>
               </ProtectedRoute>
             }
