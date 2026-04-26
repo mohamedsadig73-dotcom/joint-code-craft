@@ -3,7 +3,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Navigation } from '@/components/Navigation';
-import { Warehouse, FolderTree, Tags, Ruler, Truck, Building2, Briefcase, ArrowLeftRight } from 'lucide-react';
+import { Warehouse, FolderTree, Tags, Ruler, Truck, Building2, Briefcase, ArrowLeftRight, BarChart3, FileText, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ReferenceCrudTab } from '@/components/inventory/ReferenceCrudTab';
 
@@ -19,12 +19,32 @@ export default function Inventory() {
           subtitle={t('inventoryDesc')}
           icon={Warehouse}
           actions={
-            <Button asChild>
-              <Link to="/inventory/movements">
-                <ArrowLeftRight className="w-4 h-4 me-1.5" />
-                {t('stockMovements')}
-              </Link>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild>
+                <Link to="/inventory/movements">
+                  <ArrowLeftRight className="w-4 h-4 me-1.5" />
+                  {t('stockMovements')}
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/inventory/balances">
+                  <BarChart3 className="w-4 h-4 me-1.5" />
+                  {t('stockBalances')}
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/inventory/stock-card">
+                  <FileText className="w-4 h-4 me-1.5" />
+                  {t('stockCard')}
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/inventory/low-stock">
+                  <AlertTriangle className="w-4 h-4 me-1.5" />
+                  {t('lowStockReport')}
+                </Link>
+              </Button>
+            </div>
           }
         />
 
