@@ -804,6 +804,50 @@
     height: 8px;
     direction: ltr;
   }
+
+  /* ========== UNIFIED VISIBLE SCROLLBARS (LTR + RTL) ========== */
+  /* Always show a clear, themed scrollbar on every scrollable container,
+     including vertical lists/tables/dialogs. */
+  .overflow-y-auto::-webkit-scrollbar,
+  .overflow-y-scroll::-webkit-scrollbar,
+  .overflow-auto::-webkit-scrollbar,
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-track,
+  .overflow-y-scroll::-webkit-scrollbar-track,
+  .overflow-auto::-webkit-scrollbar-track,
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.4);
+    border-radius: 8px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-thumb,
+  .overflow-y-scroll::-webkit-scrollbar-thumb,
+  .overflow-auto::-webkit-scrollbar-thumb,
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.5);
+    border-radius: 8px;
+    border: 2px solid hsl(var(--background));
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+  .overflow-y-scroll::-webkit-scrollbar-thumb:hover,
+  .overflow-auto::-webkit-scrollbar-thumb:hover,
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.75);
+  }
+
+  /* Firefox */
+  .overflow-y-auto,
+  .overflow-y-scroll,
+  .overflow-auto,
+  [data-radix-scroll-area-viewport] {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.5) hsl(var(--muted) / 0.4);
+  }
   
   [dir="rtl"] .overflow-x-auto::-webkit-scrollbar-track,
   [dir="rtl"] .overflow-auto::-webkit-scrollbar-track,

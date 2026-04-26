@@ -12,20 +12,30 @@ import {
   BOX_STATUSES,
   normalizeBoxNo,
 } from '@/utils/boxNumberValidation';
-import type { BoxReceiptInput } from '@/hooks/useBoxReceipts';
+import type { BoxReceipt, BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { useItemsMaster } from '@/hooks/useItemsMaster';
-import { Loader2, Plus, Trash2, Package, PackageOpen, FileText } from 'lucide-react';
+import { useBoxReceipts } from '@/hooks/useBoxReceipts';
+import { Loader2, Plus, Trash2, Package, PackageOpen, FileText, AlertTriangle } from 'lucide-react';
 import { ItemPickerCombobox } from './items/ItemPickerCombobox';
+import { QuickAddItemDialog } from './items/QuickAddItemDialog';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (rows: BoxReceiptInput[]) => Promise<{ inserted: number; failed: number }>;
   existingSuppliers: string[];
+  /** When set, dialog opens in EDIT mode and loads these receipts as lines. */
+  editing?: { invoiceNumber: string; receipts: BoxReceipt[] } | null;
+  /** Called in edit mode to update an existing line (receipt) by id. */
+  onUpdateLine?: (id: string, patch: Partial<BoxReceiptInput>) => Promise<unknown>;
+  /** Called in edit mode to delete an existing line (soft delete). */
+  onDeleteLine?: (id: string) => Promise<unknown>;
 }
 
 interface InvoiceLine {
   key: string;
+  /** Existing receipt id when this line was loaded from DB (edit mode). */
+  existingId?: string;
   selectedItemId: string | null;
   part_no: string;
   description: string;
@@ -68,35 +78,104 @@ function makeEmptyLine(): InvoiceLine {
   };
 }
 
-export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppliers }: Props) {
+export function InvoiceFormDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  existingSuppliers,
+  editing,
+  onUpdateLine,
+  onDeleteLine,
+}: Props) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const { items } = useItemsMaster();
+  const { receipts: allReceipts } = useBoxReceipts();
 
   const [header, setHeader] = useState<InvoiceHeader>(HEADER_DEFAULT);
   const [lines, setLines] = useState<InvoiceLine[]>([makeEmptyLine()]);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ supplier?: string; lines?: Record<string, string> }>({});
+  const [quickAdd, setQuickAdd] = useState<{ open: boolean; lineKey: string | null; partNo: string }>({
+    open: false,
+    lineKey: null,
+    partNo: '',
+  });
 
   useEffect(() => {
     if (open) {
-      setHeader(HEADER_DEFAULT);
-      setLines([makeEmptyLine()]);
+      if (editing && editing.receipts.length > 0) {
+        // Hydrate header from the first receipt
+        const first = editing.receipts[0];
+        setHeader({
+          supplier: first.supplier,
+          receipt_date: first.receipt_date,
+          invoice_number: editing.invoiceNumber,
+          destination: first.destination,
+          packing_type: first.packing_type ?? 'boxed',
+          box_no: first.box_no ?? 'B-01',
+          place: first.place ?? 'مخزنة بالمخزن (B)',
+          status: first.status,
+        });
+        setLines(
+          editing.receipts.map((r, i) => ({
+            key: `${r.id}-${i}`,
+            existingId: r.id,
+            selectedItemId: r.item_id ?? null,
+            part_no: r.part_no,
+            description: r.description,
+            qty: r.qty,
+            unit: r.unit,
+            notes: r.notes ?? '',
+          }))
+        );
+      } else {
+        setHeader(HEADER_DEFAULT);
+        setLines([makeEmptyLine()]);
+      }
       setErrors({});
       setSubmitting(false);
     }
-  }, [open]);
+  }, [open, editing]);
 
   const totals = useMemo(() => {
     const totalQty = lines.reduce((s, l) => s + (Number(l.qty) || 0), 0);
     return { rows: lines.length, qty: totalQty };
   }, [lines]);
 
+  /**
+   * Detect duplicate part numbers within the current invoice (same dialog session).
+   * Returns a map of line.key -> info about the first occurrence it duplicates.
+   * This works in both CREATE and EDIT modes so the user is warned when adding
+   * a part number that already exists as another line of the SAME invoice.
+   */
+  const duplicateLineKeys = useMemo(() => {
+    const seen = new Map<string, string>(); // normalized part_no -> first line.key
+    const dups = new Map<string, { firstLineKey: string; lineNumber: number }>();
+    lines.forEach((l, idx) => {
+      const pn = l.part_no.trim().toLowerCase();
+      if (!pn) return;
+      if (seen.has(pn)) {
+        const firstKey = seen.get(pn)!;
+        const firstIdx = lines.findIndex((x) => x.key === firstKey);
+        dups.set(l.key, { firstLineKey: firstKey, lineNumber: firstIdx + 1 });
+      } else {
+        seen.set(pn, l.key);
+      }
+    });
+    return dups;
+  }, [lines]);
+
   const updateLine = (key: string, patch: Partial<InvoiceLine>) => {
     setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   };
 
-  const removeLine = (key: string) => {
+  const removeLine = async (key: string) => {
+    const target = lines.find((l) => l.key === key);
+    // In edit mode, deleting an existing line should soft-delete in DB
+    if (target?.existingId && onDeleteLine) {
+      await onDeleteLine(target.existingId);
+    }
     setLines((prev) => (prev.length === 1 ? prev : prev.filter((l) => l.key !== key)));
   };
 
@@ -114,6 +193,16 @@ export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppli
     // If header supplier is empty and item has a default supplier, suggest it
     if (!header.supplier && item.default_supplier) {
       setHeader((h) => ({ ...h, supplier: item.default_supplier as string }));
+    }
+  };
+
+  const openQuickAdd = (lineKey: string, partNo: string) => {
+    setQuickAdd({ open: true, lineKey, partNo });
+  };
+
+  const handleQuickAddCreated = (item: { id: string; part_no: string; description: string; default_unit: BoxReceiptInput['unit']; default_supplier: string | null }) => {
+    if (quickAdd.lineKey) {
+      handleSelectItem(quickAdd.lineKey, item);
     }
   };
 
@@ -139,25 +228,82 @@ export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppli
       return;
     }
 
-    setSubmitting(true);
-    const invoicePrefix = header.invoice_number.trim()
-      ? `[${t('invoiceNumber')}: ${header.invoice_number.trim()}] `
-      : '';
+    // Warn-and-confirm when duplicate part numbers exist within the same invoice
+    if (duplicateLineKeys.size > 0) {
+      const proceed = window.confirm(
+        `${t('duplicateInContextTitle')}\n\n${t('duplicateInContextDesc')}\n\n${t('confirmAction') || 'OK?'}`
+      );
+      if (!proceed) return;
+    }
 
-    const rows: BoxReceiptInput[] = lines.map((l) => ({
+    setSubmitting(true);
+    const invoiceNumber = header.invoice_number.trim() || null;
+    const headerPatch = {
       supplier: header.supplier.trim(),
-      part_no: l.part_no.trim(),
-      description: l.description.trim(),
-      qty: Number(l.qty),
-      unit: l.unit,
       destination: header.destination,
       packing_type: header.packing_type,
       place: header.packing_type === 'boxed' ? header.place.trim() || null : null,
       box_no: header.packing_type === 'boxed' ? normalizeBoxNo(header.box_no) : null,
       receipt_date: header.receipt_date,
       status: header.status,
-      notes: `${invoicePrefix}${l.notes.trim()}`.trim() || null,
+      invoice_number: invoiceNumber,
+    };
+
+    if (editing && onUpdateLine) {
+      // EDIT MODE: update existing lines, insert new ones
+      const existingLines = lines.filter((l) => l.existingId);
+      const newLines = lines.filter((l) => !l.existingId);
+
+      let failed = 0;
+      for (const l of existingLines) {
+        try {
+          await onUpdateLine(l.existingId as string, {
+            ...headerPatch,
+            part_no: l.part_no.trim(),
+            description: l.description.trim(),
+            qty: Number(l.qty),
+            unit: l.unit,
+            notes: l.notes.trim() || null,
+            item_id: l.selectedItemId,
+          });
+        } catch {
+          failed++;
+        }
+      }
+
+      if (newLines.length > 0) {
+        const newRows: BoxReceiptInput[] = newLines.map((l) => ({
+          ...headerPatch,
+          part_no: l.part_no.trim(),
+          description: l.description.trim(),
+          qty: Number(l.qty),
+          unit: l.unit,
+          notes: l.notes.trim() || null,
+          image_path: null,
+          item_id: l.selectedItemId,
+        }));
+        const result = await onSubmit(newRows);
+        failed += result.failed;
+      }
+
+      setSubmitting(false);
+      if (failed === 0) {
+        toast({ title: t('success'), description: t('invoiceUpdated') });
+        onOpenChange(false);
+      }
+      return;
+    }
+
+    // CREATE MODE: bulk insert all rows
+    const rows: BoxReceiptInput[] = lines.map((l) => ({
+      ...headerPatch,
+      part_no: l.part_no.trim(),
+      description: l.description.trim(),
+      qty: Number(l.qty),
+      unit: l.unit,
+      notes: l.notes.trim() || null,
       image_path: null,
+      item_id: l.selectedItemId,
     }));
 
     const result = await onSubmit(rows);
@@ -174,7 +320,7 @@ export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppli
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary" />
-            {t('addFullInvoice')}
+            {editing ? t('editFullInvoice') : t('addFullInvoice')}
           </DialogTitle>
         </DialogHeader>
 
@@ -315,7 +461,26 @@ export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppli
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {duplicateLineKeys.size > 0 && (
+            <div className="rounded-md border border-warning/40 bg-warning/10 p-3 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
+              <div className="text-xs space-y-1">
+                <p className="font-semibold text-foreground">{t('duplicateInContextTitle')}</p>
+                <p className="text-muted-foreground">
+                  {t('duplicatePartInBox')} —{' '}
+                  {Array.from(duplicateLineKeys.entries())
+                    .map(([key, info]) => {
+                      const idx = lines.findIndex((l) => l.key === key);
+                      const line = lines[idx];
+                      return `${t('row')} ${idx + 1} (${line?.part_no || '—'}) ↔ ${t('row')} ${info.lineNumber}`;
+                    })
+                    .join(' · ')}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="overflow-auto max-h-[55vh] rounded-md border border-border/40">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-xs text-muted-foreground">
@@ -330,22 +495,30 @@ export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppli
               </thead>
               <tbody>
                 {lines.map((line, idx) => (
-                  <tr key={line.key} className="border-b border-border/40 align-top">
-                    <td className="py-2 px-2 text-muted-foreground tabular-nums pt-3">{idx + 1}</td>
+                  <tr
+                    key={line.key}
+                    className={`border-b border-border/40 align-top ${
+                      duplicateLineKeys.has(line.key) ? 'bg-warning/5' : ''
+                    }`}
+                  >
+                    <td className="py-2 px-2 text-muted-foreground tabular-nums pt-3">
+                      <div className="flex items-center gap-1">
+                        <span>{idx + 1}</span>
+                        {duplicateLineKeys.has(line.key) && (
+                          <AlertTriangle
+                            className="w-3.5 h-3.5 text-warning"
+                            aria-label={t('duplicateInContextTitle')}
+                          />
+                        )}
+                      </div>
+                    </td>
                     <td className="py-2 px-2">
                       <ItemPickerCombobox
                         items={items}
                         value={line.selectedItemId}
                         onSelect={(item) => handleSelectItem(line.key, item)}
+                        onCreateNew={(partNo) => openQuickAdd(line.key, partNo)}
                       />
-                      {!line.selectedItemId && (
-                        <Input
-                          className="mt-1.5 h-9 font-mono text-xs"
-                          value={line.part_no}
-                          onChange={(e) => updateLine(line.key, { part_no: e.target.value })}
-                          placeholder={t('partNo')}
-                        />
-                      )}
                     </td>
                     <td className="py-2 px-2">
                       <Input
@@ -424,6 +597,38 @@ export function InvoiceFormDialog({ open, onOpenChange, onSubmit, existingSuppli
           </Button>
         </DialogFooter>
       </DialogContent>
+      <QuickAddItemDialog
+        open={quickAdd.open}
+        onOpenChange={(open) => setQuickAdd((q) => ({ ...q, open }))}
+        initialPartNo={quickAdd.partNo}
+        initialSupplier={header.supplier}
+        suggestedUnit={
+          lines.find((l) => l.key === quickAdd.lineKey)?.unit ?? 'PCS'
+        }
+        isContextDuplicate={(pn) => {
+          const candidate = pn.trim().toLowerCase();
+          if (!candidate) return false;
+          // Existing receipts already in DB matching supplier + destination + date
+          const inDb = allReceipts.some(
+            (r) =>
+              r.part_no.trim().toLowerCase() === candidate &&
+              r.supplier === header.supplier &&
+              r.destination === header.destination &&
+              r.receipt_date === header.receipt_date &&
+              // Allow editing the same line in edit mode
+              r.id !== editing?.receipts.find((er) => er.part_no.trim().toLowerCase() === candidate)?.id,
+          );
+          if (inDb) return true;
+          // Other unsaved lines in the current invoice
+          const inOtherLines = lines.some(
+            (l) =>
+              l.key !== quickAdd.lineKey &&
+              l.part_no.trim().toLowerCase() === candidate,
+          );
+          return inOtherLines;
+        }}
+        onCreated={handleQuickAddCreated}
+      />
     </Dialog>
   );
 }

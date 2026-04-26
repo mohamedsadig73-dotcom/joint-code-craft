@@ -26,9 +26,9 @@ type DesktopReleasePayload = {
 const LOCAL_BUILD = __BUILD_VERSION__;
 const LOCAL_VERSION = __APP_VERSION__;
 const CHECK_INTERVAL = 5 * 60 * 1000;
-const PUBLISHED_URL = 'https://dts-store-qatar-2026.lovable.app';
-const VERSION_URL = `${PUBLISHED_URL}/version.json`;
-const DESKTOP_RELEASE_URL = `${PUBLISHED_URL}/desktop-release.json`;
+const UPDATE_CHANNEL_URL = 'https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases';
+const VERSION_URL = `${UPDATE_CHANNEL_URL}/version.json`;
+const DESKTOP_RELEASE_URL = `${UPDATE_CHANNEL_URL}/desktop-release.json`;
 const isElectron = !!window.electronAPI;
 
 function parseBuildNumber(value?: string) {
@@ -197,11 +197,14 @@ export function UpdateChecker() {
             });
             return;
           }
-          // Compare against installed shell version (not bundled web LOCAL_VERSION)
-          if (compareVersions(d.desktop_shell_version, localShell) > 0) {
+          // Compare web_version against the bundled LOCAL_VERSION (hot-swap updates dist only).
+          // The shell version is handled separately via min_shell_version above.
+          const remoteWeb = d.web_version || d.desktop_shell_version;
+          const webVersionDiff = compareVersions(remoteWeb, LOCAL_VERSION);
+          if (webVersionDiff > 0) {
             setUpdateInfo({
               type: 'desktop',
-              version: d.desktop_shell_version,
+              version: remoteWeb,
               downloadUrl: d.download_url,
               releaseNotes: d.release_notes,
               mandatory: d.mandatory,
@@ -210,12 +213,28 @@ export function UpdateChecker() {
             await log({
               phase: 'check',
               status: 'success',
-              targetVersion: d.desktop_shell_version,
+              targetVersion: remoteWeb,
               attemptedUrl: DESKTOP_RELEASE_URL,
             });
-            console.log('[UpdateChecker] Desktop update:', d.desktop_shell_version);
+            console.log('[UpdateChecker] Desktop update:', remoteWeb, 'local:', LOCAL_VERSION);
             return;
           }
+
+          // Up-to-date: clear any stale banner
+          setUpdateInfo(null);
+          setShellOutdated(false);
+          setDismissed(false);
+          setPhase('idle');
+          setProgress(0);
+          setErrorReason(null);
+          console.log('[UpdateChecker] Desktop is up to date:', { remoteWeb, local: LOCAL_VERSION });
+
+          await log({
+            phase: 'check',
+            status: 'success',
+            targetVersion: remoteWeb,
+            attemptedUrl: DESKTOP_RELEASE_URL,
+          });
         } catch (err) {
           await log({
             phase: 'check',
@@ -224,19 +243,14 @@ export function UpdateChecker() {
             errorMessage: err instanceof Error ? err.message : String(err),
           });
         }
+
+        return;
       }
 
-      const data = await fetchJSON<PublishedVersionPayload>(VERSION_URL);
-      if (isRemoteUpdateAvailable(data)) {
-        setUpdateInfo({ type: 'web', version: data.version || data.build || '' });
-        setDismissed(false);
-        await log({
-          phase: 'check',
-          status: 'success',
-          targetVersion: data.version,
-          attemptedUrl: VERSION_URL,
-        });
-      }
+      // Web/PWA: do not show the update banner. Updates apply automatically
+      // when the user reloads (no service worker is registered for this app).
+      // The desktop banner is reserved for the Electron shell only.
+      return;
     } catch (err) {
       await log({
         phase: 'check',
@@ -291,12 +305,13 @@ export function UpdateChecker() {
   }, [updateInfo, phase, shellOutdated, log]);
 
   useEffect(() => {
+    if (!isElectron) return;
     const t1 = setTimeout(checkForUpdate, 3000);
     const iv = setInterval(checkForUpdate, CHECK_INTERVAL);
     return () => { clearTimeout(t1); clearInterval(iv); };
   }, [checkForUpdate]);
 
-  if (!updateInfo || dismissed) return null;
+  if (!isElectron || !updateInfo || dismissed) return null;
 
   const isDesktop = updateInfo.type === 'desktop';
 

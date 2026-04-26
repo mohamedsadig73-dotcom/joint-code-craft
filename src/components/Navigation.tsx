@@ -32,9 +32,14 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 
-const APP_VERSION = '4.4.5';
+declare const __APP_VERSION__: string;
+const APP_VERSION = __APP_VERSION__;
 
 export function Navigation({ minimal = false }: { minimal?: boolean }) {
   const location = useLocation();
@@ -43,6 +48,17 @@ export function Navigation({ minimal = false }: { minimal?: boolean }) {
   const { language, toggleLanguage, t } = useLanguage();
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Hide "Install App" entry once the app is already installed (PWA standalone mode)
+  const isStandalone = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return (
+      window.matchMedia?.('(display-mode: standalone)').matches ||
+      // iOS Safari
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (navigator as any).standalone === true
+    );
+  }, []);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -166,29 +182,55 @@ export function Navigation({ minimal = false }: { minimal?: boolean }) {
                   <Globe className="w-4 h-4 me-2" />
                   {t('switchLanguage')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/install')}>
-                  <Download className="w-4 h-4 me-2" />
-                  {t('installApp')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleForceUpdate} disabled={isUpdating}>
-                  <RefreshCw className={`w-4 h-4 me-2 ${isUpdating ? 'animate-spin' : ''}`} />
-                  {t('forceUpdate')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/update-log')}>
-                  <History className="w-4 h-4 me-2" />
-                  {t('updateLog')}
-                </DropdownMenuItem>
-                {user?.role === 'admin' && (
-                  <DropdownMenuItem onClick={() => navigate('/audit-logs')}>
-                    <History className="w-4 h-4 me-2" />
-                    {t('auditLog')}
+                {!isStandalone && (
+                  <DropdownMenuItem onClick={() => navigate('/install')}>
+                    <Download className="w-4 h-4 me-2" />
+                    {t('installApp')}
                   </DropdownMenuItem>
                 )}
-                {user?.role === 'admin' && (
-                  <DropdownMenuItem onClick={() => navigate('/admin/update-diagnostics')}>
+
+                {/* Logs submenu — groups Update Log + Audit Log */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
                     <History className="w-4 h-4 me-2" />
-                    {t('updateDiagnostics')}
-                  </DropdownMenuItem>
+                    {t('recordsMenu')}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => navigate('/update-log')}>
+                        <History className="w-4 h-4 me-2" />
+                        {t('updateLog')}
+                      </DropdownMenuItem>
+                      {user?.role === 'admin' && (
+                        <DropdownMenuItem onClick={() => navigate('/audit-logs')}>
+                          <History className="w-4 h-4 me-2" />
+                          {t('auditLog')}
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+
+                {/* Advanced Tools submenu — Admin only */}
+                {user?.role === 'admin' && (
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Wrench className="w-4 h-4 me-2" />
+                      {t('advancedTools')}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem onClick={handleForceUpdate} disabled={isUpdating}>
+                          <RefreshCw className={`w-4 h-4 me-2 ${isUpdating ? 'animate-spin' : ''}`} />
+                          {t('forceUpdate')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/update-diagnostics')}>
+                          <History className="w-4 h-4 me-2" />
+                          {t('updateDiagnostics')}
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive">

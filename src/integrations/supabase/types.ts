@@ -99,6 +99,7 @@ export type Database = {
           destination: Database["public"]["Enums"]["box_destination"]
           id: string
           image_path: string | null
+          invoice_number: string | null
           item_id: string | null
           notes: string | null
           packing_type: Database["public"]["Enums"]["packing_type"]
@@ -122,6 +123,7 @@ export type Database = {
           destination?: Database["public"]["Enums"]["box_destination"]
           id?: string
           image_path?: string | null
+          invoice_number?: string | null
           item_id?: string | null
           notes?: string | null
           packing_type?: Database["public"]["Enums"]["packing_type"]
@@ -145,6 +147,7 @@ export type Database = {
           destination?: Database["public"]["Enums"]["box_destination"]
           id?: string
           image_path?: string | null
+          invoice_number?: string | null
           item_id?: string | null
           notes?: string | null
           packing_type?: Database["public"]["Enums"]["packing_type"]
@@ -3705,7 +3708,23 @@ export type Database = {
       app_role: "admin" | "manager" | "user"
       box_destination: "morocco" | "uzbekistan" | "unspecified"
       box_receipt_status: "received" | "sorted" | "packed" | "shipped"
-      box_unit: "PCS" | "SET" | "BOX" | "KG" | "MTR" | "LTR" | "PAIR"
+      box_unit:
+        | "PCS"
+        | "SET"
+        | "BOX"
+        | "KG"
+        | "MTR"
+        | "LTR"
+        | "PAIR"
+        | "ROLL"
+        | "KIT"
+        | "BAG"
+        | "CTN"
+        | "DRUM"
+        | "PACK"
+        | "BTL"
+        | "M2"
+        | "M3"
       container_status: "preparing" | "sealed" | "shipped" | "delivered"
       declaration_status:
         | "draft"
@@ -3880,7 +3899,24 @@ export const Constants = {
       app_role: ["admin", "manager", "user"],
       box_destination: ["morocco", "uzbekistan", "unspecified"],
       box_receipt_status: ["received", "sorted", "packed", "shipped"],
-      box_unit: ["PCS", "SET", "BOX", "KG", "MTR", "LTR", "PAIR"],
+      box_unit: [
+        "PCS",
+        "SET",
+        "BOX",
+        "KG",
+        "MTR",
+        "LTR",
+        "PAIR",
+        "ROLL",
+        "KIT",
+        "BAG",
+        "CTN",
+        "DRUM",
+        "PACK",
+        "BTL",
+        "M2",
+        "M3",
+      ],
       container_status: ["preparing", "sealed", "shipped", "delivered"],
       declaration_status: [
         "draft",

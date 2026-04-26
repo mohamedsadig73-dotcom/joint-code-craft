@@ -12,6 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { FileText, Shield, RefreshCw, Search, Download, FileSpreadsheet, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { useSearchParams } from 'react-router-dom';
 import { EmptyState } from '@/components/EmptyState';
 import { TableSkeleton, CardSkeleton } from '@/components/ui/TableSkeleton';
 import { VirtualizedList } from '@/components/VirtualizedList';
@@ -44,13 +45,15 @@ interface AuditLog {
 export default function AuditLogs() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const [searchParams] = useSearchParams();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState<'excel' | 'pdf' | null>(null);
   const [filterAction, setFilterAction] = useState<string>('all');
-  const [filterTable, setFilterTable] = useState<string>('all');
+  const [filterTable, setFilterTable] = useState<string>(searchParams.get('table') || 'all');
   const [filterUser, setFilterUser] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [partNoFilter, setPartNoFilter] = useState(searchParams.get('partNo') || '');
   const [dateFrom, setDateFrom] = useState<Date | undefined>(startOfMonth(new Date()));
   const [dateTo, setDateTo] = useState<Date | undefined>(endOfMonth(new Date()));
 
@@ -126,14 +129,23 @@ export default function AuditLogs() {
       log.record_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.profiles?.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.profiles?.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Filter by part number — peeks into the new_values / old_values JSON
+    const partNoQ = partNoFilter.trim().toLowerCase();
+    const partFromValues = (() => {
+      const a = (log.new_values?.part_no ?? '') as string;
+      const b = (log.old_values?.part_no ?? '') as string;
+      return `${a} ${b}`.toLowerCase();
+    })();
+    const matchesPartNo = partNoQ === '' || partFromValues.includes(partNoQ);
     
     // Date filtering
     const logDate = new Date(log.created_at);
     const matchesDateFrom = !dateFrom || logDate >= dateFrom;
     const matchesDateTo = !dateTo || logDate <= new Date(dateTo.setHours(23, 59, 59, 999));
     
-    return matchesAction && matchesTable && matchesUser && matchesSearch && matchesDateFrom && matchesDateTo;
-  }), [logs, filterAction, filterTable, filterUser, searchTerm, dateFrom, dateTo]);
+    return matchesAction && matchesTable && matchesUser && matchesSearch && matchesPartNo && matchesDateFrom && matchesDateTo;
+  }), [logs, filterAction, filterTable, filterUser, searchTerm, partNoFilter, dateFrom, dateTo]);
 
   // Export functions
   const handleExportExcel = useCallback(async () => {
@@ -145,6 +157,7 @@ export default function AuditLogs() {
         action: log.action,
         table_name: log.table_name,
         record_id: log.record_id,
+        part_no: (log.new_values?.part_no ?? log.old_values?.part_no ?? null) as string | null,
         created_at: log.created_at,
         profiles: log.profiles,
       }));
@@ -167,6 +180,7 @@ export default function AuditLogs() {
         action: log.action,
         table_name: log.table_name,
         record_id: log.record_id,
+        part_no: (log.new_values?.part_no ?? log.old_values?.part_no ?? null) as string | null,
         created_at: log.created_at,
         profiles: log.profiles,
       }));
@@ -270,8 +284,8 @@ export default function AuditLogs() {
           <div className="flex flex-col gap-4">
             {/* Row 1: Search + Export buttons */}
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-              <div className="flex-1 w-full md:max-w-md">
-                <div className="relative">
+              <div className="flex-1 w-full md:max-w-2xl flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="بحث بالمعرف أو المستخدم..."
@@ -280,6 +294,12 @@ export default function AuditLogs() {
                     className="pr-10"
                   />
                 </div>
+                <Input
+                  placeholder="فلترة برقم القطعة..."
+                  value={partNoFilter}
+                  onChange={(e) => setPartNoFilter(e.target.value)}
+                  className="font-mono sm:max-w-[200px]"
+                />
               </div>
               <div className="flex gap-2 flex-wrap">
                 <Button 

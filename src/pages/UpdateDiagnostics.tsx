@@ -30,9 +30,9 @@ import { compareVersions, classifyUpdateError } from '@/utils/updateErrors';
 
 declare const __APP_VERSION__: string;
 
-const PUBLISHED_URL = 'https://dts-store-qatar-2026.lovable.app';
-const VERSION_URL = `${PUBLISHED_URL}/version.json`;
-const DESKTOP_RELEASE_URL = `${PUBLISHED_URL}/desktop-release.json`;
+const UPDATE_CHANNEL_URL = 'https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases';
+const VERSION_URL = `${UPDATE_CHANNEL_URL}/version.json`;
+const DESKTOP_RELEASE_URL = `${UPDATE_CHANNEL_URL}/desktop-release.json`;
 
 type TestResult = {
   ok: boolean;
@@ -179,6 +179,18 @@ export default function UpdateDiagnosticsPage() {
     const hasUpdate = compareVersions(target, shellVersion) > 0;
     return { target, minRequired, isOutdated, hasUpdate };
   }, [test, shellVersion]);
+
+  // Channel-drift guard: detects when the published channel is BEHIND the
+  // currently running build (i.e. someone forgot to re-upload desktop-release.json
+  // after building a new version). This is the failure mode that caused v4.4.8
+  // to silently stay on v4.4.7.
+  const channelDrift = useMemo(() => {
+    const channelVersion = test?.releaseJson.data?.desktop_shell_version;
+    if (!channelVersion) return null;
+    const cmp = compareVersions(channelVersion, __APP_VERSION__);
+    if (cmp >= 0) return null;
+    return { channelVersion, localVersion: __APP_VERSION__ };
+  }, [test]);
 
   const copyDiagnosticReport = useCallback(async () => {
     const lines: string[] = [
@@ -333,6 +345,25 @@ export default function UpdateDiagnosticsPage() {
         {/* Shell comparison */}
         {shellComparison && (
           <Card>
+            {channelDrift && (
+              <div className="mx-6 mt-6 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 text-destructive shrink-0" />
+                  <div className="space-y-1">
+                    <p className="font-semibold text-destructive">
+                      {isAr
+                        ? 'قناة التحديث متخلّفة عن البناء الحالي'
+                        : 'Update channel is behind the current build'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {isAr
+                        ? `القناة تُعلن v${channelDrift.channelVersion} بينما هذا البناء v${channelDrift.localVersion}. أعد تشغيل سكربت الإصدار: npm run release:desktop -- ${channelDrift.localVersion} "..."`
+                        : `Channel reports v${channelDrift.channelVersion} but this build is v${channelDrift.localVersion}. Re-run: npm run release:desktop -- ${channelDrift.localVersion} "..."`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-muted-foreground" />
