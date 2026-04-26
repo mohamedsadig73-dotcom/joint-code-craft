@@ -113,13 +113,6 @@ export default function InventoryDashboard() {
         .map(([date, v]) => ({ date, ...v }));
 
       // Top 10 moved items (by movement lines qty in last 30d)
-      const { data: linesData } = await supabase
-        .from('stock_movement_lines')
-        .select('item_id, qty, movement_id')
-        .limit(5000);
-      // need to filter by posted/30d -> fetch posted movement IDs in window:
-      const postedIds = new Set((recent30Res.data ?? []).map((m: any, i: number) => m.id).filter(Boolean));
-      // recent30Res didn't select id; refetch lightweight ids
       const { data: postedMovs } = await supabase
         .from('stock_movements')
         .select('id')
@@ -127,9 +120,13 @@ export default function InventoryDashboard() {
         .gte('movement_date', thirtyAgo)
         .limit(2000);
       const postedSet = new Set((postedMovs ?? []).map((m: any) => m.id));
+      const { data: linesData } = await supabase
+        .from('stock_movement_lines')
+        .select('item_id, qty, movement_id')
+        .in('movement_id', Array.from(postedSet))
+        .limit(5000);
       const itemQtyMap = new Map<string, number>();
       (linesData ?? []).forEach((l: any) => {
-        if (!postedSet.has(l.movement_id)) return;
         itemQtyMap.set(l.item_id, (itemQtyMap.get(l.item_id) ?? 0) + Number(l.qty));
       });
       const topIds = Array.from(itemQtyMap.entries())
