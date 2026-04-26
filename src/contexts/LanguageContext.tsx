@@ -330,7 +330,6 @@ const translations = {
     save: 'Save',
     update: 'Update',
     confirm: 'Confirm',
-    printPreview: 'Print Preview',
     printSettings: 'Print Settings',
     printSettingsHint: 'Configure paper size, orientation and margins.',
     paperSize: 'Paper Size',
