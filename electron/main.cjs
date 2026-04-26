@@ -133,24 +133,78 @@ function setupRuntimeRecovery() {
 // ── IPC: Print HTML ────────────────────────────────────
 ipcMain.handle('print-html', async (_event, htmlContent) => {
   return new Promise((resolve, reject) => {
-    // Write HTML to a temp file to avoid data: URL limitations
-    const tmpFile = path.join(app.getPath('temp'), `dts-print-${Date.now()}.html`);
-    fs.writeFileSync(tmpFile, htmlContent, 'utf-8');
+    const tmpFile = path.join(app.getPath('temp'), `dts-print-preview-${Date.now()}.html`);
+    const previewHTML = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8" />
+  <title>DTS-Store - Print Preview</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #e5e7eb; font-family: "Segoe UI Arabic", "Segoe UI", Arial, sans-serif; }
+    .bar { height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px; background: #ffffff; border-bottom: 1px solid #d1d5db; }
+    .title { font-size: 14px; font-weight: 700; color: #111827; }
+    .actions { display: flex; align-items: center; gap: 8px; }
+    button { border: 1px solid #cbd5e1; background: #ffffff; color: #111827; border-radius: 6px; padding: 8px 16px; font: inherit; cursor: pointer; }
+    button.primary { background: #1a1f2c; color: #ffffff; border-color: #1a1f2c; }
+    iframe { display: block; width: 100%; height: calc(100vh - 56px); border: 0; background: #ffffff; }
+    @media print { .bar { display: none !important; } iframe { height: 100vh; } }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <div class="title">معاينة الطباعة</div>
+    <div class="actions">
+      <button type="button" onclick="window.close()">إغلاق</button>
+      <button type="button" class="primary" onclick="printFrame()">طباعة</button>
+    </div>
+  </div>
+  <iframe id="preview" title="Print preview"></iframe>
+  <script>
+    const printHtml = ${JSON.stringify(htmlContent)};
+    const frame = document.getElementById('preview');
+    frame.srcdoc = printHtml;
+    function printFrame() {
+      const win = frame.contentWindow;
+      if (!win) return;
+      win.focus();
+      setTimeout(() => win.print(), 150);
+    }
+  </script>
+</body>
+</html>`;
 
-    const printWin = new BrowserWindow({
-      width: 800, height: 600, show: false,
+    try {
+      fs.writeFileSync(tmpFile, previewHTML, 'utf-8');
+    } catch (err) {
+      reject(err);
+      return;
+    }
+
+    const previewWin = new BrowserWindow({
+      width: 1120,
+      height: 780,
+      minWidth: 900,
+      minHeight: 650,
+      title: 'DTS-Store - Print Preview',
+      show: false,
+      parent: mainWindow || undefined,
+      modal: false,
+      backgroundColor: '#e5e7eb',
       webPreferences: { contextIsolation: true, nodeIntegration: false },
+      autoHideMenuBar: true,
     });
 
-    printWin.loadFile(tmpFile);
-    printWin.webContents.once('did-finish-load', () => {
-      setTimeout(() => {
-        printWin.webContents.print({ silent: false, printBackground: true }, (success, reason) => {
-          printWin.close();
-          try { fs.unlinkSync(tmpFile); } catch (_) {}
-          success ? resolve(true) : reject(new Error(reason || 'Print cancelled'));
-        });
-      }, 800);
+    previewWin.once('closed', () => {
+      try { fs.unlinkSync(tmpFile); } catch (_) {}
+    });
+
+    previewWin.loadFile(tmpFile).then(() => {
+      previewWin.show();
+      resolve(true);
+    }).catch((err) => {
+      try { fs.unlinkSync(tmpFile); } catch (_) {}
+      reject(err);
     });
   });
 });
