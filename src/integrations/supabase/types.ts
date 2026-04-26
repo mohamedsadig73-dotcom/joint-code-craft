@@ -2039,6 +2039,214 @@ export type Database = {
           },
         ]
       }
+      stock_balances: {
+        Row: {
+          avg_cost: number
+          id: string
+          item_id: string
+          last_movement_at: string | null
+          qty_on_hand: number
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          avg_cost?: number
+          id?: string
+          item_id: string
+          last_movement_at?: string | null
+          qty_on_hand?: number
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          avg_cost?: number
+          id?: string
+          item_id?: string
+          last_movement_at?: string | null
+          qty_on_hand?: number
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_balances_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_balances_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_movement_lines: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          line_no: number
+          line_total: number | null
+          movement_id: string
+          qty: number
+          remarks: string | null
+          unit_cost: number
+          uom_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          line_no: number
+          line_total?: number | null
+          movement_id: string
+          qty: number
+          remarks?: string | null
+          unit_cost?: number
+          uom_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          line_no?: number
+          line_total?: number | null
+          movement_id?: string
+          qty?: number
+          remarks?: string | null
+          unit_cost?: number
+          uom_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movement_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movement_lines_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "stock_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movement_lines_uom_id_fkey"
+            columns: ["uom_id"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          department_id: string | null
+          from_warehouse_id: string | null
+          id: string
+          movement_date: string
+          movement_no: string
+          movement_type: Database["public"]["Enums"]["stock_movement_type"]
+          notes: string | null
+          posted_at: string | null
+          posted_by: string | null
+          project_id: string | null
+          reference_no: string | null
+          status: Database["public"]["Enums"]["stock_movement_status"]
+          supplier_id: string | null
+          to_warehouse_id: string | null
+          total_qty: number
+          total_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          from_warehouse_id?: string | null
+          id?: string
+          movement_date?: string
+          movement_no: string
+          movement_type: Database["public"]["Enums"]["stock_movement_type"]
+          notes?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          project_id?: string | null
+          reference_no?: string | null
+          status?: Database["public"]["Enums"]["stock_movement_status"]
+          supplier_id?: string | null
+          to_warehouse_id?: string | null
+          total_qty?: number
+          total_value?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          from_warehouse_id?: string | null
+          id?: string
+          movement_date?: string
+          movement_no?: string
+          movement_type?: Database["public"]["Enums"]["stock_movement_type"]
+          notes?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          project_id?: string | null
+          reference_no?: string | null
+          status?: Database["public"]["Enums"]["stock_movement_status"]
+          supplier_id?: string | null
+          to_warehouse_id?: string | null
+          total_qty?: number
+          total_value?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_from_warehouse_id_fkey"
+            columns: ["from_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_to_warehouse_id_fkey"
+            columns: ["to_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null
@@ -4070,6 +4278,10 @@ export type Database = {
         Returns: undefined
       }
       generate_petty_cash_period_number: { Args: never; Returns: string }
+      generate_stock_movement_no: {
+        Args: { _type: Database["public"]["Enums"]["stock_movement_type"] }
+        Returns: string
+      }
       generate_verification_code: {
         Args: { _type?: string; _user_id: string }
         Returns: string
@@ -4173,6 +4385,8 @@ export type Database = {
       maintenance_status: "pending" | "done" | "not_required" | "overdue"
       packing_type: "boxed" | "loose"
       petty_cash_status: "open" | "closed" | "pending_approval" | "rejected"
+      stock_movement_status: "draft" | "posted" | "cancelled"
+      stock_movement_type: "receipt" | "issue" | "transfer"
       wms_order_status:
         | "draft"
         | "pending"
@@ -4368,6 +4582,8 @@ export const Constants = {
       maintenance_status: ["pending", "done", "not_required", "overdue"],
       packing_type: ["boxed", "loose"],
       petty_cash_status: ["open", "closed", "pending_approval", "rejected"],
+      stock_movement_status: ["draft", "posted", "cancelled"],
+      stock_movement_type: ["receipt", "issue", "transfer"],
       wms_order_status: [
         "draft",
         "pending",
