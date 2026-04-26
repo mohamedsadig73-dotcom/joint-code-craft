@@ -39,6 +39,9 @@ const Inventory = lazy(() => import('@/pages/Inventory'));
 const StockMovements = lazy(() => import('@/pages/inventory/StockMovements'));
 const NewStockMovement = lazy(() => import('@/pages/inventory/NewStockMovement'));
 const MovementDetails = lazy(() => import('@/pages/inventory/MovementDetails'));
+const StockBalances = lazy(() => import('@/pages/inventory/StockBalances'));
+const StockCard = lazy(() => import('@/pages/inventory/StockCard'));
+const LowStockReport = lazy(() => import('@/pages/inventory/LowStockReport'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -402,6 +405,36 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <MovementDetails />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/balances"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <StockBalances />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/stock-card"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <StockCard />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/low-stock"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <LowStockReport />
                 </PageTransition>
               </ProtectedRoute>
             }
