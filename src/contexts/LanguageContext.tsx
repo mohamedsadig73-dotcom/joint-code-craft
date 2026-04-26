@@ -371,10 +371,8 @@ const translations = {
     noStylesheets: 'No stylesheets',
     probablyOk: 'Probably OK',
     lastErrorPrinter: 'Last error mentions printer',
-    refresh: 'Refresh',
     copy: 'Copy',
     copied: 'Copied to clipboard',
-    clear: 'Clear',
     
     // Manage
     declarations: 'Declarations',
@@ -1761,16 +1759,13 @@ const translations = {
     printLogDesc: 'آخر أحداث الطباعة (50 عنصراً). مفيد لطلبات الدعم الفني.',
     printLogEmpty: 'لا توجد أحداث طباعة مسجلة بعد.',
     printLogCleared: 'تم مسح سجل الطباعة',
-    available: 'متاح',
     unavailable: 'غير متاح',
     stylesheets: 'ملف تنسيق',
     noStylesheets: 'لا توجد ملفات تنسيق',
     probablyOk: 'يبدو سليماً',
     lastErrorPrinter: 'آخر خطأ يخص الطابعة',
-    refresh: 'تحديث',
     copy: 'نسخ',
     copied: 'تم النسخ',
-    clear: 'مسح',
     
     // Manage
     declarations: 'الإقرارات',
