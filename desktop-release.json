@@ -1,9 +1,9 @@
 {
-  "desktop_shell_version": "4.5.2",
+  "desktop_shell_version": "4.5.3",
   "min_shell_version": "4.4.5",
-  "web_version": "4.5.2",
-  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.5.2-dist.zip",
+  "web_version": "4.5.3",
+  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.5.3-dist.zip",
   "full_download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.4.5.zip",
-  "release_notes": "v4.5.2 — معاينة طباعة داخلية، إعدادات ورق وهوامش، Toast للأخطاء",
+  "release_notes": "v4.5.3 — إصلاح جذري لمزامنة الإصدار المضمّن مع dist",
   "mandatory": false
 }
