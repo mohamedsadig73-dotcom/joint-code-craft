@@ -365,7 +365,6 @@ const translations = {
     printLogDesc: 'Most recent print events (latest 50). Useful for support requests.',
     printLogEmpty: 'No print events recorded yet.',
     printLogCleared: 'Print log cleared',
-    available: 'Available',
     unavailable: 'Unavailable',
     stylesheets: 'stylesheets',
     noStylesheets: 'No stylesheets',
