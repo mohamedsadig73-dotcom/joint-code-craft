@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { useItemsMaster, useItemReceiptsCount, type ItemMaster } from '@/hooks/useItemsMaster';
 import { ItemFormDialog } from '@/components/boxes/items/ItemFormDialog';
-import { Library, Plus, Search, Edit, Trash2, Eye, Loader2, History } from 'lucide-react';
+import { Library, Plus, Search, Edit, Trash2, Eye, Loader2, History, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ImageIcon } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -81,6 +81,14 @@ export default function ItemsMaster() {
             >
               <History className="w-4 h-4" />
               {t('imageHistory')}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/boxes/items/import')}
+              className="gap-1.5"
+            >
+              <Sparkles className="w-4 h-4" />
+              {t('importFromDocx')}
             </Button>
             <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-1.5">
               <Plus className="w-4 h-4" />
