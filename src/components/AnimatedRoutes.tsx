@@ -32,6 +32,7 @@ const BoxCardPrint = lazy(() => import('@/pages/BoxCardPrint'));
 const ContainerDetails = lazy(() => import('@/pages/ContainerDetails'));
 const BoxesDataAdmin = lazy(() => import('@/pages/BoxesDataAdmin'));
 const ItemsMaster = lazy(() => import('@/pages/ItemsMaster'));
+const ItemsMasterImport = lazy(() => import('@/pages/ItemsMasterImport'));
 const ItemDetails = lazy(() => import('@/pages/ItemDetails'));
 const ItemImageHistory = lazy(() => import('@/pages/ItemImageHistory'));
 const PrintDiagnostics = lazy(() => import('@/pages/PrintDiagnostics'));
@@ -328,6 +329,16 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <ItemsMaster />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/boxes/items/import"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                <PageTransition>
+                  <ItemsMasterImport />
                 </PageTransition>
               </ProtectedRoute>
             }
