@@ -110,7 +110,19 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (!context) {
-    throw new Error('useLanguage must be used within LanguageProvider');
+    // Graceful fallback to avoid blank screens when a component renders
+    // outside the provider (e.g., during HMR or early mount).
+    if (typeof console !== 'undefined') {
+      console.warn('useLanguage called outside LanguageProvider — using fallback.');
+    }
+    return {
+      language: 'ar' as const,
+      toggleLanguage: () => {},
+      t: (key: string) => {
+        const dict = loadedTranslations.ar ?? loadedTranslations.en;
+        return (dict as Record<string, string>)[key] ?? key;
+      },
+    };
   }
   return context;
 }
