@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useBoxReceipts, type BoxReceipt, type BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { useBoxSummary } from '@/hooks/useBoxSummary';
+import { useItemsMaster } from '@/hooks/useItemsMaster';
 import { ReceiptsTable, ALL_RECEIPT_COLUMNS, type ReceiptColumnKey } from './ReceiptsTable';
 import { ReceiptMobileCard } from './ReceiptMobileCard';
 import { ReceiptFormDialog } from './ReceiptFormDialog';
@@ -53,6 +54,7 @@ export function ReceiptsTab() {
     bulkUpdateFields,
   } = useBoxReceipts();
   const { summary } = useBoxSummary();
+  const { items: itemsForSuppliers } = useItemsMaster();
 
   const [search, setSearch] = useState('');
   const [destFilter, setDestFilter] = useState<string>('all');
@@ -136,8 +138,19 @@ export function ReceiptsTab() {
       : (isAdmin || isManager || r.created_by === user?.id);
 
   const existingSuppliers = useMemo(
-    () => Array.from(new Set(receipts.map((r) => r.supplier))).sort(),
-    [receipts]
+    () => {
+      const set = new Set<string>();
+      for (const r of receipts) {
+        const s = r.supplier?.trim();
+        if (s) set.add(s);
+      }
+      for (const i of itemsForSuppliers) {
+        const s = i.default_supplier?.trim();
+        if (s) set.add(s);
+      }
+      return Array.from(set).sort((a, b) => a.localeCompare(b, 'ar'));
+    },
+    [receipts, itemsForSuppliers]
   );
   const existingBoxes = useMemo(
     () => Array.from(new Set(receipts.map((r) => r.box_no).filter((b): b is string => !!b))).sort(),
