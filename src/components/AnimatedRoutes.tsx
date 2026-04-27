@@ -46,6 +46,8 @@ const StockCounts = lazy(() => import('@/pages/inventory/StockCounts'));
 const NewStockCount = lazy(() => import('@/pages/inventory/NewStockCount'));
 const CountDetails = lazy(() => import('@/pages/inventory/CountDetails'));
 const InventoryDashboard = lazy(() => import('@/pages/inventory/InventoryDashboard'));
+const TechnicalReview = lazy(() => import('@/pages/inventory/TechnicalReview'));
+const ReportQA = lazy(() => import('@/pages/inventory/ReportQA'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -479,6 +481,26 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <CountDetails />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/review"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <TechnicalReview />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/qa"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <ReportQA />
                 </PageTransition>
               </ProtectedRoute>
             }
