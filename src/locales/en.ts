@@ -1587,7 +1587,6 @@ const en = {
     matchesFound: 'matches',
     noMatches: 'No matches',
     page: 'Page',
-    of: 'of',
     nextPage: 'Next',
     prevPage: 'Previous',
     qaVerification: 'QA Verification',

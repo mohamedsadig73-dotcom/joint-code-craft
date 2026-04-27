@@ -1595,7 +1595,6 @@ const ar = {
     matchesFound: 'تطابق',
     noMatches: 'لا توجد نتائج',
     page: 'صفحة',
-    of: 'من',
     nextPage: 'التالي',
     prevPage: 'السابق',
     qaVerification: 'تحقق الجودة',
