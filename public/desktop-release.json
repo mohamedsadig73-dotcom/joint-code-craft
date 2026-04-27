@@ -1,10 +1,9 @@
 {
   "desktop_shell_version": "4.5.9",
-  "min_shell_version": "4.5.9",
+  "min_shell_version": "4.4.5",
   "web_version": "4.5.9",
   "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.5.9-dist.zip",
-  "full_download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.5.9.zip",
-  "release_notes": "إصدار كامل جديد - إصلاح جذري لزر الطباعة في تطبيق الكمبيوتر. يجب تحميل وتثبيت النسخة الكاملة.",
-  "mandatory": true,
-  "requires_full_install": true
+  "full_download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.4.5.zip",
+  "release_notes": "إصدار كامل v4.5.9 - إصلاح جذري للطباعة",
+  "mandatory": false
 }
