@@ -3,12 +3,24 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Navigation } from '@/components/Navigation';
-import { Warehouse, FolderTree, Tags, Ruler, Truck, Building2, Briefcase, ArrowLeftRight, BarChart3, FileText, AlertTriangle, ClipboardCheck, LayoutDashboard } from 'lucide-react';
+import {
+  Warehouse, FolderTree, Tags, Ruler, Truck, Building2, Briefcase,
+  ArrowLeftRight, BarChart3, FileText, AlertTriangle, ClipboardCheck,
+  LayoutDashboard, Menu, Download, Printer, ShieldCheck, BookOpen,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ReferenceCrudTab } from '@/components/inventory/ReferenceCrudTab';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useNavigate } from 'react-router-dom';
+import { WMS_REVIEW_REPORT } from '@/data/wmsReviewReport';
+import { downloadDocx, printPdf } from '@/utils/wmsReportRenderer';
 
 export default function Inventory() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
@@ -19,43 +31,65 @@ export default function Inventory() {
           subtitle={t('inventoryDesc')}
           icon={Warehouse}
           actions={
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" asChild>
-                <Link to="/inventory/dashboard">
-                  <LayoutDashboard className="w-4 h-4 me-1.5" />
-                  {t('inventoryDashboard')}
-                </Link>
-              </Button>
+            <div className="flex items-center gap-2">
+              {/* Primary action — always visible */}
               <Button asChild>
                 <Link to="/inventory/movements">
                   <ArrowLeftRight className="w-4 h-4 me-1.5" />
                   {t('stockMovements')}
                 </Link>
               </Button>
-              <Button variant="outline" asChild>
-                <Link to="/inventory/counts">
-                  <ClipboardCheck className="w-4 h-4 me-1.5" />
-                  {t('stockCounts')}
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/inventory/balances">
-                  <BarChart3 className="w-4 h-4 me-1.5" />
-                  {t('stockBalances')}
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/inventory/stock-card">
-                  <FileText className="w-4 h-4 me-1.5" />
-                  {t('stockCard')}
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/inventory/low-stock">
-                  <AlertTriangle className="w-4 h-4 me-1.5" />
-                  {t('lowStockReport')}
-                </Link>
-              </Button>
+
+              {/* Grouped menu — collapses 5 buttons + report actions */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" aria-label="Menu">
+                    <Menu className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-60">
+                  <DropdownMenuLabel>{t('inventoryManagement')}</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => navigate('/inventory/dashboard')}>
+                    <LayoutDashboard className="w-4 h-4 me-2" />
+                    {t('inventoryDashboard')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/inventory/counts')}>
+                    <ClipboardCheck className="w-4 h-4 me-2" />
+                    {t('stockCounts')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/inventory/balances')}>
+                    <BarChart3 className="w-4 h-4 me-2" />
+                    {t('stockBalances')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/inventory/stock-card')}>
+                    <FileText className="w-4 h-4 me-2" />
+                    {t('stockCard')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/inventory/low-stock')}>
+                    <AlertTriangle className="w-4 h-4 me-2" />
+                    {t('lowStockReport')}
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>{t('technicalReview')}</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => navigate('/inventory/review')}>
+                    <BookOpen className="w-4 h-4 me-2" />
+                    {t('technicalReview')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => downloadDocx(WMS_REVIEW_REPORT)}>
+                    <Download className="w-4 h-4 me-2" />
+                    {t('downloadDocx')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => printPdf(WMS_REVIEW_REPORT)}>
+                    <Printer className="w-4 h-4 me-2" />
+                    {t('downloadPdf')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/inventory/qa')}>
+                    <ShieldCheck className="w-4 h-4 me-2" />
+                    {t('qaVerification')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           }
         />
