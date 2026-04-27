@@ -256,6 +256,21 @@ export function ReceiptsPrintPreview({ receipts, filterSummary }: Props) {
       return;
     }
 
+    // Electron shell without printHTML support (older installed .exe):
+    // fall back to opening the report in the system default browser, where
+    // printing works correctly. This avoids the broken native Electron
+    // print dialog ("This app doesn't support print preview").
+    if (window.electronAPI?.openExternal) {
+      try {
+        const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
+        await window.electronAPI.openExternal(dataUrl);
+        document.title = originalTitle;
+        return;
+      } catch (e) {
+        console.warn('openExternal fallback failed, using iframe path:', e);
+      }
+    }
+
     const blob = new Blob([html], { type: 'text/html' });
     const blobUrl = URL.createObjectURL(blob);
     const iframe = document.createElement('iframe');
