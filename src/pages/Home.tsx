@@ -14,8 +14,7 @@ import {
   ClipboardList,
   Search,
   X,
-  Package,
-  Warehouse
+  Package
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -54,14 +53,6 @@ const appModules: AppModule[] = [
     description: 'استلام البضائع وإدارة الصناديق',
     color: 'text-rose-600 dark:text-rose-400',
     bgColor: 'bg-rose-500/10 dark:bg-rose-500/20',
-  },
-  {
-    path: '/inventory',
-    icon: Warehouse,
-    labelKey: 'inventoryManagement',
-    description: 'الأصناف، المخازن، الحركات والأرصدة',
-    color: 'text-amber-600 dark:text-amber-400',
-    bgColor: 'bg-amber-500/10 dark:bg-amber-500/20',
   },
   {
     path: '/petty-cash',

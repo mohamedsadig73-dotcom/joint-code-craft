@@ -42,9 +42,4 @@ contextBridge.exposeInMainWorld('electronAPI', {
   testUpdateChannel: async (urls) => {
     return ipcRenderer.invoke('test-update-channel', urls);
   },
-
-  // Read last update status (diagnostics: knows if update was downloaded/staged/applied)
-  getUpdateStatus: async () => {
-    return ipcRenderer.invoke('get-update-status');
-  },
 });
