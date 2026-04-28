@@ -318,7 +318,7 @@ export default function ItemsMasterImport() {
 
           {/* STEP 2 — PREVIEW */}
           <TabsContent value="preview" className="mt-6 space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
               <StatCard label={t('importStatTotal')} value={stats.total} />
               <StatCard label={t('importStatWithImage')} value={stats.withImage} tone="success" />
               <StatCard label={t('importStatNoDesc')} value={stats.noDesc} tone="warn" />
