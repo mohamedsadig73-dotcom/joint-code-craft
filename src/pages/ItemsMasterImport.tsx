@@ -384,7 +384,22 @@ export default function ItemsMasterImport() {
                             </div>
                           )}
                         </TableCell>
-                        <TableCell className="font-mono text-xs">{r.part_no}</TableCell>
+                        <TableCell className="min-w-[140px]">
+                          <Input
+                            value={r.editedPartNo}
+                            onChange={(e) => {
+                              const v = e.target.value.replace(/\s+/g, '');
+                              const existingId = existingMap.get(v.trim().toLowerCase()) ?? null;
+                              updateRow(r.key, {
+                                editedPartNo: v,
+                                existingId,
+                                selected: r.selected && !existingId,
+                              });
+                            }}
+                            className="h-8 font-mono text-xs"
+                            placeholder={t('partNo')}
+                          />
+                        </TableCell>
                         <TableCell className="min-w-[260px]">
                           <Input
                             value={r.editedDescription}
