@@ -600,27 +600,27 @@ export function ReceiptsTab() {
 
         {/* Desktop filters */}
         <Select value={destFilter} onValueChange={setDestFilter}>
-          <SelectTrigger className="w-full md:w-44"><SelectValue placeholder={t('destination')} /></SelectTrigger>
+          <SelectTrigger className="hidden md:flex md:w-44"><SelectValue placeholder={t('destination')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('all')}</SelectItem>
             {BOX_DESTINATIONS.map((d) => <SelectItem key={d} value={d}>{t(`dest_${d}`)}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full md:w-40"><SelectValue placeholder={t('status')} /></SelectTrigger>
+          <SelectTrigger className="hidden md:flex md:w-40"><SelectValue placeholder={t('status')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('all')}</SelectItem>
             {BOX_STATUSES.map((s) => <SelectItem key={s} value={s}>{t(`boxStatus_${s}`)}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={packingFilter} onValueChange={setPackingFilter}>
-          <SelectTrigger className="w-full md:w-40"><SelectValue placeholder={t('packingType')} /></SelectTrigger>
+          <SelectTrigger className="hidden md:flex md:w-40"><SelectValue placeholder={t('packingType')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('all')}</SelectItem>
             {PACKING_TYPES.map((p) => <SelectItem key={p} value={p}>{t(p)}</SelectItem>)}
           </SelectContent>
         </Select>
-        <div className="flex flex-wrap gap-2">
+        <div className="hidden md:flex flex-wrap gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-1.5">
