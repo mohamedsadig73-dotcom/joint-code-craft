@@ -1086,6 +1086,8 @@ const en = {
     importStatWithImage: 'With image',
     importStatNoDesc: 'No description',
     importStatDuplicates: 'Duplicates (existing)',
+    importStatDuplicateInFile: 'Duplicated in file',
+    importStatusDuplicateInFile: 'Duplicated in file',
     importStatSelected: 'Selected to import',
     importDuplicatesNote: 'Duplicate items (already exist) are disabled by default and will not be modified.',
     importStatusExists: 'Already exists',
