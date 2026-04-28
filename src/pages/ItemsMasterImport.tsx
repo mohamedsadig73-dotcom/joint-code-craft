@@ -40,6 +40,8 @@ interface PreviewRow extends ParsedItem {
   primaryImageIdx: number;
   /** edited description (allow user override) */
   editedDescription: string;
+  /** edited part number (Word may strip leading zeros) */
+  editedPartNo: string;
 }
 
 interface ImportResult {
@@ -99,6 +101,7 @@ export default function ItemsMasterImport() {
             selected: !existingId, // default: skip existing
             primaryImageIdx: 0,
             editedDescription: it.description,
+            editedPartNo: it.part_no,
           };
         });
         setRows(built);
