@@ -830,18 +830,45 @@ export function ReceiptsTab() {
             {filtered.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground text-sm">{t('noReceiptsYet')}</div>
             ) : (
-              filtered.map((r) => (
-                <ReceiptMobileCard
-                  key={r.id}
-                  receipt={r}
-                  onEdit={handleEdit}
-                  onDelete={setToDelete}
-                  canModify={canModify(r)}
-                />
-              ))
+              <>
+                {/* Subtle swipe hint shown once per session */}
+                <p className="text-[11px] text-muted-foreground text-center py-1">
+                  {t('swipeToEdit')}
+                </p>
+                {filtered.map((r) => {
+                  const allowed = canModify(r);
+                  return (
+                    <SwipeableRow
+                      key={r.id}
+                      onEdit={allowed ? () => handleEdit(r) : undefined}
+                      onDelete={allowed ? () => setToDelete(r) : undefined}
+                      editLabel={t('edit')}
+                      deleteLabel={t('delete')}
+                    >
+                      <ReceiptMobileCard
+                        receipt={r}
+                        onEdit={handleEdit}
+                        onDelete={setToDelete}
+                        canModify={allowed}
+                      />
+                    </SwipeableRow>
+                  );
+                })}
+              </>
             )}
           </div>
         </>
+      )}
+
+      {/* Mobile FAB for primary "Add receipt" action */}
+      {isMobile && (
+        <Button
+          onClick={handleAdd}
+          aria-label={t('addReceipt')}
+          className="lg:hidden fixed bottom-20 end-4 z-30 h-14 w-14 rounded-full shadow-lg shadow-primary/30 p-0"
+        >
+          <Plus className="w-6 h-6" />
+        </Button>
       )}
 
       <ReceiptFormDialog
