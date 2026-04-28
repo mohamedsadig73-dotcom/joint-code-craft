@@ -136,9 +136,10 @@ export default function ItemsMasterImport() {
     const withImage = rows.filter((r) => r.imageNames.length > 0).length;
     const noDesc = rows.filter((r) => !r.editedDescription.trim()).length;
     const duplicates = rows.filter((r) => r.existingId).length;
+    const dupInFile = rows.filter((r) => r.duplicateInFile).length;
     const selected = rows.filter((r) => r.selected).length;
     const newCount = rows.filter((r) => r.selected && !r.existingId).length;
-    return { total, withImage, noDesc, duplicates, selected, newCount };
+    return { total, withImage, noDesc, duplicates, dupInFile, selected, newCount };
   }, [rows]);
 
   const toggleAll = (val: boolean) => {
@@ -317,11 +318,12 @@ export default function ItemsMasterImport() {
 
           {/* STEP 2 — PREVIEW */}
           <TabsContent value="preview" className="mt-6 space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
               <StatCard label={t('importStatTotal')} value={stats.total} />
               <StatCard label={t('importStatWithImage')} value={stats.withImage} tone="success" />
               <StatCard label={t('importStatNoDesc')} value={stats.noDesc} tone="warn" />
               <StatCard label={t('importStatDuplicates')} value={stats.duplicates} tone="warn" />
+              <StatCard label={t('importStatDuplicateInFile')} value={stats.dupInFile} tone="warn" />
               <StatCard label={t('importStatSelected')} value={stats.selected} tone="info" />
             </div>
 
@@ -417,6 +419,10 @@ export default function ItemsMasterImport() {
                           {r.existingId ? (
                             <Badge variant="outline" className="text-amber-600 border-amber-300">
                               {t('importStatusExists')}
+                            </Badge>
+                          ) : r.duplicateInFile ? (
+                            <Badge variant="outline" className="text-amber-600 border-amber-300">
+                              {t('importStatusDuplicateInFile')}
                             </Badge>
                           ) : !r.editedDescription.trim() ? (
                             <Badge variant="outline" className="text-orange-600 border-orange-300">

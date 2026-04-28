@@ -8,6 +8,8 @@ export interface ParsedItem {
   qty: number | null;
   /** Image filenames inside the docx archive (word/media/...). */
   imageNames: string[];
+  /** True when the same part_no appears more than once in the source file. */
+  duplicateInFile?: boolean;
 }
 
 export interface ParsedDocx {
@@ -164,7 +166,7 @@ export async function parseDocxItems(file: File | Blob): Promise<ParsedDocx> {
 
   const items: ParsedItem[] = [];
   const skipped: Array<{ reason: string; preview: string }> = [];
-  const byPart = new Map<string, ParsedItem>();
+  const partCounts = new Map<string, number>();
   let rowIdx = 0;
 
   for (const tbl of tables) {
@@ -239,27 +241,20 @@ export async function parseDocxItems(file: File | Blob): Promise<ParsedDocx> {
         if (!imageNames.includes(name)) imageNames.push(name);
       }
 
-      const existing = byPart.get(partNo);
-      if (existing) {
-        if (description.length > existing.description.length) {
-          existing.description = description;
-        }
-        if (existing.qty == null && qty != null) existing.qty = qty;
-        for (const n of imageNames) {
-          if (!existing.imageNames.includes(n)) existing.imageNames.push(n);
-        }
-      } else {
-        const item: ParsedItem = {
-          rowIndex: rowIdx,
-          part_no: partNo,
-          description,
-          qty,
-          imageNames,
-        };
-        byPart.set(partNo, item);
-        items.push(item);
-      }
+      partCounts.set(partNo, (partCounts.get(partNo) ?? 0) + 1);
+      items.push({
+        rowIndex: rowIdx,
+        part_no: partNo,
+        description,
+        qty,
+        imageNames,
+      });
     }
+  }
+
+  // Flag rows whose part_no appears more than once in the file.
+  for (const it of items) {
+    if ((partCounts.get(it.part_no) ?? 0) > 1) it.duplicateInFile = true;
   }
 
   // Items with no description still kept but flagged in summary by caller.

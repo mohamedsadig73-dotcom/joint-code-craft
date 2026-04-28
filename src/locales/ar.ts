@@ -1079,6 +1079,8 @@ const ar = {
     importStatWithImage: 'مع صورة',
     importStatNoDesc: 'بدون وصف',
     importStatDuplicates: 'مكرر (موجود مسبقاً)',
+    importStatDuplicateInFile: 'مكرر داخل الملف',
+    importStatusDuplicateInFile: 'مكرر داخل الملف',
     importStatSelected: 'محدّد للاستيراد',
     importDuplicatesNote: 'الأصناف المكرّرة (الموجودة مسبقاً) معطّلة افتراضياً ولن يتم تعديلها.',
     importStatusExists: 'موجود مسبقاً',
