@@ -661,7 +661,6 @@ const ar = {
     filters: 'الفلاتر',
     activeFilters: 'فلتر فعّال',
     moreActions: 'إجراءات إضافية',
-    quickActions: 'إجراءات سريعة',
     swipeToEdit: 'اسحب يميناً للتعديل، يساراً للحذف',
     details: 'التفاصيل',
     summary: 'ملخص',
