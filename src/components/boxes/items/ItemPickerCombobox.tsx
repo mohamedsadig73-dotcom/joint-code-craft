@@ -23,13 +23,26 @@ export function ItemPickerCombobox({ items, value, onSelect, onCreateNew, disabl
   const selected = useMemo(() => items.find((i) => i.id === value), [items, value]);
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return items.slice(0, 50);
+    // Newest first so freshly-imported items are visible immediately
+    const sorted = [...items].sort((a, b) =>
+      (b.created_at || '').localeCompare(a.created_at || '')
+    );
+    if (!query.trim()) return sorted.slice(0, 200);
     const q = query.trim().toLowerCase();
-    return items.filter(
-      (i) =>
-        i.part_no.toLowerCase().includes(q) ||
-        i.description.toLowerCase().includes(q)
-    ).slice(0, 100);
+    // Normalize: remove all whitespace so "411 117 110" matches "411117110"
+    const qNorm = q.replace(/\s+/g, '');
+    return sorted
+      .filter((i) => {
+        const pn = i.part_no.toLowerCase();
+        const pnNorm = pn.replace(/\s+/g, '');
+        const desc = i.description.toLowerCase();
+        return (
+          pn.includes(q) ||
+          pnNorm.includes(qNorm) ||
+          desc.includes(q)
+        );
+      })
+      .slice(0, 300);
   }, [items, query]);
 
   const exactMatchExists = useMemo(
