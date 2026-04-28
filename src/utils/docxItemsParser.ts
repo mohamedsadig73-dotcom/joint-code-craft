@@ -20,7 +20,11 @@ export interface ParsedDocx {
   skipped: Array<{ reason: string; preview: string }>;
 }
 
-const PART_NO_RE = /^\d{8,14}$/;
+// Part numbers may be pure digits (e.g. 411117110) OR alphanumeric Toyota/Hyundai
+// style codes such as "44270K100", "1107138010C4", "90311T0034".
+// Rule: 8-14 chars, must contain at least one digit, only A-Z and 0-9 allowed,
+// and must start with a digit (so we don't grab DESCRIPTION-style headers).
+const PART_NO_RE = /^(?=[A-Z0-9]*\d)\d[A-Z0-9]{7,13}$/;
 const NUM_RE = /^\d+$/;
 
 function flatText(node: unknown): string {
@@ -186,7 +190,7 @@ export async function parseDocxItems(file: File | Blob): Promise<ParsedDocx> {
       let partNo: string | null = null;
       let partIdx = -1;
       for (let i = 0; i < cellTexts.length; i++) {
-        const cleaned = cellTexts[i].replace(/\s+/g, '');
+        const cleaned = cellTexts[i].replace(/\s+/g, '').toUpperCase();
         if (PART_NO_RE.test(cleaned)) {
           partNo = cleaned;
           partIdx = i;
