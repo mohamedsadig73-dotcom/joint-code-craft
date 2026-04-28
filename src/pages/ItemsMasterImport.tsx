@@ -172,18 +172,19 @@ export default function ItemsMasterImport() {
 
     for (let i = 0; i < todo.length; i++) {
       const row = todo[i];
+      const finalPartNo = (row.editedPartNo || row.part_no).trim();
       let imagePath: string | null = null;
       const primaryName = row.imageNames[row.primaryImageIdx];
       const primaryBlob = primaryName ? imageMap.get(primaryName) : null;
       if (primaryBlob) {
         const ext = (primaryName?.split('.').pop() || 'jpg').toLowerCase();
-        const safe = row.part_no.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const safe = finalPartNo.replace(/[^a-zA-Z0-9._-]/g, '_');
         const path = `items/${safe}-${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from('box-images')
           .upload(path, primaryBlob, { cacheControl: '3600', upsert: true });
         if (upErr) {
-          res.failedImages.push({ part_no: row.part_no, reason: upErr.message });
+          res.failedImages.push({ part_no: finalPartNo, reason: upErr.message });
         } else {
           imagePath = path;
           res.uploadedImages += 1;
@@ -192,8 +193,8 @@ export default function ItemsMasterImport() {
 
       const { error: insErr } = await supabase.from('items_master').insert([
         {
-          part_no: row.part_no,
-          description: row.editedDescription.trim() || row.part_no,
+          part_no: finalPartNo,
+          description: row.editedDescription.trim() || finalPartNo,
           default_supplier: supplier.trim() || null,
           default_unit: 'PCS',
           image_path: imagePath,
@@ -203,7 +204,7 @@ export default function ItemsMasterImport() {
         },
       ]);
       if (insErr) {
-        res.failed.push({ part_no: row.part_no, reason: insErr.message });
+        res.failed.push({ part_no: finalPartNo, reason: insErr.message });
       } else {
         res.inserted += 1;
       }
