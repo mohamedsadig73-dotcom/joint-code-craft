@@ -718,6 +718,15 @@ export function ReceiptsTab() {
         </div>
       </div>
 
+      {/* Hidden file input — shared between desktop toolbar and mobile actions sheet */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx"
+        className="hidden"
+        onChange={handleImportFile}
+      />
+
       {/* Undo last edit (30s window) */}
       {undoBatch && undoSecondsLeft > 0 && (
         <div className="flex items-center justify-between gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs">
