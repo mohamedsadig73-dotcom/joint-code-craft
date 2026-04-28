@@ -1,0 +1,166 @@
+name: Build Desktop (Windows)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'electron/**'
+      - '.github/workflows/build-desktop.yml'
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Force rebuild even if version unchanged'
+        required: false
+        default: 'true'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Read app version
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Building DTS-Store v$VERSION"
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build Vite (production)
+        run: bun run build
+
+      - name: Install Electron + Packager
+        run: |
+          npm install --no-save electron@33 @electron/packager@18
+
+      - name: Package Electron (Windows x64)
+        shell: bash
+        run: |
+          npx @electron/packager . "DTS-Store" \
+            --platform=win32 \
+            --arch=x64 \
+            --out=electron-release \
+            --overwrite \
+            --app-version="${{ steps.version.outputs.version }}" \
+            --ignore="^/src" \
+            --ignore="^/public" \
+            --ignore="^/electron-release" \
+            --ignore="^/.github" \
+            --ignore="^/supabase" \
+            --ignore="^/scripts" \
+            --ignore="^/.lovable" \
+            --ignore="^/node_modules/(?!(electron|@electron|adm-zip)/)"
+
+      - name: Create ZIP archive (full installer)
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $zipName = "DTS-Store-win32-x64-v$version.zip"
+          Compress-Archive -Path "electron-release/DTS-Store-win32-x64/*" -DestinationPath $zipName -Force
+          Write-Host "✓ Created $zipName"
+          Get-Item $zipName | Select-Object Name, @{N='Size(MB)';E={[math]::Round($_.Length/1MB,2)}}
+
+      - name: Create Hot-Swap dist ZIP
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $zipName = "DTS-Store-v$version-dist.zip"
+          Compress-Archive -Path "dist" -DestinationPath $zipName -Force
+          Write-Host "✓ Created $zipName"
+
+      - name: Upload Full Installer to Supabase Storage
+        shell: bash
+        env:
+          SUPABASE_URL: https://eplguuqpxuhgdagacypn.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          FULL_ZIP="DTS-Store-win32-x64-v${VERSION}.zip"
+          DIST_ZIP="DTS-Store-v${VERSION}-dist.zip"
+
+          echo "⬆️ Uploading $FULL_ZIP to Supabase Storage..."
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/zip" \
+            -H "x-upsert: true" \
+            --data-binary "@${FULL_ZIP}" \
+            "${SUPABASE_URL}/storage/v1/object/desktop-releases/${FULL_ZIP}"
+          echo ""
+          echo "✓ Full installer uploaded"
+
+          echo "⬆️ Uploading $DIST_ZIP (Hot-Swap)..."
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/zip" \
+            -H "x-upsert: true" \
+            --data-binary "@${DIST_ZIP}" \
+            "${SUPABASE_URL}/storage/v1/object/desktop-releases/${DIST_ZIP}"
+          echo ""
+          echo "✓ Hot-Swap uploaded"
+
+      - name: Update desktop-release.json
+        shell: bash
+        env:
+          SUPABASE_URL: https://eplguuqpxuhgdagacypn.supabase.co
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          BASE="${SUPABASE_URL}/storage/v1/object/public/desktop-releases"
+
+          cat > release-payload.json <<EOF
+          {
+            "desktop_shell_version": "${VERSION}",
+            "min_shell_version": "${VERSION}",
+            "web_version": "${VERSION}",
+            "download_url": "${BASE}/DTS-Store-v${VERSION}-dist.zip",
+            "full_download_url": "${BASE}/DTS-Store-win32-x64-v${VERSION}.zip",
+            "release_notes": "v${VERSION} — Full installer with native printing fix",
+            "mandatory": true,
+            "requires_full_install": true
+          }
+          EOF
+          cat release-payload.json
+
+      - name: Upload release metadata to Supabase Storage
+        shell: bash
+        env:
+          SUPABASE_URL: https://eplguuqpxuhgdagacypn.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "x-upsert: true" \
+            --data-binary "@release-payload.json" \
+            "${SUPABASE_URL}/storage/v1/object/desktop-releases/desktop-release.json"
+          echo ""
+          echo "✓ desktop-release.json uploaded"
+
+      - name: Build Summary
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          BASE="https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases"
+          echo "## ✅ Desktop Build v${VERSION} Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📥 Download URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- **Full Installer:** ${BASE}/DTS-Store-win32-x64-v${VERSION}.zip" >> $GITHUB_STEP_SUMMARY
+          echo "- **Hot-Swap:** ${BASE}/DTS-Store-v${VERSION}-dist.zip" >> $GITHUB_STEP_SUMMARY
+          echo "- **Metadata:** ${BASE}/desktop-release.json" >> $GITHUB_STEP_SUMMARY
