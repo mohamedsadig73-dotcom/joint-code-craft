@@ -498,6 +498,107 @@ export function ReceiptsTab() {
             className="ps-10"
           />
         </div>
+
+        {/* Mobile: filters trigger */}
+        <div className="flex md:hidden gap-2">
+          <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" className="flex-1 gap-1.5 relative">
+                <SlidersHorizontal className="w-4 h-4" />
+                <span className="text-xs">{t('filters')}</span>
+                {activeFilterCount > 0 && (
+                  <span className="ms-1 inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold tabular-nums">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-2xl">
+              <SheetHeader>
+                <SheetTitle className="text-start">{t('filters')}</SheetTitle>
+              </SheetHeader>
+              <div className="space-y-3 mt-4 pb-6">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t('destination')}</label>
+                  <Select value={destFilter} onValueChange={setDestFilter}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('all')}</SelectItem>
+                      {BOX_DESTINATIONS.map((d) => <SelectItem key={d} value={d}>{t(`dest_${d}`)}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t('status')}</label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('all')}</SelectItem>
+                      {BOX_STATUSES.map((s) => <SelectItem key={s} value={s}>{t(`boxStatus_${s}`)}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t('packingType')}</label>
+                  <Select value={packingFilter} onValueChange={setPackingFilter}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('all')}</SelectItem>
+                      {PACKING_TYPES.map((p) => <SelectItem key={p} value={p}>{t(p)}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {activeFilterCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => { setDestFilter('all'); setStatusFilter('all'); setPackingFilter('all'); }}
+                  >
+                    <X className="w-4 h-4 me-1.5" />
+                    {t('reset')}
+                  </Button>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <Sheet open={mobileActionsOpen} onOpenChange={setMobileActionsOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" aria-label={t('moreActions')}>
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-auto rounded-t-2xl">
+              <SheetHeader>
+                <SheetTitle className="text-start">{t('moreActions')}</SheetTitle>
+              </SheetHeader>
+              <div className="grid grid-cols-2 gap-2 mt-4 pb-6">
+                <Button variant="outline" onClick={() => { setMobileActionsOpen(false); setInvoiceOpen(true); }} className="h-14 flex-col gap-1">
+                  <FileText className="w-5 h-5" />
+                  <span className="text-xs">{t('addFullInvoice')}</span>
+                </Button>
+                <Button variant="outline" onClick={() => { setMobileActionsOpen(false); setInvoicePickerOpen(true); }} className="h-14 flex-col gap-1">
+                  <Edit3 className="w-5 h-5" />
+                  <span className="text-xs">{t('editFullInvoice')}</span>
+                </Button>
+                <Button variant="outline" onClick={() => { setMobileActionsOpen(false); handleExport(); }} disabled={receipts.length === 0} className="h-14 flex-col gap-1">
+                  <Download className="w-5 h-5" />
+                  <span className="text-xs">{t('export')}</span>
+                </Button>
+                <Button variant="outline" onClick={() => { setMobileActionsOpen(false); handleImportClick(); }} disabled={importing} className="h-14 flex-col gap-1">
+                  {importing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                  <span className="text-xs">{t('import')}</span>
+                </Button>
+                <Button variant="outline" onClick={() => { setMobileActionsOpen(false); setLockPolicyOpen(true); }} className="h-14 flex-col gap-1 col-span-2">
+                  <Info className="w-5 h-5" />
+                  <span className="text-xs">{t('lockPolicyOpen')}</span>
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Desktop filters */}
         <Select value={destFilter} onValueChange={setDestFilter}>
           <SelectTrigger className="w-full md:w-44"><SelectValue placeholder={t('destination')} /></SelectTrigger>
           <SelectContent>
