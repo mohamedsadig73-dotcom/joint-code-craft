@@ -190,7 +190,7 @@ export async function parseDocxItems(file: File | Blob): Promise<ParsedDocx> {
       let partNo: string | null = null;
       let partIdx = -1;
       for (let i = 0; i < cellTexts.length; i++) {
-        const cleaned = cellTexts[i].replace(/\s+/g, '');
+        const cleaned = cellTexts[i].replace(/\s+/g, '').toUpperCase();
         if (PART_NO_RE.test(cleaned)) {
           partNo = cleaned;
           partIdx = i;
