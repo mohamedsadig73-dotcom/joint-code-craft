@@ -682,13 +682,6 @@ export function ReceiptsTab() {
             {importing ? <Loader2 className="w-4 h-4 me-1.5 animate-spin" /> : <Upload className="w-4 h-4 me-1.5" />}
             {t('import')}
           </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx"
-            className="hidden"
-            onChange={handleImportFile}
-          />
           <Button variant="outline" onClick={() => setInvoiceOpen(true)} className="gap-1.5">
             <FileText className="w-4 h-4" />
             <span className="hidden sm:inline">{t('addFullInvoice')}</span>
