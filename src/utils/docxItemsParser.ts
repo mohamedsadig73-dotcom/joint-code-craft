@@ -8,6 +8,8 @@ export interface ParsedItem {
   qty: number | null;
   /** Image filenames inside the docx archive (word/media/...). */
   imageNames: string[];
+  /** True when the same part_no appears more than once in the source file. */
+  duplicateInFile?: boolean;
 }
 
 export interface ParsedDocx {
