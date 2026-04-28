@@ -8,12 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Plus, Search, Download, Upload, Loader2, Package, PackageOpen, Layers,
-  Columns3, Trash2, X, FileText, Edit3, Undo2, Info,
+  Columns3, Trash2, X, FileText, Edit3, Undo2, Info, SlidersHorizontal, MoreHorizontal,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { SwipeableRow } from '@/components/SwipeableRow';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useBoxReceipts, type BoxReceipt, type BoxReceiptInput } from '@/hooks/useBoxReceipts';
 import { useBoxSummary } from '@/hooks/useBoxSummary';
 import { ReceiptsTable, ALL_RECEIPT_COLUMNS, type ReceiptColumnKey } from './ReceiptsTable';
@@ -128,6 +131,15 @@ export function ReceiptsTab() {
 
   const isAdmin = user?.role === 'admin';
   const isManager = user?.role === 'manager';
+  const isMobile = useIsMobile();
+
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
+
+  const activeFilterCount =
+    (destFilter !== 'all' ? 1 : 0) +
+    (statusFilter !== 'all' ? 1 : 0) +
+    (packingFilter !== 'all' ? 1 : 0);
 
   const canModify = (r: BoxReceipt) =>
     // Shipped receipts are locked for everyone (except admin) to preserve audit integrity
@@ -486,28 +498,129 @@ export function ReceiptsTab() {
             className="ps-10"
           />
         </div>
+
+        {/* Mobile: filters trigger */}
+        <div className="flex md:hidden gap-2">
+          <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" className="flex-1 gap-1.5 relative">
+                <SlidersHorizontal className="w-4 h-4" />
+                <span className="text-xs">{t('filters')}</span>
+                {activeFilterCount > 0 && (
+                  <span className="ms-1 inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold tabular-nums">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-2xl">
+              <SheetHeader>
+                <SheetTitle className="text-start">{t('filters')}</SheetTitle>
+              </SheetHeader>
+              <div className="space-y-3 mt-4 pb-6">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t('destination')}</label>
+                  <Select value={destFilter} onValueChange={setDestFilter}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('all')}</SelectItem>
+                      {BOX_DESTINATIONS.map((d) => <SelectItem key={d} value={d}>{t(`dest_${d}`)}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t('status')}</label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('all')}</SelectItem>
+                      {BOX_STATUSES.map((s) => <SelectItem key={s} value={s}>{t(`boxStatus_${s}`)}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t('packingType')}</label>
+                  <Select value={packingFilter} onValueChange={setPackingFilter}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('all')}</SelectItem>
+                      {PACKING_TYPES.map((p) => <SelectItem key={p} value={p}>{t(p)}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {activeFilterCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => { setDestFilter('all'); setStatusFilter('all'); setPackingFilter('all'); }}
+                  >
+                    <X className="w-4 h-4 me-1.5" />
+                    {t('reset')}
+                  </Button>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <Sheet open={mobileActionsOpen} onOpenChange={setMobileActionsOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" aria-label={t('moreActions')}>
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-auto rounded-t-2xl">
+              <SheetHeader>
+                <SheetTitle className="text-start">{t('moreActions')}</SheetTitle>
+              </SheetHeader>
+              <div className="grid grid-cols-2 gap-2 mt-4 pb-6">
+                <Button variant="outline" onClick={() => { setMobileActionsOpen(false); setInvoiceOpen(true); }} className="h-14 flex-col gap-1">
+                  <FileText className="w-5 h-5" />
+                  <span className="text-xs">{t('addFullInvoice')}</span>
+                </Button>
+                <Button variant="outline" onClick={() => { setMobileActionsOpen(false); setInvoicePickerOpen(true); }} className="h-14 flex-col gap-1">
+                  <Edit3 className="w-5 h-5" />
+                  <span className="text-xs">{t('editFullInvoice')}</span>
+                </Button>
+                <Button variant="outline" onClick={() => { setMobileActionsOpen(false); handleExport(); }} disabled={receipts.length === 0} className="h-14 flex-col gap-1">
+                  <Download className="w-5 h-5" />
+                  <span className="text-xs">{t('export')}</span>
+                </Button>
+                <Button variant="outline" onClick={() => { setMobileActionsOpen(false); handleImportClick(); }} disabled={importing} className="h-14 flex-col gap-1">
+                  {importing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                  <span className="text-xs">{t('import')}</span>
+                </Button>
+                <Button variant="outline" onClick={() => { setMobileActionsOpen(false); setLockPolicyOpen(true); }} className="h-14 flex-col gap-1 col-span-2">
+                  <Info className="w-5 h-5" />
+                  <span className="text-xs">{t('lockPolicyOpen')}</span>
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Desktop filters */}
         <Select value={destFilter} onValueChange={setDestFilter}>
-          <SelectTrigger className="w-full md:w-44"><SelectValue placeholder={t('destination')} /></SelectTrigger>
+          <SelectTrigger className="hidden md:flex md:w-44"><SelectValue placeholder={t('destination')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('all')}</SelectItem>
             {BOX_DESTINATIONS.map((d) => <SelectItem key={d} value={d}>{t(`dest_${d}`)}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full md:w-40"><SelectValue placeholder={t('status')} /></SelectTrigger>
+          <SelectTrigger className="hidden md:flex md:w-40"><SelectValue placeholder={t('status')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('all')}</SelectItem>
             {BOX_STATUSES.map((s) => <SelectItem key={s} value={s}>{t(`boxStatus_${s}`)}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={packingFilter} onValueChange={setPackingFilter}>
-          <SelectTrigger className="w-full md:w-40"><SelectValue placeholder={t('packingType')} /></SelectTrigger>
+          <SelectTrigger className="hidden md:flex md:w-40"><SelectValue placeholder={t('packingType')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('all')}</SelectItem>
             {PACKING_TYPES.map((p) => <SelectItem key={p} value={p}>{t(p)}</SelectItem>)}
           </SelectContent>
         </Select>
-        <div className="flex flex-wrap gap-2">
+        <div className="hidden md:flex flex-wrap gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-1.5">
@@ -569,13 +682,6 @@ export function ReceiptsTab() {
             {importing ? <Loader2 className="w-4 h-4 me-1.5 animate-spin" /> : <Upload className="w-4 h-4 me-1.5" />}
             {t('import')}
           </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx"
-            className="hidden"
-            onChange={handleImportFile}
-          />
           <Button variant="outline" onClick={() => setInvoiceOpen(true)} className="gap-1.5">
             <FileText className="w-4 h-4" />
             <span className="hidden sm:inline">{t('addFullInvoice')}</span>
@@ -604,6 +710,15 @@ export function ReceiptsTab() {
           </Button>
         </div>
       </div>
+
+      {/* Hidden file input — shared between desktop toolbar and mobile actions sheet */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx"
+        className="hidden"
+        onChange={handleImportFile}
+      />
 
       {/* Undo last edit (30s window) */}
       {undoBatch && undoSecondsLeft > 0 && (
@@ -715,18 +830,45 @@ export function ReceiptsTab() {
             {filtered.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground text-sm">{t('noReceiptsYet')}</div>
             ) : (
-              filtered.map((r) => (
-                <ReceiptMobileCard
-                  key={r.id}
-                  receipt={r}
-                  onEdit={handleEdit}
-                  onDelete={setToDelete}
-                  canModify={canModify(r)}
-                />
-              ))
+              <>
+                {/* Subtle swipe hint shown once per session */}
+                <p className="text-[11px] text-muted-foreground text-center py-1">
+                  {t('swipeToEdit')}
+                </p>
+                {filtered.map((r) => {
+                  const allowed = canModify(r);
+                  return (
+                    <SwipeableRow
+                      key={r.id}
+                      onEdit={allowed ? () => handleEdit(r) : undefined}
+                      onDelete={allowed ? () => setToDelete(r) : undefined}
+                      editLabel={t('edit')}
+                      deleteLabel={t('delete')}
+                    >
+                      <ReceiptMobileCard
+                        receipt={r}
+                        onEdit={handleEdit}
+                        onDelete={setToDelete}
+                        canModify={allowed}
+                      />
+                    </SwipeableRow>
+                  );
+                })}
+              </>
             )}
           </div>
         </>
+      )}
+
+      {/* Mobile FAB for primary "Add receipt" action */}
+      {isMobile && (
+        <Button
+          onClick={handleAdd}
+          aria-label={t('addReceipt')}
+          className="lg:hidden fixed bottom-20 end-4 z-30 h-14 w-14 rounded-full shadow-lg shadow-primary/30 p-0"
+        >
+          <Plus className="w-6 h-6" />
+        </Button>
       )}
 
       <ReceiptFormDialog
