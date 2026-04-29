@@ -99,6 +99,7 @@ export type Database = {
           destination: Database["public"]["Enums"]["box_destination"]
           id: string
           image_path: string | null
+          inv_transaction_id: string | null
           invoice_number: string | null
           item_id: string | null
           notes: string | null
@@ -123,6 +124,7 @@ export type Database = {
           destination?: Database["public"]["Enums"]["box_destination"]
           id?: string
           image_path?: string | null
+          inv_transaction_id?: string | null
           invoice_number?: string | null
           item_id?: string | null
           notes?: string | null
@@ -147,6 +149,7 @@ export type Database = {
           destination?: Database["public"]["Enums"]["box_destination"]
           id?: string
           image_path?: string | null
+          inv_transaction_id?: string | null
           invoice_number?: string | null
           item_id?: string | null
           notes?: string | null
@@ -174,6 +177,13 @@ export type Database = {
             columns: ["deleted_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "box_receipts_inv_transaction_id_fkey"
+            columns: ["inv_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "inv_transactions"
             referencedColumns: ["id"]
           },
           {
@@ -767,6 +777,312 @@ export type Database = {
             columns: ["sheet_id"]
             isOneToOne: false
             referencedRelation: "holiday_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inv_custody: {
+        Row: {
+          id: string
+          item_id: string
+          last_movement_at: string | null
+          party_name: string
+          party_ref: string | null
+          party_type: Database["public"]["Enums"]["inv_party_type"]
+          qty: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          last_movement_at?: string | null
+          party_name: string
+          party_ref?: string | null
+          party_type: Database["public"]["Enums"]["inv_party_type"]
+          qty?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          last_movement_at?: string | null
+          party_name?: string
+          party_ref?: string | null
+          party_type?: Database["public"]["Enums"]["inv_party_type"]
+          qty?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inv_custody_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inv_locations: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          notes: string | null
+          parent_id: string | null
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          notes?: string | null
+          parent_id?: string | null
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          notes?: string | null
+          parent_id?: string | null
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inv_locations_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "inv_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inv_locations_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inv_stock: {
+        Row: {
+          id: string
+          item_id: string
+          last_movement_at: string | null
+          location_id: string | null
+          qty: number
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          last_movement_at?: string | null
+          location_id?: string | null
+          qty?: number
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          last_movement_at?: string | null
+          location_id?: string | null
+          qty?: number
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inv_stock_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inv_stock_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "inv_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inv_stock_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inv_transaction_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          line_no: number
+          notes: string | null
+          qty: number
+          transaction_id: string
+          unit: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          line_no?: number
+          notes?: string | null
+          qty: number
+          transaction_id: string
+          unit?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          line_no?: number
+          notes?: string | null
+          qty?: number
+          transaction_id?: string
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inv_transaction_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inv_transaction_items_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "inv_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inv_transactions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          from_location_id: string | null
+          from_warehouse_id: string | null
+          id: string
+          linked_box_receipt_id: string | null
+          notes: string | null
+          party_name: string | null
+          party_ref: string | null
+          party_type: Database["public"]["Enums"]["inv_party_type"] | null
+          posted_at: string | null
+          posted_by: string | null
+          reference: string | null
+          status: Database["public"]["Enums"]["inv_txn_status"]
+          to_location_id: string | null
+          to_warehouse_id: string | null
+          txn_date: string
+          txn_no: string
+          txn_type: Database["public"]["Enums"]["inv_txn_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          from_location_id?: string | null
+          from_warehouse_id?: string | null
+          id?: string
+          linked_box_receipt_id?: string | null
+          notes?: string | null
+          party_name?: string | null
+          party_ref?: string | null
+          party_type?: Database["public"]["Enums"]["inv_party_type"] | null
+          posted_at?: string | null
+          posted_by?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["inv_txn_status"]
+          to_location_id?: string | null
+          to_warehouse_id?: string | null
+          txn_date?: string
+          txn_no: string
+          txn_type: Database["public"]["Enums"]["inv_txn_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          from_location_id?: string | null
+          from_warehouse_id?: string | null
+          id?: string
+          linked_box_receipt_id?: string | null
+          notes?: string | null
+          party_name?: string | null
+          party_ref?: string | null
+          party_type?: Database["public"]["Enums"]["inv_party_type"] | null
+          posted_at?: string | null
+          posted_by?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["inv_txn_status"]
+          to_location_id?: string | null
+          to_warehouse_id?: string | null
+          txn_date?: string
+          txn_no?: string
+          txn_type?: Database["public"]["Enums"]["inv_txn_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inv_transactions_from_location_id_fkey"
+            columns: ["from_location_id"]
+            isOneToOne: false
+            referencedRelation: "inv_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inv_transactions_from_warehouse_id_fkey"
+            columns: ["from_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inv_transactions_linked_box_receipt_id_fkey"
+            columns: ["linked_box_receipt_id"]
+            isOneToOne: false
+            referencedRelation: "box_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inv_transactions_to_location_id_fkey"
+            columns: ["to_location_id"]
+            isOneToOne: false
+            referencedRelation: "inv_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inv_transactions_to_warehouse_id_fkey"
+            columns: ["to_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
         ]
@@ -4392,6 +4708,10 @@ export type Database = {
       deactivate_user: { Args: { target_user_id: string }; Returns: boolean }
       generate_archive_number: { Args: never; Returns: string }
       generate_cycle_count_number: { Args: never; Returns: string }
+      generate_inv_txn_no: {
+        Args: { _type: Database["public"]["Enums"]["inv_txn_type"] }
+        Returns: string
+      }
       generate_invoice_number: { Args: never; Returns: string }
       generate_maintenance_schedule: {
         Args: { _item_id: string; _year: number }
@@ -4489,6 +4809,9 @@ export type Database = {
         | "archived"
         | "rejected"
       declaration_type: "دخول" | "خروج"
+      inv_party_type: "employee" | "department" | "supplier" | "external"
+      inv_txn_status: "draft" | "posted" | "cancelled"
+      inv_txn_type: "in" | "out" | "transfer" | "return"
       maintenance_asset_type:
         | "electrical"
         | "plumbing"
@@ -4685,6 +5008,9 @@ export const Constants = {
         "rejected",
       ],
       declaration_type: ["دخول", "خروج"],
+      inv_party_type: ["employee", "department", "supplier", "external"],
+      inv_txn_status: ["draft", "posted", "cancelled"],
+      inv_txn_type: ["in", "out", "transfer", "return"],
       maintenance_asset_type: [
         "electrical",
         "plumbing",
