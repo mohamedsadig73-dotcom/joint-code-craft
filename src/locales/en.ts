@@ -1491,7 +1491,6 @@ const en = {
     wmsDashboardDesc: 'Overview of stock, movements and alerts',
     wmsReports: 'Warehouse Reports',
     wmsReportsDesc: 'Stock, custody and movements reports',
-    totalItems: 'Total Items',
     totalLocations: 'Total Locations',
     todayMovements: "Today's Movements",
     activeCustody: 'Active Custody',
@@ -1501,12 +1500,10 @@ const en = {
     stockReport: 'Stock Report',
     custodyReport: 'Custody Report',
     movementsReport: 'Movements Report',
-    exportExcel: 'Export Excel',
     reportExported: 'Report exported',
     minQty: 'Min Qty',
     min: 'Min',
     showing200OfX: 'Showing 200 of {x}',
-    type: 'Type',
 };
 
 export default en;

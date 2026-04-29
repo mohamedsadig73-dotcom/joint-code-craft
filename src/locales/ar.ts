@@ -1490,7 +1490,6 @@ const ar = {
     wmsDashboardDesc: 'نظرة عامة على المخزون والحركات والتنبيهات',
     wmsReports: 'تقارير المخزن',
     wmsReportsDesc: 'تقارير المخزون والعُهد والحركات',
-    totalItems: 'إجمالي الأصناف',
     totalLocations: 'إجمالي المواقع',
     todayMovements: 'حركات اليوم',
     activeCustody: 'عُهد نشطة',
@@ -1500,12 +1499,10 @@ const ar = {
     stockReport: 'تقرير المخزون',
     custodyReport: 'تقرير العُهد',
     movementsReport: 'تقرير الحركات',
-    exportExcel: 'تصدير Excel',
     reportExported: 'تم تصدير التقرير',
     minQty: 'الحد الأدنى',
     min: 'الأدنى',
     showing200OfX: 'يُعرض 200 من أصل {x}',
-    type: 'النوع',
 };
 
 export default ar;
