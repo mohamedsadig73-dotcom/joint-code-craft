@@ -331,13 +331,13 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
             <>
               <Button variant="outline" onClick={() => handleClose(false)}>{t('cancel')}</Button>
               <Button onClick={handleProceed} disabled={!validLines.length}>
-                {isDeclaration ? t('continue') : t('postTransaction')}
+                {isDeclaration ? t('continueAction') : t('postTransaction')}
               </Button>
             </>
           )}
           {step === 'confirm' && (
             <>
-              <Button variant="outline" onClick={() => setStep('form')} disabled={submitting}>{t('back')}</Button>
+              <Button variant="outline" onClick={() => setStep('form')} disabled={submitting}>{t('goBack')}</Button>
               <Button onClick={doSubmit} disabled={submitting}>
                 {submitting && <Loader2 className="w-4 h-4 animate-spin me-1" />}
                 {t('confirmAndCreate')}
