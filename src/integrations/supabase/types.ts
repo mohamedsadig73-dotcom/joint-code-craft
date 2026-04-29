@@ -983,6 +983,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          declaration_id: string | null
           deleted_at: string | null
           from_location_id: string | null
           from_warehouse_id: string | null
@@ -1006,6 +1007,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          declaration_id?: string | null
           deleted_at?: string | null
           from_location_id?: string | null
           from_warehouse_id?: string | null
@@ -1029,6 +1031,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          declaration_id?: string | null
           deleted_at?: string | null
           from_location_id?: string | null
           from_warehouse_id?: string | null
@@ -1050,6 +1053,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "inv_transactions_declaration_id_fkey"
+            columns: ["declaration_id"]
+            isOneToOne: false
+            referencedRelation: "declarations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "inv_transactions_from_location_id_fkey"
             columns: ["from_location_id"]
@@ -4708,6 +4718,10 @@ export type Database = {
       deactivate_user: { Args: { target_user_id: string }; Returns: boolean }
       generate_archive_number: { Args: never; Returns: string }
       generate_cycle_count_number: { Args: never; Returns: string }
+      generate_declaration_id: {
+        Args: { _type: Database["public"]["Enums"]["declaration_type"] }
+        Returns: string
+      }
       generate_inv_txn_no: {
         Args: { _type: Database["public"]["Enums"]["inv_txn_type"] }
         Returns: string
