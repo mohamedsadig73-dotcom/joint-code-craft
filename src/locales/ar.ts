@@ -1473,9 +1473,6 @@ const ar = {
     idOrCode: 'الرقم أو الكود',
     posted: 'مُرحّلة',
     cancelled: 'ملغاة',
-    nameAr: 'الاسم بالعربية',
-    nameEn: 'الاسم بالإنجليزية',
-    code: 'الرمز',
     warehouse: 'المخزن',
 };
 
