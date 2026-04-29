@@ -23,7 +23,7 @@ export default function Inventory() {
           <TabsList className="grid w-full grid-cols-4 max-w-3xl">
             <TabsTrigger value="transactions" className="gap-1.5">
               <ClipboardList className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('transactions')}</span>
+              <span className="hidden sm:inline">{t('declarations_and_movements')}</span>
             </TabsTrigger>
             <TabsTrigger value="stock" className="gap-1.5">
               <Package className="w-4 h-4" />
