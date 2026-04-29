@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useItemsMaster } from '@/hooks/useItemsMaster';
 import { useWarehouses, useInvLocations, useCreateInvTransaction, type InvTxnType, type InvPartyType } from '@/hooks/useInventory';
-import { Plus, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, CheckCircle2, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
@@ -42,6 +42,8 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
   const [lines, setLines] = useState<LineItem[]>([{ item_id: '', qty: 1 }]);
   const [submitting, setSubmitting] = useState(false);
   const [nextDeclNo, setNextDeclNo] = useState<string>('');
+  const [step, setStep] = useState<'form' | 'confirm' | 'success'>('form');
+  const [createdDeclId, setCreatedDeclId] = useState<string | null>(null);
 
   const { locations: fromLocs } = useInvLocations(fromWarehouseId || null);
   const { locations: toLocs } = useInvLocations(toWarehouseId || null);
@@ -54,9 +56,11 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
     in: 'newReceiptTxn', out: 'newIssueTxn', transfer: 'newTransferTxn', return: 'newReturnTxn'
   } as const)[type], [type]);
 
-  // Compute next declaration number for IN/OUT (preview only)
+  const isDeclaration = type === 'in' || type === 'out';
+
+  // Compute next declaration number for IN/OUT (preview only) — independent per year
   useEffect(() => {
-    if (!open || (type !== 'in' && type !== 'out')) { setNextDeclNo(''); return; }
+    if (!open || !isDeclaration) { setNextDeclNo(''); return; }
     const prefix = type === 'in' ? 'IN' : 'OUT';
     const year = new Date().getFullYear();
     const pattern = `${prefix}-${year}-%`;
@@ -71,19 +75,26 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
         const seq = last ? parseInt(last.split('-')[2], 10) + 1 : 1;
         setNextDeclNo(`${prefix}-${year}-${String(seq).padStart(4, '0')}`);
       });
-  }, [open, type]);
+  }, [open, type, isDeclaration, step]);
 
   const reset = () => {
     setLines([{ item_id: '', qty: 1 }]);
     setNotes(''); setReference(''); setPartyName(''); setPartyRef('');
+    setStep('form'); setCreatedDeclId(null);
   };
 
-  const handleSubmit = async () => {
-    const validLines = lines.filter(l => l.item_id && l.qty > 0);
-    if (!validLines.length) return;
+  const validLines = useMemo(() => lines.filter(l => l.item_id && l.qty > 0), [lines]);
 
+  const handleProceed = () => {
+    if (!validLines.length) return;
+    if (isDeclaration) { setStep('confirm'); return; }
+    void doSubmit();
+  };
+
+  const doSubmit = async () => {
+    if (!validLines.length) return;
     setSubmitting(true);
-    const id = await create({
+    const result = await create({
       txn_type: type,
       txn_date: txnDate,
       from_warehouse_id: needsSource ? fromWarehouseId || null : null,
@@ -93,27 +104,42 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
       party_type: needsParty ? partyType : null,
       party_name: needsParty ? partyName.trim() || null : null,
       party_ref: needsParty ? partyRef.trim() || null : null,
-      reference: reference.trim() || null,
+      // For IN/OUT the external reference is auto-set to the declaration no.
+      reference: isDeclaration ? null : (reference.trim() || null),
       notes: notes.trim() || null,
       items: validLines,
     }, true);
     setSubmitting(false);
-    if (id) {
-      reset();
-      onOpenChange(false);
+    if (result) {
       onSuccess?.();
+      if (isDeclaration) {
+        setCreatedDeclId(result.declaration_id);
+        setStep('success');
+      } else {
+        reset();
+        onOpenChange(false);
+      }
     }
   };
 
+  const handleClose = (o: boolean) => {
+    if (!o) reset();
+    onOpenChange(o);
+  };
+
+  const TypeIcon = type === 'in' ? ArrowDownToLine : ArrowUpFromLine;
+  const typeColor = type === 'in' ? 'text-green-600' : 'text-orange-600';
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t(titleKey)}</DialogTitle>
         </DialogHeader>
 
+        {step === 'form' && (
         <div className="space-y-4">
-          {(type === 'in' || type === 'out') && nextDeclNo && (
+          {isDeclaration && nextDeclNo && (
             <div className="flex items-center justify-between p-3 rounded-lg border border-primary/30 bg-primary/5">
               <span className="text-sm text-muted-foreground">{t('nextDeclarationNo')}</span>
               <span className="font-mono font-semibold text-primary">{nextDeclNo}</span>
@@ -125,10 +151,12 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
               <Label>{t('invDate')}</Label>
               <Input type="date" value={txnDate} onChange={(e) => setTxnDate(e.target.value)} />
             </div>
-            <div>
-              <Label>{t('invReference')}</Label>
-              <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t('optional')} />
-            </div>
+            {!isDeclaration && (
+              <div>
+                <Label>{t('invReference')}</Label>
+                <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t('optional')} />
+              </div>
+            )}
           </div>
 
           {needsSource && (
@@ -252,13 +280,73 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
         </div>
+        )}
+
+        {step === 'confirm' && (
+          <div className="space-y-4 py-2">
+            <div className={`flex items-center gap-3 p-4 rounded-lg border-2 border-primary/40 bg-primary/5`}>
+              <TypeIcon className={`w-8 h-8 ${typeColor}`} />
+              <div className="flex-1">
+                <div className="text-sm text-muted-foreground">{t('aboutToCreate')}</div>
+                <div className="text-lg font-semibold">{t(titleKey)}</div>
+              </div>
+              <div className="text-end">
+                <div className="text-xs text-muted-foreground">{t('nextDeclarationNo')}</div>
+                <div className="font-mono font-bold text-primary">{nextDeclNo}</div>
+              </div>
+            </div>
+            <div className="text-sm text-muted-foreground space-y-1 px-1">
+              <div>{t('invDate')}: <span className="font-medium text-foreground">{txnDate}</span></div>
+              <div>{t('items')}: <span className="font-medium text-foreground">{validLines.length}</span></div>
+              {needsParty && partyName && (
+                <div>{t('partyName')}: <span className="font-medium text-foreground">{partyName}</span></div>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">{t('confirmDeclarationHint')}</p>
+          </div>
+        )}
+
+        {step === 'success' && (
+          <div className="space-y-4 py-4 text-center">
+            <div className="flex justify-center">
+              <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <CheckCircle2 className="w-10 h-10 text-green-600" />
+              </div>
+            </div>
+            <div>
+              <div className="text-lg font-semibold">{t('declarationCreated')}</div>
+              <div className="text-sm text-muted-foreground mt-1">{t(titleKey)}</div>
+            </div>
+            {createdDeclId && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-primary/40 bg-primary/5 mx-auto">
+                <span className="text-xs text-muted-foreground">{t('declarationNo')}:</span>
+                <span className="font-mono font-bold text-primary text-lg">{createdDeclId}</span>
+              </div>
+            )}
+          </div>
+        )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('cancel')}</Button>
-          <Button onClick={handleSubmit} disabled={submitting}>
-            {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-            {t('postTransaction')}
-          </Button>
+          {step === 'form' && (
+            <>
+              <Button variant="outline" onClick={() => handleClose(false)}>{t('cancel')}</Button>
+              <Button onClick={handleProceed} disabled={!validLines.length}>
+                {isDeclaration ? t('continue') : t('postTransaction')}
+              </Button>
+            </>
+          )}
+          {step === 'confirm' && (
+            <>
+              <Button variant="outline" onClick={() => setStep('form')} disabled={submitting}>{t('back')}</Button>
+              <Button onClick={doSubmit} disabled={submitting}>
+                {submitting && <Loader2 className="w-4 h-4 animate-spin me-1" />}
+                {t('confirmAndCreate')}
+              </Button>
+            </>
+          )}
+          {step === 'success' && (
+            <Button onClick={() => handleClose(false)} className="w-full sm:w-auto">{t('done')}</Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

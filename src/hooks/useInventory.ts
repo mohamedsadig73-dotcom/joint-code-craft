@@ -203,7 +203,7 @@ export function useCreateInvTransaction() {
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  const create = useCallback(async (payload: CreateTransactionPayload, post = true): Promise<string | null> => {
+  const create = useCallback(async (payload: CreateTransactionPayload, post = true): Promise<{ id: string; declaration_id: string | null } | null> => {
     if (!user?.id) {
       toast({ title: t('error'), description: t('mustBeLoggedIn'), variant: 'destructive' });
       return null;
@@ -263,12 +263,22 @@ export function useCreateInvTransaction() {
         .eq('id', (txn as { id: string }).id);
       if (postErr) {
         toast({ title: t('error'), description: postErr.message, variant: 'destructive' });
-        return (txn as { id: string }).id;
+        return { id: (txn as { id: string }).id, declaration_id: null };
       }
     }
 
+    // 4. Re-fetch to get auto-generated declaration_id from trigger
+    const { data: refreshed } = await supabase
+      .from('inv_transactions')
+      .select('id, declaration_id')
+      .eq('id', (txn as { id: string }).id)
+      .maybeSingle();
+
     toast({ title: t('success'), description: t('transactionCreated') });
-    return (txn as { id: string }).id;
+    return {
+      id: (txn as { id: string }).id,
+      declaration_id: (refreshed as { declaration_id: string | null } | null)?.declaration_id ?? null,
+    };
   }, [user?.id, toast, t]);
 
   return { create };

@@ -1479,6 +1479,14 @@ const en = {
     posted: 'Posted',
     cancelled: 'Cancelled',
     warehouse: 'Warehouse',
+    declarations_and_movements: 'Declarations & Movements',
+    noTransactionsDecl: 'No declarations or movements',
+    continue: 'Continue',
+    back: 'Back',
+    confirmAndCreate: 'Confirm & Create',
+    aboutToCreate: 'You are about to create',
+    confirmDeclarationHint: 'An official declaration will be auto-generated and linked to this movement. Please verify before proceeding.',
+    declarationNo: 'Declaration No.',
 };
 
 export default en;

@@ -48,7 +48,7 @@ export function TransactionsTab() {
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin" /></div>
       ) : transactions.length === 0 ? (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">{t('noTransactions')}</CardContent></Card>
+        <Card><CardContent className="py-12 text-center text-muted-foreground">{t('noTransactionsDecl')}</CardContent></Card>
       ) : (
         <div className="grid gap-2">
           {transactions.map(tx => {

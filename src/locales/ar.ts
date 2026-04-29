@@ -1478,6 +1478,14 @@ const ar = {
     posted: 'مُرحّلة',
     cancelled: 'ملغاة',
     warehouse: 'المخزن',
+    declarations_and_movements: 'الإقرارات والحركات',
+    noTransactionsDecl: 'لا توجد إقرارات أو حركات',
+    continue: 'متابعة',
+    back: 'رجوع',
+    confirmAndCreate: 'تأكيد وإنشاء',
+    aboutToCreate: 'أنت على وشك إنشاء',
+    confirmDeclarationHint: 'سيتم إنشاء إقرار رسمي تلقائياً وربطه بهذه الحركة. تأكد من البيانات قبل المتابعة.',
+    declarationNo: 'رقم الإقرار',
 };
 
 export default ar;
