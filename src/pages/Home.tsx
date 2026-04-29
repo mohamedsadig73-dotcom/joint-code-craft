@@ -14,7 +14,9 @@ import {
   ClipboardList,
   Search,
   X,
-  Package
+  Package,
+  LayoutDashboard,
+  BarChart3 as BarChart3Icon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
