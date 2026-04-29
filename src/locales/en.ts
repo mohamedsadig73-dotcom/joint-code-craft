@@ -1486,7 +1486,6 @@ const en = {
     confirmAndCreate: 'Confirm & Create',
     aboutToCreate: 'You are about to create',
     confirmDeclarationHint: 'An official declaration will be auto-generated and linked to this movement. Please verify before proceeding.',
-    declarationCreated: 'Declaration created successfully',
     declarationNo: 'Declaration No.',
 };
 

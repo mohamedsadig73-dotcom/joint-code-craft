@@ -1485,7 +1485,6 @@ const ar = {
     confirmAndCreate: 'تأكيد وإنشاء',
     aboutToCreate: 'أنت على وشك إنشاء',
     confirmDeclarationHint: 'سيتم إنشاء إقرار رسمي تلقائياً وربطه بهذه الحركة. تأكد من البيانات قبل المتابعة.',
-    declarationCreated: 'تم إنشاء الإقرار بنجاح',
     declarationNo: 'رقم الإقرار',
 };
 
