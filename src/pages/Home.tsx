@@ -55,6 +55,14 @@ const appModules: AppModule[] = [
     bgColor: 'bg-rose-500/10 dark:bg-rose-500/20',
   },
   {
+    path: '/inventory',
+    icon: Package,
+    labelKey: 'inventoryManagement',
+    description: 'إدارة المخزن: استلام، صرف، نقل، عُهد',
+    color: 'text-cyan-600 dark:text-cyan-400',
+    bgColor: 'bg-cyan-500/10 dark:bg-cyan-500/20',
+  },
+  {
     path: '/petty-cash',
     icon: Wallet,
     labelKey: 'pettyCash',
