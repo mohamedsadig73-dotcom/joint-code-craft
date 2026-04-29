@@ -7,6 +7,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useInvTransactions, useWarehouses, type InvTxnType } from '@/hooks/useInventory';
 import { ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, RotateCcw, Loader2, Plus } from 'lucide-react';
 import { InventoryTransactionDialog } from './InventoryTransactionDialog';
+import { Link } from 'react-router-dom';
+import { FileText } from 'lucide-react';
 
 const TYPE_META: Record<InvTxnType, { icon: typeof ArrowDownToLine; color: string }> = {
   in: { icon: ArrowDownToLine, color: 'text-green-600' },
@@ -73,6 +75,15 @@ export function TransactionsTab() {
                       {toWh && <> · {t('to')}: {language === 'ar' ? toWh.name_ar : toWh.name_en}</>}
                       {tx.party_name && <> · {tx.party_name}</>}
                     </div>
+                    {tx.declaration_id && (
+                      <Link
+                        to={`/declarations`}
+                        className="inline-flex items-center gap-1 mt-1 text-xs text-primary hover:underline"
+                      >
+                        <FileText className="w-3 h-3" />
+                        <span className="font-mono">{tx.declaration_id}</span>
+                      </Link>
+                    )}
                   </div>
                 </CardContent>
               </Card>
