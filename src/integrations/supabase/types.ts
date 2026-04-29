@@ -190,6 +190,20 @@ export type Database = {
             foreignKeyName: "box_receipts_item_id_fkey"
             columns: ["item_id"]
             isOneToOne: false
+            referencedRelation: "inv_low_stock"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "box_receipts_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_stock_summary"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "box_receipts_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
             referencedRelation: "items_master"
             referencedColumns: ["id"]
           },
@@ -817,6 +831,20 @@ export type Database = {
             foreignKeyName: "inv_custody_item_id_fkey"
             columns: ["item_id"]
             isOneToOne: false
+            referencedRelation: "inv_low_stock"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "inv_custody_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_stock_summary"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "inv_custody_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
             referencedRelation: "items_master"
             referencedColumns: ["id"]
           },
@@ -912,6 +940,20 @@ export type Database = {
             foreignKeyName: "inv_stock_item_id_fkey"
             columns: ["item_id"]
             isOneToOne: false
+            referencedRelation: "inv_low_stock"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "inv_stock_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_stock_summary"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "inv_stock_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
             referencedRelation: "items_master"
             referencedColumns: ["id"]
           },
@@ -963,6 +1005,20 @@ export type Database = {
           unit?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "inv_transaction_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_low_stock"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "inv_transaction_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_stock_summary"
+            referencedColumns: ["item_id"]
+          },
           {
             foreignKeyName: "inv_transaction_items_item_id_fkey"
             columns: ["item_id"]
@@ -1223,6 +1279,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_image_history_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_low_stock"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "item_image_history_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_stock_summary"
+            referencedColumns: ["item_id"]
           },
           {
             foreignKeyName: "item_image_history_item_id_fkey"
@@ -2398,6 +2468,20 @@ export type Database = {
             foreignKeyName: "stock_balances_item_id_fkey"
             columns: ["item_id"]
             isOneToOne: false
+            referencedRelation: "inv_low_stock"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "stock_balances_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_stock_summary"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "stock_balances_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
             referencedRelation: "items_master"
             referencedColumns: ["id"]
           },
@@ -2454,6 +2538,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "stock_counts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_low_stock"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_stock_summary"
+            referencedColumns: ["item_id"]
           },
           {
             foreignKeyName: "stock_count_lines_item_id_fkey"
@@ -2568,6 +2666,20 @@ export type Database = {
           uom_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "stock_movement_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_low_stock"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "stock_movement_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_stock_summary"
+            referencedColumns: ["item_id"]
+          },
           {
             foreignKeyName: "stock_movement_lines_item_id_fkey"
             columns: ["item_id"]
@@ -4658,6 +4770,49 @@ export type Database = {
         }
         Relationships: []
       }
+      inv_low_stock: {
+        Row: {
+          description: string | null
+          item_id: string | null
+          min_qty: number | null
+          part_no: string | null
+          total_qty: number | null
+        }
+        Relationships: []
+      }
+      inv_stock_summary: {
+        Row: {
+          description: string | null
+          item_id: string | null
+          last_movement_at: string | null
+          location_code: string | null
+          location_id: string | null
+          min_qty: number | null
+          part_no: string | null
+          qty: number | null
+          unit: Database["public"]["Enums"]["box_unit"] | null
+          warehouse_code: string | null
+          warehouse_id: string | null
+          warehouse_name_ar: string | null
+          warehouse_name_en: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inv_stock_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "inv_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inv_stock_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_2fa_status: {
         Row: {
           created_at: string | null
@@ -4792,7 +4947,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "manager" | "user"
+      app_role: "admin" | "manager" | "user" | "storekeeper" | "viewer"
       box_destination: "morocco" | "uzbekistan" | "unspecified"
       box_receipt_status: "received" | "sorted" | "packed" | "shipped"
       box_unit:
@@ -4989,7 +5144,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "manager", "user"],
+      app_role: ["admin", "manager", "user", "storekeeper", "viewer"],
       box_destination: ["morocco", "uzbekistan", "unspecified"],
       box_receipt_status: ["received", "sorted", "packed", "shipped"],
       box_unit: [

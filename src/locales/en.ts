@@ -1487,6 +1487,23 @@ const en = {
     aboutToCreate: 'You are about to create',
     confirmDeclarationHint: 'An official declaration will be auto-generated and linked to this movement. Please verify before proceeding.',
     declarationNo: 'Declaration No.',
+    wmsDashboard: 'Warehouse Dashboard',
+    wmsDashboardDesc: 'Overview of stock, movements and alerts',
+    wmsReports: 'Warehouse Reports',
+    wmsReportsDesc: 'Stock, custody and movements reports',
+    totalLocations: 'Total Locations',
+    todayMovements: "Today's Movements",
+    activeCustody: 'Active Custody',
+    lowStockAlerts: 'Low Stock Alerts',
+    noLowStock: 'No low stock items',
+    recentMovements: 'Recent Movements',
+    stockReport: 'Stock Report',
+    custodyReport: 'Custody Report',
+    movementsReport: 'Movements Report',
+    reportExported: 'Report exported',
+    minQty: 'Min Qty',
+    min: 'Min',
+    showing200OfX: 'Showing 200 of {x}',
 };
 
 export default en;

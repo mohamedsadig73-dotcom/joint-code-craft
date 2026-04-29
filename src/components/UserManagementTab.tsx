@@ -54,7 +54,7 @@ interface UserWithRole {
   email: string;
   created_at: string;
   is_active: boolean;
-  role: 'admin' | 'manager' | 'user';
+  role: 'admin' | 'manager' | 'storekeeper' | 'user' | 'viewer';
 }
 
 interface LinkedDataInfo {

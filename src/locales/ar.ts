@@ -1486,6 +1486,23 @@ const ar = {
     aboutToCreate: 'أنت على وشك إنشاء',
     confirmDeclarationHint: 'سيتم إنشاء إقرار رسمي تلقائياً وربطه بهذه الحركة. تأكد من البيانات قبل المتابعة.',
     declarationNo: 'رقم الإقرار',
+    wmsDashboard: 'لوحة المخزن',
+    wmsDashboardDesc: 'نظرة عامة على المخزون والحركات والتنبيهات',
+    wmsReports: 'تقارير المخزن',
+    wmsReportsDesc: 'تقارير المخزون والعُهد والحركات',
+    totalLocations: 'إجمالي المواقع',
+    todayMovements: 'حركات اليوم',
+    activeCustody: 'عُهد نشطة',
+    lowStockAlerts: 'تنبيهات نقص',
+    noLowStock: 'لا توجد أصناف ناقصة',
+    recentMovements: 'آخر الحركات',
+    stockReport: 'تقرير المخزون',
+    custodyReport: 'تقرير العُهد',
+    movementsReport: 'تقرير الحركات',
+    reportExported: 'تم تصدير التقرير',
+    minQty: 'الحد الأدنى',
+    min: 'الأدنى',
+    showing200OfX: 'يُعرض 200 من أصل {x}',
 };
 
 export default ar;
