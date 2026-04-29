@@ -64,6 +64,7 @@ export interface InvTransaction {
   reference: string | null;
   notes: string | null;
   linked_box_receipt_id: string | null;
+  declaration_id: string | null;
   posted_at: string | null;
   created_by: string | null;
   created_at: string;
