@@ -64,6 +64,14 @@ const appModules: AppModule[] = [
     bgColor: 'bg-cyan-500/10 dark:bg-cyan-500/20',
   },
   {
+    path: '/wms',
+    icon: LayoutDashboard,
+    labelKey: 'wmsDashboard',
+    description: 'لوحة تحكم المخزن: KPIs والتقارير',
+    color: 'text-sky-600 dark:text-sky-400',
+    bgColor: 'bg-sky-500/10 dark:bg-sky-500/20',
+  },
+  {
     path: '/petty-cash',
     icon: Wallet,
     labelKey: 'pettyCash',
