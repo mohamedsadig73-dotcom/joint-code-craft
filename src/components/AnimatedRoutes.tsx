@@ -37,6 +37,8 @@ const ItemDetails = lazy(() => import('@/pages/ItemDetails'));
 const ItemImageHistory = lazy(() => import('@/pages/ItemImageHistory'));
 const PrintDiagnostics = lazy(() => import('@/pages/PrintDiagnostics'));
 const Inventory = lazy(() => import('@/pages/Inventory'));
+const WmsDashboard = lazy(() => import('@/pages/WmsDashboard'));
+const WmsReports = lazy(() => import('@/pages/WmsReports'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -380,6 +382,26 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <Inventory />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WmsDashboard />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wms/reports"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WmsReports />
                 </PageTransition>
               </ProtectedRoute>
             }
