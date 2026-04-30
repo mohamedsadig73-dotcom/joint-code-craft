@@ -34,6 +34,8 @@ interface PreviewRow extends ParsedItem {
   previewUrls: string[];
   /** existing item match by part_no */
   existingId: string | null;
+  /** existing item's stored image (public URL) when matched */
+  existingImageUrl: string | null;
   /** include in import */
   selected: boolean;
   /** which image (index) to attach as primary */
@@ -73,9 +75,9 @@ export default function ItemsMasterImport() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const existingMap = useMemo(() => {
-    const m = new Map<string, string>();
+    const m = new Map<string, { id: string; image_path: string | null }>();
     for (const it of existingItems) {
-      m.set(it.part_no.trim().toLowerCase(), it.id);
+      m.set(it.part_no.trim().toLowerCase(), { id: it.id, image_path: it.image_path });
     }
     return m;
   }, [existingItems]);
@@ -92,12 +94,17 @@ export default function ItemsMasterImport() {
             .map((n) => parsed.images.get(n))
             .filter(Boolean)
             .map((b) => URL.createObjectURL(b as Blob));
-          const existingId = existingMap.get(it.part_no.trim().toLowerCase()) ?? null;
+          const match = existingMap.get(it.part_no.trim().toLowerCase()) ?? null;
+          const existingId = match?.id ?? null;
+          const existingImageUrl = match?.image_path
+            ? supabase.storage.from('box-images').getPublicUrl(match.image_path).data.publicUrl
+            : null;
           return {
             ...it,
             key: `${it.part_no}-${idx}`,
             previewUrls,
             existingId,
+            existingImageUrl,
             selected: !existingId, // default: skip existing
             primaryImageIdx: 0,
             editedDescription: it.description,
@@ -391,10 +398,15 @@ export default function ItemsMasterImport() {
                             value={r.editedPartNo}
                             onChange={(e) => {
                               const v = e.target.value.replace(/\s+/g, '');
-                              const existingId = existingMap.get(v.trim().toLowerCase()) ?? null;
+                              const match = existingMap.get(v.trim().toLowerCase()) ?? null;
+                              const existingId = match?.id ?? null;
+                              const existingImageUrl = match?.image_path
+                                ? supabase.storage.from('box-images').getPublicUrl(match.image_path).data.publicUrl
+                                : null;
                               updateRow(r.key, {
                                 editedPartNo: v,
                                 existingId,
+                                existingImageUrl,
                                 selected: r.selected && !existingId,
                               });
                             }}
