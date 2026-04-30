@@ -17,7 +17,7 @@ export interface BoxReceipt {
   place: string | null;
   box_no: string | null;
   receipt_date: string;
-  status: 'received' | 'sorted' | 'packed' | 'shipped';
+  status: 'received' | 'sorted' | 'packed' | 'shipped' | 'dispatched';
   notes: string | null;
   image_path: string | null;
   invoice_number: string | null;

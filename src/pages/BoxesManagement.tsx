@@ -6,7 +6,9 @@ import { ReceiptsTab } from '@/components/boxes/ReceiptsTab';
 import { BoxesSummaryTab } from '@/components/boxes/BoxesSummaryTab';
 import { BoxesDashboardTab } from '@/components/boxes/BoxesDashboardTab';
 import { ContainersTab } from '@/components/boxes/containers/ContainersTab';
-import { Package, ClipboardList, BarChart3, Ship, FileDown, Loader2, Library } from 'lucide-react';
+import { PackingTab } from '@/components/boxes/PackingTab';
+import { DispatchTab } from '@/components/boxes/dispatches/DispatchTab';
+import { Package, ClipboardList, BarChart3, Ship, FileDown, Loader2, Library, Boxes, Send } from 'lucide-react';
 import { Navigation } from '@/components/Navigation';
 import { DuplicateCheckBanner } from '@/components/boxes/DuplicateCheckBanner';
 import { Button } from '@/components/ui/button';
@@ -20,7 +22,7 @@ export default function BoxesManagement() {
   const { receipts } = useBoxReceipts();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'receipts' | 'boxes' | 'containers' | 'dashboard'>('receipts');
+  const [tab, setTab] = useState<'receipts' | 'packing' | 'boxes' | 'dispatch' | 'containers' | 'dashboard'>('receipts');
   const [downloading, setDownloading] = useState(false);
 
   const handleDownloadPdf = async () => {
@@ -75,16 +77,26 @@ export default function BoxesManagement() {
         </div>
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-4">
-          <TabsList className="grid w-full grid-cols-4 max-w-3xl">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 max-w-4xl">
             <TabsTrigger value="receipts" className="gap-1.5">
               <ClipboardList className="w-4 h-4" />
               <span className="hidden sm:inline">{t('receiptsLog')}</span>
               <span className="sm:hidden">{t('receiptsLogShort')}</span>
             </TabsTrigger>
+            <TabsTrigger value="packing" className="gap-1.5">
+              <Boxes className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('packing')}</span>
+              <span className="sm:hidden">{t('packing')}</span>
+            </TabsTrigger>
             <TabsTrigger value="boxes" className="gap-1.5">
               <Package className="w-4 h-4" />
               <span className="hidden sm:inline">{t('boxesSummary')}</span>
               <span className="sm:hidden">{t('boxesShort')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="dispatch" className="gap-1.5">
+              <Send className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('dispatch')}</span>
+              <span className="sm:hidden">{t('dispatch')}</span>
             </TabsTrigger>
             <TabsTrigger value="containers" className="gap-1.5">
               <Ship className="w-4 h-4" />
@@ -101,8 +113,14 @@ export default function BoxesManagement() {
           <TabsContent value="receipts" className="mt-4">
             <ReceiptsTab />
           </TabsContent>
+          <TabsContent value="packing" className="mt-4">
+            <PackingTab />
+          </TabsContent>
           <TabsContent value="boxes" className="mt-4">
             <BoxesSummaryTab />
+          </TabsContent>
+          <TabsContent value="dispatch" className="mt-4">
+            <DispatchTab />
           </TabsContent>
           <TabsContent value="containers" className="mt-4">
             <ContainersTab />
