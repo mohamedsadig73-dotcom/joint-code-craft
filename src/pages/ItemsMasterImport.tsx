@@ -387,6 +387,15 @@ export default function ItemsMasterImport() {
                                 </span>
                               )}
                             </div>
+                          ) : r.existingImageUrl ? (
+                            <div className="flex items-center gap-1" title={t('importStatusExists')}>
+                              <img
+                                src={r.existingImageUrl}
+                                alt={r.part_no}
+                                className="w-14 h-14 object-cover rounded border border-emerald-300"
+                                loading="lazy"
+                              />
+                            </div>
                           ) : (
                             <div className="w-14 h-14 rounded border border-dashed border-border flex items-center justify-center bg-muted/20">
                               <ImageIcon className="w-5 h-5 text-muted-foreground/50" />
