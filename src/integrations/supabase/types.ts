@@ -88,6 +88,122 @@ export type Database = {
         }
         Relationships: []
       }
+      box_dispatch_items: {
+        Row: {
+          created_at: string
+          dispatch_id: string
+          id: string
+          notes: string | null
+          qty_dispatched: number
+          receipt_id: string
+        }
+        Insert: {
+          created_at?: string
+          dispatch_id: string
+          id?: string
+          notes?: string | null
+          qty_dispatched: number
+          receipt_id: string
+        }
+        Update: {
+          created_at?: string
+          dispatch_id?: string
+          id?: string
+          notes?: string | null
+          qty_dispatched?: number
+          receipt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "box_dispatch_items_dispatch_id_fkey"
+            columns: ["dispatch_id"]
+            isOneToOne: false
+            referencedRelation: "box_dispatches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "box_dispatch_items_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "box_receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      box_dispatches: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          department_id: string | null
+          department_name: string
+          destination: Database["public"]["Enums"]["box_destination"]
+          dispatch_date: string
+          dispatch_no: string
+          id: string
+          notes: string | null
+          serial_no: number
+          shipping_company: string | null
+          signer_name: string
+          signer_title: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          department_id?: string | null
+          department_name: string
+          destination?: Database["public"]["Enums"]["box_destination"]
+          dispatch_date?: string
+          dispatch_no: string
+          id?: string
+          notes?: string | null
+          serial_no?: number
+          shipping_company?: string | null
+          signer_name: string
+          signer_title?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          department_id?: string | null
+          department_name?: string
+          destination?: Database["public"]["Enums"]["box_destination"]
+          dispatch_date?: string
+          dispatch_no?: string
+          id?: string
+          notes?: string | null
+          serial_no?: number
+          shipping_company?: string | null
+          signer_name?: string
+          signer_title?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "box_dispatches_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       box_receipts: {
         Row: {
           box_no: string | null
@@ -2847,6 +2963,10 @@ export type Database = {
       }
     }
     Functions: {
+      apply_dispatch_quantities: {
+        Args: { p_dispatch_id: string }
+        Returns: undefined
+      }
       check_admin_office_notifications: { Args: never; Returns: undefined }
       check_maintenance_notifications: { Args: never; Returns: undefined }
       check_user_has_linked_data: {
@@ -2943,7 +3063,12 @@ export type Database = {
     Enums: {
       app_role: "admin" | "manager" | "user" | "storekeeper" | "viewer"
       box_destination: "morocco" | "uzbekistan" | "unspecified"
-      box_receipt_status: "received" | "sorted" | "packed" | "shipped"
+      box_receipt_status:
+        | "received"
+        | "sorted"
+        | "packed"
+        | "shipped"
+        | "dispatched"
       box_unit:
         | "PCS"
         | "SET"
@@ -3140,7 +3265,13 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "manager", "user", "storekeeper", "viewer"],
       box_destination: ["morocco", "uzbekistan", "unspecified"],
-      box_receipt_status: ["received", "sorted", "packed", "shipped"],
+      box_receipt_status: [
+        "received",
+        "sorted",
+        "packed",
+        "shipped",
+        "dispatched",
+      ],
       box_unit: [
         "PCS",
         "SET",
