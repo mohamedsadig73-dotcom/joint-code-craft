@@ -53,7 +53,31 @@ export function useBoxReceipts() {
       console.error('[useBoxReceipts]', error);
       toast({ title: t('error'), description: error.message, variant: 'destructive' });
     } else {
-      setReceipts((data ?? []) as BoxReceipt[]);
+      const rows = (data ?? []) as BoxReceipt[];
+      const itemIds = Array.from(
+        new Set(rows.filter((r) => !r.image_path && r.item_id).map((r) => r.item_id as string))
+      );
+
+      if (itemIds.length === 0) {
+        setReceipts(rows);
+      } else {
+        const { data: items, error: itemsError } = await supabase
+          .from('items_master')
+          .select('id, image_path')
+          .in('id', itemIds);
+
+        if (itemsError) console.error('[useBoxReceipts:items_master]', itemsError);
+
+        const imageByItemId = new Map(
+          (items ?? []).map((item) => [item.id, item.image_path] as const)
+        );
+        setReceipts(
+          rows.map((r) => ({
+            ...r,
+            image_path: r.image_path ?? (r.item_id ? imageByItemId.get(r.item_id) ?? null : null),
+          }))
+        );
+      }
     }
     setLoading(false);
   }, [toast, t]);
