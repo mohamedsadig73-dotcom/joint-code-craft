@@ -1537,9 +1537,6 @@ const ar = {
     min: 'الأدنى',
     showing200OfX: 'يُعرض 200 من أصل {x}',
     itemDetails: 'تفاصيل الصنف',
-    warehouses: 'المخازن',
-    nameAr: 'الاسم بالعربي',
-    nameEn: 'الاسم بالإنجليزي',
     brand: 'العلامة التجارية',
     modelNo: 'رقم الموديل',
     plateNo: 'رقم اللوحة',
@@ -1560,7 +1557,6 @@ const ar = {
     purchasePrice: 'سعر الشراء',
     preferred: 'مفضل',
     noSuppliersLinked: 'لا يوجد موردون مرتبطون',
-    selectWarehouse: 'اختر المخزن',
     defaultWarehouse: 'افتراضي',
     noWarehousesLinked: 'لا توجد مخازن مرتبطة',
     barcodePrint: 'طباعة الباركود',
@@ -1570,7 +1566,6 @@ const ar = {
     formatMedium: 'متوسط (3 أعمدة)',
     formatLarge: 'كبير (2 أعمدة)',
     copiesPerItem: 'نسخ لكل صنف',
-    selected: 'المحدد',
 };
 
 export default ar;
