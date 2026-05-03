@@ -1566,6 +1566,20 @@ const ar = {
     formatMedium: 'متوسط (3 أعمدة)',
     formatLarge: 'كبير (2 أعمدة)',
     copiesPerItem: 'نسخ لكل صنف',
+    name: 'الاسم',
+    fullName: 'الاسم الكامل',
+    employeeNo: 'الرقم الوظيفي',
+    personalId: 'رقم الهوية',
+    authorizedBy: 'مفوض من',
+    endDate: 'تاريخ النهاية',
+    conversionFactor: 'معامل التحويل',
+    categories: 'التصنيفات',
+    projects: 'المشاريع',
+    receivingStaff: 'موظفو الاستلام',
+    unitsOfMeasure: 'وحدات القياس',
+    dataSetup: 'إعداد البيانات الأساسية',
+    dataSetupSubtitle: 'إدارة التصنيفات والوحدات والموردين والمشاريع وموظفي الاستلام',
+    taxNumber: 'الرقم الضريبي',
 };
 
 export default ar;
