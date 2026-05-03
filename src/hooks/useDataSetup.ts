@@ -72,7 +72,7 @@ function useGenericCrud<T extends { id: string }>(table: TableName, orderBy: str
       toast.error(error.message);
       setRows([]);
     } else {
-      setRows((data || []) as T[]);
+      setRows(((data as any) || []) as T[]);
     }
     setLoading(false);
   }, [table, orderBy]);
