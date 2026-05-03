@@ -1537,7 +1537,6 @@ const ar = {
     min: 'الأدنى',
     showing200OfX: 'يُعرض 200 من أصل {x}',
     itemDetails: 'تفاصيل الصنف',
-    suppliers: 'الموردون',
     warehouses: 'المخازن',
     nameAr: 'الاسم بالعربي',
     nameEn: 'الاسم بالإنجليزي',
@@ -1560,7 +1559,6 @@ const ar = {
     supplierItemCode: 'كود الصنف عند المورد',
     purchasePrice: 'سعر الشراء',
     preferred: 'مفضل',
-    add: 'إضافة',
     noSuppliersLinked: 'لا يوجد موردون مرتبطون',
     selectWarehouse: 'اختر المخزن',
     defaultWarehouse: 'افتراضي',
@@ -1573,7 +1571,6 @@ const ar = {
     formatLarge: 'كبير (2 أعمدة)',
     copiesPerItem: 'نسخ لكل صنف',
     selected: 'المحدد',
-    print: 'طباعة',
 };
 
 export default ar;
