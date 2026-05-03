@@ -1568,6 +1568,20 @@ const en = {
     formatMedium: 'Medium (3 cols)',
     formatLarge: 'Large (2 cols)',
     copiesPerItem: 'Copies per item',
+    name: 'Name',
+    fullName: 'Full Name',
+    employeeNo: 'Employee No.',
+    personalId: 'Personal ID',
+    authorizedBy: 'Authorized By',
+    endDate: 'End Date',
+    conversionFactor: 'Conversion Factor',
+    categories: 'Categories',
+    projects: 'Projects',
+    receivingStaff: 'Receiving Staff',
+    unitsOfMeasure: 'Units of Measure',
+    dataSetup: 'Data Setup',
+    dataSetupSubtitle: 'Manage categories, units, suppliers, projects and receiving staff',
+    taxNumber: 'Tax Number',
 };
 
 export default en;
