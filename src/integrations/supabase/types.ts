@@ -1412,12 +1412,140 @@ export type Database = {
           },
         ]
       }
+      item_suppliers: {
+        Row: {
+          created_at: string
+          id: string
+          is_preferred: boolean
+          item_id: string
+          notes: string | null
+          purchase_price: number
+          supplier_id: string
+          supplier_item_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_preferred?: boolean
+          item_id: string
+          notes?: string | null
+          purchase_price?: number
+          supplier_id: string
+          supplier_item_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_preferred?: boolean
+          item_id?: string
+          notes?: string | null
+          purchase_price?: number
+          supplier_id?: string
+          supplier_item_code?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_suppliers_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_low_stock"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "item_suppliers_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_stock_summary"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "item_suppliers_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_suppliers_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      item_warehouses: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          item_id: string
+          max_qty: number | null
+          min_qty: number | null
+          notes: string | null
+          warehouse_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          item_id: string
+          max_qty?: number | null
+          min_qty?: number | null
+          notes?: string | null
+          warehouse_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          item_id?: string
+          max_qty?: number | null
+          min_qty?: number | null
+          notes?: string | null
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_warehouses_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_low_stock"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "item_warehouses_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_stock_summary"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "item_warehouses_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_warehouses_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       items_master: {
         Row: {
           avg_cost: number | null
           barcode: string | null
           brand: string | null
           category_id: string | null
+          condition: string
           created_at: string
           created_by: string | null
           default_supplier: string | null
@@ -1425,15 +1553,20 @@ export type Database = {
           description: string
           expiry_date: string | null
           group_id: string | null
+          has_expiry: boolean
           id: string
           image_path: string | null
           is_active: boolean
+          item_type: string
           last_cost: number | null
           max_qty: number | null
           min_qty: number | null
           model_no: string | null
+          name_ar: string | null
+          name_en: string | null
           notes: string | null
           part_no: string
+          plate_no: string | null
           reorder_qty: number | null
           supplier_id: string | null
           uom_id: string | null
@@ -1444,6 +1577,7 @@ export type Database = {
           barcode?: string | null
           brand?: string | null
           category_id?: string | null
+          condition?: string
           created_at?: string
           created_by?: string | null
           default_supplier?: string | null
@@ -1451,15 +1585,20 @@ export type Database = {
           description?: string
           expiry_date?: string | null
           group_id?: string | null
+          has_expiry?: boolean
           id?: string
           image_path?: string | null
           is_active?: boolean
+          item_type?: string
           last_cost?: number | null
           max_qty?: number | null
           min_qty?: number | null
           model_no?: string | null
+          name_ar?: string | null
+          name_en?: string | null
           notes?: string | null
           part_no: string
+          plate_no?: string | null
           reorder_qty?: number | null
           supplier_id?: string | null
           uom_id?: string | null
@@ -1470,6 +1609,7 @@ export type Database = {
           barcode?: string | null
           brand?: string | null
           category_id?: string | null
+          condition?: string
           created_at?: string
           created_by?: string | null
           default_supplier?: string | null
@@ -1477,15 +1617,20 @@ export type Database = {
           description?: string
           expiry_date?: string | null
           group_id?: string | null
+          has_expiry?: boolean
           id?: string
           image_path?: string | null
           is_active?: boolean
+          item_type?: string
           last_cost?: number | null
           max_qty?: number | null
           min_qty?: number | null
           model_no?: string | null
+          name_ar?: string | null
+          name_en?: string | null
           notes?: string | null
           part_no?: string
+          plate_no?: string | null
           reorder_qty?: number | null
           supplier_id?: string | null
           uom_id?: string | null
@@ -2481,6 +2626,57 @@ export type Database = {
           request_count?: number
           updated_at?: string
           window_start?: string
+        }
+        Relationships: []
+      }
+      receiving_staff: {
+        Row: {
+          authorized_by: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          employee_no: string | null
+          full_name: string
+          id: string
+          is_active: boolean
+          job_title: string | null
+          notes: string | null
+          personal_id: string | null
+          phone: string | null
+          serial: number
+          updated_at: string
+        }
+        Insert: {
+          authorized_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          employee_no?: string | null
+          full_name: string
+          id?: string
+          is_active?: boolean
+          job_title?: string | null
+          notes?: string | null
+          personal_id?: string | null
+          phone?: string | null
+          serial?: never
+          updated_at?: string
+        }
+        Update: {
+          authorized_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          employee_no?: string | null
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          job_title?: string | null
+          notes?: string | null
+          personal_id?: string | null
+          phone?: string | null
+          serial?: never
+          updated_at?: string
         }
         Relationships: []
       }

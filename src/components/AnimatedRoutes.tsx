@@ -35,6 +35,7 @@ const ItemsMaster = lazy(() => import('@/pages/ItemsMaster'));
 const ItemsMasterImport = lazy(() => import('@/pages/ItemsMasterImport'));
 const ItemDetails = lazy(() => import('@/pages/ItemDetails'));
 const ItemImageHistory = lazy(() => import('@/pages/ItemImageHistory'));
+const ItemBarcodePrint = lazy(() => import('@/pages/ItemBarcodePrint'));
 const PrintDiagnostics = lazy(() => import('@/pages/PrintDiagnostics'));
 const Inventory = lazy(() => import('@/pages/Inventory'));
 const WmsDashboard = lazy(() => import('@/pages/WmsDashboard'));
@@ -362,6 +363,16 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <ItemImageHistory />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/boxes/items/barcodes"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <ItemBarcodePrint />
                 </PageTransition>
               </ProtectedRoute>
             }
