@@ -33,7 +33,8 @@ interface Props<T extends { id: string; is_active?: boolean }> {
 export function SimpleCrudTable<T extends { id: string; is_active?: boolean }>({
   rows, loading, fields, columns, onCreate, onUpdate, onDelete, searchKeys = [], emptyText, hideActiveToggle,
 }: Props<T>) {
-  const { t, isRTL } = useLanguage();
+  const { t, language } = useLanguage();
+  const isRTL = language === 'ar';
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<T | null>(null);
