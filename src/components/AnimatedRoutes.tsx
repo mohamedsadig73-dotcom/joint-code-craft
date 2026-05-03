@@ -40,6 +40,7 @@ const PrintDiagnostics = lazy(() => import('@/pages/PrintDiagnostics'));
 const Inventory = lazy(() => import('@/pages/Inventory'));
 const WmsDashboard = lazy(() => import('@/pages/WmsDashboard'));
 const WmsReports = lazy(() => import('@/pages/WmsReports'));
+const DataSetup = lazy(() => import('@/pages/DataSetup'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -413,6 +414,16 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <WmsReports />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/data-setup"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                <PageTransition>
+                  <DataSetup />
                 </PageTransition>
               </ProtectedRoute>
             }
