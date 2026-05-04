@@ -502,6 +502,7 @@ export function AnimatedRoutes() {
             }
           />
         </Routes>
-    </Suspense>
+      </Suspense>
+    </RouteErrorBoundary>
   );
 }
