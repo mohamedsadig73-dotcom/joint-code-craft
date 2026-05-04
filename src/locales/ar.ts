@@ -1601,6 +1601,12 @@ const ar = {
     aiSuggest: 'اقتراح بالذكاء الاصطناعي',
     aiSuggestNeedsInput: 'أدخل رمز القطعة أو الاسم أو الماركة أولاً',
     aiSuggestApplied: 'تم تطبيق اقتراحات الذكاء الاصطناعي',
+    aiThinking: 'جاري توليد الاقتراحات...',
+    aiNoSuggestions: 'لم يقترح المساعد أي قيم. حاول إدخال مزيد من التفاصيل.',
+    apply: 'تطبيق',
+    discard: 'تجاهل',
+    retry: 'إعادة المحاولة',
+    appSettingsNav: 'إعدادات التطبيق',
 };
 
 export default ar;
