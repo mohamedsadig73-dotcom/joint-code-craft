@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { hapticSelection, hapticLight } from '@/lib/haptics';
 
 interface NavItem {
   path: string;
@@ -52,6 +53,7 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
   const isMoreActive = moreNavItems.some(item => isActive(item.path));
 
   const handleMoreNavigate = (path: string) => {
+    hapticSelection();
     navigate(path);
     setMoreOpen(false);
   };
@@ -63,7 +65,7 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
     <>
       <nav 
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-50 md:hidden print:hidden",
+          "fixed bottom-0 left-0 right-0 z-50 md:hidden print:hidden no-select-mobile tap-highlight-none",
           "transition-transform duration-300",
           isHomePage && "translate-y-full"
         )}
@@ -73,7 +75,7 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-background/80 backdrop-blur-xl border-t border-border/30" />
         
         {/* Safe area padding for iOS */}
-        <div className="relative flex items-center justify-around h-18 px-2 pb-safe">
+        <div className="relative flex items-center justify-around px-2 pb-safe ps-safe pe-safe" style={{ height: '4.25rem' }}>
           {primaryNavItems.map((item, index) => {
             const active = isActive(item.path);
             const Icon = item.icon;
@@ -81,10 +83,10 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
             return (
               <button
                 key={item.path}
-                onClick={() => navigate(item.path)}
+                onClick={() => { hapticSelection(); navigate(item.path); }}
                 className={cn(
                   'relative flex flex-col items-center justify-center flex-1 h-full py-3',
-                  'min-w-[48px] min-h-[48px]',
+                  'touch-target',
                   'transition-all duration-200',
                   'active:scale-95',
                   active ? 'text-primary' : 'text-muted-foreground'
@@ -124,10 +126,10 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
 
           {/* More button */}
           <button
-            onClick={() => setMoreOpen(true)}
+            onClick={() => { hapticLight(); setMoreOpen(true); }}
             className={cn(
               'relative flex flex-col items-center justify-center flex-1 h-full py-3',
-              'min-w-[48px] min-h-[48px]',
+              'touch-target',
               'transition-all duration-200',
               'active:scale-95',
               isMoreActive ? 'text-primary' : 'text-muted-foreground'
