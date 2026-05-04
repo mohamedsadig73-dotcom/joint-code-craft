@@ -1582,6 +1582,8 @@ const en = {
     dataSetup: 'Data Setup',
     dataSetupSubtitle: 'Manage categories, units, suppliers, projects and receiving staff',
     taxNumber: 'Tax Number',
+    category: 'Category',
+    selectCategory: 'Select category',
 };
 
 export default en;

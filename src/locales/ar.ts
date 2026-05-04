@@ -1580,6 +1580,8 @@ const ar = {
     dataSetup: 'إعداد البيانات الأساسية',
     dataSetupSubtitle: 'إدارة التصنيفات والوحدات والموردين والمشاريع وموظفي الاستلام',
     taxNumber: 'الرقم الضريبي',
+    category: 'التصنيف',
+    selectCategory: 'اختر التصنيف',
 };
 
 export default ar;
