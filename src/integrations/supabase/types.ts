@@ -2808,6 +2808,174 @@ export type Database = {
           },
         ]
       }
+      stock_count_lines: {
+        Row: {
+          count_id: string
+          counted_at: string | null
+          counted_by: string | null
+          counted_qty: number
+          created_at: string
+          expected_qty: number
+          id: string
+          item_id: string
+          line_no: number
+          location_id: string | null
+          remarks: string | null
+          unit_cost: number
+          variance_qty: number | null
+        }
+        Insert: {
+          count_id: string
+          counted_at?: string | null
+          counted_by?: string | null
+          counted_qty?: number
+          created_at?: string
+          expected_qty?: number
+          id?: string
+          item_id: string
+          line_no?: number
+          location_id?: string | null
+          remarks?: string | null
+          unit_cost?: number
+          variance_qty?: number | null
+        }
+        Update: {
+          count_id?: string
+          counted_at?: string | null
+          counted_by?: string | null
+          counted_qty?: number
+          created_at?: string
+          expected_qty?: number
+          id?: string
+          item_id?: string
+          line_no?: number
+          location_id?: string | null
+          remarks?: string | null
+          unit_cost?: number
+          variance_qty?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_count_lines_count_id_fkey"
+            columns: ["count_id"]
+            isOneToOne: false
+            referencedRelation: "stock_counts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_counted_by_fkey"
+            columns: ["counted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_low_stock"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_stock_summary"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "v_low_stock_alerts"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "inv_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_counts: {
+        Row: {
+          count_date: string
+          count_no: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          posted_at: string | null
+          posted_by: string | null
+          status: Database["public"]["Enums"]["stock_count_status"]
+          total_variance_qty: number | null
+          total_variance_value: number | null
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          count_date?: string
+          count_no?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          status?: Database["public"]["Enums"]["stock_count_status"]
+          total_variance_qty?: number | null
+          total_variance_value?: number | null
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          count_date?: string
+          count_no?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          status?: Database["public"]["Enums"]["stock_count_status"]
+          total_variance_qty?: number | null
+          total_variance_value?: number | null
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_counts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_counts_posted_by_fkey"
+            columns: ["posted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_counts_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null
