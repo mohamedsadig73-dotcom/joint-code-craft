@@ -554,7 +554,7 @@ const en = {
     maintenanceItems: 'Maintenance Items',
     assets: 'Assets',
     vendors: 'Vendors',
-    totalItems: 'Total Items',
+    namingSystemTotal: 'Total Items',
     pendingTasks: 'Pending Tasks',
     overdueTasks: 'Overdue Tasks',
     completedThisMonth: 'Completed This Month',
@@ -1629,6 +1629,23 @@ const en = {
     managerName: 'Manager Name',
     filterByCategory: 'Filter by Category',
     allCategories: 'All Categories',
+    // Item Naming System (M1)
+    namingSystemTitle: 'Item Naming System',
+    namingSystemDesc: 'Standardized naming, codes, units & categories',
+    namingFormat: 'Naming Format',
+    standardNamingFormat: 'Standard Naming Format',
+    uomDictionary: 'Units of Measure',
+    categoryTree: 'Category Tree',
+    validationRules: 'Validation Rules',
+    totalItems: 'Total Items',
+    withInternalRef: 'With Internal Ref',
+    categorized: 'Categorized',
+    avgQualityScore: 'Avg Quality Score',
+    exampleTv: 'Example: Samsung TV',
+    exampleDecor: 'Example: Decor item with variant',
+    namingTip1: 'Use clean Arabic name without redundant attributes.',
+    namingTip2: 'Brand is optional — only when distinctive (Samsung, LG).',
+    namingTip3: 'Specifications go in the SPEC field (e.g. 65 inch, 6 persons).',
 };
 
 export default en;

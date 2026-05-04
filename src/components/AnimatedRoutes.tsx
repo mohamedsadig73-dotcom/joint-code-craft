@@ -64,6 +64,7 @@ const BoxCardPrint = lazyRetry(() => import('@/pages/BoxCardPrint'));
 const ContainerDetails = lazyRetry(() => import('@/pages/ContainerDetails'));
 const BoxesDataAdmin = lazyRetry(() => import('@/pages/BoxesDataAdmin'));
 const ItemsHub = lazyRetry(() => import('@/pages/ItemsHub'));
+const ItemNamingSystem = lazyRetry(() => import('@/pages/ItemNamingSystem'));
 const ItemDetails = lazyRetry(() => import('@/pages/ItemDetails'));
 const ItemBarcodePrint = lazyRetry(() => import('@/pages/ItemBarcodePrint'));
 const PrintDiagnostics = lazyRetry(() => import('@/pages/PrintDiagnostics'));
@@ -374,6 +375,16 @@ export function AnimatedRoutes() {
           />
           {/* P3-b: import merged into ItemsHub tab */}
           <Route path="/boxes/items/import" element={<Navigate to="/boxes/items?tab=import" replace />} />
+          <Route
+            path="/admin/naming-system"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <ItemNamingSystem />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/boxes/items/:id"
             element={
