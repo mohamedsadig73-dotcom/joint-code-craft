@@ -941,10 +941,10 @@
   /* Button groups - reverse order in RTL */
   [dir="rtl"] .button-group,
   .rtl .button-group,
-  [dir="rtl"] .flex.gap-2:has(button):not(.ltr-flex),
-  .rtl .flex.gap-2:has(button):not(.ltr-flex),
-  [dir="rtl"] .flex.gap-3:has(button):not(.ltr-flex),
-  .rtl .flex.gap-3:has(button):not(.ltr-flex) {
+  [dir="rtl"] .flex.gap-2:has(> button):not(.ltr-flex):not(.flex-col):not([data-sidebar]):not([data-sidebar] *),
+  .rtl .flex.gap-2:has(> button):not(.ltr-flex):not(.flex-col):not([data-sidebar]):not([data-sidebar] *),
+  [dir="rtl"] .flex.gap-3:has(> button):not(.ltr-flex):not(.flex-col):not([data-sidebar]):not([data-sidebar] *),
+  .rtl .flex.gap-3:has(> button):not(.ltr-flex):not(.flex-col):not([data-sidebar]):not([data-sidebar] *) {
     flex-direction: row-reverse;
   }
   
