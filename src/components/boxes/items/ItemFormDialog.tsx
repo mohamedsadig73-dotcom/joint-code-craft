@@ -301,9 +301,13 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
                     {t('aiSuggest') || 'اقتراح بالذكاء الاصطناعي'}
                   </div>
                   {aiBusy && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      {t('aiThinking') || 'جاري توليد الاقتراحات...'}
+                    <div
+                      role="status"
+                      aria-live="polite"
+                      className="flex items-center gap-2 text-primary font-medium"
+                    >
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{t('aiThinking') || 'جاري توليد الاقتراحات...'}</span>
                     </div>
                   )}
                   {aiError && !aiBusy && (
@@ -337,11 +341,11 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
                         <div><span className="opacity-70 me-1">{t('category')}:</span>{aiSuggestion.category_label}</div>
                       )}
                       <div className="flex gap-2 pt-1">
-                        <Button type="button" size="sm" variant="default" onClick={applyAiSuggestion} className="h-7 px-2">
+                        <Button type="button" size="sm" variant="default" onClick={applyAiSuggestion} disabled={aiBusy} className="h-7 px-2">
                           <Check className="w-3.5 h-3.5 me-1" />
                           {t('apply') || 'تطبيق'}
                         </Button>
-                        <Button type="button" size="sm" variant="ghost" onClick={() => setAiSuggestion(null)} className="h-7 px-2">
+                        <Button type="button" size="sm" variant="ghost" onClick={() => setAiSuggestion(null)} disabled={aiBusy} className="h-7 px-2">
                           <X className="w-3.5 h-3.5 me-1" />
                           {t('discard') || 'تجاهل'}
                         </Button>
