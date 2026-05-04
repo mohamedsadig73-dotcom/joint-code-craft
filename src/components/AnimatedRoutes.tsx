@@ -4,26 +4,35 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PageTransition } from '@/components/PageTransition';
 import { Loader2 } from 'lucide-react';
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
+import { isChunkLoadError, trackChunkError } from '@/utils/chunkErrorTracking';
 
-// Retry dynamic imports once and reload on stale chunk failure (after deploys)
+/**
+ * Retry dynamic imports up to N times with exponential backoff.
+ * On final failure, the error propagates to <RouteErrorBoundary> which
+ * presents the user with retry / reload / home options instead of a blank screen.
+ */
 function lazyRetry<T extends { default: React.ComponentType<any> }>(
-  factory: () => Promise<T>
+  factory: () => Promise<T>,
+  retries = 2,
+  baseDelay = 400
 ) {
   return lazy(async () => {
-    try {
-      return await factory();
-    } catch (err: any) {
-      const msg = String(err?.message || '');
-      if (/Failed to fetch dynamically imported module|Importing a module script failed/i.test(msg)) {
-        const key = '__chunk_reload_once__';
-        if (!sessionStorage.getItem(key)) {
-          sessionStorage.setItem(key, '1');
-          window.location.reload();
-          return new Promise<T>(() => {});
+    let lastErr: unknown;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        return await factory();
+      } catch (err) {
+        lastErr = err;
+        if (!isChunkLoadError(err)) throw err;
+        if (attempt < retries) {
+          await new Promise((r) => setTimeout(r, baseDelay * Math.pow(2, attempt)));
         }
       }
-      throw err;
     }
+    // Track and rethrow → ErrorBoundary handles UI
+    trackChunkError(lastErr, true);
+    throw lastErr;
   });
 }
 
@@ -88,7 +97,8 @@ export function AnimatedRoutes() {
   const shouldShowAuthenticatedContent = isAuthenticated;
 
   return (
-    <Suspense fallback={<PageLoader />}>
+    <RouteErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route
             path="/login"
@@ -492,6 +502,7 @@ export function AnimatedRoutes() {
             }
           />
         </Routes>
-    </Suspense>
+      </Suspense>
+    </RouteErrorBoundary>
   );
 }
