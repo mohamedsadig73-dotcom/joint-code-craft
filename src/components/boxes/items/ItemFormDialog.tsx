@@ -270,7 +270,18 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
               </div>
               <div className="space-y-1.5">
                 <Label>{t('barcode')}</Label>
-                <Input value={values.barcode ?? ''} onChange={(e) => setField('barcode', e.target.value)} dir="ltr" />
+                <div className="flex gap-2">
+                  <Input value={values.barcode ?? ''} onChange={(e) => setField('barcode', e.target.value)} dir="ltr" />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setScanOpen(true)}
+                    title={t('scanBarcode') || 'مسح الباركود بالكاميرا'}
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label>{t('defaultUnit')} *</Label>
@@ -283,19 +294,30 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>{t('category')}</Label>
+                <Label>
+                  {t('category')} {categoryRequired && <span className="text-destructive">*</span>}
+                </Label>
                 <CategoryTreeSelect
                   categories={categories}
                   value={values.category_id ?? null}
                   onChange={(id) => setField('category_id', id)}
                 />
+                {errors.category_id && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />{errors.category_id}
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label>{t('defaultSupplier')}</Label>
                 <Combobox
                   options={supplierOptions}
-                  value={values.default_supplier || null}
-                  onChange={(v) => setField('default_supplier', v ?? '')}
+                  value={values.supplier_id || null}
+                  onChange={(id) => {
+                    setField('supplier_id', id);
+                    const sup = suppliers.find((s) => s.id === id);
+                    setField('default_supplier', sup ? (sup.name_ar || sup.name_en) : '');
+                  }}
                   placeholder={t('selectSupplier')}
                 />
               </div>
