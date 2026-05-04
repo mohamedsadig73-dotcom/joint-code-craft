@@ -1607,6 +1607,7 @@ const en = {
     discard: 'Discard',
     retry: 'Retry',
     appSettingsNav: 'App Settings',
+    rlsDiagnosticsNav: 'RLS Diagnostics',
 };
 
 export default en;
