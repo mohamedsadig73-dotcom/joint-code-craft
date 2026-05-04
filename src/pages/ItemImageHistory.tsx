@@ -6,9 +6,13 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, History } from 'lucide-react';
 import { ItemImageHistoryViewer } from '@/components/boxes/items/ItemImageHistoryViewer';
 
-export default function ItemImageHistory() {
+export default function ItemImageHistory({ embedded = false }: { embedded?: boolean } = {}) {
   const { t } = useLanguage();
   const navigate = useNavigate();
+
+  if (embedded) {
+    return <ItemImageHistoryViewer showItem limit={500} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
