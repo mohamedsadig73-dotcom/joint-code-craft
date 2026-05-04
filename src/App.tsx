@@ -47,7 +47,6 @@ function AppRoutes() {
     '/forgot-password',
     '/reset-password',
     '/install',
-    '/',
   ];
   const noShellPrefixes = [
     '/boxes/card/',          // BoxCardPrint
