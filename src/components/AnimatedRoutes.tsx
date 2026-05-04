@@ -477,7 +477,7 @@ export function AnimatedRoutes() {
           {/* WMS legacy paths */}
           <Route path="/wms-dashboard"         element={<Navigate to="/wms" replace />} />
           <Route path="/wms/dashboard"         element={<Navigate to="/wms" replace />} />
-          <Route path="/wms-reports"           element={<Navigate to="/wms/reports" replace />} />
+          <Route path="/wms-reports"           element={<Navigate to="/reports-analytics?type=warehouse" replace />} />
           {/* Items / Boxes legacy aliases */}
           <Route path="/items"                 element={<Navigate to="/boxes/items" replace />} />
           <Route path="/items-master"          element={<Navigate to="/boxes/items" replace />} />
