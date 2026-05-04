@@ -18,6 +18,8 @@ interface SuggestRequest {
 }
 
 interface SuggestResponse {
+  name_en: string;
+  name_ar: string;
   description_en: string;
   description_ar: string;
   category_code: string | null;
@@ -62,13 +64,16 @@ Deno.serve(async (req: Request) => {
 
     const sys = `You are an inventory data assistant for an Arabic/English warehouse system.
 Given partial item info, produce:
-- description_en: a concise (max 140 chars) professional English description.
+- name_en: SHORT canonical item name in English (2-5 words MAX, e.g. "Fuel Filter", "Brake Pad", "Oil Filter"). NO brand, NO marketing language, NO part number, NO punctuation.
+- name_ar: SHORT canonical item name in Arabic (2-5 words MAX, e.g. "فلتر وقود", "تيل فرامل"). NO brand, NO marketing language.
+- description_en: a concise (max 140 chars) professional English description (can include brand, function, key specs).
 - description_ar: a concise (max 140 chars) Arabic description.
 - category_code: the best matching category code from the provided list, or null if none fits.
 - reasoning: short justification (max 80 chars).
 Available categories:
 ${catList || '(none)'}
-Return ONLY valid JSON with keys: description_en, description_ar, category_code, reasoning.`;
+Return ONLY valid JSON with keys: name_en, name_ar, description_en, description_ar, category_code, reasoning.
+CRITICAL: name_en and name_ar must be SHORT product type labels — never sentences, never descriptions.`;
 
     const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -102,6 +107,8 @@ Return ONLY valid JSON with keys: description_en, description_ar, category_code,
       parsed = JSON.parse(content);
     } catch {
       parsed = {
+        name_en: '',
+        name_ar: '',
         description_en: '',
         description_ar: '',
         category_code: null,
