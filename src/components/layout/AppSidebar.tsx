@@ -204,12 +204,10 @@ export function AppSidebar() {
             <Collapsible key={mod.key} open={isOpen} onOpenChange={() => toggle(mod.key)}>
               <SidebarGroup>
                 <SidebarGroupLabel asChild>
-                  <CollapsibleTrigger className="flex w-full items-center justify-between hover:text-foreground transition-colors">
-                    <span className="flex items-center gap-2">
-                      <Icon className="h-3.5 w-3.5" />
-                      {mod.label}
-                    </span>
-                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                  <CollapsibleTrigger className="group/label flex w-full items-center gap-2 hover:text-foreground transition-colors">
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    <span className="flex-1 truncate text-start">{mod.label}</span>
+                    <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </CollapsibleTrigger>
                 </SidebarGroupLabel>
                 <CollapsibleContent>
@@ -218,7 +216,7 @@ export function AppSidebar() {
                       {mod.items.map((leaf) => (
                         <SidebarMenuSubItem key={leaf.path}>
                           <SidebarMenuSubButton asChild isActive={isLeafActive(leaf.path)}>
-                            <NavLink to={leaf.path}>
+                            <NavLink to={leaf.path} className="block w-full text-start">
                               <span className="truncate">{leaf.label}</span>
                             </NavLink>
                           </SidebarMenuSubButton>
