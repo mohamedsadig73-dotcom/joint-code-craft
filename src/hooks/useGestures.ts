@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { hapticMedium } from '@/lib/haptics';
 
 interface SwipeState {
   startX: number;
@@ -34,9 +35,11 @@ export function useGestures(options: UseGesturesOptions = {}) {
   });
   
   const elementRef = useRef<HTMLDivElement>(null);
+  const passedThreshold = useRef(false);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (!enabled) return;
+    passedThreshold.current = false;
     
     setSwipeState({
       startX: e.touches[0].clientX,
@@ -51,13 +54,18 @@ export function useGestures(options: UseGesturesOptions = {}) {
     
     const currentX = e.touches[0].clientX;
     const diff = currentX - swipeState.startX;
+
+    if (!passedThreshold.current && Math.abs(diff) >= threshold) {
+      passedThreshold.current = true;
+      hapticMedium();
+    }
     
     setSwipeState(prev => ({
       ...prev,
       currentX,
       direction: diff > 0 ? 'right' : 'left',
     }));
-  }, [enabled, swipeState.swiping, swipeState.startX]);
+  }, [enabled, swipeState.swiping, swipeState.startX, threshold]);
 
   const handleTouchEnd = useCallback(() => {
     if (!enabled || !swipeState.swiping) return;
