@@ -134,61 +134,60 @@ export default function ItemsMaster({ embedded = false }: { embedded?: boolean }
         />
       )}
 
-        <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-          <div className="flex flex-col sm:flex-row gap-2 flex-1 max-w-2xl">
-            <div className="relative flex-1">
-              <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('searchPartNoOrDesc')}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="ps-9"
-              />
-            </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full sm:w-56">
-                <SelectValue placeholder={t('filterByCategory')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('allCategories')}</SelectItem>
-                {categories.filter((c: any) => c.is_active !== false).map((c: any) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.code} — {isAr ? c.name_ar : (c.name_en || c.name_ar)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => navigate('/boxes/items-image-history')}
-              className="gap-1.5"
-            >
-              <History className="w-4 h-4" />
-              {t('imageHistory')}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/boxes/items/barcodes')}
-              className="gap-1.5"
-            >
-              <Barcode className="w-4 h-4" />
-              {t('barcodePrint')}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/boxes/items/import')}
-              className="gap-1.5"
-            >
-              <Sparkles className="w-4 h-4" />
-              {t('importFromDocx')}
-            </Button>
-            <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-1.5">
-              <Plus className="w-4 h-4" />
-              {t('addItem')}
-            </Button>
-          </div>
+        <div className="mt-4">
+          <UnifiedFilterBar
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder={t('searchPartNoOrDesc')}
+            filters={
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-full sm:w-56 h-9">
+                  <SelectValue placeholder={t('filterByCategory')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('allCategories')}</SelectItem>
+                  {categories.filter((c: any) => c.is_active !== false).map((c: any) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.code} — {isAr ? c.name_ar : (c.name_en || c.name_ar)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            }
+            activeChips={
+              categoryFilter !== 'all'
+                ? [{
+                    key: 'cat',
+                    label: (() => {
+                      const c: any = categories.find((x: any) => x.id === categoryFilter);
+                      return c ? `${c.code} — ${isAr ? c.name_ar : (c.name_en || c.name_ar)}` : t('filterByCategory');
+                    })(),
+                    onRemove: () => setCategoryFilter('all'),
+                  }]
+                : []
+            }
+            onReset={() => { setSearch(''); setCategoryFilter('all'); }}
+            actions={
+              <>
+                <Button variant="outline" size="sm" onClick={() => navigate('/boxes/items-image-history')} className="gap-1.5">
+                  <History className="w-4 h-4" />
+                  <span className="hidden lg:inline">{t('imageHistory')}</span>
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate('/boxes/items/barcodes')} className="gap-1.5">
+                  <Barcode className="w-4 h-4" />
+                  <span className="hidden lg:inline">{t('barcodePrint')}</span>
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate('/boxes/items/import')} className="gap-1.5">
+                  <Sparkles className="w-4 h-4" />
+                  <span className="hidden lg:inline">{t('importFromDocx')}</span>
+                </Button>
+                <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-1.5">
+                  <Plus className="w-4 h-4" />
+                  {t('addItem')}
+                </Button>
+              </>
+            }
+          />
         </div>
 
         {selected.size > 0 && (
