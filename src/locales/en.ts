@@ -1596,6 +1596,17 @@ const en = {
     selectCategory: 'Select category',
     stockCountsNav: 'Stock Counts',
     itemApprovalsNav: 'Item Approvals',
+    supplierPriceImport: 'Supplier Price Import',
+    scanBarcode: 'Scan Barcode',
+    startingCamera: 'Starting camera...',
+    aiSuggest: 'AI Suggest',
+    aiSuggestNeedsInput: 'Enter part number, name or brand first',
+    aiSuggestApplied: 'AI suggestions applied',
+    aiThinking: 'Generating suggestions...',
+    aiNoSuggestions: 'No suggestions returned. Try adding more details.',
+    discard: 'Discard',
+    retry: 'Retry',
+    appSettingsNav: 'App Settings',
 };
 
 export default en;
