@@ -1654,21 +1654,15 @@ const ar = {
     materialIssueVoucher: 'سند صرف مواد',
     materialIssueVoucherDesc: 'إصدار سند صرف مواد للجهات أو الموظفين',
     referenceNo: 'رقم المرجع',
-    selectWarehouse: 'اختر المخزن',
     selectWarehouseRequired: 'يرجى اختيار المخزن',
-    selectItem: 'اختر الصنف',
     selectEmployee: 'اختر الموظف',
     issuingStaff: 'الموظف المُسلِّم',
     supplierOrSource: 'المورد / مصدر التوريد',
     beneficiaryParty: 'الجهة المستفيدة',
-    expiryDate: 'تاريخ الصلاحية',
     addRow: 'إضافة سطر',
     saveAndPost: 'حفظ وترحيل',
     voucherSaved: 'تم حفظ السند بنجاح',
     totalLines: 'عدد الأسطر',
-    totalQty: 'إجمالي الكمية',
-    item: 'الصنف',
-    jobTitle: 'المسمى الوظيفي',
 };
 
 export default ar;
