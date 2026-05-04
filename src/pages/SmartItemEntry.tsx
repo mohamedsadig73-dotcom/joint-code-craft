@@ -295,6 +295,12 @@ export default function SmartItemEntry() {
             <Card>
               <CardHeader><CardTitle>{isAr ? 'بيانات الصنف' : 'Item Details'}</CardTitle></CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2">
+                <div className="md:col-span-2 flex justify-end">
+                  <Button type="button" variant="outline" size="sm" onClick={handleAiSuggest} disabled={aiBusy}>
+                    {aiBusy ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Wand2 className="w-4 h-4 me-2" />}
+                    {isAr ? 'اقتراح بالذكاء الاصطناعي' : 'AI Suggest'}
+                  </Button>
+                </div>
                 <div className="space-y-1">
                   <Label>{isAr ? 'رقم القطعة *' : 'Part No *'}</Label>
                   <Input value={partNo} onChange={(e) => setPartNo(e.target.value)} />
@@ -370,6 +376,17 @@ export default function SmartItemEntry() {
                 </div>
               </CardContent>
             </Card>
+            {qrPreview && (
+              <Card>
+                <CardHeader><CardTitle>{isAr ? 'رمز QR (معاينة)' : 'QR Code (preview)'}</CardTitle></CardHeader>
+                <CardContent className="flex flex-col items-center gap-2">
+                  <div className="bg-white p-2 rounded">
+                    <QRCodeSVG value={qrPreview} size={128} />
+                  </div>
+                  <code className="text-[10px] text-muted-foreground break-all text-center">{qrPreview}</code>
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader><CardTitle>{isAr ? 'جودة البيانات' : 'Data Quality'}</CardTitle></CardHeader>
               <CardContent className="space-y-2">
@@ -397,6 +414,11 @@ export default function SmartItemEntry() {
                 {blocking
                   ? (isAr ? 'يجب التعامل مع المكرر أولاً' : 'Resolve the duplicate warning first')
                   : (isAr ? 'أكمل الحقول المطلوبة (*)' : 'Complete the required fields (*)')}
+              </p>
+            )}
+            {canSubmit && !isPrivileged && (
+              <p className="text-xs text-amber-600">
+                {isAr ? 'سيتم إرسال الصنف للاعتماد قبل التفعيل' : 'Item will be sent for approval before activation'}
               </p>
             )}
           </div>
