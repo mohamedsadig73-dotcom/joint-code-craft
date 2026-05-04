@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useBoxReceipts } from '@/hooks/useBoxReceipts';
 import { useBoxDispatches, type DispatchInput } from '@/hooks/useBoxDispatches';
+import { useProjects, useReceivingStaff } from '@/hooks/useDataSetup';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -37,6 +38,8 @@ export function CreateDispatchDialog({ open, onOpenChange, onCreated }: Props) {
   const { toast } = useToast();
   const { receipts } = useBoxReceipts();
   const { createDispatch } = useBoxDispatches();
+  const { rows: projects } = useProjects();
+  const { rows: staff } = useReceivingStaff();
 
   const [departments, setDepartments] = useState<Dept[]>([]);
   const [showAddDept, setShowAddDept] = useState(false);
@@ -45,6 +48,8 @@ export function CreateDispatchDialog({ open, onOpenChange, onCreated }: Props) {
   const [savingDept, setSavingDept] = useState(false);
 
   const [departmentId, setDepartmentId] = useState<string>('');
+  const [projectId, setProjectId] = useState<string>('');
+  const [receivingStaffId, setReceivingStaffId] = useState<string>('');
   const [signerName, setSignerName] = useState('');
   const [signerTitle, setSignerTitle] = useState('');
   const [shippingCompany, setShippingCompany] = useState('');
@@ -67,6 +72,8 @@ export function CreateDispatchDialog({ open, onOpenChange, onCreated }: Props) {
       setNotes('');
       setDestination('unspecified');
       setDepartmentId('');
+      setProjectId('');
+      setReceivingStaffId('');
       setShowAddDept(false);
       setNewDeptAr('');
       setNewDeptEn('');
@@ -175,6 +182,8 @@ export function CreateDispatchDialog({ open, onOpenChange, onCreated }: Props) {
       shipping_company: shippingCompany.trim() || null,
       destination,
       notes: notes.trim() || null,
+      project_id: projectId || null,
+      receiving_staff_id: receivingStaffId || null,
       items,
     };
     setSubmitting(true);
