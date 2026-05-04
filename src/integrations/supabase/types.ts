@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       archive_files: {
         Row: {
           archive_number: string
@@ -2975,6 +2999,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      supplier_price_imports: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          errors: Json
+          file_name: string | null
+          id: string
+          rows_inserted: number
+          rows_skipped: number
+          rows_total: number
+          rows_updated: number
+          supplier_id: string | null
+          supplier_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          errors?: Json
+          file_name?: string | null
+          id?: string
+          rows_inserted?: number
+          rows_skipped?: number
+          rows_total?: number
+          rows_updated?: number
+          supplier_id?: string | null
+          supplier_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          errors?: Json
+          file_name?: string | null
+          id?: string
+          rows_inserted?: number
+          rows_skipped?: number
+          rows_total?: number
+          rows_updated?: number
+          supplier_id?: string | null
+          supplier_name?: string | null
+        }
+        Relationships: []
       }
       suppliers: {
         Row: {
