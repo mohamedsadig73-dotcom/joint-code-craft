@@ -28,6 +28,7 @@ export interface ItemMaster {
   condition?: string | null;
   item_type?: string | null;
   barcode?: string | null;
+  supplier_id?: string | null;
 }
 
 export type ItemMasterInput = Omit<ItemMaster, 'id' | 'created_at' | 'updated_at' | 'created_by'>;
