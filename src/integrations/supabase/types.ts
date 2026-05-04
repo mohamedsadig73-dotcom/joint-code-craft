@@ -169,6 +169,8 @@ export type Database = {
           dispatch_no: string
           id: string
           notes: string | null
+          project_id: string | null
+          receiving_staff_id: string | null
           serial_no: number
           shipping_company: string | null
           signer_name: string
@@ -190,6 +192,8 @@ export type Database = {
           dispatch_no: string
           id?: string
           notes?: string | null
+          project_id?: string | null
+          receiving_staff_id?: string | null
           serial_no?: number
           shipping_company?: string | null
           signer_name: string
@@ -211,6 +215,8 @@ export type Database = {
           dispatch_no?: string
           id?: string
           notes?: string | null
+          project_id?: string | null
+          receiving_staff_id?: string | null
           serial_no?: number
           shipping_company?: string | null
           signer_name?: string
@@ -224,6 +230,20 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "box_dispatches_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "box_dispatches_receiving_staff_id_fkey"
+            columns: ["receiving_staff_id"]
+            isOneToOne: false
+            referencedRelation: "receiving_staff"
             referencedColumns: ["id"]
           },
         ]
@@ -355,6 +375,51 @@ export type Database = {
             referencedColumns: ["item_id"]
           },
         ]
+      }
+      branches: {
+        Row: {
+          address: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          manager_name: string | null
+          name_ar: string
+          name_en: string | null
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          manager_name?: string | null
+          name_ar: string
+          name_en?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          manager_name?: string | null
+          name_ar?: string
+          name_en?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       compliance_logs: {
         Row: {
@@ -1621,6 +1686,7 @@ export type Database = {
           barcode: string | null
           brand: string | null
           category_id: string | null
+          classification_id: string | null
           condition: string
           created_at: string
           created_by: string | null
@@ -1633,6 +1699,7 @@ export type Database = {
           id: string
           image_path: string | null
           is_active: boolean
+          is_dormant: boolean
           item_type: string
           last_cost: number | null
           max_qty: number | null
@@ -1657,6 +1724,7 @@ export type Database = {
           barcode?: string | null
           brand?: string | null
           category_id?: string | null
+          classification_id?: string | null
           condition?: string
           created_at?: string
           created_by?: string | null
@@ -1669,6 +1737,7 @@ export type Database = {
           id?: string
           image_path?: string | null
           is_active?: boolean
+          is_dormant?: boolean
           item_type?: string
           last_cost?: number | null
           max_qty?: number | null
@@ -1693,6 +1762,7 @@ export type Database = {
           barcode?: string | null
           brand?: string | null
           category_id?: string | null
+          classification_id?: string | null
           condition?: string
           created_at?: string
           created_by?: string | null
@@ -1705,6 +1775,7 @@ export type Database = {
           id?: string
           image_path?: string | null
           is_active?: boolean
+          is_dormant?: boolean
           item_type?: string
           last_cost?: number | null
           max_qty?: number | null
@@ -1732,6 +1803,13 @@ export type Database = {
           {
             foreignKeyName: "items_master_category_id_fkey"
             columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "item_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_master_classification_id_fkey"
+            columns: ["classification_id"]
             isOneToOne: false
             referencedRelation: "item_categories"
             referencedColumns: ["id"]
@@ -3134,6 +3212,57 @@ export type Database = {
           {
             foreignKeyName: "units_of_measure_base_unit_id_fkey"
             columns: ["base_unit_id"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      uom_conversions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          factor: number
+          from_uom_id: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          to_uom_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          factor: number
+          from_uom_id: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          to_uom_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          factor?: number
+          from_uom_id?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          to_uom_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uom_conversions_from_uom_id_fkey"
+            columns: ["from_uom_id"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "uom_conversions_to_uom_id_fkey"
+            columns: ["to_uom_id"]
             isOneToOne: false
             referencedRelation: "units_of_measure"
             referencedColumns: ["id"]
