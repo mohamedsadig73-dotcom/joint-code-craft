@@ -41,6 +41,7 @@ const Login = lazyRetry(() => import('@/pages/Login'));
 const ForgotPassword = lazyRetry(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazyRetry(() => import('@/pages/ResetPassword'));
 const Home = lazyRetry(() => import('@/pages/Home'));
+const SmartDashboard = lazyRetry(() => import('@/pages/SmartDashboard'));
 const Dashboard = lazyRetry(() => import('@/pages/Dashboard'));
 const AdminDashboard = lazyRetry(() => import('@/pages/AdminDashboard'));
 const ReportsAnalytics = lazyRetry(() => import('@/pages/ReportsAnalytics'));
@@ -140,7 +141,7 @@ export function AnimatedRoutes() {
               </PageTransition>
             }
           />
-          {/* Root route - show Home (App Launcher) if authenticated */}
+          {/* Root route - show role-aware Smart Dashboard (P3) */}
           <Route
             path="/"
             element={
@@ -149,7 +150,7 @@ export function AnimatedRoutes() {
               ) : shouldShowAuthenticatedContent ? (
                 <ProtectedRoute>
                   <PageTransition>
-                    <Home />
+                    <SmartDashboard />
                   </PageTransition>
                 </ProtectedRoute>
               ) : (
