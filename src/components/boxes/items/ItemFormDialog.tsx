@@ -281,6 +281,49 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
                   </ul>
                 </div>
               )}
+              {(aiBusy || aiError || aiSuggestion) && (
+                <div className="md:col-span-2 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs space-y-2">
+                  <div className="flex items-center gap-1.5 font-medium text-primary">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {t('aiSuggest') || 'اقتراح بالذكاء الاصطناعي'}
+                  </div>
+                  {aiBusy && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      {t('aiThinking') || 'جاري توليد الاقتراحات...'}
+                    </div>
+                  )}
+                  {aiError && !aiBusy && (
+                    <div className="flex items-start gap-1.5 text-destructive">
+                      <AlertCircle className="w-3.5 h-3.5 mt-0.5" />
+                      <span>{aiError}</span>
+                    </div>
+                  )}
+                  {aiSuggestion && !aiBusy && (
+                    <div className="space-y-1.5">
+                      {aiSuggestion.description_ar && (
+                        <div><span className="opacity-70 me-1">{t('description')}:</span>{aiSuggestion.description_ar}</div>
+                      )}
+                      {aiSuggestion.description_en && (
+                        <div dir="ltr"><span className="opacity-70 me-1">EN:</span>{aiSuggestion.description_en}</div>
+                      )}
+                      {aiSuggestion.category_label && (
+                        <div><span className="opacity-70 me-1">{t('category')}:</span>{aiSuggestion.category_label}</div>
+                      )}
+                      <div className="flex gap-2 pt-1">
+                        <Button type="button" size="sm" variant="default" onClick={applyAiSuggestion} className="h-7 px-2">
+                          <Check className="w-3.5 h-3.5 me-1" />
+                          {t('apply') || 'تطبيق'}
+                        </Button>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => setAiSuggestion(null)} className="h-7 px-2">
+                          <X className="w-3.5 h-3.5 me-1" />
+                          {t('discard') || 'تجاهل'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="md:col-span-2 space-y-1.5">
                 <Label>{t('description')} *</Label>
                 <Input value={values.description} onChange={(e) => setField('description', e.target.value)} />
