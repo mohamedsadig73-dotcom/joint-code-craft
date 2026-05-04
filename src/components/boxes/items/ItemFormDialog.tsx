@@ -15,6 +15,10 @@ import { ItemImageUpload } from './ItemImageUpload';
 import { ItemSuppliersTab } from './ItemSuppliersTab';
 import { ItemWarehousesTab } from './ItemWarehousesTab';
 import { useCategories, useSuppliers, useUnits } from '@/hooks/useDataSetup';
+import { Combobox } from '@/components/ui/Combobox';
+import { CategoryTreeSelect } from '@/components/data-setup/CategoryTreeSelect';
+import { validateItem } from '@/utils/itemSchema';
+import { findSimilar } from '@/utils/stringSimilarity';
 
 interface Props {
   open: boolean;
@@ -23,6 +27,7 @@ interface Props {
   initialPartNo?: string;
   onSubmit: (values: ItemMasterInput) => Promise<ItemMaster | null>;
   existingPartNos: string[];
+  existingItems?: Array<{ id: string; description: string; name_ar?: string | null }>;
 }
 
 const DEFAULT: ItemMasterInput = {
@@ -35,7 +40,7 @@ const DEFAULT: ItemMasterInput = {
   is_active: true,
 };
 
-export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onSubmit, existingPartNos }: Props) {
+export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onSubmit, existingPartNos, existingItems = [] }: Props) {
   const { t } = useLanguage();
   const { rows: categories } = useCategories();
   const { rows: suppliers } = useSuppliers();
@@ -48,6 +53,7 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
   }>(DEFAULT);
   const [submitting, setSubmitting] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [tab, setTab] = useState('details');
 
   useEffect(() => {
@@ -78,6 +84,7 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
       setValues({ ...DEFAULT, part_no: initialPartNo?.trim() ?? '' } as never);
     }
     setDuplicateWarning(false);
+    setErrors({});
     setTab('details');
   }, [open, initial, initialPartNo]);
 
@@ -89,16 +96,44 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
 
   const setField = (key: string, value: unknown) => {
     setValues((v) => ({ ...v, [key]: value as never }));
+    setErrors((e) => {
+      if (!e[key]) return e;
+      const n = { ...e };
+      delete n[key];
+      return n;
+    });
   };
 
   const handleSubmit = async () => {
-    if (!values.part_no.trim() || !values.description.trim()) return;
+    const v = validateItem(values);
+    if (!v.ok) {
+      setErrors(v.errors);
+      setTab('details');
+      return;
+    }
     if (duplicateWarning) return;
     setSubmitting(true);
     const result = await onSubmit(values);
     setSubmitting(false);
     if (result) onOpenChange(false);
   };
+
+  const similarNames = (() => {
+    const candidate = (values.name_ar || values.description || '').trim();
+    if (!candidate || candidate.length < 3) return [];
+    return findSimilar(
+      candidate,
+      existingItems.filter((i) => i.id !== initial?.id),
+      (i) => i.name_ar || i.description || ''
+    );
+  })();
+
+  const unitOptions = (units.length > 0 ? units.map((u) => ({ value: u.code, label: u.name_ar || u.name_en || u.code, hint: u.code })) : BOX_UNITS.map((u) => ({ value: u, label: u })));
+  const supplierOptions = suppliers.filter((s) => s.is_active).map((s) => ({
+    value: s.name_ar || s.name_en,
+    label: s.name_ar || s.name_en,
+    hint: s.code,
+  }));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -125,18 +160,41 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
                     <AlertCircle className="w-3.5 h-3.5" />{t('itemAlreadyExists')}
                   </p>
                 )}
+                {errors.part_no && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />{errors.part_no}
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label>{t('nameAr')}</Label>
                 <Input value={values.name_ar ?? ''} onChange={(e) => setField('name_ar', e.target.value)} />
+                {errors.name_ar && <p className="text-xs text-destructive">{errors.name_ar}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label>{t('nameEn')}</Label>
                 <Input value={values.name_en ?? ''} onChange={(e) => setField('name_en', e.target.value)} dir="ltr" />
               </div>
+              {similarNames.length > 0 && (
+                <div className="md:col-span-2 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 p-2.5 text-xs">
+                  <div className="flex items-center gap-1.5 font-medium text-amber-800 dark:text-amber-300 mb-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {t('similarNamesFound')}
+                  </div>
+                  <ul className="space-y-0.5 text-amber-900 dark:text-amber-200">
+                    {similarNames.map((m) => (
+                      <li key={m.row.id}>
+                        • {m.row.name_ar || m.row.description}{' '}
+                        <span className="opacity-70">({Math.round(m.score * 100)}%)</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <div className="md:col-span-2 space-y-1.5">
                 <Label>{t('description')} *</Label>
                 <Input value={values.description} onChange={(e) => setField('description', e.target.value)} />
+                {errors.description && <p className="text-xs text-destructive">{errors.description}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label>{t('brand')}</Label>
@@ -156,46 +214,30 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
               </div>
               <div className="space-y-1.5">
                 <Label>{t('defaultUnit')} *</Label>
-                <Select value={values.default_unit} onValueChange={(v) => setField('default_unit', v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {(units.length > 0 ? units.map((u) => u.code) : BOX_UNITS).map((u) => (
-                      <SelectItem key={u} value={u}>{u}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  options={unitOptions}
+                  value={values.default_unit}
+                  onChange={(v) => setField('default_unit', v ?? 'PCS')}
+                  allowClear={false}
+                  placeholder={t('defaultUnit')}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>{t('category')}</Label>
-                <Select
-                  value={values.category_id ?? '__none__'}
-                  onValueChange={(v) => setField('category_id', v === '__none__' ? null : v)}
-                >
-                  <SelectTrigger><SelectValue placeholder={t('selectCategory')} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">—</SelectItem>
-                    {categories.filter((c) => c.is_active).map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.code} - {c.name_ar || c.name_en}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <CategoryTreeSelect
+                  categories={categories}
+                  value={values.category_id ?? null}
+                  onChange={(id) => setField('category_id', id)}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>{t('defaultSupplier')}</Label>
-                <Select
-                  value={values.default_supplier || '__none__'}
-                  onValueChange={(v) => setField('default_supplier', v === '__none__' ? '' : v)}
-                >
-                  <SelectTrigger><SelectValue placeholder={t('selectSupplier')} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">—</SelectItem>
-                    {suppliers.filter((s) => s.is_active).map((s) => (
-                      <SelectItem key={s.id} value={s.name_ar || s.name_en}>
-                        {s.code} - {s.name_ar || s.name_en}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  options={supplierOptions}
+                  value={values.default_supplier || null}
+                  onChange={(v) => setField('default_supplier', v ?? '')}
+                  placeholder={t('selectSupplier')}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>{t('itemType')}</Label>
