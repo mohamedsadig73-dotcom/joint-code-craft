@@ -23,7 +23,7 @@ import { useAppSettings } from '@/hooks/useAppSettings';
 import { BarcodeScannerDialog } from '@/components/scan/BarcodeScannerDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Check, X } from 'lucide-react';
+import { Check, X, RefreshCw } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -294,9 +294,22 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
                     </div>
                   )}
                   {aiError && !aiBusy && (
-                    <div className="flex items-start gap-1.5 text-destructive">
-                      <AlertCircle className="w-3.5 h-3.5 mt-0.5" />
-                      <span>{aiError}</span>
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-1.5 text-destructive">
+                        <AlertCircle className="w-3.5 h-3.5 mt-0.5" />
+                        <span>{aiError}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleAiSuggest}
+                        disabled={aiBusy}
+                        className="h-7 px-2"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5 me-1" />
+                        {t('retry') || (language === 'ar' ? 'إعادة المحاولة' : 'Retry')}
+                      </Button>
                     </div>
                   )}
                   {aiSuggestion && !aiBusy && (
