@@ -64,7 +64,19 @@ export interface UomConversionRow {
   is_active: boolean;
 }
 
-type TableName = 'item_categories' | 'units_of_measure' | 'suppliers' | 'projects' | 'receiving_staff' | 'uom_conversions';
+export interface BranchRow {
+  id: string;
+  code: string;
+  name_ar: string;
+  name_en: string | null;
+  manager_name: string | null;
+  phone: string | null;
+  address: string | null;
+  notes: string | null;
+  is_active: boolean;
+}
+
+type TableName = 'item_categories' | 'units_of_measure' | 'suppliers' | 'projects' | 'receiving_staff' | 'uom_conversions' | 'branches';
 
 function useGenericCrud<T extends { id: string }>(table: TableName, orderBy: string = 'created_at') {
   const [rows, setRows] = useState<T[]>([]);
@@ -123,6 +135,7 @@ export const useSuppliers = () => useGenericCrud<SupplierRow>('suppliers', 'code
 export const useProjects = () => useGenericCrud<ProjectRow>('projects', 'code');
 export const useReceivingStaff = () => useGenericCrud<ReceivingStaffRow>('receiving_staff', 'serial');
 export const useUomConversions = () => useGenericCrud<UomConversionRow>('uom_conversions', 'created_at');
+export const useBranches = () => useGenericCrud<BranchRow>('branches', 'code');
 
 /**
  * Convert a quantity between two units of measure using uom_conversions table.
