@@ -1386,9 +1386,11 @@ export type Database = {
           created_by: string | null
           id: string
           is_active: boolean
+          level: number
           name_ar: string
           name_en: string | null
           parent_id: string | null
+          sort_order: number
           updated_at: string
         }
         Insert: {
@@ -1397,9 +1399,11 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_active?: boolean
+          level?: number
           name_ar: string
           name_en?: string | null
           parent_id?: string | null
+          sort_order?: number
           updated_at?: string
         }
         Update: {
@@ -1408,9 +1412,11 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_active?: boolean
+          level?: number
           name_ar?: string
           name_en?: string | null
           parent_id?: string | null
+          sort_order?: number
           updated_at?: string
         }
         Relationships: [
@@ -1535,6 +1541,33 @@ export type Database = {
             referencedColumns: ["item_id"]
           },
         ]
+      }
+      item_naming_rules: {
+        Row: {
+          description: string | null
+          id: string
+          rule_key: string
+          rule_value: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          rule_key: string
+          rule_value: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          rule_key?: string
+          rule_value?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       item_suppliers: {
         Row: {
@@ -1698,6 +1731,7 @@ export type Database = {
           has_expiry: boolean
           id: string
           image_path: string | null
+          internal_ref: string | null
           is_active: boolean
           is_dormant: boolean
           item_type: string
@@ -1707,14 +1741,20 @@ export type Database = {
           model_no: string | null
           name_ar: string | null
           name_en: string | null
+          naming_quality_score: number | null
           notes: string | null
           part_no: string
           plate_no: string | null
+          qr_payload: string | null
           rejection_reason: string | null
           reorder_qty: number | null
+          spec: string | null
+          sub_category_id: string | null
           supplier_id: string | null
+          uom_dict_id: string | null
           uom_id: string | null
           updated_at: string
+          variant_code: string | null
         }
         Insert: {
           approval_status?: Database["public"]["Enums"]["item_approval_status"]
@@ -1736,6 +1776,7 @@ export type Database = {
           has_expiry?: boolean
           id?: string
           image_path?: string | null
+          internal_ref?: string | null
           is_active?: boolean
           is_dormant?: boolean
           item_type?: string
@@ -1745,14 +1786,20 @@ export type Database = {
           model_no?: string | null
           name_ar?: string | null
           name_en?: string | null
+          naming_quality_score?: number | null
           notes?: string | null
           part_no: string
           plate_no?: string | null
+          qr_payload?: string | null
           rejection_reason?: string | null
           reorder_qty?: number | null
+          spec?: string | null
+          sub_category_id?: string | null
           supplier_id?: string | null
+          uom_dict_id?: string | null
           uom_id?: string | null
           updated_at?: string
+          variant_code?: string | null
         }
         Update: {
           approval_status?: Database["public"]["Enums"]["item_approval_status"]
@@ -1774,6 +1821,7 @@ export type Database = {
           has_expiry?: boolean
           id?: string
           image_path?: string | null
+          internal_ref?: string | null
           is_active?: boolean
           is_dormant?: boolean
           item_type?: string
@@ -1783,14 +1831,20 @@ export type Database = {
           model_no?: string | null
           name_ar?: string | null
           name_en?: string | null
+          naming_quality_score?: number | null
           notes?: string | null
           part_no?: string
           plate_no?: string | null
+          qr_payload?: string | null
           rejection_reason?: string | null
           reorder_qty?: number | null
+          spec?: string | null
+          sub_category_id?: string | null
           supplier_id?: string | null
+          uom_dict_id?: string | null
           uom_id?: string | null
           updated_at?: string
+          variant_code?: string | null
         }
         Relationships: [
           {
@@ -1829,10 +1883,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "items_master_sub_category_id_fkey"
+            columns: ["sub_category_id"]
+            isOneToOne: false
+            referencedRelation: "item_categories"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "items_master_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_master_uom_dict_id_fkey"
+            columns: ["uom_dict_id"]
+            isOneToOne: false
+            referencedRelation: "uom_dictionary"
             referencedColumns: ["id"]
           },
           {
@@ -3269,6 +3337,36 @@ export type Database = {
           },
         ]
       }
+      uom_dictionary: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          sort_order: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          sort_order?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       update_logs: {
         Row: {
           app_version: string | null
@@ -3618,6 +3716,10 @@ export type Database = {
         Args: { p_dispatch_id: string }
         Returns: undefined
       }
+      calculate_item_quality_score: {
+        Args: { _item_id: string }
+        Returns: number
+      }
       check_admin_office_notifications: { Args: never; Returns: undefined }
       check_maintenance_notifications: { Args: never; Returns: undefined }
       check_user_has_linked_data: {
@@ -3636,6 +3738,22 @@ export type Database = {
         Returns: undefined
       }
       deactivate_user: { Args: { target_user_id: string }; Returns: boolean }
+      find_similar_items: {
+        Args: {
+          _category_id?: string
+          _limit?: number
+          _name: string
+          _threshold?: number
+        }
+        Returns: {
+          category_id: string
+          id: string
+          internal_ref: string
+          name_ar: string
+          name_en: string
+          similarity: number
+        }[]
+      }
       generate_archive_number: { Args: never; Returns: string }
       generate_cycle_count_number: { Args: never; Returns: string }
       generate_declaration_id: {
@@ -3647,6 +3765,10 @@ export type Database = {
         Returns: string
       }
       generate_invoice_number: { Args: never; Returns: string }
+      generate_item_internal_ref: {
+        Args: { _category_code: string; _sub_category_code?: string }
+        Returns: string
+      }
       generate_maintenance_schedule: {
         Args: { _item_id: string; _year: number }
         Returns: undefined
@@ -3700,6 +3822,7 @@ export type Database = {
             }
             Returns: string
           }
+      normalize_uom: { Args: { _raw: string }; Returns: string }
       post_stock_count: { Args: { p_count_id: string }; Returns: string }
       reactivate_user: { Args: { target_user_id: string }; Returns: boolean }
       verify_backup_code: {
