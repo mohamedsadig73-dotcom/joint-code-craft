@@ -46,7 +46,7 @@ export default function ItemNamingSystem() {
       <main className="container mx-auto px-4 py-6 max-w-7xl">
         <PageHeader
           title={t('namingSystemTitle')}
-          description={t('namingSystemDesc')}
+          subtitle={t('namingSystemDesc')}
           icon={Tag}
         />
 
