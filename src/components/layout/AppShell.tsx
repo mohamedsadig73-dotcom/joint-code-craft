@@ -29,21 +29,21 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider key={defaultOpen ? 'open' : 'closed'} defaultOpen={defaultOpen}>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-background no-overscroll">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0 border-s border-border/40">
-          <header className="h-12 flex items-center justify-between border-b px-2 sticky top-0 bg-background/80 backdrop-blur-md z-40">
+          <header className="flex items-center justify-between border-b px-2 sticky top-0 bg-background/80 backdrop-blur-md z-40 pt-safe ps-safe pe-safe" style={{ minHeight: '3rem' }}>
             <SidebarTrigger className="ms-1" />
             <div className="flex items-center gap-1.5 ltr-flex">
               <div className="hidden lg:block"><OfflineIndicator /></div>
               <div className="hidden md:block"><ThemeToggleSimple /></div>
-              <Button variant="ghost" size="icon" onClick={toggleLanguage} title={t('switchLanguage')}>
+              <Button variant="ghost" size="icon" onClick={toggleLanguage} title={t('switchLanguage')} className="touch-target">
                 <Globe className="w-4 h-4" />
               </Button>
               <NotificationCenter />
             </div>
           </header>
-          <main className="flex-1 min-w-0 pb-16 md:pb-0">{children}</main>
+          <main className="flex-1 min-w-0 pb-nav md:pb-0 scroll-momentum">{children}</main>
         </div>
       </div>
     </SidebarProvider>
