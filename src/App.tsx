@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, HashRouter } from "react-router-dom";
+import { BrowserRouter, HashRouter, useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +14,7 @@ import { Onboarding } from "@/components/Onboarding";
 import { OfflineBanner } from "@/components/OfflineIndicator";
 import { AnimatedRoutes } from '@/components/AnimatedRoutes';
 import { UpdateChecker } from '@/components/UpdateChecker';
+import { AppShell } from '@/components/layout/AppShell';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,28 @@ const AppRouter =
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  // Routes that should render WITHOUT the unified AppShell chrome.
+  // - Auth pages (no auth yet)
+  // - Home / App Launcher (has its own contextual UI)
+  // - Print/standalone pages
+  const path = location.pathname;
+  const noShellRoutes = [
+    '/login',
+    '/forgot-password',
+    '/reset-password',
+    '/install',
+    '/',
+  ];
+  const noShellPrefixes = [
+    '/boxes/card/',          // BoxCardPrint
+    '/boxes/items/barcodes', // ItemBarcodePrint
+  ];
+  const useShell =
+    isAuthenticated &&
+    !noShellRoutes.includes(path) &&
+    !noShellPrefixes.some((p) => path.startsWith(p));
 
   return (
     <>
@@ -42,7 +65,13 @@ function AppRoutes() {
       {isAuthenticated && <MobileBottomNav />}
       {isAuthenticated && <OfflineBanner />}
       <UpdateChecker />
-      <AnimatedRoutes />
+      {useShell ? (
+        <AppShell>
+          <AnimatedRoutes />
+        </AppShell>
+      ) : (
+        <AnimatedRoutes />
+      )}
     </>
   );
 }
