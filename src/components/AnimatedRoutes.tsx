@@ -466,6 +466,16 @@ export function AnimatedRoutes() {
             }
           />
           <Route
+            path="/admin/app-settings"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <PageTransition>
+                  <AppSettingsPage />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/inventory/alerts"
             element={
               <ProtectedRoute>
