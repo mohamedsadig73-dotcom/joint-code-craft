@@ -206,6 +206,7 @@ export default function ItemsMaster() {
                         <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{item.part_no}</span>
                         <Badge variant="outline" className="text-[10px]">{item.default_unit}</Badge>
                         {item.is_active ? <Badge className="text-[10px]">{t('active')}</Badge> : <Badge variant="outline" className="text-[10px]">{t('inactive')}</Badge>}
+                        {item.is_dormant && <Badge variant="destructive" className="text-[10px]">{t('dormant')}</Badge>}
                       </div>
                       <p className="text-sm mt-1 truncate">{item.description}</p>
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">{item.default_supplier || '—'} • {t('movementsCount')}: {count}</p>
@@ -309,6 +310,7 @@ export default function ItemsMaster() {
                         ) : (
                           <Badge variant="outline">{t('inactive')}</Badge>
                         )}
+                        {item.is_dormant && <Badge variant="destructive" className="ms-1">{t('dormant')}</Badge>}
                       </TableCell>
                       <TableCell className="text-end">
                         <div className="flex items-center justify-end gap-1">
