@@ -48,7 +48,7 @@ export function CategoryTreeSelect({
   placeholder,
   disabled,
 }: Props) {
-  const { t, lang } = useLanguage();
+  const { t, language } = useLanguage();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -59,7 +59,7 @@ export function CategoryTreeSelect({
   );
 
   const labelOf = (c: CategoryRow) =>
-    lang === 'ar' ? c.name_ar || c.name_en : c.name_en || c.name_ar;
+    language === 'ar' ? c.name_ar || c.name_en : c.name_en || c.name_ar;
 
   const selected = useMemo(
     () => categories.find((c) => c.id === value),
