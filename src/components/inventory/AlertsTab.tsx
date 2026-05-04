@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StockBar } from '@/components/ui/StockBar';
 
 const levelConfig: Record<string, { label: string; cls: string }> = {
   out_of_stock: { label: 'نفد', cls: 'bg-destructive text-destructive-foreground' },
@@ -61,25 +62,32 @@ export function AlertsTab() {
           {filtered.map((r, i) => {
             const cfg = levelConfig[r.alert_level] || { label: r.alert_level, cls: '' };
             return (
-              <Card key={`${r.item_id}-${r.warehouse_id || 'none'}-${i}`} className="p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="font-mono text-sm font-bold">{r.part_no}</div>
-                  <div className="text-sm text-muted-foreground truncate">{r.name_ar || r.description}</div>
-                  {r.warehouse_name && <div className="text-xs text-muted-foreground mt-1">{r.warehouse_name}</div>}
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="text-end">
-                    <div className="text-xs text-muted-foreground">{t('stock') || 'المخزون'}</div>
-                    <div className="font-bold">{Number(r.qty_on_hand).toLocaleString('en-US')}</div>
+              <Card key={`${r.item_id}-${r.warehouse_id || 'none'}-${i}`} className="p-3 flex flex-col gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-mono text-sm font-bold">{r.part_no}</div>
+                    <div className="text-sm text-muted-foreground truncate">{r.name_ar || r.description}</div>
+                    {r.warehouse_name && <div className="text-xs text-muted-foreground mt-1">{r.warehouse_name}</div>}
                   </div>
-                  {r.min_qty != null && (
+                  <div className="flex items-center gap-3 shrink-0">
                     <div className="text-end">
-                      <div className="text-xs text-muted-foreground">{t('min')}</div>
-                      <div>{Number(r.min_qty).toLocaleString('en-US')}</div>
+                      <div className="text-xs text-muted-foreground">{t('stock') || 'المخزون'}</div>
+                      <div className="font-bold">{Number(r.qty_on_hand).toLocaleString('en-US')}</div>
                     </div>
-                  )}
-                  <Badge className={cfg.cls}>{cfg.label}</Badge>
+                    {r.min_qty != null && (
+                      <div className="text-end">
+                        <div className="text-xs text-muted-foreground">{t('min')}</div>
+                        <div>{Number(r.min_qty).toLocaleString('en-US')}</div>
+                      </div>
+                    )}
+                    <Badge className={cfg.cls}>{cfg.label}</Badge>
+                  </div>
                 </div>
+                <StockBar
+                  qty={Number(r.qty_on_hand) || 0}
+                  min={r.min_qty != null ? Number(r.min_qty) : 0}
+                  max={r.max_qty != null ? Number(r.max_qty) : 0}
+                />
               </Card>
             );
           })}
