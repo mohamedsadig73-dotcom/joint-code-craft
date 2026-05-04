@@ -22,7 +22,8 @@ import { findSimilar } from '@/utils/stringSimilarity';
 import { useAppSettings } from '@/hooks/useAppSettings';
 import { BarcodeScannerDialog } from '@/components/scan/BarcodeScannerDialog';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { wmsToast } from '@/lib/wmsToast';
+import { StandardAlert, FuzzyWarning } from '@/components/ui/StandardForm';
 import { Check, X, RefreshCw } from 'lucide-react';
 
 interface Props {
