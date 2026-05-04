@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useStockAlerts } from '@/hooks/useStockAlerts';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -67,23 +68,17 @@ export default function SmartDashboard() {
   const [stats, setStats] = useState<DashStats>({
     totalDeclarations: 0, pending: 0, completed: 0, overdue: 0, lowStock: 0,
   });
+  const { rows: stockRows } = useStockAlerts();
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [decRes, stockRes] = await Promise.all([
-        supabase
-          .from('declarations')
-          .select('id, status, created_at, deleted_at')
-          .is('deleted_at', null),
-        supabase
-          .from('items_master')
-          .select('id, current_stock, min_stock, deleted_at')
-          .is('deleted_at', null),
-      ]);
+      const decRes = await supabase
+        .from('declarations')
+        .select('id, status, created_at, deleted_at')
+        .is('deleted_at', null);
 
       const decs = decRes.data || [];
-      const items = stockRes.data || [];
       const now = Date.now();
 
       const pending = decs.filter(d =>
@@ -96,14 +91,10 @@ export default function SmartDashboard() {
         const days = (now - new Date(d.created_at).getTime()) / 86_400_000;
         return d.status === 'sent_to_admin_office' && days > 7;
       }).length;
-      const lowStock = items.filter((i: any) =>
-        typeof i.current_stock === 'number' && typeof i.min_stock === 'number'
-        && i.min_stock > 0 && i.current_stock <= i.min_stock
-      ).length;
-
       setStats({
         totalDeclarations: decs.length,
-        pending, completed, overdue, lowStock,
+        pending, completed, overdue,
+        lowStock: 0, // populated from useStockAlerts in render
       });
     } catch (e) {
       // silent — dashboard should not block on errors
@@ -120,11 +111,14 @@ export default function SmartDashboard() {
   );
 
   const alerts = useMemo(() => {
+    const lowStock = stockRows.filter(r =>
+      r.alert_level === 'out_of_stock' || r.alert_level === 'below_min' || r.alert_level === 'reorder'
+    ).length;
     const out: Array<{ key: string; label: string; count: number; tone: 'danger' | 'warning'; path: string; icon: typeof AlertTriangle }> = [];
     if (stats.overdue > 0) out.push({ key: 'overdue', label: t('overdueDeclarations') || 'إقرارات متأخرة', count: stats.overdue, tone: 'danger', path: '/declarations', icon: Clock });
-    if (stats.lowStock > 0) out.push({ key: 'low', label: t('lowStockAlerts') || 'تنبيهات نقص المخزون', count: stats.lowStock, tone: 'warning', path: '/inventory?tab=alerts', icon: AlertTriangle });
+    if (lowStock > 0) out.push({ key: 'low', label: t('lowStockAlerts') || 'تنبيهات نقص المخزون', count: lowStock, tone: 'warning', path: '/inventory?tab=alerts', icon: AlertTriangle });
     return out;
-  }, [stats, t]);
+  }, [stats, stockRows, t]);
 
   return (
     <div className="space-y-6 pb-8">
