@@ -24,7 +24,10 @@ import {
   CalendarDays,
   Users,
   Package,
-  Database
+  Database,
+  AlertTriangle,
+  ClipboardList,
+  ShieldCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -100,6 +103,12 @@ export function Navigation({ minimal = false }: { minimal?: boolean }) {
     if (user?.role === 'admin') {
       items.push({ path: '/admin', icon: Shield, labelKey: 'adminDashboard' });
       items.push({ path: '/admin/data-setup', icon: Database, labelKey: 'dataSetup' });
+    }
+    // Inventory tools (all roles)
+    items.push({ path: '/inventory/alerts', icon: AlertTriangle, labelKey: 'lowStockAlerts' });
+    items.push({ path: '/inventory/stock-counts', icon: ClipboardList, labelKey: 'stockCountsNav' });
+    if (user?.role === 'admin' || user?.role === 'manager') {
+      items.push({ path: '/admin/item-approvals', icon: ShieldCheck, labelKey: 'itemApprovalsNav' });
     }
     
     return items;
