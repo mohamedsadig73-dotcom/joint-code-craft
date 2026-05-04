@@ -75,6 +75,7 @@ const DataSetup = lazyRetry(() => import('@/pages/DataSetup'));
 const StockAlerts = lazyRetry(() => import('@/pages/StockAlerts'));
 const StockCounts = lazyRetry(() => import('@/pages/StockCounts'));
 const ItemApprovals = lazyRetry(() => import('@/pages/ItemApprovals'));
+const SupplierPriceImport = lazyRetry(() => import('@/pages/SupplierPriceImport'));
 const NotFound = lazyRetry(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -489,6 +490,16 @@ export function AnimatedRoutes() {
               <ProtectedRoute allowedRoles={['admin', 'manager']}>
                 <PageTransition>
                   <ItemApprovals />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/supplier-price-import"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                <PageTransition>
+                  <SupplierPriceImport />
                 </PageTransition>
               </ProtectedRoute>
             }

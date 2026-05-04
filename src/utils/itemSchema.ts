@@ -7,6 +7,7 @@ const ar = {
   tooLong: 'النص طويل جداً',
   numberPositive: 'يجب أن يكون رقماً موجباً',
   maxLessThanMin: 'الحد الأقصى يجب أن يكون أكبر من الحد الأدنى',
+  categoryRequired: 'يجب اختيار التصنيف قبل حفظ الصنف',
 };
 
 export const itemSchema = z
@@ -26,6 +27,7 @@ export const itemSchema = z
     barcode: z.string().trim().max(80, ar.tooLong).optional().nullable(),
     default_unit: z.string().trim().min(1, ar.required),
     default_supplier: z.string().trim().max(150).optional().nullable(),
+    supplier_id: z.string().uuid().nullable().optional(),
     category_id: z.string().uuid().nullable().optional(),
     item_type: z.enum(['item', 'service', 'asset']).optional(),
     condition: z.enum(['good', 'damaged']).optional(),
@@ -55,4 +57,20 @@ export function validateItem(values: unknown): {
     if (!errors[k]) errors[k] = issue.message;
   }
   return { ok: false, errors };
+}
+
+export function validateItemWithRules(
+  values: any,
+  opts: { categoryRequired: boolean; defaultCategoryId: string | null }
+): { ok: boolean; errors: Record<string, string>; patched: any } {
+  const patched = { ...values };
+  if (!patched.category_id && opts.defaultCategoryId) {
+    patched.category_id = opts.defaultCategoryId;
+  }
+  const base = validateItem(patched);
+  const errors = { ...base.errors };
+  if (opts.categoryRequired && !patched.category_id) {
+    errors.category_id = ar.categoryRequired;
+  }
+  return { ok: Object.keys(errors).length === 0, errors, patched };
 }

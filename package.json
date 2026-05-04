@@ -51,6 +51,7 @@
     "embla-carousel-react": "^8.6.0",
     "exceljs": "^4.4.0",
     "fast-xml-parser": "^5.7.2",
+    "html5-qrcode": "^2.3.8",
     "input-otp": "^1.4.2",
     "jsbarcode": "^3.12.3",
     "jszip": "^3.10.1",

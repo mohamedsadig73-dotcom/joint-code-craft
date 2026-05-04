@@ -1594,6 +1594,13 @@ const ar = {
     selectCategory: 'اختر التصنيف',
     stockCountsNav: 'جرد المخزون',
     itemApprovalsNav: 'اعتماد الأصناف',
+    supplierPriceImport: 'استيراد أسعار الموردين',
+    supplierPriceImportDesc: 'حدّث أسعار الشراء من ملف Excel',
+    scanBarcode: 'مسح الباركود',
+    startingCamera: 'جاري تشغيل الكاميرا...',
+    aiSuggest: 'اقتراح بالذكاء الاصطناعي',
+    aiSuggestNeedsInput: 'أدخل رمز القطعة أو الاسم أو الماركة أولاً',
+    aiSuggestApplied: 'تم تطبيق اقتراحات الذكاء الاصطناعي',
 };
 
 export default ar;
