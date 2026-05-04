@@ -139,12 +139,9 @@ async function runProbe(table: string, op: Op): Promise<{ ok: boolean; message?:
 export default function RlsDiagnosticsPage() {
   const { language } = useLanguage();
   const isAr = language === 'ar';
-  const { roles } = useAuth();
-  const role: 'admin' | 'manager' | 'user' = roles?.includes('admin')
-    ? 'admin'
-    : roles?.includes('manager')
-      ? 'manager'
-      : 'user';
+  const { user } = useAuth();
+  const role: 'admin' | 'manager' | 'user' =
+    (user?.role as 'admin' | 'manager' | 'user') || 'user';
 
   const [results, setResults] = useState<ProbeResult[]>(
     PROBES_BY_ROLE[role].map((p) => ({ ...p, status: 'pending' as Status })),
@@ -153,7 +150,7 @@ export default function RlsDiagnosticsPage() {
 
   const runAll = async () => {
     setRunning(true);
-    const list = PROBES_BY_ROLE[role].map((p) => ({ ...p, status: 'running' as Status }));
+    const list: ProbeResult[] = PROBES_BY_ROLE[role].map((p) => ({ ...p, status: 'running' as Status }));
     setResults([...list]);
     for (let i = 0; i < list.length; i++) {
       const probe = list[i];
