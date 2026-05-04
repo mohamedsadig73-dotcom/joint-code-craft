@@ -14,6 +14,7 @@ import { Loader2, AlertCircle, Info, Image as ImageIcon, Truck, Warehouse } from
 import { ItemImageUpload } from './ItemImageUpload';
 import { ItemSuppliersTab } from './ItemSuppliersTab';
 import { ItemWarehousesTab } from './ItemWarehousesTab';
+import { useCategories, useSuppliers, useUnits } from '@/hooks/useDataSetup';
 
 interface Props {
   open: boolean;
@@ -36,11 +37,14 @@ const DEFAULT: ItemMasterInput = {
 
 export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onSubmit, existingPartNos }: Props) {
   const { t } = useLanguage();
+  const { rows: categories } = useCategories();
+  const { rows: suppliers } = useSuppliers();
+  const { rows: units } = useUnits();
   const [values, setValues] = useState<ItemMasterInput & {
     name_ar?: string | null; name_en?: string | null; brand?: string | null;
     model_no?: string | null; plate_no?: string | null; barcode?: string | null;
     min_qty?: number | null; max_qty?: number | null; has_expiry?: boolean | null;
-    condition?: string | null; item_type?: string | null;
+    condition?: string | null; item_type?: string | null; category_id?: string | null;
   }>(DEFAULT);
   const [submitting, setSubmitting] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState(false);
@@ -63,6 +67,7 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
         model_no: initial.model_no ?? '',
         plate_no: initial.plate_no ?? '',
         barcode: initial.barcode ?? '',
+        category_id: initial.category_id ?? null,
         min_qty: initial.min_qty ?? 0,
         max_qty: initial.max_qty ?? null,
         has_expiry: initial.has_expiry ?? false,
@@ -154,7 +159,41 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
                 <Select value={values.default_unit} onValueChange={(v) => setField('default_unit', v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {BOX_UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                    {(units.length > 0 ? units.map((u) => u.code) : BOX_UNITS).map((u) => (
+                      <SelectItem key={u} value={u}>{u}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>{t('category')}</Label>
+                <Select
+                  value={values.category_id ?? '__none__'}
+                  onValueChange={(v) => setField('category_id', v === '__none__' ? null : v)}
+                >
+                  <SelectTrigger><SelectValue placeholder={t('selectCategory')} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">—</SelectItem>
+                    {categories.filter((c) => c.is_active).map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.code} - {c.name_ar || c.name_en}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>{t('defaultSupplier')}</Label>
+                <Select
+                  value={values.default_supplier || '__none__'}
+                  onValueChange={(v) => setField('default_supplier', v === '__none__' ? '' : v)}
+                >
+                  <SelectTrigger><SelectValue placeholder={t('selectSupplier')} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">—</SelectItem>
+                    {suppliers.filter((s) => s.is_active).map((s) => (
+                      <SelectItem key={s.id} value={s.name_ar || s.name_en}>
+                        {s.code} - {s.name_ar || s.name_en}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
