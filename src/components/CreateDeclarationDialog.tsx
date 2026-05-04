@@ -4,14 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import { StandardModal } from '@/components/ui/StandardModal';
+import { FormSection, FormField, StandardAlert } from '@/components/ui/StandardForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -270,34 +265,50 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
     ? Math.max(0, parseInt(toNumber) - parseInt(fromNumber) + 1) || 0
     : 0;
 
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2">
-            <Plus className="w-4 h-4" />
-            {t('addDeclaration')}
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{t('createNewDeclaration')}</DialogTitle>
-          <DialogDescription>
-            {t('enterDeclarationDetails')}
-          </DialogDescription>
-        </DialogHeader>
+  const submitDisabled = loading || (mode === 'multiple' && (batchCount > 50 || batchCount === 0));
+  const submitLabel = loading
+    ? (mode === 'multiple' ? t('batchCreating') : t('creating'))
+    : mode === 'multiple' && batchCount > 1
+      ? `${t('createDeclaration')} (${batchCount})`
+      : t('createDeclaration');
 
-        <form onSubmit={handleSubmit} className="space-y-5 mt-4">
+  return (
+    <>
+      {/* Trigger kept on its own Dialog wrapper to preserve existing API */}
+      {(controlledOpen === undefined) && (
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            {trigger || (
+              <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2">
+                <Plus className="w-4 h-4" />
+                {t('addDeclaration')}
+              </Button>
+            )}
+          </DialogTrigger>
+        </Dialog>
+      )}
+
+      <StandardModal
+        open={open}
+        onOpenChange={(v) => { if (!v) resetForm(); setOpen(v); }}
+        title={t('createNewDeclaration')}
+        description={t('enterDeclarationDetails')}
+        size="md"
+        submitLabel={submitLabel}
+        submitting={loading}
+        submitDisabled={submitDisabled}
+        onSubmit={() => handleSubmit({ preventDefault: () => {} } as any)}
+      >
+        <div className="space-y-4">
           {/* Mode Toggle */}
-          <div className="flex gap-2 p-1 bg-muted rounded-lg">
+          <div className="flex gap-2 p-1 bg-[hsl(var(--wms-bg3))] rounded-lg border border-[hsl(var(--wms-border))]">
             <button
               type="button"
               onClick={() => setMode('single')}
               className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                 mode === 'single'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-[hsl(var(--wms-bg2))] text-[hsl(var(--wms-text))] shadow-sm'
+                  : 'text-[hsl(var(--wms-text3))] hover:text-[hsl(var(--wms-text))]'
               }`}
             >
               {t('singleDeclaration')}
@@ -314,8 +325,8 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
               }}
               className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                 mode === 'multiple'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-[hsl(var(--wms-bg2))] text-[hsl(var(--wms-text))] shadow-sm'
+                  : 'text-[hsl(var(--wms-text3))] hover:text-[hsl(var(--wms-text))]'
               }`}
             >
               {t('multipleDeclarations')}
@@ -323,9 +334,13 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
           </div>
 
           {/* Number Input */}
+          <FormSection columns={1}>
           {mode === 'single' ? (
-            <div className="space-y-2">
-              <Label htmlFor="number">{t('declarationNumberLabel')}</Label>
+            <FormField label={t('declarationNumberLabel')} required
+              hint={loadingNextNumber ? 'جاري جلب الرقم التالي...' : declarationNumber
+                ? `${t('finalId') || 'الرقم النهائي'}: ${type === 'دخول' ? 'IN' : 'OUT'}-${selectedYear}-${declarationNumber.padStart(4, '0')}`
+                : ''}
+            >
               <div className="flex gap-2">
                 <Input
                   id="number"
@@ -340,146 +355,95 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
                   placeholder="0006"
                   required
                   disabled={loading || loadingNextNumber}
-                  className="glass-card border-border/50 flex-1 font-mono"
+                  className="flex-1 font-mono"
                   maxLength={6}
                 />
                 <Button type="button" variant="outline" onClick={loadNextNumber} disabled={loading || loadingNextNumber} className="shrink-0">
                   {loadingNextNumber ? t('loading') : t('refresh')}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {loadingNextNumber ? 'جاري جلب الرقم التالي...' : declarationNumber ? (
-                  <>الرقم النهائي: <span className="font-mono font-medium text-foreground">{type === 'دخول' ? 'IN' : 'OUT'}-{selectedYear}-{declarationNumber.padStart(4, '0')}</span></>
-                ) : <>أدخل رقم الإقرار</>}
-              </p>
-            </div>
+            </FormField>
           ) : (
-            <div className="space-y-3">
+            <>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="fromNumber">{t('fromNumber')}</Label>
+                <FormField label={t('fromNumber')} required>
                   <Input
-                    id="fromNumber"
                     type="text"
                     value={fromNumber}
                     onChange={(e) => setFromNumber(e.target.value.replace(/\D/g, ''))}
-                    onBlur={() => {
-                      if (fromNumber && fromNumber.length > 0) {
-                        setFromNumber(fromNumber.padStart(4, '0'));
-                      }
-                    }}
+                    onBlur={() => { if (fromNumber) setFromNumber(fromNumber.padStart(4, '0')); }}
                     placeholder="0001"
-                    required
                     disabled={loading || loadingNextNumber}
-                    className="glass-card border-border/50 font-mono"
+                    className="font-mono"
                     maxLength={6}
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="toNumber">{t('toNumber')}</Label>
+                </FormField>
+                <FormField label={t('toNumber')} required>
                   <Input
-                    id="toNumber"
                     type="text"
                     value={toNumber}
                     onChange={(e) => setToNumber(e.target.value.replace(/\D/g, ''))}
-                    onBlur={() => {
-                      if (toNumber && toNumber.length > 0) {
-                        setToNumber(toNumber.padStart(4, '0'));
-                      }
-                    }}
+                    onBlur={() => { if (toNumber) setToNumber(toNumber.padStart(4, '0')); }}
                     placeholder="0010"
-                    required
                     disabled={loading || loadingNextNumber}
-                    className="glass-card border-border/50 font-mono"
+                    className="font-mono"
                     maxLength={6}
                   />
-                </div>
+                </FormField>
               </div>
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-2 items-center mt-2">
                 <Button type="button" variant="outline" size="sm" onClick={loadNextNumber} disabled={loading || loadingNextNumber}>
                   {loadingNextNumber ? t('loading') : t('refresh')}
                 </Button>
-                {batchCount > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    سيتم إنشاء <span className="font-mono font-medium text-foreground">{batchCount}</span> إقرار
-                    ({type === 'دخول' ? 'IN' : 'OUT'}-{selectedYear}-{fromNumber.padStart(4, '0')} → {type === 'دخول' ? 'IN' : 'OUT'}-{selectedYear}-{toNumber.padStart(4, '0')})
-                  </p>
+                {batchCount > 0 && batchCount <= 50 && (
+                  <span className="text-[12px] text-[hsl(var(--wms-text3))]">
+                    {batchCount} ({type === 'دخول' ? 'IN' : 'OUT'}-{selectedYear}-{fromNumber.padStart(4, '0')} → {toNumber.padStart(4, '0')})
+                  </span>
                 )}
               </div>
               {batchCount > 50 && (
-                <p className="text-xs text-destructive">{t('maxBatchSize')}</p>
+                <StandardAlert tone="danger" className="mt-2">{t('maxBatchSize')}</StandardAlert>
               )}
-            </div>
+            </>
           )}
+          </FormSection>
 
-          <div className="space-y-2">
-            <Label htmlFor="year">{t('year') || 'السنة'}</Label>
-            <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))} disabled={loading}>
-              <SelectTrigger className="glass-card border-border/50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {availableYears.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <FormSection columns={3}>
+            <FormField label={t('year') || 'السنة'} required>
+              <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))} disabled={loading}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {availableYears.map((y) => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </FormField>
+            <FormField label={t('declarationType')} required>
+              <Select value={type} onValueChange={(v: 'دخول' | 'خروج') => setType(v)} disabled={loading}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="دخول">{t('entrance')}</SelectItem>
+                  <SelectItem value="خروج">{t('exit')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormField>
+            <FormField label={t('initialStatus')} required>
+              <Select value={status} onValueChange={(v: typeof status) => setStatus(v)} disabled={loading}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </FormField>
+          </FormSection>
 
-          <div className="space-y-2">
-            <Label htmlFor="type">{t('declarationType')}</Label>
-            <Select value={type} onValueChange={(value: 'دخول' | 'خروج') => setType(value)} disabled={loading}>
-              <SelectTrigger className="glass-card border-border/50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="دخول">{t('entrance')}</SelectItem>
-                <SelectItem value="خروج">{t('exit')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="status">{t('initialStatus')}</Label>
-            <Select
-              value={status}
-              onValueChange={(value: typeof status) => setStatus(value)}
-              disabled={loading}
-            >
-              <SelectTrigger className="glass-card border-border/50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Batch Progress */}
           {loading && mode === 'multiple' && batchProgress > 0 && (
             <div className="space-y-2">
               <Progress value={batchProgress} className="h-2" />
-              <p className="text-xs text-muted-foreground text-center">{batchProgress}%</p>
+              <p className="text-[12px] text-[hsl(var(--wms-text3))] text-center">{batchProgress}%</p>
             </div>
           )}
-
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={loading}>
-              {t('cancel')}
-            </Button>
-            <Button type="submit" disabled={loading || (mode === 'multiple' && batchCount > 50)}>
-              {loading
-                ? (mode === 'multiple' ? t('batchCreating') : t('creating'))
-                : mode === 'multiple' && batchCount > 1
-                  ? `${t('createDeclaration')} (${batchCount})`
-                  : t('createDeclaration')
-              }
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </StandardModal>
+    </>
   );
 }
