@@ -102,7 +102,7 @@ export default function ItemsMaster({ embedded = false }: { embedded?: boolean }
     setBulkBusy(false);
     setBulkAction(null);
     setSelected(new Set());
-    toast.success(`${t('bulkOperationDone')}: ${ok}${fail ? ` / ${t('failed')}: ${fail}` : ''}`);
+    wmsToast.success(`${t('bulkOperationDone')}: ${ok}${fail ? ` / ${t('failed')}: ${fail}` : ''}`);
   };
 
   const runBulkDormant = async (action: 'mark-dormant' | 'unmark-dormant') => {
@@ -116,7 +116,7 @@ export default function ItemsMaster({ embedded = false }: { embedded?: boolean }
     }
     setBulkBusy(false);
     setSelected(new Set());
-    toast.success(`${t('bulkOperationDone')}: ${ok}${fail ? ` / ${t('failed')}: ${fail}` : ''}`);
+    wmsToast.success(`${t('bulkOperationDone')}: ${ok}${fail ? ` / ${t('failed')}: ${fail}` : ''}`);
   };
 
   const handleSubmit = async (values: Parameters<typeof createItem>[0]) => {
