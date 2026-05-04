@@ -11,10 +11,12 @@ import {
 } from '@/components/ui/table';
 import { useItemsMaster, useItemReceiptsCount, type ItemMaster } from '@/hooks/useItemsMaster';
 import { ItemFormDialog } from '@/components/boxes/items/ItemFormDialog';
-import { Library, Plus, Search, Edit, Trash2, Eye, Loader2, History, Sparkles, Barcode } from 'lucide-react';
+import { Library, Plus, Search, Edit, Trash2, Eye, Loader2, History, Sparkles, Barcode, CheckSquare, X, Power, PowerOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ImageIcon } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -28,6 +30,9 @@ export default function ItemsMaster() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ItemMaster | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ItemMaster | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<null | 'delete' | 'activate' | 'deactivate'>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const itemIds = useMemo(() => items.map((i) => i.id), [items]);
   const counts = useItemReceiptsCount(itemIds);
@@ -47,6 +52,43 @@ export default function ItemsMaster() {
     () => items.filter((i) => i.id !== editing?.id).map((i) => i.part_no),
     [items, editing]
   );
+
+  const allSelectedOnPage = filtered.length > 0 && filtered.every((i) => selected.has(i.id));
+  const toggleSelect = (id: string) =>
+    setSelected((s) => {
+      const n = new Set(s);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+  const toggleSelectAll = () => {
+    if (allSelectedOnPage) setSelected(new Set());
+    else setSelected(new Set(filtered.map((i) => i.id)));
+  };
+
+  const runBulk = async () => {
+    if (!bulkAction || selected.size === 0) return;
+    setBulkBusy(true);
+    const ids = [...selected];
+    let ok = 0, fail = 0;
+    for (const id of ids) {
+      const item = items.find((x) => x.id === id);
+      if (!item) continue;
+      let res: ItemMaster | null | boolean = null;
+      if (bulkAction === 'delete') {
+        if ((counts[id] ?? 0) > 0) { fail++; continue; }
+        res = await deleteItem(id);
+      } else if (bulkAction === 'activate') {
+        res = await updateItem(id, { is_active: true });
+      } else if (bulkAction === 'deactivate') {
+        res = await updateItem(id, { is_active: false });
+      }
+      res ? ok++ : fail++;
+    }
+    setBulkBusy(false);
+    setBulkAction(null);
+    setSelected(new Set());
+    toast.success(`${t('bulkOperationDone')}: ${ok}${fail ? ` / ${t('failed')}: ${fail}` : ''}`);
+  };
 
   const handleSubmit = async (values: Parameters<typeof createItem>[0]) => {
     if (editing) return updateItem(editing.id, values);
@@ -105,6 +147,27 @@ export default function ItemsMaster() {
           </div>
         </div>
 
+        {selected.size > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border bg-primary/5 p-3">
+            <span className="text-sm font-medium">
+              {t('selectedCount').replace('{n}', String(selected.size))}
+            </span>
+            <div className="flex-1" />
+            <Button size="sm" variant="outline" onClick={() => setBulkAction('activate')} className="gap-1.5">
+              <Power className="w-4 h-4" />{t('activate')}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setBulkAction('deactivate')} className="gap-1.5">
+              <PowerOff className="w-4 h-4" />{t('deactivate')}
+            </Button>
+            <Button size="sm" variant="destructive" onClick={() => setBulkAction('delete')} className="gap-1.5">
+              <Trash2 className="w-4 h-4" />{t('delete')}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())} className="gap-1.5">
+              <X className="w-4 h-4" />{t('deselectAll')}
+            </Button>
+          </div>
+        )}
+
         <div className="mt-4 rounded-lg border bg-card">
           {loading ? (
             <div className="flex items-center justify-center py-12">
@@ -115,9 +178,43 @@ export default function ItemsMaster() {
               {t('noItemsFound')}
             </div>
           ) : (
+            <>
+            {/* Mobile card view */}
+            <div className="md:hidden divide-y">
+              {filtered.map((item) => {
+                const count = counts[item.id] ?? 0;
+                const checked = selected.has(item.id);
+                return (
+                  <div key={item.id} className={`p-3 flex gap-3 items-start ${checked ? 'bg-primary/5' : ''}`}>
+                    <Checkbox checked={checked} onCheckedChange={() => toggleSelect(item.id)} className="mt-1" />
+                    <div className="flex-1 min-w-0" onClick={() => navigate(`/boxes/items/${item.id}`)}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{item.part_no}</span>
+                        <Badge variant="outline" className="text-[10px]">{item.default_unit}</Badge>
+                        {item.is_active ? <Badge className="text-[10px]">{t('active')}</Badge> : <Badge variant="outline" className="text-[10px]">{t('inactive')}</Badge>}
+                      </div>
+                      <p className="text-sm mt-1 truncate">{item.description}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{item.default_supplier || '—'} • {t('movementsCount')}: {count}</p>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditing(item); setFormOpen(true); }}>
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" disabled={count > 0} onClick={(e) => { e.stopPropagation(); setConfirmDelete(item); }}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox checked={allSelectedOnPage} onCheckedChange={toggleSelectAll} aria-label={t('selectAll')} />
+                  </TableHead>
                   <TableHead className="w-14"></TableHead>
                   <TableHead>{t('partNo')}</TableHead>
                   <TableHead>{t('description')}</TableHead>
@@ -134,8 +231,12 @@ export default function ItemsMaster() {
                   const thumbUrl = item.image_path
                     ? supabase.storage.from('box-images').getPublicUrl(item.image_path).data.publicUrl
                     : null;
+                  const checked = selected.has(item.id);
                   return (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.id} className={checked ? 'bg-primary/5' : ''}>
+                      <TableCell>
+                        <Checkbox checked={checked} onCheckedChange={() => toggleSelect(item.id)} aria-label={item.part_no} />
+                      </TableCell>
                       <TableCell>
                         {thumbUrl ? (
                           <HoverCard openDelay={120} closeDelay={80}>
@@ -232,6 +333,8 @@ export default function ItemsMaster() {
                 })}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </div>
 
@@ -241,6 +344,7 @@ export default function ItemsMaster() {
           initial={editing}
           onSubmit={handleSubmit}
           existingPartNos={existingPartNos}
+          existingItems={items.map((i) => ({ id: i.id, description: i.description, name_ar: i.name_ar }))}
         />
 
         <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
@@ -259,6 +363,29 @@ export default function ItemsMaster() {
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 {t('delete')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={!!bulkAction} onOpenChange={(o) => !o && setBulkAction(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {bulkAction === 'delete' ? t('bulkDelete') : bulkAction === 'activate' ? t('activate') : t('deactivate')}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {(bulkAction === 'delete' ? t('bulkDeleteConfirm') : t('bulkConfirm')).replace('{count}', String(selected.size))}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={bulkBusy}>{t('cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => { e.preventDefault(); runBulk(); }}
+                className={bulkAction === 'delete' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
+              >
+                {bulkBusy && <Loader2 className="w-4 h-4 me-1.5 animate-spin" />}
+                {t('confirm')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
