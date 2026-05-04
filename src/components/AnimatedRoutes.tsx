@@ -5,8 +5,30 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PageTransition } from '@/components/PageTransition';
 import { Loader2 } from 'lucide-react';
 
+// Retry dynamic imports once and reload on stale chunk failure (after deploys)
+function lazyRetry<T extends { default: React.ComponentType<any> }>(
+  factory: () => Promise<T>
+) {
+  return lazy(async () => {
+    try {
+      return await factory();
+    } catch (err: any) {
+      const msg = String(err?.message || '');
+      if (/Failed to fetch dynamically imported module|Importing a module script failed/i.test(msg)) {
+        const key = '__chunk_reload_once__';
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, '1');
+          window.location.reload();
+          return new Promise<T>(() => {});
+        }
+      }
+      throw err;
+    }
+  });
+}
+
 // Lazy load pages with preload hints for critical pages
-const Login = lazy(() => import('@/pages/Login'));
+const Login = lazyRetry(() => import('@/pages/Login'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const Home = lazy(() => import('@/pages/Home'));
