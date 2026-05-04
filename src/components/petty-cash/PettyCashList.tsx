@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Search, Edit, Trash2, Check, X, FileDown } from 'lucide-react';
 import { formatNumber } from '@/utils/numberFormat';
 import { formatDate } from '@/utils/dateUtils';
-import { toast } from 'sonner';
+import { wmsToast as toast } from '@/lib/wmsToast';
 import { AddExpenseDialog } from './AddExpenseDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import {

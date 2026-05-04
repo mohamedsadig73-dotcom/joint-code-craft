@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { wmsToast as toast } from '@/lib/wmsToast';
 
 export interface CategoryRow {
   id: string;

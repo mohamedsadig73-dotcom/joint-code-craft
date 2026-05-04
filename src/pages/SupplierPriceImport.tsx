@@ -10,7 +10,7 @@ import { useSuppliers } from '@/hooks/useDataSetup';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { toast } from 'sonner';
+import { wmsToast as toast } from '@/lib/wmsToast';
 import { FileSpreadsheet, Upload, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
 import ExcelJS from 'exceljs';
 

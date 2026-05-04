@@ -24,6 +24,7 @@ export const wmsToast = {
   success: (msg: string, o?: Opts) => sonner.success(msg, { ...DEFAULTS, ...o }),
   error:   (msg: string, o?: Opts) => sonner.error(msg,   { ...ERROR_DEFAULTS, ...o }),
   warn:    (msg: string, o?: Opts) => sonner.warning(msg, { ...DEFAULTS, ...o }),
+  warning: (msg: string, o?: Opts) => sonner.warning(msg, { ...DEFAULTS, ...o }),
   info:    (msg: string, o?: Opts) => sonner.info(msg,    { ...DEFAULTS, ...o }),
   loading: (msg: string, o?: Opts) => sonner.loading(msg, { ...DEFAULTS, ...o }),
   dismiss: (id?: string | number) => sonner.dismiss(id),
