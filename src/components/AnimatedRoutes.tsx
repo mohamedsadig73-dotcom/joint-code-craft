@@ -63,10 +63,8 @@ const BoxesManagement = lazyRetry(() => import('@/pages/BoxesManagement'));
 const BoxCardPrint = lazyRetry(() => import('@/pages/BoxCardPrint'));
 const ContainerDetails = lazyRetry(() => import('@/pages/ContainerDetails'));
 const BoxesDataAdmin = lazyRetry(() => import('@/pages/BoxesDataAdmin'));
-const ItemsMaster = lazyRetry(() => import('@/pages/ItemsMaster'));
-const ItemsMasterImport = lazyRetry(() => import('@/pages/ItemsMasterImport'));
+const ItemsHub = lazyRetry(() => import('@/pages/ItemsHub'));
 const ItemDetails = lazyRetry(() => import('@/pages/ItemDetails'));
-const ItemImageHistory = lazyRetry(() => import('@/pages/ItemImageHistory'));
 const ItemBarcodePrint = lazyRetry(() => import('@/pages/ItemBarcodePrint'));
 const PrintDiagnostics = lazyRetry(() => import('@/pages/PrintDiagnostics'));
 const Inventory = lazyRetry(() => import('@/pages/Inventory'));
@@ -75,8 +73,7 @@ const WmsReports = lazyRetry(() => import('@/pages/WmsReports'));
 const DataSetup = lazyRetry(() => import('@/pages/DataSetup'));
 const AppSettingsPage = lazyRetry(() => import('@/pages/AppSettingsPage'));
 const RlsDiagnosticsPage = lazyRetry(() => import('@/pages/admin/RlsDiagnosticsPage'));
-// StockAlerts & StockCounts merged into Inventory tabs (P2). Pages kept for legacy redirects only.
-const ItemApprovals = lazyRetry(() => import('@/pages/ItemApprovals'));
+// StockAlerts & StockCounts merged into Inventory tabs (P2). ItemApprovals/ItemImageHistory/ItemsMasterImport merged into ItemsHub (P3-b).
 const SupplierPriceImport = lazyRetry(() => import('@/pages/SupplierPriceImport'));
 const NotFound = lazyRetry(() => import('@/pages/NotFound'));
 
