@@ -27,7 +27,8 @@ import {
   Database,
   AlertTriangle,
   ClipboardList,
-  ShieldCheck
+  ShieldCheck,
+  Settings as SettingsIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -103,6 +104,7 @@ export function Navigation({ minimal = false }: { minimal?: boolean }) {
     if (user?.role === 'admin') {
       items.push({ path: '/admin', icon: Shield, labelKey: 'adminDashboard' });
       items.push({ path: '/admin/data-setup', icon: Database, labelKey: 'dataSetup' });
+      items.push({ path: '/admin/app-settings', icon: SettingsIcon, labelKey: 'appSettingsNav' });
     }
     // Inventory tools (all roles)
     items.push({ path: '/inventory/alerts', icon: AlertTriangle, labelKey: 'lowStockAlerts' });
