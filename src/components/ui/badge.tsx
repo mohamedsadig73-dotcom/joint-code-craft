@@ -15,6 +15,14 @@ const badgeVariants = cva(
         success: "border-transparent bg-success text-white hover:bg-success/90 hover:shadow-md",
         warning: "border-transparent bg-warning text-white hover:bg-warning/90 hover:shadow-md",
         muted: "border-transparent bg-muted text-muted-foreground hover:bg-muted/80",
+        /* WMS Pro soft variants — pill style with subtle bg + strong text */
+        "wms-blue":   "border-transparent bg-[hsl(var(--wms-accent-soft2))] text-[hsl(var(--wms-accent))]",
+        "wms-green":  "border-transparent bg-[hsl(var(--wms-green-soft))]  text-[hsl(var(--wms-green))]",
+        "wms-red":    "border-transparent bg-[hsl(var(--wms-red-soft))]    text-[hsl(var(--wms-red))]",
+        "wms-yellow": "border-transparent bg-[hsl(var(--wms-yellow-soft))] text-[hsl(var(--wms-yellow))]",
+        "wms-purple": "border-transparent bg-[hsl(var(--wms-purple-soft))] text-[hsl(var(--wms-purple))]",
+        "wms-teal":   "border-transparent bg-[hsl(var(--wms-teal-soft))]   text-[hsl(var(--wms-teal))]",
+        "wms-gray":   "border-transparent bg-[hsl(var(--wms-bg4))]         text-[hsl(var(--wms-text3))]",
       },
     },
     defaultVariants: {
