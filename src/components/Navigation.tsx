@@ -6,9 +6,10 @@
  * shell chrome (sidebar, header, notifications, theme/lang toggles) is
  * provided exclusively by AppShell.
  *
- * Kept as a named export to preserve all existing imports across the codebase.
+ * Accepts any props (e.g. legacy `minimal`) without effect, to preserve all
+ * existing call sites across the codebase.
  */
-export function Navigation() {
+export function Navigation(_props: Record<string, unknown> = {}) {
   return null;
 }
 
