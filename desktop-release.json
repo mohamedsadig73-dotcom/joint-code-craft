@@ -1,11 +1,9 @@
 {
-  "version": "4.5.12",
-  "releaseDate": "2026-05-04",
-  "channel": "stable",
-  "downloadUrl": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.5.12-dist.zip",
-  "notes": [
-    "P3-b: Items Master unified — قائمة الأصناف | الاعتمادات | سجل الصور | الاستيراد in a single tabbed page (/boxes/items?tab=...).",
-    "Old paths (/admin/item-approvals, /boxes/items/import, /boxes/items-image-history) now redirect to the new tabs.",
-    "No business logic changes; underlying create/update/import flows unchanged."
-  ]
+  "desktop_shell_version": "4.5.13",
+  "min_shell_version": "4.4.5",
+  "web_version": "4.5.13",
+  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.5.13-dist.zip",
+  "full_download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.4.5.zip",
+  "release_notes": "v4.5.13",
+  "mandatory": false
 }
