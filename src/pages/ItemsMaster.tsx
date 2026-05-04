@@ -173,6 +173,12 @@ export default function ItemsMaster() {
             <Button size="sm" variant="outline" onClick={() => setBulkAction('deactivate')} className="gap-1.5">
               <PowerOff className="w-4 h-4" />{t('deactivate')}
             </Button>
+            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => runBulkDormant('mark-dormant')} className="gap-1.5">
+              {t('markDormant')}
+            </Button>
+            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => runBulkDormant('unmark-dormant')} className="gap-1.5">
+              {t('unmarkDormant')}
+            </Button>
             <Button size="sm" variant="destructive" onClick={() => setBulkAction('delete')} className="gap-1.5">
               <Trash2 className="w-4 h-4" />{t('delete')}
             </Button>
