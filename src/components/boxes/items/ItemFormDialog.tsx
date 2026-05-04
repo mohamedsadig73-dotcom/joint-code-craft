@@ -239,7 +239,7 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
       if (aiSuggestion.category_id) next.category_id = aiSuggestion.category_id;
       return next;
     });
-    toast.success(t('aiSuggestApplied') || 'تم تطبيق اقتراحات الذكاء الاصطناعي');
+    wmsToast.success(t('aiSuggestApplied') || 'تم تطبيق اقتراحات الذكاء الاصطناعي');
     setAiSuggestion(null);
   };
 
