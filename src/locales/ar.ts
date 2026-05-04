@@ -1646,6 +1646,24 @@ const ar = {
     namingTip1: 'استخدم اسماً عربياً نظيفاً بدون صفات زائدة.',
     namingTip2: 'العلامة التجارية اختيارية — فقط عند التميّز (Samsung, LG).',
     namingTip3: 'المواصفات تُكتب في حقل SPEC (مثل 65 بوصة، 6 أشخاص).',
+    // Voucher screens (M-Vouchers)
+    openingBalanceVoucher: 'الأرصدة الافتتاحية',
+    openingBalanceVoucherDesc: 'إدخال الأرصدة الأولى للأصناف داخل المخزن',
+    materialReceiptVoucher: 'سند استلام مواد',
+    materialReceiptVoucherDesc: 'إصدار سند استلام مواد بمتعدد الأسطر',
+    materialIssueVoucher: 'سند صرف مواد',
+    materialIssueVoucherDesc: 'إصدار سند صرف مواد للجهات أو الموظفين',
+    referenceNo: 'رقم المرجع',
+    selectWarehouseRequired: 'يرجى اختيار المخزن',
+    selectEmployee: 'اختر الموظف',
+    issuingStaff: 'الموظف المُسلِّم',
+    supplierOrSource: 'المورد / مصدر التوريد',
+    beneficiaryParty: 'الجهة المستفيدة',
+    addRow: 'إضافة سطر',
+    saveAndPost: 'حفظ وترحيل',
+    voucherSaved: 'تم حفظ السند بنجاح',
+    totalLines: 'عدد الأسطر',
+    expiryDate: 'تاريخ الصلاحية',
 };
 
 export default ar;
