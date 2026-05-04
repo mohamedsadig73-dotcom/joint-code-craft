@@ -17,7 +17,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { ImageIcon } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from 'sonner';
+import { wmsToast } from '@/lib/wmsToast';
+import { UnifiedFilterBar } from '@/components/ui/UnifiedFilterBar';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
