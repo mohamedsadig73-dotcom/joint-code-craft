@@ -499,16 +499,8 @@ export function AnimatedRoutes() {
           <Route path="/rls-diagnostics"       element={<Navigate to="/admin/rls-diagnostics" replace />} />
           {/* Container shorthand */}
           <Route path="/containers/:id"        element={<Navigate to="/boxes/container/:id" replace />} />
-          <Route
-            path="/admin/item-approvals"
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'manager']}>
-                <PageTransition>
-                  <ItemApprovals />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
+          {/* P3-b: approvals merged into ItemsHub tab */}
+          <Route path="/admin/item-approvals" element={<Navigate to="/boxes/items?tab=approvals" replace />} />
           <Route
             path="/admin/supplier-price-import"
             element={
