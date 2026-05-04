@@ -267,6 +267,30 @@ export function CreateDispatchDialog({ open, onOpenChange, onCreated }: Props) {
               <Label>{t('dispatchDate')}</Label>
               <Input type="date" value={dispatchDate} onChange={(e) => setDispatchDate(e.target.value)} />
             </div>
+            <div className="space-y-1.5">
+              <Label>{t('projects')}</Label>
+              <Select value={projectId || 'none'} onValueChange={(v) => setProjectId(v === 'none' ? '' : v)}>
+                <SelectTrigger><SelectValue placeholder={t('selectOption') || '—'} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">—</SelectItem>
+                  {projects.filter(p => p.is_active).map(p => (
+                    <SelectItem key={p.id} value={p.id}>{language === 'ar' ? p.name_ar : (p.name_en || p.name_ar)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('receivingStaff')}</Label>
+              <Select value={receivingStaffId || 'none'} onValueChange={(v) => setReceivingStaffId(v === 'none' ? '' : v)}>
+                <SelectTrigger><SelectValue placeholder={t('selectOption') || '—'} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">—</SelectItem>
+                  {staff.filter(s => s.is_active).map(s => (
+                    <SelectItem key={s.id} value={s.id}>{s.full_name}{s.job_title ? ` — ${s.job_title}` : ''}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="sm:col-span-2 space-y-1.5">
               <Label>{t('notes')}</Label>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
