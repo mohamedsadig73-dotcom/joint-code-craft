@@ -368,21 +368,13 @@ export function AnimatedRoutes() {
             element={
               <ProtectedRoute>
                 <PageTransition>
-                  <ItemsMaster />
+                  <ItemsHub />
                 </PageTransition>
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/boxes/items/import"
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'manager']}>
-                <PageTransition>
-                  <ItemsMasterImport />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
+          {/* P3-b: import merged into ItemsHub tab */}
+          <Route path="/boxes/items/import" element={<Navigate to="/boxes/items?tab=import" replace />} />
           <Route
             path="/boxes/items/:id"
             element={
@@ -393,16 +385,8 @@ export function AnimatedRoutes() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/boxes/items-image-history"
-            element={
-              <ProtectedRoute>
-                <PageTransition>
-                  <ItemImageHistory />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
+          {/* P3-b: image history merged into ItemsHub tab */}
+          <Route path="/boxes/items-image-history" element={<Navigate to="/boxes/items?tab=images" replace />} />
           <Route
             path="/boxes/items/barcodes"
             element={
