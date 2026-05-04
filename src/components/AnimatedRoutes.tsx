@@ -72,6 +72,7 @@ const Inventory = lazyRetry(() => import('@/pages/Inventory'));
 const WmsDashboard = lazyRetry(() => import('@/pages/WmsDashboard'));
 const WmsReports = lazyRetry(() => import('@/pages/WmsReports'));
 const DataSetup = lazyRetry(() => import('@/pages/DataSetup'));
+const AppSettingsPage = lazyRetry(() => import('@/pages/AppSettingsPage'));
 const StockAlerts = lazyRetry(() => import('@/pages/StockAlerts'));
 const StockCounts = lazyRetry(() => import('@/pages/StockCounts'));
 const ItemApprovals = lazyRetry(() => import('@/pages/ItemApprovals'));
