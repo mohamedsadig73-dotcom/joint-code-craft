@@ -1628,6 +1628,23 @@ const ar = {
     managerName: 'اسم المسؤول',
     filterByCategory: 'تصفية حسب التصنيف',
     allCategories: 'كل التصنيفات',
+    // Item Naming System (M1)
+    namingSystemTitle: 'نظام توحيد مسميات الأصناف',
+    namingSystemDesc: 'تسمية موحدة، أكواد، وحدات قياس وتصنيفات',
+    namingFormat: 'صيغة التسمية',
+    standardNamingFormat: 'الصيغة القياسية لتسمية الأصناف',
+    uomDictionary: 'قاموس وحدات القياس',
+    categoryTree: 'شجرة التصنيفات',
+    validationRules: 'قواعد التحقق',
+    totalItems: 'إجمالي الأصناف',
+    withInternalRef: 'بأكواد داخلية',
+    categorized: 'مُصنّفة',
+    avgQualityScore: 'متوسط جودة البيانات',
+    exampleTv: 'مثال: تلفزيون سامسونج',
+    exampleDecor: 'مثال: قطعة ديكور بمتغير',
+    namingTip1: 'استخدم اسماً عربياً نظيفاً بدون صفات زائدة.',
+    namingTip2: 'العلامة التجارية اختيارية — فقط عند التميّز (Samsung, LG).',
+    namingTip3: 'المواصفات تُكتب في حقل SPEC (مثل 65 بوصة، 6 أشخاص).',
 };
 
 export default ar;
