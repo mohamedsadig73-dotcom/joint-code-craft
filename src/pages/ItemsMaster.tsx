@@ -10,6 +10,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { useItemsMaster, useItemReceiptsCount, type ItemMaster } from '@/hooks/useItemsMaster';
+import { useCategories } from '@/hooks/useDataSetup';
 import { ItemFormDialog } from '@/components/boxes/items/ItemFormDialog';
 import { Library, Plus, Search, Edit, Trash2, Eye, Loader2, History, Sparkles, Barcode, CheckSquare, X, Power, PowerOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,15 +19,21 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/h
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
 export default function ItemsMaster() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === 'ar';
   const navigate = useNavigate();
   const { items, loading, createItem, updateItem, deleteItem } = useItemsMaster();
+  const { rows: categories } = useCategories();
   const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ItemMaster | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ItemMaster | null>(null);
@@ -39,14 +46,21 @@ export default function ItemsMaster() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter(
-      (i) =>
+    return items.filter((i) => {
+      if (categoryFilter !== 'all') {
+        // match either primary category_id or secondary classification_id
+        const cat = (i as any).category_id;
+        const cls = (i as any).classification_id;
+        if (cat !== categoryFilter && cls !== categoryFilter) return false;
+      }
+      if (!q) return true;
+      return (
         i.part_no.toLowerCase().includes(q) ||
         i.description.toLowerCase().includes(q) ||
         (i.default_supplier ?? '').toLowerCase().includes(q)
-    );
-  }, [items, search]);
+      );
+    });
+  }, [items, search, categoryFilter]);
 
   const existingPartNos = useMemo(
     () => items.filter((i) => i.id !== editing?.id).map((i) => i.part_no),
@@ -120,14 +134,29 @@ export default function ItemsMaster() {
         />
 
         <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-          <div className="relative max-w-md w-full">
-            <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t('searchPartNoOrDesc')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="ps-9"
-            />
+          <div className="flex flex-col sm:flex-row gap-2 flex-1 max-w-2xl">
+            <div className="relative flex-1">
+              <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t('searchPartNoOrDesc')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="ps-9"
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full sm:w-56">
+                <SelectValue placeholder={t('filterByCategory')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('allCategories')}</SelectItem>
+                {categories.filter((c: any) => c.is_active !== false).map((c: any) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.code} — {isAr ? c.name_ar : (c.name_en || c.name_ar)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center gap-2">
             <Button

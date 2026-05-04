@@ -1620,6 +1620,10 @@ const en = {
     retry: 'Retry',
     appSettingsNav: 'App Settings',
     rlsDiagnosticsNav: 'RLS Diagnostics',
+    branches: 'Branches',
+    managerName: 'Manager Name',
+    filterByCategory: 'Filter by Category',
+    allCategories: 'All Categories',
 };
 
 export default en;

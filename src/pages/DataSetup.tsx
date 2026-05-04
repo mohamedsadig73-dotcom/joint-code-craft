@@ -5,9 +5,9 @@ import { useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SimpleCrudTable } from '@/components/data-setup/SimpleCrudTable';
 import {
-  useCategories, useUnits, useSuppliers, useProjects, useReceivingStaff, useUomConversions,
+  useCategories, useUnits, useSuppliers, useProjects, useReceivingStaff, useUomConversions, useBranches,
 } from '@/hooks/useDataSetup';
-import { Database, Layers, Ruler, Truck, FolderKanban, UserCheck, ArrowLeftRight } from 'lucide-react';
+import { Database, Layers, Ruler, Truck, FolderKanban, UserCheck, ArrowLeftRight, Building2 } from 'lucide-react';
 
 export default function DataSetup() {
   const { t, language } = useLanguage();
@@ -19,6 +19,7 @@ export default function DataSetup() {
   const prjs = useProjects();
   const stf = useReceivingStaff();
   const conv = useUomConversions();
+  const brn = useBranches();
 
   const uomOptions = useMemo(
     () => uoms.rows.filter((u: any) => u.is_active !== false).map((u: any) => ({
@@ -60,6 +61,7 @@ export default function DataSetup() {
             <TabsTrigger value="suppliers"><Truck className="h-4 w-4 me-1" />{t('suppliers')}</TabsTrigger>
             <TabsTrigger value="projects"><FolderKanban className="h-4 w-4 me-1" />{t('projects')}</TabsTrigger>
             <TabsTrigger value="staff"><UserCheck className="h-4 w-4 me-1" />{t('receivingStaff')}</TabsTrigger>
+            <TabsTrigger value="branches"><Building2 className="h-4 w-4 me-1" />{t('branches')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="categories" className="mt-4">
@@ -182,6 +184,29 @@ export default function DataSetup() {
                 { key: 'employee_no', label: t('employeeNo') },
                 { key: 'full_name', label: t('fullName') },
                 { key: 'job_title', label: t('jobTitle') },
+                { key: 'phone', label: t('phone') },
+              ]}
+            />
+          </TabsContent>
+
+          <TabsContent value="branches" className="mt-4">
+            <SimpleCrudTable
+              rows={brn.rows} loading={brn.loading}
+              onCreate={brn.create} onUpdate={brn.update} onDelete={brn.remove}
+              searchKeys={['code', 'name_ar', 'name_en', 'manager_name', 'phone']}
+              fields={[
+                { key: 'code', label: t('code'), required: true },
+                { key: 'name_ar', label: t('nameAr'), required: true },
+                { key: 'name_en', label: t('nameEn') },
+                { key: 'manager_name', label: t('managerName') },
+                { key: 'phone', label: t('phone'), type: 'tel' },
+                { key: 'address', label: t('address'), type: 'textarea' },
+                { key: 'notes', label: t('notes'), type: 'textarea' },
+              ]}
+              columns={[
+                { key: 'code', label: t('code') },
+                { key: isAr ? 'name_ar' : 'name_en', label: t('name') },
+                { key: 'manager_name', label: t('managerName') },
                 { key: 'phone', label: t('phone') },
               ]}
             />

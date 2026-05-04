@@ -1619,6 +1619,10 @@ const ar = {
     retry: 'إعادة المحاولة',
     appSettingsNav: 'إعدادات التطبيق',
     rlsDiagnosticsNav: 'تشخيص سياسات RLS',
+    branches: 'الفروع',
+    managerName: 'اسم المسؤول',
+    filterByCategory: 'تصفية حسب التصنيف',
+    allCategories: 'كل التصنيفات',
 };
 
 export default ar;
