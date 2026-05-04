@@ -13,7 +13,8 @@ import { Progress } from '@/components/ui/progress';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { AlertTriangle, CheckCircle2, Sparkles, Loader2, RefreshCw } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Sparkles, Loader2, RefreshCw, Wand2 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   useUomDictionary, useItemCategories, useFindSimilarItems,
@@ -21,6 +22,7 @@ import {
 } from '@/hooks/useNamingSystem';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 function useDebounced<T>(value: T, delay = 400): T {
   const [v, setV] = useState(value);
@@ -40,6 +42,8 @@ export default function SmartItemEntry() {
   const { data: uoms } = useUomDictionary();
   const { mainCategories, subCategories } = useItemCategories();
   const findSimilar = useFindSimilarItems();
+  const { user } = useAuth() as any;
+  const isPrivileged = user?.role === 'admin' || user?.role === 'manager';
 
   const [categoryId, setCategoryId] = useState<string>('');
   const [subCategoryId, setSubCategoryId] = useState<string>('');
@@ -56,6 +60,7 @@ export default function SmartItemEntry() {
   const [similar, setSimilar] = useState<SimilarItem[]>([]);
   const [similarLoading, setSimilarLoading] = useState(false);
   const [acceptedDuplicate, setAcceptedDuplicate] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
 
   const subCats = useMemo(
     () => (categoryId ? subCategories(categoryId) : []),
@@ -88,6 +93,53 @@ export default function SmartItemEntry() {
     ].filter(Boolean);
     return parts.join(' - ');
   }, [brand, spec, nameAr, nameEn, uomDictId, uoms]);
+
+  // QR preview payload (mirrors DB trigger format)
+  const qrPreview = useMemo(() => {
+    if (!internalRef && !partNo) return '';
+    return `ITEM:${internalRef ?? partNo}|PN:${partNo}`;
+  }, [internalRef, partNo]);
+
+  const handleAiSuggest = async () => {
+    if (aiBusy) return;
+    if (!partNo && !nameAr && !brand) {
+      toast({
+        title: isAr ? 'يلزم إدخال بيانات' : 'Need input',
+        description: isAr ? 'أدخل رقم القطعة أو الاسم أو الماركة' : 'Enter part no, name, or brand',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setAiBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('suggest-item-details', {
+        body: {
+          part_no: partNo, name_ar: nameAr, name_en: nameEn, brand,
+          categories: mainCategories.map((c) => ({ code: c.code, name_ar: c.name_ar, name_en: c.name_en })),
+        },
+      });
+      if (error) throw error;
+      const s = data as { description_en?: string; description_ar?: string; category_code?: string | null };
+      if (s.description_ar && !nameAr) setNameAr(s.description_ar);
+      if (s.description_en && !nameEn) setNameEn(s.description_en);
+      if (s.description_ar || s.description_en) setDescription(s.description_ar || s.description_en || '');
+      if (s.category_code) {
+        const matched = mainCategories.find((c) => c.code === s.category_code);
+        if (matched) setCategoryId(matched.id);
+      }
+      toast({ title: isAr ? 'تم الاقتراح' : 'Suggested', description: isAr ? 'تم تعبئة الحقول' : 'Fields populated' });
+    } catch (e: any) {
+      const status = e?.context?.status;
+      const msg = status === 429
+        ? (isAr ? 'تجاوز حد الاستخدام' : 'Rate limit exceeded')
+        : status === 402
+        ? (isAr ? 'يلزم شحن رصيد الذكاء الاصطناعي' : 'AI credits required')
+        : (e?.message || 'Failed');
+      toast({ title: isAr ? 'فشل الاقتراح' : 'Suggest failed', description: msg, variant: 'destructive' });
+    } finally {
+      setAiBusy(false);
+    }
+  };
 
   // Live fuzzy match
   const debouncedName = useDebounced(nameAr || nameEn, 500);
@@ -144,7 +196,8 @@ export default function SmartItemEntry() {
       default_unit: (uom?.code || 'PCS') as any,
       internal_ref: ref,
       naming_quality_score: qualityScore,
-      approval_status: 'pending',
+      approval_status: isPrivileged ? 'approved' : 'pending',
+      is_active: isPrivileged,
     };
 
     const { data, error } = await supabase
@@ -242,6 +295,12 @@ export default function SmartItemEntry() {
             <Card>
               <CardHeader><CardTitle>{isAr ? 'بيانات الصنف' : 'Item Details'}</CardTitle></CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2">
+                <div className="md:col-span-2 flex justify-end">
+                  <Button type="button" variant="outline" size="sm" onClick={handleAiSuggest} disabled={aiBusy}>
+                    {aiBusy ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Wand2 className="w-4 h-4 me-2" />}
+                    {isAr ? 'اقتراح بالذكاء الاصطناعي' : 'AI Suggest'}
+                  </Button>
+                </div>
                 <div className="space-y-1">
                   <Label>{isAr ? 'رقم القطعة *' : 'Part No *'}</Label>
                   <Input value={partNo} onChange={(e) => setPartNo(e.target.value)} />
@@ -317,6 +376,17 @@ export default function SmartItemEntry() {
                 </div>
               </CardContent>
             </Card>
+            {qrPreview && (
+              <Card>
+                <CardHeader><CardTitle>{isAr ? 'رمز QR (معاينة)' : 'QR Code (preview)'}</CardTitle></CardHeader>
+                <CardContent className="flex flex-col items-center gap-2">
+                  <div className="bg-white p-2 rounded">
+                    <QRCodeSVG value={qrPreview} size={128} />
+                  </div>
+                  <code className="text-[10px] text-muted-foreground break-all text-center">{qrPreview}</code>
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader><CardTitle>{isAr ? 'جودة البيانات' : 'Data Quality'}</CardTitle></CardHeader>
               <CardContent className="space-y-2">
@@ -344,6 +414,11 @@ export default function SmartItemEntry() {
                 {blocking
                   ? (isAr ? 'يجب التعامل مع المكرر أولاً' : 'Resolve the duplicate warning first')
                   : (isAr ? 'أكمل الحقول المطلوبة (*)' : 'Complete the required fields (*)')}
+              </p>
+            )}
+            {canSubmit && !isPrivileged && (
+              <p className="text-xs text-amber-600">
+                {isAr ? 'سيتم إرسال الصنف للاعتماد قبل التفعيل' : 'Item will be sent for approval before activation'}
               </p>
             )}
           </div>

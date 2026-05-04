@@ -4,7 +4,9 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Tag, Ruler, FolderTree, ShieldCheck, Sparkles } from 'lucide-react';
+import { Tag, Ruler, FolderTree, ShieldCheck, Sparkles, BarChart3 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useUomDictionary, useItemCategories, useNamingRules } from '@/hooks/useNamingSystem';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +17,8 @@ export default function ItemNamingSystem() {
   const { data: cats, mainCategories, subCategories } = useItemCategories();
   const { rules } = useNamingRules();
   const [stats, setStats] = useState({ total: 0, withRef: 0, withCat: 0, avgScore: 0 });
+  const [lowQuality, setLowQuality] = useState<Array<{ id: string; part_no: string; name_ar: string | null; naming_quality_score: number | null }>>([]);
+  const [scoreBuckets, setScoreBuckets] = useState({ excellent: 0, good: 0, poor: 0 });
 
   useEffect(() => {
     (async () => {
@@ -28,7 +32,18 @@ export default function ItemNamingSystem() {
         const withCat = data.filter((r: any) => !!r.category_id).length;
         const sum = data.reduce((a: number, r: any) => a + (r.naming_quality_score ?? 0), 0);
         setStats({ total, withRef, withCat, avgScore: total ? Math.round(sum / total) : 0 });
+        const excellent = data.filter((r: any) => (r.naming_quality_score ?? 0) >= 80).length;
+        const good = data.filter((r: any) => { const s = r.naming_quality_score ?? 0; return s >= 50 && s < 80; }).length;
+        const poor = data.filter((r: any) => (r.naming_quality_score ?? 0) < 50).length;
+        setScoreBuckets({ excellent, good, poor });
       }
+      const { data: low } = await supabase
+        .from('items_master')
+        .select('id, part_no, name_ar, naming_quality_score')
+        .lt('naming_quality_score', 50)
+        .order('naming_quality_score', { ascending: true })
+        .limit(20);
+      if (low) setLowQuality(low as any);
     })();
   }, []);
 
@@ -64,6 +79,7 @@ export default function ItemNamingSystem() {
             <TabsTrigger value="uom"><Ruler className="w-4 h-4 me-2" />{t('uomDictionary')}</TabsTrigger>
             <TabsTrigger value="categories"><FolderTree className="w-4 h-4 me-2" />{t('categoryTree')}</TabsTrigger>
             <TabsTrigger value="rules"><ShieldCheck className="w-4 h-4 me-2" />{t('validationRules')}</TabsTrigger>
+            <TabsTrigger value="quality"><BarChart3 className="w-4 h-4 me-2" />{language === 'ar' ? 'لوحة الجودة' : 'Quality Dashboard'}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="format" className="mt-4">
@@ -144,8 +160,66 @@ export default function ItemNamingSystem() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="quality" className="mt-4 space-y-4">
+            <Card>
+              <CardHeader><CardTitle>{language === 'ar' ? 'توزيع جودة البيانات' : 'Data Quality Distribution'}</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <QualityBar
+                  label={language === 'ar' ? 'ممتاز (≥80)' : 'Excellent (≥80)'}
+                  value={scoreBuckets.excellent} total={stats.total} color="bg-emerald-500"
+                />
+                <QualityBar
+                  label={language === 'ar' ? 'جيد (50-79)' : 'Good (50-79)'}
+                  value={scoreBuckets.good} total={stats.total} color="bg-amber-500"
+                />
+                <QualityBar
+                  label={language === 'ar' ? 'ضعيف (<50)' : 'Poor (<50)'}
+                  value={scoreBuckets.poor} total={stats.total} color="bg-rose-500"
+                />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>{language === 'ar' ? 'أسوأ 20 صنفاً (يحتاج تحسين)' : 'Lowest 20 items (need improvement)'}</CardTitle></CardHeader>
+              <CardContent>
+                {lowQuality.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    {language === 'ar' ? 'لا توجد أصناف منخفضة الجودة 🎉' : 'No low-quality items 🎉'}
+                  </p>
+                ) : (
+                  <div className="space-y-1">
+                    {lowQuality.map((it) => (
+                      <Link key={it.id} to={`/boxes/items/${it.id}`}
+                        className="flex items-center justify-between p-2 rounded hover:bg-muted/50 text-sm">
+                        <span className="truncate">
+                          <Badge variant="outline" className="font-mono me-2">{it.part_no}</Badge>
+                          {it.name_ar || '—'}
+                        </span>
+                        <Badge variant="destructive">{it.naming_quality_score ?? 0}/100</Badge>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </main>
+    </div>
+  );
+}
+
+function QualityBar({ label, value, total, color }: { label: string; value: number; total: number; color: string }) {
+  const pctNum = total ? Math.round((value / total) * 100) : 0;
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-sm">
+        <span>{label}</span>
+        <span className="font-mono">{value.toLocaleString('en-US')} ({pctNum}%)</span>
+      </div>
+      <div className="h-2 rounded bg-muted overflow-hidden">
+        <div className={`h-full ${color}`} style={{ width: `${pctNum}%` }} />
+      </div>
     </div>
   );
 }
