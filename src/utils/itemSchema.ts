@@ -58,3 +58,19 @@ export function validateItem(values: unknown): {
   }
   return { ok: false, errors };
 }
+
+export function validateItemWithRules(
+  values: any,
+  opts: { categoryRequired: boolean; defaultCategoryId: string | null }
+): { ok: boolean; errors: Record<string, string>; patched: any } {
+  const patched = { ...values };
+  if (!patched.category_id && opts.defaultCategoryId) {
+    patched.category_id = opts.defaultCategoryId;
+  }
+  const base = validateItem(patched);
+  const errors = { ...base.errors };
+  if (opts.categoryRequired && !patched.category_id) {
+    errors.category_id = ar.categoryRequired;
+  }
+  return { ok: Object.keys(errors).length === 0, errors, patched };
+}
