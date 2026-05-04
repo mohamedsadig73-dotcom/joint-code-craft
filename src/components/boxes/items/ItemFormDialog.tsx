@@ -47,7 +47,7 @@ const DEFAULT: ItemMasterInput = {
 };
 
 export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onSubmit, existingPartNos, existingItems = [] }: Props) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { rows: categories } = useCategories();
   const { rows: suppliers } = useSuppliers();
   const { rows: units } = useUnits();
