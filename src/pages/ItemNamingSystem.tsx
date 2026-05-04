@@ -52,7 +52,7 @@ export default function ItemNamingSystem() {
 
         {/* KPI cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <KpiCard label={t('totalItems')} value={stats.total.toLocaleString('en-US')} />
+          <KpiCard label={t('namingSystemTotal')} value={stats.total.toLocaleString('en-US')} />
           <KpiCard label={t('withInternalRef')} value={`${stats.withRef.toLocaleString('en-US')}`} sub={pct(stats.withRef, stats.total)} />
           <KpiCard label={t('categorized')} value={`${stats.withCat.toLocaleString('en-US')}`} sub={pct(stats.withCat, stats.total)} />
           <KpiCard label={t('avgQualityScore')} value={`${stats.avgScore}/100`} accent />

@@ -554,7 +554,7 @@ const en = {
     maintenanceItems: 'Maintenance Items',
     assets: 'Assets',
     vendors: 'Vendors',
-    totalItems: 'Total Items',
+    namingSystemTotal: 'Total Items',
     pendingTasks: 'Pending Tasks',
     overdueTasks: 'Overdue Tasks',
     completedThisMonth: 'Completed This Month',

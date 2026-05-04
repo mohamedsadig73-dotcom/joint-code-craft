@@ -1636,7 +1636,7 @@ const ar = {
     uomDictionary: 'قاموس وحدات القياس',
     categoryTree: 'شجرة التصنيفات',
     validationRules: 'قواعد التحقق',
-    totalItems: 'إجمالي الأصناف',
+    namingSystemTotal: 'إجمالي الأصناف',
     withInternalRef: 'بأكواد داخلية',
     categorized: 'مُصنّفة',
     avgQualityScore: 'متوسط جودة البيانات',
