@@ -23,7 +23,8 @@ import {
   Wallet,
   CalendarDays,
   Users,
-  Package
+  Package,
+  Database
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -98,6 +99,7 @@ export function Navigation({ minimal = false }: { minimal?: boolean }) {
     // Add Admin Dashboard for admins only
     if (user?.role === 'admin') {
       items.push({ path: '/admin', icon: Shield, labelKey: 'adminDashboard' });
+      items.push({ path: '/admin/data-setup', icon: Database, labelKey: 'dataSetup' });
     }
     
     return items;
