@@ -489,6 +489,35 @@ export function AnimatedRoutes() {
           {/* Legacy routes — merged into /inventory tabs (P2 unification) */}
           <Route path="/inventory/alerts" element={<Navigate to="/inventory?tab=alerts" replace />} />
           <Route path="/inventory/stock-counts" element={<Navigate to="/inventory?tab=counts" replace />} />
+          {/* P8 — Legacy redirects (preserve old bookmarks after IA restructure) */}
+          <Route path="/stock-alerts"          element={<Navigate to="/inventory?tab=alerts" replace />} />
+          <Route path="/stock-counts"          element={<Navigate to="/inventory?tab=counts" replace />} />
+          <Route path="/inventory/transactions" element={<Navigate to="/inventory?tab=transactions" replace />} />
+          <Route path="/inventory/stock"       element={<Navigate to="/inventory?tab=stock" replace />} />
+          <Route path="/inventory/custody"     element={<Navigate to="/inventory?tab=custody" replace />} />
+          <Route path="/inventory/locations"   element={<Navigate to="/inventory?tab=locations" replace />} />
+          <Route path="/custody"               element={<Navigate to="/inventory?tab=custody" replace />} />
+          <Route path="/locations"             element={<Navigate to="/inventory?tab=locations" replace />} />
+          {/* Dashboard / Home aliases */}
+          <Route path="/home"                  element={<Navigate to="/" replace />} />
+          <Route path="/smart-dashboard"       element={<Navigate to="/" replace />} />
+          <Route path="/dashboard/smart"       element={<Navigate to="/" replace />} />
+          {/* WMS legacy paths */}
+          <Route path="/wms-dashboard"         element={<Navigate to="/wms" replace />} />
+          <Route path="/wms/dashboard"         element={<Navigate to="/wms" replace />} />
+          <Route path="/wms-reports"           element={<Navigate to="/wms/reports" replace />} />
+          {/* Items / Boxes legacy aliases */}
+          <Route path="/items"                 element={<Navigate to="/boxes/items" replace />} />
+          <Route path="/items-master"          element={<Navigate to="/boxes/items" replace />} />
+          <Route path="/items/import"          element={<Navigate to="/boxes/items/import" replace />} />
+          <Route path="/items/:id"             element={<Navigate to="/boxes/items/:id" replace />} />
+          <Route path="/item-approvals"        element={<Navigate to="/admin/item-approvals" replace />} />
+          <Route path="/supplier-price-import" element={<Navigate to="/admin/supplier-price-import" replace />} />
+          <Route path="/data-setup"            element={<Navigate to="/admin/data-setup" replace />} />
+          <Route path="/app-settings"          element={<Navigate to="/admin/app-settings" replace />} />
+          <Route path="/rls-diagnostics"       element={<Navigate to="/admin/rls-diagnostics" replace />} />
+          {/* Container shorthand */}
+          <Route path="/containers/:id"        element={<Navigate to="/boxes/container/:id" replace />} />
           <Route
             path="/admin/item-approvals"
             element={
