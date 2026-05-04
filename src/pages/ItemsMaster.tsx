@@ -32,7 +32,6 @@ export default function ItemsMaster() {
   const [confirmDelete, setConfirmDelete] = useState<ItemMaster | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkAction, setBulkAction] = useState<null | 'delete' | 'activate' | 'deactivate'>(null);
-  const [bulkAction2, setBulkAction2] = useState<null | 'mark-dormant' | 'unmark-dormant'>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
 
   const itemIds = useMemo(() => items.map((i) => i.id), [items]);
@@ -101,7 +100,6 @@ export default function ItemsMaster() {
       res ? ok++ : fail++;
     }
     setBulkBusy(false);
-    setBulkAction2(null);
     setSelected(new Set());
     toast.success(`${t('bulkOperationDone')}: ${ok}${fail ? ` / ${t('failed')}: ${fail}` : ''}`);
   };
