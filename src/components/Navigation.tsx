@@ -109,6 +109,7 @@ export function Navigation({ minimal = false }: { minimal?: boolean }) {
     items.push({ path: '/inventory/stock-counts', icon: ClipboardList, labelKey: 'stockCountsNav' });
     if (user?.role === 'admin' || user?.role === 'manager') {
       items.push({ path: '/admin/item-approvals', icon: ShieldCheck, labelKey: 'itemApprovalsNav' });
+      items.push({ path: '/admin/supplier-price-import', icon: Database, labelKey: 'supplierPriceImport' });
     }
     
     return items;
