@@ -66,6 +66,9 @@ const BoxesDataAdmin = lazyRetry(() => import('@/pages/BoxesDataAdmin'));
 const ItemsHub = lazyRetry(() => import('@/pages/ItemsHub'));
 const ItemNamingSystem = lazyRetry(() => import('@/pages/ItemNamingSystem'));
 const SmartItemEntry = lazyRetry(() => import('@/pages/SmartItemEntry'));
+const OpeningBalanceVoucher = lazyRetry(() => import('@/pages/OpeningBalanceVoucher'));
+const ReceiptVoucher = lazyRetry(() => import('@/pages/ReceiptVoucher'));
+const IssueVoucher = lazyRetry(() => import('@/pages/IssueVoucher'));
 const ItemDetails = lazyRetry(() => import('@/pages/ItemDetails'));
 const ItemBarcodePrint = lazyRetry(() => import('@/pages/ItemBarcodePrint'));
 const PrintDiagnostics = lazyRetry(() => import('@/pages/PrintDiagnostics'));
@@ -392,6 +395,36 @@ export function AnimatedRoutes() {
               <ProtectedRoute>
                 <PageTransition>
                   <ItemNamingSystem />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/voucher/opening"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <OpeningBalanceVoucher />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/voucher/receipt"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <ReceiptVoucher />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/voucher/issue"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <IssueVoucher />
                 </PageTransition>
               </ProtectedRoute>
             }
