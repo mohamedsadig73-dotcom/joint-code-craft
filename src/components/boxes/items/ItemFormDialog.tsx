@@ -10,15 +10,19 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BOX_UNITS } from '@/utils/boxNumberValidation';
 import type { ItemMaster, ItemMasterInput } from '@/hooks/useItemsMaster';
-import { Loader2, AlertCircle, Info, Image as ImageIcon, Truck, Warehouse } from 'lucide-react';
+import { Loader2, AlertCircle, Info, Image as ImageIcon, Truck, Warehouse, Camera, Sparkles } from 'lucide-react';
 import { ItemImageUpload } from './ItemImageUpload';
 import { ItemSuppliersTab } from './ItemSuppliersTab';
 import { ItemWarehousesTab } from './ItemWarehousesTab';
 import { useCategories, useSuppliers, useUnits } from '@/hooks/useDataSetup';
 import { Combobox } from '@/components/ui/Combobox';
 import { CategoryTreeSelect } from '@/components/data-setup/CategoryTreeSelect';
-import { validateItem } from '@/utils/itemSchema';
+import { validateItemWithRules } from '@/utils/itemSchema';
 import { findSimilar } from '@/utils/stringSimilarity';
+import { useAppSettings } from '@/hooks/useAppSettings';
+import { BarcodeScannerDialog } from '@/components/scan/BarcodeScannerDialog';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Props {
   open: boolean;
@@ -38,6 +42,7 @@ const DEFAULT: ItemMasterInput = {
   image_path: null,
   notes: '',
   is_active: true,
+  supplier_id: null,
 };
 
 export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onSubmit, existingPartNos, existingItems = [] }: Props) {
@@ -45,16 +50,20 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
   const { rows: categories } = useCategories();
   const { rows: suppliers } = useSuppliers();
   const { rows: units } = useUnits();
+  const { categoryRequired, defaultCategoryId } = useAppSettings();
   const [values, setValues] = useState<ItemMasterInput & {
     name_ar?: string | null; name_en?: string | null; brand?: string | null;
     model_no?: string | null; plate_no?: string | null; barcode?: string | null;
     min_qty?: number | null; max_qty?: number | null; has_expiry?: boolean | null;
     condition?: string | null; item_type?: string | null; category_id?: string | null;
+    supplier_id?: string | null;
   }>(DEFAULT);
   const [submitting, setSubmitting] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [tab, setTab] = useState('details');
+  const [scanOpen, setScanOpen] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -74,6 +83,7 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
         plate_no: initial.plate_no ?? '',
         barcode: initial.barcode ?? '',
         category_id: initial.category_id ?? null,
+        supplier_id: initial.supplier_id ?? null,
         min_qty: initial.min_qty ?? 0,
         max_qty: initial.max_qty ?? null,
         has_expiry: initial.has_expiry ?? false,
@@ -81,7 +91,11 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
         item_type: initial.item_type ?? 'item',
       } as never);
     } else {
-      setValues({ ...DEFAULT, part_no: initialPartNo?.trim() ?? '' } as never);
+      setValues({
+        ...DEFAULT,
+        part_no: initialPartNo?.trim() ?? '',
+        category_id: defaultCategoryId ?? null,
+      } as never);
     }
     setDuplicateWarning(false);
     setErrors({});
@@ -105,7 +119,7 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
   };
 
   const handleSubmit = async () => {
-    const v = validateItem(values);
+    const v = validateItemWithRules(values, { categoryRequired, defaultCategoryId });
     if (!v.ok) {
       setErrors(v.errors);
       setTab('details');
@@ -113,7 +127,7 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
     }
     if (duplicateWarning) return;
     setSubmitting(true);
-    const result = await onSubmit(values);
+    const result = await onSubmit(v.patched);
     setSubmitting(false);
     if (result) onOpenChange(false);
   };
@@ -128,12 +142,58 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
     );
   })();
 
-  const unitOptions = (units.length > 0 ? units.map((u) => ({ value: u.code, label: u.name_ar || u.name_en || u.code, hint: u.code })) : BOX_UNITS.map((u) => ({ value: u, label: u })));
-  const supplierOptions = suppliers.filter((s) => s.is_active).map((s) => ({
-    value: s.name_ar || s.name_en,
-    label: s.name_ar || s.name_en,
-    hint: s.code,
-  }));
+  const unitOptions = (units.length > 0
+    ? units.map((u) => ({ value: u.code, label: u.name_ar || u.name_en || u.code, hint: u.code }))
+    : BOX_UNITS.map((u) => ({ value: u, label: u })));
+  // Bind supplier picker to supplier_id (UUID), not the free-text name.
+  const supplierOptions = suppliers
+    .filter((s) => s.is_active)
+    .map((s) => ({
+      value: s.id,
+      label: s.name_ar || s.name_en,
+      hint: s.code,
+    }));
+
+  const handleAiSuggest = async () => {
+    if (aiBusy) return;
+    if (!values.part_no && !values.name_ar && !values.brand) {
+      toast.error(t('aiSuggestNeedsInput') || 'أدخل رمز القطعة أو الاسم أو الماركة أولاً');
+      return;
+    }
+    setAiBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('suggest-item-details', {
+        body: {
+          part_no: values.part_no,
+          name_ar: values.name_ar,
+          name_en: values.name_en,
+          brand: values.brand,
+          model_no: values.model_no,
+          notes: values.notes,
+          categories: categories
+            .filter((c) => c.is_active)
+            .map((c) => ({ code: c.code, name_ar: c.name_ar, name_en: c.name_en })),
+        },
+      });
+      if (error) throw error;
+      const suggestion = data as { description_en?: string; description_ar?: string; category_code?: string | null };
+      setValues((v) => {
+        const next: any = { ...v };
+        if (suggestion.description_en && !v.name_en) next.name_en = suggestion.description_en;
+        if (suggestion.description_ar && !v.description) next.description = suggestion.description_ar;
+        if (suggestion.category_code && !v.category_id) {
+          const match = categories.find((c) => c.code === suggestion.category_code);
+          if (match) next.category_id = match.id;
+        }
+        return next;
+      });
+      toast.success(t('aiSuggestApplied') || 'تم تطبيق اقتراحات الذكاء الاصطناعي');
+    } catch (e: any) {
+      toast.error(e?.message || 'AI suggest failed');
+    } finally {
+      setAiBusy(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
