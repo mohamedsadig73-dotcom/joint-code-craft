@@ -1,12 +1,13 @@
 import { Navigation } from '@/components/Navigation';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SimpleCrudTable } from '@/components/data-setup/SimpleCrudTable';
 import {
-  useCategories, useUnits, useSuppliers, useProjects, useReceivingStaff,
+  useCategories, useUnits, useSuppliers, useProjects, useReceivingStaff, useUomConversions,
 } from '@/hooks/useDataSetup';
-import { Database, Layers, Ruler, Truck, FolderKanban, UserCheck } from 'lucide-react';
+import { Database, Layers, Ruler, Truck, FolderKanban, UserCheck, ArrowLeftRight } from 'lucide-react';
 
 export default function DataSetup() {
   const { t, language } = useLanguage();
@@ -17,6 +18,29 @@ export default function DataSetup() {
   const sups = useSuppliers();
   const prjs = useProjects();
   const stf = useReceivingStaff();
+  const conv = useUomConversions();
+
+  const uomOptions = useMemo(
+    () => uoms.rows.filter((u: any) => u.is_active !== false).map((u: any) => ({
+      value: u.id,
+      label: `${u.code} — ${isAr ? u.name_ar : u.name_en}`,
+    })),
+    [uoms.rows, isAr]
+  );
+
+  const uomLabel = (id: string) => {
+    const u: any = uoms.rows.find((r: any) => r.id === id);
+    return u ? `${u.code} (${isAr ? u.name_ar : u.name_en})` : '—';
+  };
+
+  const conversionRows = useMemo(
+    () => conv.rows.map((r: any) => ({
+      ...r,
+      from_uom_label: uomLabel(r.from_uom_id),
+      to_uom_label: uomLabel(r.to_uom_id),
+    })),
+    [conv.rows, uoms.rows, isAr]
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,6 +56,7 @@ export default function DataSetup() {
           <TabsList className="flex flex-wrap h-auto">
             <TabsTrigger value="categories"><Layers className="h-4 w-4 me-1" />{t('categories')}</TabsTrigger>
             <TabsTrigger value="units"><Ruler className="h-4 w-4 me-1" />{t('unitsOfMeasure')}</TabsTrigger>
+            <TabsTrigger value="conversions"><ArrowLeftRight className="h-4 w-4 me-1" />{t('uomConversions')}</TabsTrigger>
             <TabsTrigger value="suppliers"><Truck className="h-4 w-4 me-1" />{t('suppliers')}</TabsTrigger>
             <TabsTrigger value="projects"><FolderKanban className="h-4 w-4 me-1" />{t('projects')}</TabsTrigger>
             <TabsTrigger value="staff"><UserCheck className="h-4 w-4 me-1" />{t('receivingStaff')}</TabsTrigger>
@@ -69,6 +94,25 @@ export default function DataSetup() {
                 { key: 'code', label: t('code') },
                 { key: isAr ? 'name_ar' : 'name_en', label: t('name') },
                 { key: 'conversion_factor', label: t('conversionFactor') },
+              ]}
+            />
+          </TabsContent>
+
+          <TabsContent value="conversions" className="mt-4">
+            <SimpleCrudTable
+              rows={conversionRows} loading={conv.loading || uoms.loading}
+              onCreate={conv.create} onUpdate={conv.update} onDelete={conv.remove}
+              searchKeys={['from_uom_label', 'to_uom_label', 'notes']}
+              fields={[
+                { key: 'from_uom_id', label: t('fromUnit'), type: 'select', required: true, options: uomOptions },
+                { key: 'to_uom_id', label: t('toUnit'), type: 'select', required: true, options: uomOptions },
+                { key: 'factor', label: t('conversionFactor'), type: 'number', required: true },
+                { key: 'notes', label: t('notes'), type: 'textarea' },
+              ]}
+              columns={[
+                { key: 'from_uom_label', label: t('fromUnit') },
+                { key: 'to_uom_label', label: t('toUnit') },
+                { key: 'factor', label: t('conversionFactor') },
               ]}
             />
           </TabsContent>
