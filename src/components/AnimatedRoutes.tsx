@@ -64,6 +64,7 @@ const BoxCardPrint = lazyRetry(() => import('@/pages/BoxCardPrint'));
 const ContainerDetails = lazyRetry(() => import('@/pages/ContainerDetails'));
 const BoxesDataAdmin = lazyRetry(() => import('@/pages/BoxesDataAdmin'));
 const ItemsHub = lazyRetry(() => import('@/pages/ItemsHub'));
+const ItemNamingSystem = lazyRetry(() => import('@/pages/ItemNamingSystem'));
 const ItemDetails = lazyRetry(() => import('@/pages/ItemDetails'));
 const ItemBarcodePrint = lazyRetry(() => import('@/pages/ItemBarcodePrint'));
 const PrintDiagnostics = lazyRetry(() => import('@/pages/PrintDiagnostics'));
