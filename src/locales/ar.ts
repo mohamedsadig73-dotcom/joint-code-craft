@@ -1590,7 +1590,6 @@ const ar = {
     masterDataModule: 'البيانات الرئيسية',
     hrOfficeModule: 'الموارد والمكتب',
     reportsModule: 'التقارير',
-    itemsMaster: 'الأصناف',
     uomConversions: 'تحويلات الوحدات',
     fromUnit: 'من وحدة',
     toUnit: 'إلى وحدة',
