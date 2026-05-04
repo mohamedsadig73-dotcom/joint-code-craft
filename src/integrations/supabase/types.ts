@@ -323,6 +323,13 @@ export type Database = {
             referencedRelation: "items_master"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "box_receipts_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "v_low_stock_alerts"
+            referencedColumns: ["item_id"]
+          },
         ]
       }
       compliance_logs: {
@@ -957,6 +964,13 @@ export type Database = {
             referencedRelation: "items_master"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "inv_custody_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "v_low_stock_alerts"
+            referencedColumns: ["item_id"]
+          },
         ]
       }
       inv_locations: {
@@ -1067,6 +1081,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "inv_stock_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "v_low_stock_alerts"
+            referencedColumns: ["item_id"]
+          },
+          {
             foreignKeyName: "inv_stock_location_id_fkey"
             columns: ["location_id"]
             isOneToOne: false
@@ -1134,6 +1155,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "items_master"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inv_transaction_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "v_low_stock_alerts"
+            referencedColumns: ["item_id"]
           },
           {
             foreignKeyName: "inv_transaction_items_transaction_id_fkey"
@@ -1410,6 +1438,13 @@ export type Database = {
             referencedRelation: "items_master"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "item_image_history_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "v_low_stock_alerts"
+            referencedColumns: ["item_id"]
+          },
         ]
       }
       item_suppliers: {
@@ -1467,6 +1502,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "items_master"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_suppliers_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "v_low_stock_alerts"
+            referencedColumns: ["item_id"]
           },
           {
             foreignKeyName: "item_suppliers_supplier_id_fkey"
@@ -1531,6 +1573,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "item_warehouses_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "v_low_stock_alerts"
+            referencedColumns: ["item_id"]
+          },
+          {
             foreignKeyName: "item_warehouses_warehouse_id_fkey"
             columns: ["warehouse_id"]
             isOneToOne: false
@@ -1541,6 +1590,9 @@ export type Database = {
       }
       items_master: {
         Row: {
+          approval_status: Database["public"]["Enums"]["item_approval_status"]
+          approved_at: string | null
+          approved_by: string | null
           avg_cost: number | null
           barcode: string | null
           brand: string | null
@@ -1567,12 +1619,16 @@ export type Database = {
           notes: string | null
           part_no: string
           plate_no: string | null
+          rejection_reason: string | null
           reorder_qty: number | null
           supplier_id: string | null
           uom_id: string | null
           updated_at: string
         }
         Insert: {
+          approval_status?: Database["public"]["Enums"]["item_approval_status"]
+          approved_at?: string | null
+          approved_by?: string | null
           avg_cost?: number | null
           barcode?: string | null
           brand?: string | null
@@ -1599,12 +1655,16 @@ export type Database = {
           notes?: string | null
           part_no: string
           plate_no?: string | null
+          rejection_reason?: string | null
           reorder_qty?: number | null
           supplier_id?: string | null
           uom_id?: string | null
           updated_at?: string
         }
         Update: {
+          approval_status?: Database["public"]["Enums"]["item_approval_status"]
+          approved_at?: string | null
+          approved_by?: string | null
           avg_cost?: number | null
           barcode?: string | null
           brand?: string | null
@@ -1631,12 +1691,20 @@ export type Database = {
           notes?: string | null
           part_no?: string
           plate_no?: string | null
+          rejection_reason?: string | null
           reorder_qty?: number | null
           supplier_id?: string | null
           uom_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "items_master_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "items_master_category_id_fkey"
             columns: ["category_id"]
@@ -2740,6 +2808,174 @@ export type Database = {
           },
         ]
       }
+      stock_count_lines: {
+        Row: {
+          count_id: string
+          counted_at: string | null
+          counted_by: string | null
+          counted_qty: number
+          created_at: string
+          expected_qty: number
+          id: string
+          item_id: string
+          line_no: number
+          location_id: string | null
+          remarks: string | null
+          unit_cost: number
+          variance_qty: number | null
+        }
+        Insert: {
+          count_id: string
+          counted_at?: string | null
+          counted_by?: string | null
+          counted_qty?: number
+          created_at?: string
+          expected_qty?: number
+          id?: string
+          item_id: string
+          line_no?: number
+          location_id?: string | null
+          remarks?: string | null
+          unit_cost?: number
+          variance_qty?: number | null
+        }
+        Update: {
+          count_id?: string
+          counted_at?: string | null
+          counted_by?: string | null
+          counted_qty?: number
+          created_at?: string
+          expected_qty?: number
+          id?: string
+          item_id?: string
+          line_no?: number
+          location_id?: string | null
+          remarks?: string | null
+          unit_cost?: number
+          variance_qty?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_count_lines_count_id_fkey"
+            columns: ["count_id"]
+            isOneToOne: false
+            referencedRelation: "stock_counts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_counted_by_fkey"
+            columns: ["counted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_low_stock"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inv_stock_summary"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "v_low_stock_alerts"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "inv_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_counts: {
+        Row: {
+          count_date: string
+          count_no: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          posted_at: string | null
+          posted_by: string | null
+          status: Database["public"]["Enums"]["stock_count_status"]
+          total_variance_qty: number | null
+          total_variance_value: number | null
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          count_date?: string
+          count_no?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          status?: Database["public"]["Enums"]["stock_count_status"]
+          total_variance_qty?: number | null
+          total_variance_value?: number | null
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          count_date?: string
+          count_no?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          status?: Database["public"]["Enums"]["stock_count_status"]
+          total_variance_qty?: number | null
+          total_variance_value?: number | null
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_counts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_counts_posted_by_fkey"
+            columns: ["posted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_counts_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null
@@ -3157,6 +3393,30 @@ export type Database = {
           },
         ]
       }
+      v_low_stock_alerts: {
+        Row: {
+          alert_level: string | null
+          description: string | null
+          item_id: string | null
+          max_qty: number | null
+          min_qty: number | null
+          name_ar: string | null
+          part_no: string | null
+          qty_on_hand: number | null
+          reorder_qty: number | null
+          warehouse_id: string | null
+          warehouse_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inv_stock_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       apply_dispatch_quantities: {
@@ -3296,6 +3556,7 @@ export type Database = {
       inv_party_type: "employee" | "department" | "supplier" | "external"
       inv_txn_status: "draft" | "posted" | "cancelled"
       inv_txn_type: "in" | "out" | "transfer" | "return"
+      item_approval_status: "draft" | "pending" | "approved" | "rejected"
       maintenance_asset_type:
         | "electrical"
         | "plumbing"
@@ -3313,7 +3574,12 @@ export type Database = {
       maintenance_status: "pending" | "done" | "not_required" | "overdue"
       packing_type: "boxed" | "loose"
       petty_cash_status: "open" | "closed" | "pending_approval" | "rejected"
-      stock_count_status: "draft" | "in_progress" | "posted" | "cancelled"
+      stock_count_status:
+        | "draft"
+        | "in_progress"
+        | "submitted"
+        | "posted"
+        | "cancelled"
       stock_movement_status: "draft" | "posted" | "cancelled"
       stock_movement_type: "receipt" | "issue" | "transfer"
       wms_order_status:
@@ -3501,6 +3767,7 @@ export const Constants = {
       inv_party_type: ["employee", "department", "supplier", "external"],
       inv_txn_status: ["draft", "posted", "cancelled"],
       inv_txn_type: ["in", "out", "transfer", "return"],
+      item_approval_status: ["draft", "pending", "approved", "rejected"],
       maintenance_asset_type: [
         "electrical",
         "plumbing",
@@ -3520,7 +3787,13 @@ export const Constants = {
       maintenance_status: ["pending", "done", "not_required", "overdue"],
       packing_type: ["boxed", "loose"],
       petty_cash_status: ["open", "closed", "pending_approval", "rejected"],
-      stock_count_status: ["draft", "in_progress", "posted", "cancelled"],
+      stock_count_status: [
+        "draft",
+        "in_progress",
+        "submitted",
+        "posted",
+        "cancelled",
+      ],
       stock_movement_status: ["draft", "posted", "cancelled"],
       stock_movement_type: ["receipt", "issue", "transfer"],
       wms_order_status: [

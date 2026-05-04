@@ -1592,6 +1592,8 @@ const ar = {
     taxNumber: 'الرقم الضريبي',
     category: 'التصنيف',
     selectCategory: 'اختر التصنيف',
+    stockCountsNav: 'جرد المخزون',
+    itemApprovalsNav: 'اعتماد الأصناف',
 };
 
 export default ar;

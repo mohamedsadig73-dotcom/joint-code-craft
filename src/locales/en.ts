@@ -1594,6 +1594,8 @@ const en = {
     taxNumber: 'Tax Number',
     category: 'Category',
     selectCategory: 'Select category',
+    stockCountsNav: 'Stock Counts',
+    itemApprovalsNav: 'Item Approvals',
 };
 
 export default en;

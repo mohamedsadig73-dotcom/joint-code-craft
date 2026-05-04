@@ -1,0 +1,1 @@
+ALTER VIEW public.v_low_stock_alerts SET (security_invoker = true);
