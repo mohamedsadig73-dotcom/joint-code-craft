@@ -41,6 +41,9 @@ const Inventory = lazy(() => import('@/pages/Inventory'));
 const WmsDashboard = lazy(() => import('@/pages/WmsDashboard'));
 const WmsReports = lazy(() => import('@/pages/WmsReports'));
 const DataSetup = lazy(() => import('@/pages/DataSetup'));
+const StockAlerts = lazy(() => import('@/pages/StockAlerts'));
+const StockCounts = lazy(() => import('@/pages/StockCounts'));
+const ItemApprovals = lazy(() => import('@/pages/ItemApprovals'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -424,6 +427,36 @@ export function AnimatedRoutes() {
               <ProtectedRoute allowedRoles={['admin', 'manager']}>
                 <PageTransition>
                   <DataSetup />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/alerts"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <StockAlerts />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/stock-counts"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <StockCounts />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/item-approvals"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                <PageTransition>
+                  <ItemApprovals />
                 </PageTransition>
               </ProtectedRoute>
             }
