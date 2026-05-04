@@ -11,9 +11,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 export interface FieldDef {
   key: string;
   label: string;
-  type?: 'text' | 'email' | 'tel' | 'date' | 'number' | 'textarea';
+  type?: 'text' | 'email' | 'tel' | 'date' | 'number' | 'textarea' | 'select';
   required?: boolean;
   placeholder?: string;
+  options?: { value: string; label: string }[];
 }
 
 interface Props<T extends { id: string; is_active?: boolean }> {
@@ -150,6 +151,17 @@ export function SimpleCrudTable<T extends { id: string; is_active?: boolean }>({
                     onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
                     placeholder={f.placeholder}
                   />
+                ) : f.type === 'select' ? (
+                  <select
+                    className="rounded-md border bg-background px-3 py-2 text-sm h-10"
+                    value={form[f.key] ?? ''}
+                    onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
+                  >
+                    <option value="">—</option>
+                    {(f.options ?? []).map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
                 ) : (
                   <Input
                     type={f.type ?? 'text'}

@@ -55,7 +55,16 @@ export interface ReceivingStaffRow {
   is_active: boolean;
 }
 
-type TableName = 'item_categories' | 'units_of_measure' | 'suppliers' | 'projects' | 'receiving_staff';
+export interface UomConversionRow {
+  id: string;
+  from_uom_id: string;
+  to_uom_id: string;
+  factor: number;
+  notes: string | null;
+  is_active: boolean;
+}
+
+type TableName = 'item_categories' | 'units_of_measure' | 'suppliers' | 'projects' | 'receiving_staff' | 'uom_conversions';
 
 function useGenericCrud<T extends { id: string }>(table: TableName, orderBy: string = 'created_at') {
   const [rows, setRows] = useState<T[]>([]);
@@ -113,3 +122,26 @@ export const useUnits = () => useGenericCrud<UomRow>('units_of_measure', 'code')
 export const useSuppliers = () => useGenericCrud<SupplierRow>('suppliers', 'code');
 export const useProjects = () => useGenericCrud<ProjectRow>('projects', 'code');
 export const useReceivingStaff = () => useGenericCrud<ReceivingStaffRow>('receiving_staff', 'serial');
+export const useUomConversions = () => useGenericCrud<UomConversionRow>('uom_conversions', 'created_at');
+
+/**
+ * Convert a quantity between two units of measure using uom_conversions table.
+ * Falls back to direct conversion factor or 1 if no path is found.
+ */
+export function convertQuantity(
+  qty: number,
+  fromUomId: string,
+  toUomId: string,
+  conversions: UomConversionRow[]
+): number {
+  if (!fromUomId || !toUomId || fromUomId === toUomId) return qty;
+  const direct = conversions.find(
+    (c) => c.is_active && c.from_uom_id === fromUomId && c.to_uom_id === toUomId
+  );
+  if (direct) return qty * Number(direct.factor);
+  const inverse = conversions.find(
+    (c) => c.is_active && c.from_uom_id === toUomId && c.to_uom_id === fromUomId
+  );
+  if (inverse && Number(inverse.factor) !== 0) return qty / Number(inverse.factor);
+  return qty;
+}
