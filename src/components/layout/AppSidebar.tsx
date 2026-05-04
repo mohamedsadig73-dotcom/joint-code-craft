@@ -76,6 +76,7 @@ export function AppSidebar() {
     }
     if (user?.role === 'admin') {
       master.push({ path: '/admin/data-setup', label: t('dataSetup') });
+      master.push({ path: '/admin/naming-system', label: t('namingSystemTitle') || 'نظام التسمية' });
     }
 
     const hr: Leaf[] = [
