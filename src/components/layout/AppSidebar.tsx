@@ -58,6 +58,9 @@ export function AppSidebar() {
 
     const inv: Leaf[] = [
       { path: '/inventory?tab=transactions', label: t('declarations_and_movements') || 'الحركات' },
+      { path: '/inventory/voucher/opening', label: t('openingBalanceVoucher') || 'الأرصدة الافتتاحية' },
+      { path: '/inventory/voucher/receipt', label: t('materialReceiptVoucher') || 'سند استلام مواد' },
+      { path: '/inventory/voucher/issue',   label: t('materialIssueVoucher')   || 'سند صرف مواد' },
       { path: '/inventory?tab=stock',        label: t('stock') },
       { path: '/inventory?tab=alerts',       label: t('lowStockAlerts') },
       { path: '/inventory?tab=counts',       label: t('stockCountsNav') },
