@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatNumber } from '@/utils/numberFormat';
 import { ArrowRightLeft, Info } from 'lucide-react';
+import { StandardModal } from '@/components/ui/StandardModal';
+import { FormSection, FormField, StandardAlert } from '@/components/ui/StandardForm';
 
 interface CarryForwardInfo {
   period_id: string;
@@ -161,119 +160,94 @@ export function OpenPeriodDialog({ open, onOpenChange, onSuccess }: OpenPeriodDi
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md" dir={isRTL ? 'rtl' : 'ltr'}>
-        <DialogHeader>
-          <DialogTitle>{t('openNewPeriod')}</DialogTitle>
-          {carryForward && (
-            <DialogDescription>
-              {language === 'ar' 
-                ? `سيتم ترحيل الرصيد المتبقي من النثرية السابقة ${carryForward.period_number}`
-                : `Remaining balance from period ${carryForward.period_number} will be carried forward`}
-            </DialogDescription>
-          )}
-        </DialogHeader>
-
-        {/* Carry Forward Info */}
+    <StandardModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('openNewPeriod')}
+      description={carryForward
+        ? (language === 'ar'
+            ? `سيتم ترحيل الرصيد المتبقي من النثرية السابقة ${carryForward.period_number}`
+            : `Remaining balance from period ${carryForward.period_number} will be carried forward`)
+        : undefined}
+      size="md"
+      submitLabel={loading ? t('saving') : t('openPeriod')}
+      submitting={loading}
+      submitDisabled={loadingCarry}
+      onSubmit={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
+    >
+      <div className="space-y-1" dir={isRTL ? 'rtl' : 'ltr'}>
         {carryForward && (
-          <Card className="border-primary/30 bg-primary/5">
-            <CardContent className="p-3">
-              <div className="flex items-start gap-3">
-                <ArrowRightLeft className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">
-                    {language === 'ar' ? 'رصيد مُرحّل' : 'Carried Forward Balance'}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {language === 'ar' 
-                      ? `من النثرية رقم ${carryForward.period_number}`
-                      : `From period ${carryForward.period_number}`}
-                  </p>
-                  <Badge variant="secondary" className="mt-1.5 text-sm">
-                    +{formatNumber(carryForward.amount)} {t('currency')}
-                  </Badge>
+          <StandardAlert tone="info" className="mb-3">
+            <div className="flex items-start gap-2">
+              <ArrowRightLeft className="w-4 h-4 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <div className="font-medium text-[13px]">
+                  {language === 'ar' ? 'رصيد مُرحّل' : 'Carried Forward Balance'}
+                  <span className="opacity-80 mx-1">— {language === 'ar' ? `من النثرية ${carryForward.period_number}` : `From ${carryForward.period_number}`}</span>
                 </div>
+                <Badge variant="wms-blue" className="mt-1.5">
+                  +{formatNumber(carryForward.amount)} {t('currency')}
+                </Badge>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </StandardAlert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>{t('location')} *</Label>
+        <FormSection title={t('basicInfo') || 'البيانات الأساسية'} columns={2}>
+          <FormField label={t('location')} required>
             <Input
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               placeholder={t('locationPlaceholder')}
-              required
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t('responsiblePerson')} *</Label>
+          </FormField>
+          <FormField label={t('responsiblePerson')} required>
             <Input
               value={formData.responsible_person}
               onChange={(e) => setFormData({ ...formData, responsible_person: e.target.value })}
               placeholder={t('responsiblePersonPlaceholder')}
-              required
             />
-          </div>
+          </FormField>
+        </FormSection>
 
-          <div className="space-y-2">
-            <Label>{language === 'ar' ? 'الرصيد الافتتاحي الجديد' : 'New Opening Balance'} *</Label>
+        <FormSection title={language === 'ar' ? 'الرصيد والميزانية' : 'Balance & Budget'} columns={2}>
+          <FormField
+            label={language === 'ar' ? 'الرصيد الافتتاحي الجديد' : 'New Opening Balance'}
+            required
+            hint={carryForward && formData.opening_balance
+              ? (language === 'ar'
+                  ? `الإجمالي: ${formatNumber(totalOpeningBalance)} ${t('currency')} (${formData.opening_balance} + ${formatNumber(carryForward.amount)} مُرحّل)`
+                  : `Total: ${formatNumber(totalOpeningBalance)} ${t('currency')}`)
+              : undefined}
+          >
             <Input
-              type="number"
-              min="0"
-              step="0.01"
+              type="number" min="0" step="0.01"
               value={formData.opening_balance}
               onChange={(e) => setFormData({ ...formData, opening_balance: e.target.value })}
               placeholder="0.00"
-              required
             />
-            {carryForward && formData.opening_balance && (
-              <div className="flex items-center gap-2 p-2 rounded-md bg-muted/50 text-sm">
-                <Info className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                <span>
-                  {language === 'ar' 
-                    ? `الإجمالي: ${formatNumber(totalOpeningBalance)} ${t('currency')} (${formData.opening_balance} + ${formatNumber(carryForward.amount)} مُرحّل)`
-                    : `Total: ${formatNumber(totalOpeningBalance)} ${t('currency')} (${formData.opening_balance} + ${formatNumber(carryForward.amount)} carried)`}
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t('budgetLimit')}</Label>
+          </FormField>
+          <FormField label={t('budgetLimit')}>
             <Input
-              type="number"
-              min="0"
-              step="0.01"
+              type="number" min="0" step="0.01"
               value={formData.budget_limit}
               onChange={(e) => setFormData({ ...formData, budget_limit: e.target.value })}
               placeholder="1000"
             />
-          </div>
+          </FormField>
+        </FormSection>
 
-          <div className="space-y-2">
-            <Label>{t('notes')}</Label>
+        <FormSection columns={1}>
+          <FormField label={t('notes')}>
             <Textarea
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder={t('notesPlaceholder')}
               rows={3}
             />
-          </div>
-
-          <div className={`flex gap-3 pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <Button type="submit" disabled={loading || loadingCarry} className="flex-1">
-              {loading ? t('saving') : t('openPeriod')}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {t('cancel')}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </FormField>
+        </FormSection>
+      </div>
+    </StandardModal>
   );
 }
