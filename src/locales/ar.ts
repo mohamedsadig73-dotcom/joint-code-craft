@@ -1663,6 +1663,7 @@ const ar = {
     saveAndPost: 'حفظ وترحيل',
     voucherSaved: 'تم حفظ السند بنجاح',
     totalLines: 'عدد الأسطر',
+    expiryDate: 'تاريخ الصلاحية',
 };
 
 export default ar;
