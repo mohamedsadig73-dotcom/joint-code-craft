@@ -284,19 +284,11 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
                 <Input value={values.name_en ?? ''} onChange={(e) => setField('name_en', e.target.value)} dir="ltr" />
               </div>
               {similarNames.length > 0 && (
-                <div className="md:col-span-2 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 p-2.5 text-xs">
-                  <div className="flex items-center gap-1.5 font-medium text-amber-800 dark:text-amber-300 mb-1">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    {t('similarNamesFound')}
-                  </div>
-                  <ul className="space-y-0.5 text-amber-900 dark:text-amber-200">
-                    {similarNames.map((m) => (
-                      <li key={m.row.id}>
-                        • {m.row.name_ar || m.row.description}{' '}
-                        <span className="opacity-70">({Math.round(m.score * 100)}%)</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="md:col-span-2">
+                  <FuzzyWarning
+                    count={similarNames.length}
+                    sampleNames={similarNames.map((m) => m.row.name_ar || m.row.description || '')}
+                  />
                 </div>
               )}
               {(aiBusy || aiError || aiSuggestion) && (
