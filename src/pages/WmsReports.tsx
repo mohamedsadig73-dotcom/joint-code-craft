@@ -14,7 +14,7 @@ import { BarChart3, Download, AlertTriangle, Package, UserCheck, FileText, Loade
 import { exportStockReport, exportCustodyReport, exportMovementsReport, exportLowStockReport } from '@/utils/wmsExcelExport';
 import { useToast } from '@/hooks/use-toast';
 
-export default function WmsReports() {
+export default function WmsReports({ embedded = false }: { embedded?: boolean } = {}) {
   const { t, language } = useLanguage();
   const { toast } = useToast();
   const { rows: stockRows, loading: stockLoading } = useStockSummary();
@@ -96,11 +96,9 @@ export default function WmsReports() {
     toast({ title: t('success'), description: t('reportExported') });
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
-        <PageHeader title={t('wmsReports')} subtitle={t('wmsReportsDesc')} icon={BarChart3} />
+  const body = (
+    <>
+      {!embedded && <PageHeader title={t('wmsReports')} subtitle={t('wmsReportsDesc')} icon={BarChart3} />}
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
           <TabsList className="grid w-full grid-cols-4 max-w-3xl">
@@ -248,6 +246,15 @@ export default function WmsReports() {
             )}
           </TabsContent>
         </Tabs>
+    </>
+  );
+
+  if (embedded) return body;
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
+        {body}
       </main>
     </div>
   );

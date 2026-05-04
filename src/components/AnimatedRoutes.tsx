@@ -44,7 +44,7 @@ const Home = lazyRetry(() => import('@/pages/Home'));
 const SmartDashboard = lazyRetry(() => import('@/pages/SmartDashboard'));
 const Dashboard = lazyRetry(() => import('@/pages/Dashboard'));
 const AdminDashboard = lazyRetry(() => import('@/pages/AdminDashboard'));
-const ReportsAnalytics = lazyRetry(() => import('@/pages/ReportsAnalytics'));
+const ReportsHub = lazyRetry(() => import('@/pages/ReportsHub'));
 const Profile = lazyRetry(() => import('@/pages/Profile'));
 const DeclarationDetails = lazyRetry(() => import('@/pages/DeclarationDetails'));
 const Maintenance = lazyRetry(() => import('@/pages/Maintenance'));
@@ -69,7 +69,6 @@ const ItemBarcodePrint = lazyRetry(() => import('@/pages/ItemBarcodePrint'));
 const PrintDiagnostics = lazyRetry(() => import('@/pages/PrintDiagnostics'));
 const Inventory = lazyRetry(() => import('@/pages/Inventory'));
 const WmsDashboard = lazyRetry(() => import('@/pages/WmsDashboard'));
-const WmsReports = lazyRetry(() => import('@/pages/WmsReports'));
 const DataSetup = lazyRetry(() => import('@/pages/DataSetup'));
 const AppSettingsPage = lazyRetry(() => import('@/pages/AppSettingsPage'));
 const RlsDiagnosticsPage = lazyRetry(() => import('@/pages/admin/RlsDiagnosticsPage'));
@@ -174,13 +173,13 @@ export function AnimatedRoutes() {
             element={
               <ProtectedRoute>
                 <PageTransition>
-                  <ReportsAnalytics />
+                  <ReportsHub />
                 </PageTransition>
               </ProtectedRoute>
             }
           />
-          <Route path="/reports" element={<Navigate to="/reports-analytics" replace />} />
-          <Route path="/analytics" element={<Navigate to="/reports-analytics" replace />} />
+          <Route path="/reports"   element={<Navigate to="/reports-analytics?type=declarations" replace />} />
+          <Route path="/analytics" element={<Navigate to="/reports-analytics?type=declarations" replace />} />
           <Route
             path="/profile"
             element={
@@ -427,16 +426,8 @@ export function AnimatedRoutes() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/wms/reports"
-            element={
-              <ProtectedRoute>
-                <PageTransition>
-                  <WmsReports />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
+          {/* P4 — WMS reports merged into unified ReportsHub */}
+          <Route path="/wms/reports" element={<Navigate to="/reports-analytics?type=warehouse" replace />} />
           <Route
             path="/admin/data-setup"
             element={
@@ -486,7 +477,7 @@ export function AnimatedRoutes() {
           {/* WMS legacy paths */}
           <Route path="/wms-dashboard"         element={<Navigate to="/wms" replace />} />
           <Route path="/wms/dashboard"         element={<Navigate to="/wms" replace />} />
-          <Route path="/wms-reports"           element={<Navigate to="/wms/reports" replace />} />
+          <Route path="/wms-reports"           element={<Navigate to="/reports-analytics?type=warehouse" replace />} />
           {/* Items / Boxes legacy aliases */}
           <Route path="/items"                 element={<Navigate to="/boxes/items" replace />} />
           <Route path="/items-master"          element={<Navigate to="/boxes/items" replace />} />

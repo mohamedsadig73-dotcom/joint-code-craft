@@ -1,11 +1,11 @@
 {
-  "version": "4.5.12",
+  "version": "4.5.13",
   "releaseDate": "2026-05-04",
   "channel": "stable",
-  "downloadUrl": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.5.12-dist.zip",
+  "downloadUrl": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.5.13-dist.zip",
   "notes": [
-    "P3-b: Items Master unified — قائمة الأصناف | الاعتمادات | سجل الصور | الاستيراد in a single tabbed page (/boxes/items?tab=...).",
-    "Old paths (/admin/item-approvals, /boxes/items/import, /boxes/items-image-history) now redirect to the new tabs.",
-    "No business logic changes; underlying create/update/import flows unchanged."
+    "P4: Reports unified — single page (/reports-analytics) with a dropdown to switch between Declarations Analytics and Warehouse Reports.",
+    "Legacy /wms/reports, /wms-reports, /reports, /analytics now redirect to the new hub with the correct ?type= query.",
+    "No business logic changes; both report engines render embedded."
   ]
 }
