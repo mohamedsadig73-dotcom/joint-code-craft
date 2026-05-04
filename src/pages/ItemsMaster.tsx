@@ -441,6 +441,15 @@ export default function ItemsMaster({ embedded = false }: { embedded?: boolean }
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+    </>
+  );
+
+  if (embedded) return body;
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
+        {body}
       </main>
     </div>
   );
