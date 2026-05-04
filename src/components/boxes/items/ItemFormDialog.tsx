@@ -477,6 +477,13 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
                   <Switch checked={values.is_active} onCheckedChange={(c) => setField('is_active', c)} />
                 </div>
               )}
+              <div className="md:col-span-2 flex items-center justify-between rounded-md border p-3">
+                <div>
+                  <Label className="text-sm">{t('dormant')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('dormantDesc')}</p>
+                </div>
+                <Switch checked={!!values.is_dormant} onCheckedChange={(c) => setField('is_dormant' as any, c)} />
+              </div>
             </div>
           </TabsContent>
 
