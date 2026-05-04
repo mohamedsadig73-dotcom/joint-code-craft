@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { toast } from 'sonner';
+import { wmsToast as toast } from '@/lib/wmsToast';
 import {
   readPrintLog,
   runPrintSelfTest,

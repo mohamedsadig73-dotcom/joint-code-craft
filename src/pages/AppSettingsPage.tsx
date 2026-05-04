@@ -10,7 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAppSettings } from '@/hooks/useAppSettings';
 import { useCategories } from '@/hooks/useDataSetup';
 import { CategoryTreeSelect } from '@/components/data-setup/CategoryTreeSelect';
-import { toast } from 'sonner';
+import { wmsToast as toast } from '@/lib/wmsToast';
 
 export default function AppSettingsPage() {
   const { t, language } = useLanguage();
