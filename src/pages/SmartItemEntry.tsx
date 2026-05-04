@@ -119,10 +119,20 @@ export default function SmartItemEntry() {
         },
       });
       if (error) throw error;
-      const s = data as { description_en?: string; description_ar?: string; category_code?: string | null };
-      if (s.description_ar && !nameAr) setNameAr(s.description_ar);
-      if (s.description_en && !nameEn) setNameEn(s.description_en);
-      if (s.description_ar || s.description_en) setDescription(s.description_ar || s.description_en || '');
+      const s = data as {
+        name_en?: string; name_ar?: string;
+        description_en?: string; description_ar?: string;
+        category_code?: string | null;
+      };
+      // Names: short canonical labels only
+      if (s.name_ar && !nameAr) setNameAr(s.name_ar);
+      if (s.name_en && !nameEn) setNameEn(s.name_en);
+      // Description: longer text, kept separate
+      if (!description && (s.description_ar || s.description_en)) {
+        setDescription(isAr
+          ? (s.description_ar || s.description_en || '')
+          : (s.description_en || s.description_ar || ''));
+      }
       if (s.category_code) {
         const matched = mainCategories.find((c) => c.code === s.category_code);
         if (matched) setCategoryId(matched.id);
