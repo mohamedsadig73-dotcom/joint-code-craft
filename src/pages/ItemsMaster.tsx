@@ -26,7 +26,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-export default function ItemsMaster() {
+export default function ItemsMaster({ embedded = false }: { embedded?: boolean } = {}) {
   const { t, language } = useLanguage();
   const isAr = language === 'ar';
   const navigate = useNavigate();
@@ -123,15 +123,15 @@ export default function ItemsMaster() {
     return createItem(values);
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
+  const body = (
+    <>
+      {!embedded && (
         <PageHeader
           title={t('itemsMaster')}
           subtitle={t('itemsMasterDesc')}
           icon={Library}
         />
+      )}
 
         <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
           <div className="flex flex-col sm:flex-row gap-2 flex-1 max-w-2xl">
