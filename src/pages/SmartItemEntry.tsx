@@ -175,10 +175,10 @@ export default function SmartItemEntry() {
       <div className="container mx-auto px-4 py-6 space-y-6">
         <PageHeader
           title={isAr ? 'إدخال صنف ذكي' : 'Smart Item Entry'}
-          description={isAr
+          subtitle={isAr
             ? 'توليد تلقائي للاسم الموحد والكود الداخلي + كشف فوري للمكررات'
             : 'Auto-generate standardized name & internal ref + live duplicate detection'}
-          icon={<Sparkles className="w-6 h-6" />}
+          icon={Sparkles}
         />
 
         <div className="grid gap-6 lg:grid-cols-3">
