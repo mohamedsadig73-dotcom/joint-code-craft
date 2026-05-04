@@ -23,6 +23,7 @@ import { useAppSettings } from '@/hooks/useAppSettings';
 import { BarcodeScannerDialog } from '@/components/scan/BarcodeScannerDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Check, X } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -64,6 +65,14 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
   const [tab, setTab] = useState('details');
   const [scanOpen, setScanOpen] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiSuggestion, setAiSuggestion] = useState<{
+    description_en?: string;
+    description_ar?: string;
+    category_code?: string | null;
+    category_id?: string | null;
+    category_label?: string | null;
+  } | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -100,6 +109,8 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
     setDuplicateWarning(false);
     setErrors({});
     setTab('details');
+    setAiSuggestion(null);
+    setAiError(null);
   }, [open, initial, initialPartNo]);
 
   useEffect(() => {
@@ -156,8 +167,9 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
 
   const handleAiSuggest = async () => {
     if (aiBusy) return;
+    setAiError(null);
     if (!values.part_no && !values.name_ar && !values.brand) {
-      toast.error(t('aiSuggestNeedsInput') || 'أدخل رمز القطعة أو الاسم أو الماركة أولاً');
+      setAiError(t('aiSuggestNeedsInput') || 'أدخل رمز القطعة أو الاسم أو الماركة أولاً');
       return;
     }
     setAiBusy(true);
@@ -177,22 +189,40 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
       });
       if (error) throw error;
       const suggestion = data as { description_en?: string; description_ar?: string; category_code?: string | null };
-      setValues((v) => {
-        const next: any = { ...v };
-        if (suggestion.description_en && !v.name_en) next.name_en = suggestion.description_en;
-        if (suggestion.description_ar && !v.description) next.description = suggestion.description_ar;
-        if (suggestion.category_code && !v.category_id) {
-          const match = categories.find((c) => c.code === suggestion.category_code);
-          if (match) next.category_id = match.id;
-        }
-        return next;
-      });
-      toast.success(t('aiSuggestApplied') || 'تم تطبيق اقتراحات الذكاء الاصطناعي');
+      const matched = suggestion.category_code
+        ? categories.find((c) => c.code === suggestion.category_code)
+        : null;
+      const hasAny =
+        suggestion.description_en || suggestion.description_ar || matched;
+      if (!hasAny) {
+        setAiError(t('aiNoSuggestions') || 'لم يقترح المساعد أي قيم. حاول إدخال مزيد من التفاصيل.');
+      } else {
+        setAiSuggestion({
+          description_en: suggestion.description_en,
+          description_ar: suggestion.description_ar,
+          category_code: suggestion.category_code,
+          category_id: matched?.id ?? null,
+          category_label: matched ? (matched.name_ar || matched.name_en || matched.code) : null,
+        });
+      }
     } catch (e: any) {
-      toast.error(e?.message || 'AI suggest failed');
+      setAiError(e?.message || 'AI suggest failed');
     } finally {
       setAiBusy(false);
     }
+  };
+
+  const applyAiSuggestion = () => {
+    if (!aiSuggestion) return;
+    setValues((v) => {
+      const next: any = { ...v };
+      if (aiSuggestion.description_en) next.name_en = aiSuggestion.description_en;
+      if (aiSuggestion.description_ar) next.description = aiSuggestion.description_ar;
+      if (aiSuggestion.category_id) next.category_id = aiSuggestion.category_id;
+      return next;
+    });
+    toast.success(t('aiSuggestApplied') || 'تم تطبيق اقتراحات الذكاء الاصطناعي');
+    setAiSuggestion(null);
   };
 
   return (
@@ -249,6 +279,49 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
                       </li>
                     ))}
                   </ul>
+                </div>
+              )}
+              {(aiBusy || aiError || aiSuggestion) && (
+                <div className="md:col-span-2 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs space-y-2">
+                  <div className="flex items-center gap-1.5 font-medium text-primary">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {t('aiSuggest') || 'اقتراح بالذكاء الاصطناعي'}
+                  </div>
+                  {aiBusy && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      {t('aiThinking') || 'جاري توليد الاقتراحات...'}
+                    </div>
+                  )}
+                  {aiError && !aiBusy && (
+                    <div className="flex items-start gap-1.5 text-destructive">
+                      <AlertCircle className="w-3.5 h-3.5 mt-0.5" />
+                      <span>{aiError}</span>
+                    </div>
+                  )}
+                  {aiSuggestion && !aiBusy && (
+                    <div className="space-y-1.5">
+                      {aiSuggestion.description_ar && (
+                        <div><span className="opacity-70 me-1">{t('description')}:</span>{aiSuggestion.description_ar}</div>
+                      )}
+                      {aiSuggestion.description_en && (
+                        <div dir="ltr"><span className="opacity-70 me-1">EN:</span>{aiSuggestion.description_en}</div>
+                      )}
+                      {aiSuggestion.category_label && (
+                        <div><span className="opacity-70 me-1">{t('category')}:</span>{aiSuggestion.category_label}</div>
+                      )}
+                      <div className="flex gap-2 pt-1">
+                        <Button type="button" size="sm" variant="default" onClick={applyAiSuggestion} className="h-7 px-2">
+                          <Check className="w-3.5 h-3.5 me-1" />
+                          {t('apply') || 'تطبيق'}
+                        </Button>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => setAiSuggestion(null)} className="h-7 px-2">
+                          <X className="w-3.5 h-3.5 me-1" />
+                          {t('discard') || 'تجاهل'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               <div className="md:col-span-2 space-y-1.5">
