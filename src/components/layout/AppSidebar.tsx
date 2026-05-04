@@ -21,7 +21,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import {
   LayoutDashboard, FileText, Wrench, Package, Wallet, CalendarDays,
   Users, BarChart3, Shield, Database, Settings as SettingsIcon,
-  ShieldCheck, Warehouse, Briefcase, FolderCog, ChevronDown,
+  ShieldCheck, Warehouse, ChevronDown, ClipboardList, Boxes,
 } from 'lucide-react';
 
 type Leaf = { path: string; label: string };
@@ -33,14 +33,19 @@ type Module = {
 };
 
 /**
- * P1: Sidebar reorganized into 6 logical Modules (Information Architecture).
- *  1) Dashboard (single entry)
- *  2) Operations    — Declarations / Boxes / Maintenance
- *  3) Inventory     — Unified inventory page (with internal Tabs)
- *  4) Master Data   — Items / Data Setup / Suppliers
- *  5) HR & Office   — Employees / Leaves / Holiday / Petty Cash
- *  6) Reports       — Unified reports
- *  7) Admin         — Users / Audit / Settings (admin only)
+ * IA-Refactor v5 — Reorganized into 5 clean modules (down from 6),
+ * inspired by WMS Pro hierarchical pattern. Goal: ~12 visible items
+ * instead of ~32. All admin/diagnostic pages collapsed into a single
+ * "Settings Hub" tile group, and 3 separate vouchers merged into one
+ * `/vouchers` page with internal tabs.
+ *
+ *  1) Items     — ItemsHub + Smart Entry
+ *  2) Vouchers  — Unified Vouchers (opening/receipt/issue) + Movements log
+ *  3) Inventory — Stock / Alerts / Counts / Custody / Locations (tabs)
+ *  4) Documents — Declarations + Boxes + Maintenance (operations)
+ *  5) Office    — Employees / Leaves / Holiday / Petty Cash
+ *  6) Reports   — Unified reports hub
+ *  7) Admin     — Settings Hub (single entry → tile directory)
  */
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -50,69 +55,71 @@ export function AppSidebar() {
   const { t, language } = useLanguage();
 
   const modules: Module[] = useMemo(() => {
-    const ops: Leaf[] = [
-      { path: '/declarations', label: t('declarations') },
-      { path: '/boxes',        label: t('boxesManagement') },
-      { path: '/maintenance',  label: t('maintenance') },
-    ];
-
-    const inv: Leaf[] = [
-      { path: '/inventory?tab=transactions', label: t('declarations_and_movements') || 'الحركات' },
-      { path: '/inventory/voucher/opening', label: t('openingBalanceVoucher') || 'الأرصدة الافتتاحية' },
-      { path: '/inventory/voucher/receipt', label: t('materialReceiptVoucher') || 'سند استلام مواد' },
-      { path: '/inventory/voucher/issue',   label: t('materialIssueVoucher')   || 'سند صرف مواد' },
-      { path: '/inventory?tab=stock',        label: t('stock') },
-      { path: '/inventory?tab=alerts',       label: t('lowStockAlerts') },
-      { path: '/inventory?tab=counts',       label: t('stockCountsNav') },
-      { path: '/inventory?tab=custody',      label: t('custody') },
-      { path: '/inventory?tab=locations',    label: t('locations') },
-    ];
-
-    const master: Leaf[] = [
-      { path: '/boxes/items?tab=list', label: t('itemsMaster') || 'الأصناف' },
+    // 1) ITEMS
+    const items: Leaf[] = [
+      { path: '/boxes/items?tab=list', label: t('itemsMaster') || 'كل الأصناف' },
     ];
     if (user?.role === 'admin' || user?.role === 'manager') {
-      master.push({ path: '/boxes/items/smart-new',     label: t('smartItemEntry') || 'إدخال صنف ذكي' });
-      master.push({ path: '/boxes/items?tab=approvals',  label: t('itemApprovalsNav') });
-      master.push({ path: '/boxes/items?tab=images',     label: t('itemImageHistory') || 'سجل الصور' });
-      master.push({ path: '/boxes/items?tab=import',     label: t('importItemsTitle') || 'الاستيراد' });
-      master.push({ path: '/admin/supplier-price-import', label: t('supplierPriceImport') });
-    }
-    if (user?.role === 'admin') {
-      master.push({ path: '/admin/data-setup', label: t('dataSetup') });
-      master.push({ path: '/admin/naming-system', label: t('namingSystemTitle') || 'نظام التسمية' });
+      items.push({ path: '/boxes/items/smart-new', label: t('smartItemEntry') || 'إدخال صنف ذكي' });
     }
 
-    const hr: Leaf[] = [
+    // 2) VOUCHERS & MOVEMENTS
+    const vouchers: Leaf[] = [
+      { path: '/vouchers?tab=receipt',         label: t('materialReceiptVoucher') || 'استلام' },
+      { path: '/vouchers?tab=issue',           label: t('materialIssueVoucher')   || 'صرف' },
+      { path: '/vouchers?tab=opening',         label: t('openingBalanceVoucher')  || 'أرصدة افتتاحية' },
+      { path: '/inventory?tab=transactions',   label: t('declarations_and_movements') || 'سجل الحركات' },
+    ];
+
+    // 3) INVENTORY (read/inquiry)
+    const inventory: Leaf[] = [
+      { path: '/inventory?tab=stock',     label: t('stock')           || 'المخزون الحالي' },
+      { path: '/inventory?tab=alerts',    label: t('lowStockAlerts')  || 'تنبيهات' },
+      { path: '/inventory?tab=counts',    label: t('stockCountsNav')  || 'الجرد' },
+      { path: '/inventory?tab=custody',   label: t('custody')         || 'العُهد' },
+      { path: '/inventory?tab=locations', label: t('locations')       || 'المواقع' },
+    ];
+
+    // 4) DOCUMENTS & BOXES (Declarations + Boxes + Maintenance grouped)
+    const documents: Leaf[] = [
+      { path: '/declarations', label: t('declarations')     || 'الإعلانات' },
+      { path: '/boxes',        label: t('boxesManagement')  || 'الصناديق' },
+      { path: '/maintenance',  label: t('maintenance')      || 'الصيانة' },
+    ];
+
+    // 5) OFFICE (HR)
+    const office: Leaf[] = [
       { path: '/employees',          label: t('employeesManagement') },
       { path: '/leave-tracking',     label: t('leaveTracking') },
       { path: '/holiday-attendance', label: t('holidayAttendance') },
       { path: '/petty-cash',         label: t('pettyCash') },
     ];
 
+    // 6) REPORTS
     const reports: Leaf[] = [
-      { path: '/reports-analytics', label: t('reportsTitle') },
+      { path: '/reports-analytics', label: t('reportsTitle') || 'مركز التقارير' },
     ];
-
-    const admin: Leaf[] = [];
-    if (user?.role === 'manager' || user?.role === 'admin') {
-      admin.push({ path: '/manager-dashboard', label: t('managerDashboard') });
-    }
-    if (user?.role === 'admin') {
-      admin.push({ path: '/admin',                  label: t('adminDashboard') });
-      admin.push({ path: '/admin/app-settings',     label: t('appSettingsNav') });
-      admin.push({ path: '/audit-logs',             label: t('auditLogsTitle') || 'سجل التدقيق' });
-      admin.push({ path: '/admin/rls-diagnostics',  label: t('rlsDiagnosticsNav') });
-    }
 
     const list: Module[] = [
-      { key: 'operations',  label: t('operationsModule')  || 'العمليات',          icon: FileText,  items: ops },
-      { key: 'inventory',   label: t('inventoryModule')   || 'المخزون',           icon: Warehouse, items: inv },
-      { key: 'master',      label: t('masterDataModule')  || 'البيانات الرئيسية', icon: FolderCog, items: master },
-      { key: 'hr',          label: t('hrOfficeModule')    || 'الموارد والمكتب',   icon: Briefcase, items: hr },
-      { key: 'reports',     label: t('reportsModule')     || 'التقارير',          icon: BarChart3, items: reports },
+      { key: 'items',     label: t('itemsModule')     || 'الأصناف',            icon: Package,       items },
+      { key: 'vouchers',  label: t('vouchersModule')  || 'الحركات والسندات',   icon: ClipboardList, items: vouchers },
+      { key: 'inventory', label: t('inventoryModule') || 'المخزون',            icon: Warehouse,     items: inventory },
+      { key: 'documents', label: t('documentsModule') || 'المستندات والصناديق', icon: Boxes,        items: documents },
+      { key: 'office',    label: t('officeModule')    || 'المكتب',             icon: Users,         items: office },
+      { key: 'reports',   label: t('reportsModule')   || 'التقارير',           icon: BarChart3,     items: reports },
     ];
-    if (admin.length) list.push({ key: 'admin', label: t('administration') || 'الإدارة', icon: Shield, items: admin });
+
+    // 7) ADMIN — single tile entry (everything else lives inside the hub)
+    if (user?.role === 'manager' || user?.role === 'admin') {
+      const admin: Leaf[] = [
+        { path: '/admin/settings', label: t('adminSettingsHub') || 'الإدارة والإعدادات' },
+      ];
+      if (user?.role === 'manager') {
+        admin.unshift({ path: '/manager-dashboard', label: t('managerDashboard') });
+      }
+      list.push({ key: 'admin', label: t('administration') || 'الإدارة', icon: Shield, items: admin });
+    }
+
     return list;
   }, [user?.role, t, language]);
 
