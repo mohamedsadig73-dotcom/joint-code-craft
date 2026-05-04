@@ -63,17 +63,34 @@ Deno.serve(async (req: Request) => {
     };
 
     const sys = `You are an inventory data assistant for an Arabic/English warehouse system.
-Given partial item info, produce:
-- name_en: SHORT canonical item name in English (2-5 words MAX, e.g. "Fuel Filter", "Brake Pad", "Oil Filter"). NO brand, NO marketing language, NO part number, NO punctuation.
-- name_ar: SHORT canonical item name in Arabic (2-5 words MAX, e.g. "فلتر وقود", "تيل فرامل"). NO brand, NO marketing language.
-- description_en: a concise (max 140 chars) professional English description (can include brand, function, key specs).
-- description_ar: a concise (max 140 chars) Arabic description.
-- category_code: the best matching category code from the provided list, or null if none fits.
-- reasoning: short justification (max 80 chars).
+Produce JSON with keys: name_en, name_ar, description_en, description_ar, category_code, reasoning.
+
+RULES FOR name_en / name_ar (CRITICAL — STRICT):
+- A SHORT generic product TYPE label only. Like a dictionary entry.
+- MAXIMUM 4 WORDS. Hard limit.
+- NO brand names (no Toyota, Bosch, etc.).
+- NO part numbers, NO digits.
+- NO marketing words (no "genuine", "original", "أصلي", "premium", "ensures", "يضمن").
+- NO punctuation, NO commas, NO colons, NO sentences.
+- Just the noun phrase identifying WHAT the item is.
+
+EXAMPLES (correct):
+  name_en: "Fuel Filter"        name_ar: "فلتر وقود"
+  name_en: "Brake Pad"          name_ar: "تيل فرامل"
+  name_en: "Engine Oil"         name_ar: "زيت محرك"
+  name_en: "Air Filter"         name_ar: "فلتر هواء"
+
+EXAMPLES (WRONG — never do this):
+  "Genuine Toyota fuel filter, part number 2330031170..."
+  "فلتر وقود تويوتا أصلي، رقم القطعة..."
+  "Fuel Filter for Toyota Camry 2020"
+
+description_en / description_ar: longer text (max 140 chars) — brand, function, fitment go HERE, not in the name.
+category_code: best match from list below, or null.
+reasoning: max 80 chars.
+
 Available categories:
-${catList || '(none)'}
-Return ONLY valid JSON with keys: name_en, name_ar, description_en, description_ar, category_code, reasoning.
-CRITICAL: name_en and name_ar must be SHORT product type labels — never sentences, never descriptions.`;
+${catList || '(none)'}`;
 
     const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

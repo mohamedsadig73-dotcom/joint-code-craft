@@ -124,9 +124,23 @@ export default function SmartItemEntry() {
         description_en?: string; description_ar?: string;
         category_code?: string | null;
       };
+      // Safety net: enforce SHORT canonical names client-side even if AI
+      // ignores the prompt and returns a long descriptive sentence.
+      const sanitizeName = (raw?: string): string => {
+        if (!raw) return '';
+        let v = raw.trim();
+        // Cut at first sentence-breaking punctuation
+        v = v.split(/[،,:.;\(\)\[\]]/)[0].trim();
+        // Drop trailing digits/part numbers tokens
+        const words = v.split(/\s+/).filter(w => !/^\d+$/.test(w));
+        // Hard cap at 4 words
+        return words.slice(0, 4).join(' ').trim();
+      };
       // Names: short canonical labels only
-      if (s.name_ar && !nameAr) setNameAr(s.name_ar);
-      if (s.name_en && !nameEn) setNameEn(s.name_en);
+      const cleanAr = sanitizeName(s.name_ar);
+      const cleanEn = sanitizeName(s.name_en);
+      if (cleanAr && !nameAr) setNameAr(cleanAr);
+      if (cleanEn && !nameEn) setNameEn(cleanEn);
       // Description: longer text, kept separate
       if (!description && (s.description_ar || s.description_en)) {
         setDescription(isAr
