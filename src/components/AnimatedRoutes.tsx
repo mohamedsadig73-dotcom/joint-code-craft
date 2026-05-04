@@ -377,6 +377,16 @@ export function AnimatedRoutes() {
           {/* P3-b: import merged into ItemsHub tab */}
           <Route path="/boxes/items/import" element={<Navigate to="/boxes/items?tab=import" replace />} />
           <Route
+            path="/boxes/items/smart-new"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <SmartItemEntry />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/naming-system"
             element={
               <ProtectedRoute>
