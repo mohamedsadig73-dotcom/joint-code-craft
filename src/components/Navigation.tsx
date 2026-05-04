@@ -105,6 +105,7 @@ export function Navigation({ minimal = false }: { minimal?: boolean }) {
       items.push({ path: '/admin', icon: Shield, labelKey: 'adminDashboard' });
       items.push({ path: '/admin/data-setup', icon: Database, labelKey: 'dataSetup' });
       items.push({ path: '/admin/app-settings', icon: SettingsIcon, labelKey: 'appSettingsNav' });
+      items.push({ path: '/admin/rls-diagnostics', icon: ShieldCheck, labelKey: 'rlsDiagnosticsNav' });
     }
     // Inventory tools (all roles)
     items.push({ path: '/inventory/alerts', icon: AlertTriangle, labelKey: 'lowStockAlerts' });
