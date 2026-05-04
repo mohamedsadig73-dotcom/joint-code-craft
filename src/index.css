@@ -80,6 +80,37 @@
     --chart-1: 210 100% 50%;
     --chart-2: 40 80% 50%;
     --chart-3: 151 55% 42%;
+
+    /* ============================================================
+       WMS Pro Tokens — Layered surfaces & soft accent variants.
+       Use these for StandardModal/StandardForm only. Existing
+       semantic tokens (background/card/primary…) remain untouched.
+       ============================================================ */
+    --wms-bg: 222 40% 10%;
+    --wms-bg2: 222 38% 13%;
+    --wms-bg3: 222 35% 17%;
+    --wms-bg4: 222 30% 22%;
+    --wms-border: 217 33% 25%;
+    --wms-border2: 217 30% 32%;
+    --wms-text: 210 40% 98%;
+    --wms-text2: 215 25% 75%;
+    --wms-text3: 215 18% 55%;
+    --wms-accent: 210 100% 55%;
+    --wms-accent2: 210 100% 42%;
+    --wms-accent-soft: 210 100% 55% / 0.10;
+    --wms-accent-soft2: 210 100% 55% / 0.18;
+    --wms-green: 142 70% 45%;
+    --wms-green-soft: 142 70% 45% / 0.12;
+    --wms-red: 0 75% 58%;
+    --wms-red-soft: 0 75% 58% / 0.12;
+    --wms-yellow: 38 92% 50%;
+    --wms-yellow-soft: 38 92% 50% / 0.12;
+    --wms-purple: 270 80% 60%;
+    --wms-purple-soft: 270 80% 60% / 0.12;
+    --wms-teal: 173 80% 40%;
+    --wms-teal-soft: 173 80% 40% / 0.12;
+    --wms-radius: 10px;
+    --wms-radius-sm: 6px;
   }
 
   /* Light Theme */
@@ -118,6 +149,21 @@
     
     --glass-bg: 0 0% 0% / 0.03;
     --glass-border: 0 0% 0% / 0.1;
+
+    /* WMS Pro — Light mode override */
+    --wms-bg: 0 0% 100%;
+    --wms-bg2: 220 20% 98%;
+    --wms-bg3: 220 15% 95%;
+    --wms-bg4: 220 14% 91%;
+    --wms-border: 220 13% 88%;
+    --wms-border2: 220 13% 80%;
+    --wms-text: 222 47% 11%;
+    --wms-text2: 215 20% 35%;
+    --wms-text3: 215 15% 55%;
+    --wms-accent: 210 100% 45%;
+    --wms-accent2: 210 100% 35%;
+    --wms-accent-soft: 210 100% 45% / 0.10;
+    --wms-accent-soft2: 210 100% 45% / 0.18;
     
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
