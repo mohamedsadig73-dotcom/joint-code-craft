@@ -1630,6 +1630,7 @@ const ar = {
     allCategories: 'كل التصنيفات',
     // Item Naming System (M1)
     namingSystemTitle: 'نظام توحيد مسميات الأصناف',
+    smartItemEntry: 'إدخال صنف ذكي',
     namingSystemDesc: 'تسمية موحدة، أكواد، وحدات قياس وتصنيفات',
     namingFormat: 'صيغة التسمية',
     standardNamingFormat: 'الصيغة القياسية لتسمية الأصناف',

@@ -69,6 +69,7 @@ export function AppSidebar() {
       { path: '/boxes/items?tab=list', label: t('itemsMaster') || 'الأصناف' },
     ];
     if (user?.role === 'admin' || user?.role === 'manager') {
+      master.push({ path: '/boxes/items/smart-new',     label: t('smartItemEntry') || 'إدخال صنف ذكي' });
       master.push({ path: '/boxes/items?tab=approvals',  label: t('itemApprovalsNav') });
       master.push({ path: '/boxes/items?tab=images',     label: t('itemImageHistory') || 'سجل الصور' });
       master.push({ path: '/boxes/items?tab=import',     label: t('importItemsTitle') || 'الاستيراد' });
