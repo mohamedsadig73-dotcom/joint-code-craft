@@ -1,12 +1,9 @@
 {
-  "version": "4.5.14",
-  "releaseDate": "2026-05-04",
-  "channel": "stable",
-  "downloadUrl": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.5.14-dist.zip",
-  "notes": [
-    "M3: AI Suggest button in Smart Item Entry — auto-fill name & category via Lovable AI.",
-    "M3: Auto QR payload generated for every item; live QR preview in Smart Entry.",
-    "M3: Approval workflow — non-admin submissions enter pending state automatically.",
-    "M3: Quality Dashboard tab in Item Naming System with score buckets and lowest-20 list."
-  ]
+  "desktop_shell_version": "4.5.14",
+  "min_shell_version": "4.4.5",
+  "web_version": "4.5.14",
+  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.5.14-dist.zip",
+  "full_download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.4.5.zip",
+  "release_notes": "v4.5.14",
+  "mandatory": false
 }
