@@ -7,6 +7,7 @@ const ar = {
   tooLong: 'النص طويل جداً',
   numberPositive: 'يجب أن يكون رقماً موجباً',
   maxLessThanMin: 'الحد الأقصى يجب أن يكون أكبر من الحد الأدنى',
+  categoryRequired: 'يجب اختيار التصنيف قبل حفظ الصنف',
 };
 
 export const itemSchema = z
@@ -26,6 +27,7 @@ export const itemSchema = z
     barcode: z.string().trim().max(80, ar.tooLong).optional().nullable(),
     default_unit: z.string().trim().min(1, ar.required),
     default_supplier: z.string().trim().max(150).optional().nullable(),
+    supplier_id: z.string().uuid().nullable().optional(),
     category_id: z.string().uuid().nullable().optional(),
     item_type: z.enum(['item', 'service', 'asset']).optional(),
     condition: z.enum(['good', 'damaged']).optional(),
