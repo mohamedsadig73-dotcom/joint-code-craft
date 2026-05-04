@@ -21,7 +21,7 @@ interface PendingItem {
   created_at: string;
 }
 
-export default function ItemApprovals() {
+export default function ItemApprovals({ embedded = false }: { embedded?: boolean } = {}) {
   const { t } = useLanguage();
   const [tab, setTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [rows, setRows] = useState<PendingItem[]>([]);
@@ -56,11 +56,11 @@ export default function ItemApprovals() {
     load();
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
+  const body = (
+    <>
+      {!embedded && (
         <PageHeader title="اعتماد الأصناف" subtitle="مراجعة وموافقة الأصناف الجديدة" icon={ShieldCheck} />
+      )}
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-4">
           <TabsList>
@@ -100,6 +100,15 @@ export default function ItemApprovals() {
             )}
           </TabsContent>
         </Tabs>
+    </>
+  );
+
+  if (embedded) return body;
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
+        {body}
       </main>
     </div>
   );
