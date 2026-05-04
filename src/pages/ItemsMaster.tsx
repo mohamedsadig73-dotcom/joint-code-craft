@@ -32,6 +32,7 @@ export default function ItemsMaster() {
   const [confirmDelete, setConfirmDelete] = useState<ItemMaster | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkAction, setBulkAction] = useState<null | 'delete' | 'activate' | 'deactivate'>(null);
+  const [bulkAction2, setBulkAction2] = useState<null | 'mark-dormant' | 'unmark-dormant'>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
 
   const itemIds = useMemo(() => items.map((i) => i.id), [items]);
@@ -86,6 +87,21 @@ export default function ItemsMaster() {
     }
     setBulkBusy(false);
     setBulkAction(null);
+    setSelected(new Set());
+    toast.success(`${t('bulkOperationDone')}: ${ok}${fail ? ` / ${t('failed')}: ${fail}` : ''}`);
+  };
+
+  const runBulkDormant = async (action: 'mark-dormant' | 'unmark-dormant') => {
+    if (selected.size === 0) return;
+    setBulkBusy(true);
+    const ids = [...selected];
+    let ok = 0, fail = 0;
+    for (const id of ids) {
+      const res = await updateItem(id, { is_dormant: action === 'mark-dormant' } as any);
+      res ? ok++ : fail++;
+    }
+    setBulkBusy(false);
+    setBulkAction2(null);
     setSelected(new Set());
     toast.success(`${t('bulkOperationDone')}: ${ok}${fail ? ` / ${t('failed')}: ${fail}` : ''}`);
   };
