@@ -173,6 +173,8 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
       return;
     }
     setAiBusy(true);
+    // Clear any previous suggestion so the user always sees the latest result
+    setAiSuggestion(null);
     try {
       const { data, error } = await supabase.functions.invoke('suggest-item-details', {
         body: {
@@ -187,7 +189,17 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
             .map((c) => ({ code: c.code, name_ar: c.name_ar, name_en: c.name_en })),
         },
       });
-      if (error) throw error;
+      if (error) {
+        // Edge Function errors expose useful context (rate limits, payment, etc.)
+        const ctxStatus = (error as any)?.context?.status as number | undefined;
+        if (ctxStatus === 429) {
+          throw new Error(language === 'ar' ? 'تم تجاوز حد الاستخدام، حاول لاحقاً.' : 'Rate limit exceeded, please try again later.');
+        }
+        if (ctxStatus === 402) {
+          throw new Error(language === 'ar' ? 'يلزم شحن رصيد الذكاء الاصطناعي للاستمرار.' : 'AI credits required to continue.');
+        }
+        throw new Error(error.message || (language === 'ar' ? 'تعذر الاتصال بخدمة الاقتراحات.' : 'Failed to reach suggestions service.'));
+      }
       const suggestion = data as { description_en?: string; description_ar?: string; category_code?: string | null };
       const matched = suggestion.category_code
         ? categories.find((c) => c.code === suggestion.category_code)
@@ -206,14 +218,15 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
         });
       }
     } catch (e: any) {
-      setAiError(e?.message || 'AI suggest failed');
+      setAiError(e?.message || (language === 'ar' ? 'فشل اقتراح الذكاء الاصطناعي' : 'AI suggest failed'));
     } finally {
       setAiBusy(false);
     }
   };
 
   const applyAiSuggestion = () => {
-    if (!aiSuggestion) return;
+    // Hard guard: never apply while a request is in flight or after a failure
+    if (!aiSuggestion || aiBusy) return;
     setValues((v) => {
       const next: any = { ...v };
       if (aiSuggestion.description_en) next.name_en = aiSuggestion.description_en;
@@ -288,9 +301,13 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
                     {t('aiSuggest') || 'اقتراح بالذكاء الاصطناعي'}
                   </div>
                   {aiBusy && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      {t('aiThinking') || 'جاري توليد الاقتراحات...'}
+                    <div
+                      role="status"
+                      aria-live="polite"
+                      className="flex items-center gap-2 text-primary font-medium"
+                    >
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{t('aiThinking') || 'جاري توليد الاقتراحات...'}</span>
                     </div>
                   )}
                   {aiError && !aiBusy && (
@@ -324,11 +341,11 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
                         <div><span className="opacity-70 me-1">{t('category')}:</span>{aiSuggestion.category_label}</div>
                       )}
                       <div className="flex gap-2 pt-1">
-                        <Button type="button" size="sm" variant="default" onClick={applyAiSuggestion} className="h-7 px-2">
+                        <Button type="button" size="sm" variant="default" onClick={applyAiSuggestion} disabled={aiBusy} className="h-7 px-2">
                           <Check className="w-3.5 h-3.5 me-1" />
                           {t('apply') || 'تطبيق'}
                         </Button>
-                        <Button type="button" size="sm" variant="ghost" onClick={() => setAiSuggestion(null)} className="h-7 px-2">
+                        <Button type="button" size="sm" variant="ghost" onClick={() => setAiSuggestion(null)} disabled={aiBusy} className="h-7 px-2">
                           <X className="w-3.5 h-3.5 me-1" />
                           {t('discard') || 'تجاهل'}
                         </Button>
