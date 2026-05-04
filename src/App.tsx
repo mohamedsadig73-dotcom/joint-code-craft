@@ -62,7 +62,9 @@ function AppRoutes() {
     <>
       {isAuthenticated && <NotificationListener />}
       {isAuthenticated && <Onboarding />}
-      {isAuthenticated && <MobileBottomNav />}
+      {/* MobileBottomNav only on routes WITHOUT AppShell (e.g. Home launcher).
+          AppShell provides mobile navigation via Sidebar sheet — avoid duplicates. */}
+      {isAuthenticated && !useShell && <MobileBottomNav />}
       {isAuthenticated && <OfflineBanner />}
       <UpdateChecker />
       {useShell ? (
