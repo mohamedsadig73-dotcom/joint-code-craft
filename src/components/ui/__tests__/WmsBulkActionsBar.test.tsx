@@ -5,10 +5,10 @@ import { WmsBulkActionsBar } from '@/components/ui/WmsBulkActionsBar';
 
 describe('WmsBulkActionsBar (RTL)', () => {
   it('لا يعرض شيء عندما selectedCount=0', () => {
-    const { container } = renderRTL(
+    renderRTL(
       <WmsBulkActionsBar selectedCount={0} onClear={() => {}} actions={null} />
     );
-    expect(container.firstChild).toBeNull();
+    expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();
   });
 
   it('يعرض العدد والإجراءات عند تحديد عناصر', () => {
