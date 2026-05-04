@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { wmsToast as toast } from '@/lib/wmsToast';
 import { formatNumber } from '@/utils/numberFormat';
 import { Check, ChevronsUpDown, AlertCircle, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
