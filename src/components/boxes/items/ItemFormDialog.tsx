@@ -391,7 +391,17 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
           </TabsContent>
         </Tabs>
 
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-4 flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleAiSuggest}
+            disabled={aiBusy || submitting}
+            className="me-auto"
+          >
+            {aiBusy ? <Loader2 className="w-4 h-4 me-1.5 animate-spin" /> : <Sparkles className="w-4 h-4 me-1.5" />}
+            {t('aiSuggest') || 'اقتراح بالذكاء الاصطناعي'}
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
             {t('cancel')}
           </Button>
@@ -401,6 +411,11 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
           </Button>
         </DialogFooter>
       </DialogContent>
+      <BarcodeScannerDialog
+        open={scanOpen}
+        onOpenChange={setScanOpen}
+        onResult={(text) => setField('barcode', text)}
+      />
     </Dialog>
   );
 }
