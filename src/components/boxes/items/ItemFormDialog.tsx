@@ -58,6 +58,8 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
     min_qty?: number | null; max_qty?: number | null; has_expiry?: boolean | null;
     condition?: string | null; item_type?: string | null; category_id?: string | null;
     supplier_id?: string | null;
+    is_dormant?: boolean | null;
+    classification_id?: string | null;
   }>(DEFAULT);
   const [submitting, setSubmitting] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState(false);
@@ -93,6 +95,8 @@ export function ItemFormDialog({ open, onOpenChange, initial, initialPartNo, onS
         barcode: initial.barcode ?? '',
         category_id: initial.category_id ?? null,
         supplier_id: initial.supplier_id ?? null,
+        is_dormant: (initial as any).is_dormant ?? false,
+        classification_id: (initial as any).classification_id ?? null,
         min_qty: initial.min_qty ?? 0,
         max_qty: initial.max_qty ?? null,
         has_expiry: initial.has_expiry ?? false,
