@@ -74,8 +74,7 @@ const WmsReports = lazyRetry(() => import('@/pages/WmsReports'));
 const DataSetup = lazyRetry(() => import('@/pages/DataSetup'));
 const AppSettingsPage = lazyRetry(() => import('@/pages/AppSettingsPage'));
 const RlsDiagnosticsPage = lazyRetry(() => import('@/pages/admin/RlsDiagnosticsPage'));
-const StockAlerts = lazyRetry(() => import('@/pages/StockAlerts'));
-const StockCounts = lazyRetry(() => import('@/pages/StockCounts'));
+// StockAlerts & StockCounts merged into Inventory tabs (P2). Pages kept for legacy redirects only.
 const ItemApprovals = lazyRetry(() => import('@/pages/ItemApprovals'));
 const SupplierPriceImport = lazyRetry(() => import('@/pages/SupplierPriceImport'));
 const NotFound = lazyRetry(() => import('@/pages/NotFound'));
@@ -486,26 +485,9 @@ export function AnimatedRoutes() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/inventory/alerts"
-            element={
-              <ProtectedRoute>
-                <PageTransition>
-                  <StockAlerts />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/inventory/stock-counts"
-            element={
-              <ProtectedRoute>
-                <PageTransition>
-                  <StockCounts />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
+          {/* Legacy routes — merged into /inventory tabs (P2 unification) */}
+          <Route path="/inventory/alerts" element={<Navigate to="/inventory?tab=alerts" replace />} />
+          <Route path="/inventory/stock-counts" element={<Navigate to="/inventory?tab=counts" replace />} />
           <Route
             path="/admin/item-approvals"
             element={
