@@ -1646,6 +1646,24 @@ const en = {
     namingTip1: 'Use clean Arabic name without redundant attributes.',
     namingTip2: 'Brand is optional — only when distinctive (Samsung, LG).',
     namingTip3: 'Specifications go in the SPEC field (e.g. 65 inch, 6 persons).',
+    // Voucher screens (M-Vouchers)
+    openingBalanceVoucher: 'Opening Balance Voucher',
+    openingBalanceVoucherDesc: 'Enter initial item balances into the warehouse',
+    materialReceiptVoucher: 'Material Receipt Voucher',
+    materialReceiptVoucherDesc: 'Issue a multi-line material receipt voucher',
+    materialIssueVoucher: 'Material Issue Voucher',
+    materialIssueVoucherDesc: 'Issue materials to departments or employees',
+    referenceNo: 'Reference No',
+    selectWarehouseRequired: 'Please select a warehouse',
+    selectEmployee: 'Select employee',
+    issuingStaff: 'Issuing Staff',
+    supplierOrSource: 'Supplier / Source',
+    beneficiaryParty: 'Beneficiary',
+    expiryDate: 'Expiry Date',
+    addRow: 'Add Row',
+    saveAndPost: 'Save & Post',
+    voucherSaved: 'Voucher saved successfully',
+    totalLines: 'Lines',
 };
 
 export default en;
