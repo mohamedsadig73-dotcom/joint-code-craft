@@ -90,6 +90,20 @@ export default function ItemsMaster() {
     toast.success(`${t('bulkOperationDone')}: ${ok}${fail ? ` / ${t('failed')}: ${fail}` : ''}`);
   };
 
+  const runBulkDormant = async (action: 'mark-dormant' | 'unmark-dormant') => {
+    if (selected.size === 0) return;
+    setBulkBusy(true);
+    const ids = [...selected];
+    let ok = 0, fail = 0;
+    for (const id of ids) {
+      const res = await updateItem(id, { is_dormant: action === 'mark-dormant' } as any);
+      res ? ok++ : fail++;
+    }
+    setBulkBusy(false);
+    setSelected(new Set());
+    toast.success(`${t('bulkOperationDone')}: ${ok}${fail ? ` / ${t('failed')}: ${fail}` : ''}`);
+  };
+
   const handleSubmit = async (values: Parameters<typeof createItem>[0]) => {
     if (editing) return updateItem(editing.id, values);
     return createItem(values);
@@ -159,6 +173,12 @@ export default function ItemsMaster() {
             <Button size="sm" variant="outline" onClick={() => setBulkAction('deactivate')} className="gap-1.5">
               <PowerOff className="w-4 h-4" />{t('deactivate')}
             </Button>
+            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => runBulkDormant('mark-dormant')} className="gap-1.5">
+              {t('markDormant')}
+            </Button>
+            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => runBulkDormant('unmark-dormant')} className="gap-1.5">
+              {t('unmarkDormant')}
+            </Button>
             <Button size="sm" variant="destructive" onClick={() => setBulkAction('delete')} className="gap-1.5">
               <Trash2 className="w-4 h-4" />{t('delete')}
             </Button>
@@ -192,6 +212,7 @@ export default function ItemsMaster() {
                         <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{item.part_no}</span>
                         <Badge variant="outline" className="text-[10px]">{item.default_unit}</Badge>
                         {item.is_active ? <Badge className="text-[10px]">{t('active')}</Badge> : <Badge variant="outline" className="text-[10px]">{t('inactive')}</Badge>}
+                        {item.is_dormant && <Badge variant="destructive" className="text-[10px]">{t('dormant')}</Badge>}
                       </div>
                       <p className="text-sm mt-1 truncate">{item.description}</p>
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">{item.default_supplier || '—'} • {t('movementsCount')}: {count}</p>
@@ -295,6 +316,7 @@ export default function ItemsMaster() {
                         ) : (
                           <Badge variant="outline">{t('inactive')}</Badge>
                         )}
+                        {item.is_dormant && <Badge variant="destructive" className="ms-1">{t('dormant')}</Badge>}
                       </TableCell>
                       <TableCell className="text-end">
                         <div className="flex items-center justify-end gap-1">
