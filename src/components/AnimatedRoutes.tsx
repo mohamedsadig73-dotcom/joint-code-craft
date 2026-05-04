@@ -66,9 +66,7 @@ const BoxesDataAdmin = lazyRetry(() => import('@/pages/BoxesDataAdmin'));
 const ItemsHub = lazyRetry(() => import('@/pages/ItemsHub'));
 const ItemNamingSystem = lazyRetry(() => import('@/pages/ItemNamingSystem'));
 const SmartItemEntry = lazyRetry(() => import('@/pages/SmartItemEntry'));
-const OpeningBalanceVoucher = lazyRetry(() => import('@/pages/OpeningBalanceVoucher'));
-const ReceiptVoucher = lazyRetry(() => import('@/pages/ReceiptVoucher'));
-const IssueVoucher = lazyRetry(() => import('@/pages/IssueVoucher'));
+const VouchersHub = lazyRetry(() => import('@/pages/VouchersHub'));
 const ItemDetails = lazyRetry(() => import('@/pages/ItemDetails'));
 const ItemBarcodePrint = lazyRetry(() => import('@/pages/ItemBarcodePrint'));
 const PrintDiagnostics = lazyRetry(() => import('@/pages/PrintDiagnostics'));
@@ -77,6 +75,7 @@ const WmsDashboard = lazyRetry(() => import('@/pages/WmsDashboard'));
 const DataSetup = lazyRetry(() => import('@/pages/DataSetup'));
 const AppSettingsPage = lazyRetry(() => import('@/pages/AppSettingsPage'));
 const RlsDiagnosticsPage = lazyRetry(() => import('@/pages/admin/RlsDiagnosticsPage'));
+const AdminSettingsHub = lazyRetry(() => import('@/pages/AdminSettingsHub'));
 // StockAlerts & StockCounts merged into Inventory tabs (P2). ItemApprovals/ItemImageHistory/ItemsMasterImport merged into ItemsHub (P3-b).
 const SupplierPriceImport = lazyRetry(() => import('@/pages/SupplierPriceImport'));
 const NotFound = lazyRetry(() => import('@/pages/NotFound'));
@@ -399,32 +398,27 @@ export function AnimatedRoutes() {
               </ProtectedRoute>
             }
           />
+          {/* IA-Refactor v5: Unified Vouchers Hub */}
           <Route
-            path="/inventory/voucher/opening"
+            path="/vouchers"
             element={
               <ProtectedRoute>
                 <PageTransition>
-                  <OpeningBalanceVoucher />
+                  <VouchersHub />
                 </PageTransition>
               </ProtectedRoute>
             }
           />
+          <Route path="/inventory/voucher/opening" element={<Navigate to="/vouchers?tab=opening" replace />} />
+          <Route path="/inventory/voucher/receipt" element={<Navigate to="/vouchers?tab=receipt" replace />} />
+          <Route path="/inventory/voucher/issue"   element={<Navigate to="/vouchers?tab=issue"   replace />} />
+          {/* IA-Refactor v5: Unified Admin & Settings Hub */}
           <Route
-            path="/inventory/voucher/receipt"
+            path="/admin/settings"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin', 'manager']}>
                 <PageTransition>
-                  <ReceiptVoucher />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/inventory/voucher/issue"
-            element={
-              <ProtectedRoute>
-                <PageTransition>
-                  <IssueVoucher />
+                  <AdminSettingsHub />
                 </PageTransition>
               </ProtectedRoute>
             }
