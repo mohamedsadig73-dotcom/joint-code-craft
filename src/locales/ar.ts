@@ -1606,6 +1606,7 @@ const ar = {
     discard: 'تجاهل',
     retry: 'إعادة المحاولة',
     appSettingsNav: 'إعدادات التطبيق',
+    rlsDiagnosticsNav: 'تشخيص سياسات RLS',
 };
 
 export default ar;
