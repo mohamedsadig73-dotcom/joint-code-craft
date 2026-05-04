@@ -32,6 +32,30 @@ const routeLabels: Record<string, { en: string; ar: string }> = {
   'install': { en: 'Install App', ar: 'تثبيت التطبيق' },
 };
 
+// Extended global mappings used after AppShell rollout. Keep in sync with routes.
+Object.assign(routeLabels, {
+  'declarations': { en: 'Declarations', ar: 'الإقرارات' },
+  'boxes': { en: 'Boxes', ar: 'الصناديق' },
+  'card': { en: 'Card', ar: 'البطاقة' },
+  'items': { en: 'Items', ar: 'الأصناف' },
+  'barcodes': { en: 'Barcodes', ar: 'الباركود' },
+  'inventory': { en: 'Inventory', ar: 'المخزون' },
+  'alerts': { en: 'Alerts', ar: 'التنبيهات' },
+  'stock-counts': { en: 'Stock Counts', ar: 'الجرد' },
+  'item-approvals': { en: 'Item Approvals', ar: 'اعتماد الأصناف' },
+  'supplier-price-import': { en: 'Supplier Price Import', ar: 'استيراد أسعار المورد' },
+  'data-setup': { en: 'Data Setup', ar: 'إعداد البيانات' },
+  'app-settings': { en: 'App Settings', ar: 'إعدادات التطبيق' },
+  'rls-diagnostics': { en: 'RLS Diagnostics', ar: 'تشخيص الصلاحيات' },
+  'wms': { en: 'WMS', ar: 'إدارة المستودعات' },
+  'new': { en: 'New', ar: 'جديد' },
+  'edit': { en: 'Edit', ar: 'تعديل' },
+  'details': { en: 'Details', ar: 'التفاصيل' },
+  'employees-management': { en: 'Employees Management', ar: 'إدارة الموظفين' },
+  'forgot-password': { en: 'Forgot Password', ar: 'استعادة كلمة المرور' },
+  'reset-password': { en: 'Reset Password', ar: 'إعادة تعيين كلمة المرور' },
+});
+
 export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
   const { language } = useLanguage();
   const location = useLocation();
