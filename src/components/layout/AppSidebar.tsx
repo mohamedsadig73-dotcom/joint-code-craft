@@ -66,10 +66,12 @@ export function AppSidebar() {
     ];
 
     const master: Leaf[] = [
-      { path: '/boxes/items', label: t('itemsMaster') || 'الأصناف' },
+      { path: '/boxes/items?tab=list', label: t('itemsMaster') || 'الأصناف' },
     ];
     if (user?.role === 'admin' || user?.role === 'manager') {
-      master.push({ path: '/admin/item-approvals',       label: t('itemApprovalsNav') });
+      master.push({ path: '/boxes/items?tab=approvals',  label: t('itemApprovalsNav') });
+      master.push({ path: '/boxes/items?tab=images',     label: t('itemImageHistory') || 'سجل الصور' });
+      master.push({ path: '/boxes/items?tab=import',     label: t('importItemsTitle') || 'الاستيراد' });
       master.push({ path: '/admin/supplier-price-import', label: t('supplierPriceImport') });
     }
     if (user?.role === 'admin') {
