@@ -486,26 +486,9 @@ export function AnimatedRoutes() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/inventory/alerts"
-            element={
-              <ProtectedRoute>
-                <PageTransition>
-                  <StockAlerts />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/inventory/stock-counts"
-            element={
-              <ProtectedRoute>
-                <PageTransition>
-                  <StockCounts />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
+          {/* Legacy routes — merged into /inventory tabs (P2 unification) */}
+          <Route path="/inventory/alerts" element={<Navigate to="/inventory?tab=alerts" replace />} />
+          <Route path="/inventory/stock-counts" element={<Navigate to="/inventory?tab=counts" replace />} />
           <Route
             path="/admin/item-approvals"
             element={
