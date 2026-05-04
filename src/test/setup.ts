@@ -14,17 +14,13 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
-// Stub ResizeObserver for Radix UI
 class ResizeObserverStub {
   observe() {} unobserve() {} disconnect() {}
 }
 (global as any).ResizeObserver = ResizeObserverStub;
 
-// Stub scrollIntoView for Radix Select
 if (typeof Element !== 'undefined') {
   Element.prototype.scrollIntoView = () => {};
-  // @ts-expect-error - jsdom stub for Radix
-  Element.prototype.hasPointerCapture = () => false;
-  // @ts-expect-error
-  Element.prototype.releasePointerCapture = () => {};
+  (Element.prototype as any).hasPointerCapture = () => false;
+  (Element.prototype as any).releasePointerCapture = () => {};
 }
