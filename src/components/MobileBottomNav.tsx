@@ -1,24 +1,12 @@
-import { memo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, Wrench, Wallet, FileText, MoreHorizontal, CalendarDays, Users, Shield, X, Home, Package } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { hapticSelection, hapticLight } from '@/lib/haptics';
-
-interface NavItem {
-  path: string;
-  icon: typeof LayoutDashboard;
-  labelKey: string;
-}
-
-const primaryNavItems: NavItem[] = [
-  { path: '/', icon: Home, labelKey: 'home' },
-  { path: '/vouchers?tab=receipt', icon: FileText, labelKey: 'vouchersHub' },
-  { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
-  { path: '/petty-cash', icon: Wallet, labelKey: 'pettyCashShort' },
-];
+import { mobilePrimaryNav, mobileMoreNav, type NavLeaf, type Role } from '@/config/navigation';
 
 export const MobileBottomNav = memo(function MobileBottomNav() {
   const location = useLocation();
@@ -33,22 +21,12 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
     return location.pathname.startsWith(path);
   };
 
-  // Secondary pages shown in "More" menu
-  const moreNavItems: NavItem[] = [
-    { path: '/boxes', icon: Package, labelKey: 'boxesManagement' },
-    { path: '/leave-tracking', icon: CalendarDays, labelKey: 'leaveShort' },
-    { path: '/reports-analytics', icon: BarChart3, labelKey: 'reports' },
-    { path: '/holiday-attendance', icon: CalendarDays, labelKey: 'holidayAttendance' },
-    { path: '/employees', icon: Users, labelKey: 'employeesManagement' },
-  ];
-
-  // Role-based items
-  if (user?.role === 'manager' || user?.role === 'admin') {
-    moreNavItems.push({ path: '/manager-dashboard', icon: BarChart3, labelKey: 'managerDashboard' });
-  }
-  if (user?.role === 'admin') {
-    moreNavItems.push({ path: '/admin', icon: Shield, labelKey: 'adminDashboard' });
-  }
+  // P1: nav definitions come from src/config/navigation.ts (single source of truth).
+  const primaryNavItems: NavLeaf[] = mobilePrimaryNav;
+  const moreNavItems: NavLeaf[] = useMemo(
+    () => mobileMoreNav.filter((it) => !it.roles || (user?.role && it.roles.includes(user.role as Role))),
+    [user?.role]
+  );
 
   const isMoreActive = moreNavItems.some(item => isActive(item.path));
 
@@ -78,7 +56,7 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
         <div className="relative flex items-center justify-around px-2 pb-safe ps-safe pe-safe" style={{ height: '4.25rem' }}>
           {primaryNavItems.map((item, index) => {
             const active = isActive(item.path);
-            const Icon = item.icon;
+            const Icon = item.icon!;
             
             return (
               <button
@@ -170,7 +148,7 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
           </SheetHeader>
           <div className="grid grid-cols-3 gap-4 pb-6">
             {moreNavItems.map((item) => {
-              const Icon = item.icon;
+              const Icon = item.icon!;
               const active = isActive(item.path);
               return (
                 <button
