@@ -80,9 +80,8 @@ export function AppSidebar() {
       { path: '/inventory?tab=locations', label: t('locations')       || 'المواقع' },
     ];
 
-    // 4) DOCUMENTS & BOXES (Declarations + Boxes + Maintenance grouped)
+    // 4) DOCUMENTS & BOXES (Vouchers + Boxes + Maintenance grouped)
     const documents: Leaf[] = [
-      { path: '/declarations', label: t('declarations')     || 'الإعلانات' },
       { path: '/boxes',        label: t('boxesManagement')  || 'الصناديق' },
       { path: '/maintenance',  label: t('maintenance')      || 'الصيانة' },
     ];
