@@ -3,83 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import * as invSvc from '@/services/inventoryService';
+import type {
+  Warehouse, InvLocation, InvStock, InvCustody, InvTransaction,
+  InvTransactionItem, InvTxnType, InvTxnStatus, InvPartyType,
+  CreateTransactionInput,
+} from '@/services/inventoryService';
 
-export type InvTxnType = 'in' | 'out' | 'transfer' | 'return';
-export type InvTxnStatus = 'draft' | 'posted' | 'cancelled';
-export type InvPartyType = 'employee' | 'department' | 'supplier' | 'external';
-
-export interface Warehouse {
-  id: string;
-  code: string;
-  name_ar: string;
-  name_en: string;
-  location: string | null;
-  is_active: boolean;
-}
-
-export interface InvLocation {
-  id: string;
-  warehouse_id: string;
-  code: string;
-  name_ar: string;
-  name_en: string;
-  parent_id: string | null;
-  notes: string | null;
-  is_active: boolean;
-  created_at: string;
-}
-
-export interface InvStock {
-  id: string;
-  item_id: string;
-  warehouse_id: string;
-  location_id: string | null;
-  qty: number;
-  last_movement_at: string | null;
-}
-
-export interface InvCustody {
-  id: string;
-  item_id: string;
-  party_type: InvPartyType;
-  party_name: string;
-  party_ref: string | null;
-  qty: number;
-  last_movement_at: string | null;
-}
-
-export interface InvTransaction {
-  id: string;
-  txn_no: string;
-  txn_type: InvTxnType;
-  txn_date: string;
-  status: InvTxnStatus;
-  from_warehouse_id: string | null;
-  from_location_id: string | null;
-  to_warehouse_id: string | null;
-  to_location_id: string | null;
-  party_type: InvPartyType | null;
-  party_name: string | null;
-  party_ref: string | null;
-  reference: string | null;
-  notes: string | null;
-  linked_box_receipt_id: string | null;
-  declaration_id: string | null;
-  posted_at: string | null;
-  created_by: string | null;
-  created_at: string;
-  deleted_at: string | null;
-}
-
-export interface InvTransactionItem {
-  id: string;
-  transaction_id: string;
-  line_no: number;
-  item_id: string;
-  qty: number;
-  unit: string | null;
-  notes: string | null;
-}
+// Re-export service types for backwards compatibility with existing imports.
+export type { InvTxnType, InvTxnStatus, InvPartyType, Warehouse, InvLocation, InvStock, InvCustody, InvTransaction, InvTransactionItem };
+export type CreateTransactionPayload = CreateTransactionInput;
 
 export function useWarehouses() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -87,8 +20,7 @@ export function useWarehouses() {
 
   const fetch = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from('warehouses').select('id,code,name_ar,name_en,location,is_active').order('code');
-    setWarehouses((data ?? []) as Warehouse[]);
+    setWarehouses(await invSvc.listWarehouses().catch(() => []));
     setLoading(false);
   }, []);
 
@@ -102,10 +34,7 @@ export function useInvLocations(warehouseId?: string | null) {
 
   const fetch = useCallback(async () => {
     setLoading(true);
-    let q = supabase.from('inv_locations').select('*').order('code');
-    if (warehouseId) q = q.eq('warehouse_id', warehouseId);
-    const { data } = await q;
-    setLocations((data ?? []) as InvLocation[]);
+    setLocations(await invSvc.listLocations(warehouseId).catch(() => []));
     setLoading(false);
   }, [warehouseId]);
 
@@ -119,8 +48,7 @@ export function useInvStock() {
 
   const fetch = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from('inv_stock').select('*').order('updated_at', { ascending: false });
-    setStock((data ?? []) as InvStock[]);
+    setStock(await invSvc.listStock().catch(() => []));
     setLoading(false);
   }, []);
 
@@ -141,8 +69,7 @@ export function useInvCustody() {
 
   const fetch = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from('inv_custody').select('*').order('updated_at', { ascending: false });
-    setCustody((data ?? []) as InvCustody[]);
+    setCustody(await invSvc.listCustody().catch(() => []));
     setLoading(false);
   }, []);
 
@@ -163,11 +90,7 @@ export function useInvTransactions(filters?: { type?: InvTxnType; status?: InvTx
 
   const fetch = useCallback(async () => {
     setLoading(true);
-    let q = supabase.from('inv_transactions').select('*').is('deleted_at', null).order('txn_date', { ascending: false }).order('created_at', { ascending: false });
-    if (filters?.type) q = q.eq('txn_type', filters.type);
-    if (filters?.status) q = q.eq('status', filters.status);
-    const { data } = await q;
-    setTransactions((data ?? []) as InvTransaction[]);
+    setTransactions(await invSvc.listTransactions(filters).catch(() => []));
     setLoading(false);
   }, [filters?.type, filters?.status]);
 
@@ -182,22 +105,6 @@ export function useInvTransactions(filters?: { type?: InvTxnType; status?: InvTx
   return { transactions, loading, refetch: fetch };
 }
 
-export interface CreateTransactionPayload {
-  txn_type: InvTxnType;
-  txn_date: string;
-  from_warehouse_id?: string | null;
-  from_location_id?: string | null;
-  to_warehouse_id?: string | null;
-  to_location_id?: string | null;
-  party_type?: InvPartyType | null;
-  party_name?: string | null;
-  party_ref?: string | null;
-  reference?: string | null;
-  notes?: string | null;
-  linked_box_receipt_id?: string | null;
-  items: Array<{ item_id: string; qty: number; unit?: string | null; notes?: string | null }>;
-}
-
 export function useCreateInvTransaction() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -208,77 +115,15 @@ export function useCreateInvTransaction() {
       toast({ title: t('error'), description: t('mustBeLoggedIn'), variant: 'destructive' });
       return null;
     }
-    if (!payload.items.length) {
-      toast({ title: t('error'), description: t('atLeastOneItemRequired'), variant: 'destructive' });
+    try {
+      const result = await invSvc.createTransaction(payload, { userId: user.id, post });
+      toast({ title: t('success'), description: t('transactionCreated') });
+      return result;
+    } catch (err) {
+      const msg = err instanceof invSvc.ServiceError ? err.message : (err as Error)?.message;
+      toast({ title: t('error'), description: msg, variant: 'destructive' });
       return null;
     }
-
-    // 1. Insert transaction as draft
-    const { data: txn, error: txnErr } = await supabase
-      .from('inv_transactions')
-      .insert({
-        txn_type: payload.txn_type,
-        txn_date: payload.txn_date,
-        status: 'draft',
-        from_warehouse_id: payload.from_warehouse_id ?? null,
-        from_location_id: payload.from_location_id ?? null,
-        to_warehouse_id: payload.to_warehouse_id ?? null,
-        to_location_id: payload.to_location_id ?? null,
-        party_type: payload.party_type ?? null,
-        party_name: payload.party_name ?? null,
-        party_ref: payload.party_ref ?? null,
-        reference: payload.reference ?? null,
-        notes: payload.notes ?? null,
-        linked_box_receipt_id: payload.linked_box_receipt_id ?? null,
-        created_by: user.id,
-      } as never)
-      .select()
-      .single();
-
-    if (txnErr || !txn) {
-      toast({ title: t('error'), description: txnErr?.message, variant: 'destructive' });
-      return null;
-    }
-
-    // 2. Insert lines
-    const lines = payload.items.map((it, idx) => ({
-      transaction_id: (txn as { id: string }).id,
-      line_no: idx + 1,
-      item_id: it.item_id,
-      qty: it.qty,
-      unit: it.unit ?? null,
-      notes: it.notes ?? null,
-    }));
-    const { error: linesErr } = await supabase.from('inv_transaction_items').insert(lines as never);
-    if (linesErr) {
-      toast({ title: t('error'), description: linesErr.message, variant: 'destructive' });
-      return null;
-    }
-
-    // 3. Post if requested
-    if (post) {
-      const { error: postErr } = await supabase
-        .from('inv_transactions')
-        .update({ status: 'posted' } as never)
-        .eq('id', (txn as { id: string }).id);
-      if (postErr) {
-        toast({ title: t('error'), description: postErr.message, variant: 'destructive' });
-        return { id: (txn as { id: string }).id, declaration_id: null };
-      }
-    }
-
-    // 4. Re-fetch to get auto-generated declaration_id from trigger
-    const { data: refreshed } = await supabase
-      .from('inv_transactions')
-      .select('id, declaration_id')
-      .eq('id', (txn as { id: string }).id)
-      .maybeSingle();
-
-    toast({ title: t('success'), description: t('transactionCreated') });
-    return {
-      id: (txn as { id: string }).id,
-      declaration_id: (refreshed as { declaration_id: string | null } | null)?.declaration_id ?? null,
-    };
   }, [user?.id, toast, t]);
 
   return { create };
@@ -291,11 +136,10 @@ export function useTransactionItems(transactionId?: string | null) {
   useEffect(() => {
     if (!transactionId) { setItems([]); return; }
     setLoading(true);
-    supabase.from('inv_transaction_items').select('*').eq('transaction_id', transactionId).order('line_no')
-      .then(({ data }) => {
-        setItems((data ?? []) as InvTransactionItem[]);
-        setLoading(false);
-      });
+    invSvc.listTransactionItems(transactionId)
+      .then((rows) => { setItems(rows); })
+      .catch(() => { setItems([]); })
+      .finally(() => setLoading(false));
   }, [transactionId]);
 
   return { items, loading };
