@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { dashboardLeaf, filterNavForRole, type NavModule, type Role } from '@/config/navigation';
 import {
   Sidebar,
   SidebarContent,
@@ -19,18 +20,8 @@ import {
 } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
-  LayoutDashboard, FileText, Wrench, Package, Wallet, CalendarDays,
-  Users, BarChart3, Shield, Database, Settings as SettingsIcon,
-  ShieldCheck, Warehouse, ChevronDown, ClipboardList, Boxes,
+  LayoutDashboard, ChevronDown,
 } from 'lucide-react';
-
-type Leaf = { path: string; label: string };
-type Module = {
-  key: string;
-  label: string;
-  icon: typeof LayoutDashboard;
-  items: Leaf[];
-};
 
 /**
  * IA-Refactor v5 — Reorganized into 5 clean modules (down from 6),
@@ -54,73 +45,11 @@ export function AppSidebar() {
   const { user } = useAuth();
   const { t, language } = useLanguage();
 
-  const modules: Module[] = useMemo(() => {
-    // 1) ITEMS
-    const items: Leaf[] = [
-      { path: '/boxes/items?tab=list', label: t('itemsMaster') || 'كل الأصناف' },
-    ];
-    if (user?.role === 'admin' || user?.role === 'manager') {
-      items.push({ path: '/boxes/items/smart-new', label: t('smartItemEntry') || 'إدخال صنف ذكي' });
-    }
-
-    // 2) VOUCHERS & MOVEMENTS
-    const vouchers: Leaf[] = [
-      { path: '/vouchers?tab=receipt',         label: t('materialReceiptVoucher') || 'استلام' },
-      { path: '/vouchers?tab=issue',           label: t('materialIssueVoucher')   || 'صرف' },
-      { path: '/vouchers?tab=opening',         label: t('openingBalanceVoucher')  || 'أرصدة افتتاحية' },
-      { path: '/inventory?tab=transactions',   label: t('declarations_and_movements') || 'سجل الحركات' },
-    ];
-
-    // 3) INVENTORY (read/inquiry)
-    const inventory: Leaf[] = [
-      { path: '/inventory?tab=stock',     label: t('stock')           || 'المخزون الحالي' },
-      { path: '/inventory?tab=alerts',    label: t('lowStockAlerts')  || 'تنبيهات' },
-      { path: '/inventory?tab=counts',    label: t('stockCountsNav')  || 'الجرد' },
-      { path: '/inventory?tab=custody',   label: t('custody')         || 'العُهد' },
-      { path: '/inventory?tab=locations', label: t('locations')       || 'المواقع' },
-    ];
-
-    // 4) DOCUMENTS & BOXES (Vouchers + Boxes + Maintenance grouped)
-    const documents: Leaf[] = [
-      { path: '/boxes',        label: t('boxesManagement')  || 'الصناديق' },
-      { path: '/maintenance',  label: t('maintenance')      || 'الصيانة' },
-    ];
-
-    // 5) OFFICE (HR)
-    const office: Leaf[] = [
-      { path: '/employees',          label: t('employeesManagement') },
-      { path: '/leave-tracking',     label: t('leaveTracking') },
-      { path: '/holiday-attendance', label: t('holidayAttendance') },
-      { path: '/petty-cash',         label: t('pettyCash') },
-    ];
-
-    // 6) REPORTS
-    const reports: Leaf[] = [
-      { path: '/reports-analytics', label: t('reportsTitle') || 'مركز التقارير' },
-    ];
-
-    const list: Module[] = [
-      { key: 'items',     label: t('itemsModule')     || 'الأصناف',            icon: Package,       items },
-      { key: 'vouchers',  label: t('vouchersModule')  || 'الحركات والسندات',   icon: ClipboardList, items: vouchers },
-      { key: 'inventory', label: t('inventoryModule') || 'المخزون',            icon: Warehouse,     items: inventory },
-      { key: 'documents', label: t('documentsModule') || 'المستندات والصناديق', icon: Boxes,        items: documents },
-      { key: 'office',    label: t('officeModule')    || 'المكتب',             icon: Users,         items: office },
-      { key: 'reports',   label: t('reportsModule')   || 'التقارير',           icon: BarChart3,     items: reports },
-    ];
-
-    // 7) ADMIN — single tile entry (everything else lives inside the hub)
-    if (user?.role === 'manager' || user?.role === 'admin') {
-      const admin: Leaf[] = [
-        { path: '/admin/settings', label: t('adminSettingsHub') || 'الإدارة والإعدادات' },
-      ];
-      if (user?.role === 'manager') {
-        admin.unshift({ path: '/manager-dashboard', label: t('managerDashboard') });
-      }
-      list.push({ key: 'admin', label: t('administration') || 'الإدارة', icon: Shield, items: admin });
-    }
-
-    return list;
-  }, [user?.role, t, language]);
+  // P1 — Nav definitions come from src/config/navigation.ts (single source of truth).
+  const modules: NavModule[] = useMemo(
+    () => filterNavForRole(user?.role as Role | undefined),
+    [user?.role]
+  );
 
   // Auto-expand the module containing the active route on initial render.
   const initialOpen = useMemo(() => {
@@ -162,10 +91,10 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === '/'} tooltip={t('dashboard') || 'لوحة التحكم'}>
-                  <NavLink to="/" className="flex items-center gap-2">
+                <SidebarMenuButton asChild isActive={pathname === dashboardLeaf.path} tooltip={t(dashboardLeaf.labelKey) || dashboardLeaf.fallback}>
+                  <NavLink to={dashboardLeaf.path} className="flex items-center gap-2">
                     <LayoutDashboard className="h-4 w-4 shrink-0" />
-                    {!collapsed && <span className="truncate">{t('dashboard') || 'لوحة التحكم'}</span>}
+                    {!collapsed && <span className="truncate">{t(dashboardLeaf.labelKey) || dashboardLeaf.fallback}</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -177,6 +106,7 @@ export function AppSidebar() {
         {modules.map((mod) => {
           const Icon = mod.icon;
           const isOpen = !!openMap[mod.key];
+          const moduleLabel = t(mod.labelKey) || mod.fallback || mod.labelKey;
 
           // When sidebar is collapsed (icon-only), render as a flat menu using the icon.
           if (collapsed) {
@@ -186,7 +116,7 @@ export function AppSidebar() {
                   <SidebarMenu>
                     {mod.items.map((leaf) => (
                       <SidebarMenuItem key={leaf.path}>
-                        <SidebarMenuButton asChild isActive={isLeafActive(leaf.path)} tooltip={leaf.label}>
+                        <SidebarMenuButton asChild isActive={isLeafActive(leaf.path)} tooltip={t(leaf.labelKey) || leaf.fallback || leaf.labelKey}>
                           <NavLink to={leaf.path} className="flex items-center gap-2">
                             <Icon className="h-4 w-4 shrink-0" />
                           </NavLink>
@@ -205,7 +135,7 @@ export function AppSidebar() {
                 <SidebarGroupLabel asChild>
                   <CollapsibleTrigger className="group/label flex w-full items-center gap-2 hover:text-foreground transition-colors">
                     <Icon className="h-3.5 w-3.5 shrink-0" />
-                    <span className="flex-1 truncate text-start">{mod.label}</span>
+                    <span className="flex-1 truncate text-start">{moduleLabel}</span>
                     <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </CollapsibleTrigger>
                 </SidebarGroupLabel>
@@ -216,7 +146,7 @@ export function AppSidebar() {
                         <SidebarMenuSubItem key={leaf.path}>
                           <SidebarMenuSubButton asChild isActive={isLeafActive(leaf.path)}>
                             <NavLink to={leaf.path} className="block w-full text-start">
-                              <span className="truncate">{leaf.label}</span>
+                              <span className="truncate">{t(leaf.labelKey) || leaf.fallback || leaf.labelKey}</span>
                             </NavLink>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
