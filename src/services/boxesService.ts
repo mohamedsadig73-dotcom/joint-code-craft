@@ -89,9 +89,10 @@ export async function createReceipt(
 ): Promise<BoxReceipt> {
   assert(opts.userId, 'unauthorized', 'User ID required');
   assert(payload.supplier && payload.part_no && payload.description, 'validation', 'Missing required fields');
+  const insertPayload = { ...(payload as Record<string, unknown>), created_by: opts.userId };
   const { data, error } = await supabase
     .from('box_receipts')
-    .insert({ ...(payload as never), created_by: opts.userId } as never)
+    .insert(insertPayload as never)
     .select()
     .single();
   if (error || !data) throw fromPostgrest(error, 'Failed to create receipt');
