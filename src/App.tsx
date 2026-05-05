@@ -15,6 +15,8 @@ import { OfflineBanner } from "@/components/OfflineIndicator";
 import { AnimatedRoutes } from '@/components/AnimatedRoutes';
 import { UpdateChecker } from '@/components/UpdateChecker';
 import { AppShell } from '@/components/layout/AppShell';
+import { FabProvider } from '@/contexts/FabContext';
+import { FAB } from '@/components/FAB';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,6 +75,8 @@ function AppRoutes() {
       ) : (
         <AnimatedRoutes />
       )}
+      {/* Context-aware global FAB — only renders when a page registers an action */}
+      {isAuthenticated && <FAB />}
     </>
   );
 }
@@ -88,8 +92,10 @@ const App = () => (
         <AppRouter>
           <LanguageProvider>
             <AuthProvider>
-              <AppRoutes />
-              <PWAInstallPrompt />
+              <FabProvider>
+                <AppRoutes />
+                <PWAInstallPrompt />
+              </FabProvider>
             </AuthProvider>
           </LanguageProvider>
         </AppRouter>
