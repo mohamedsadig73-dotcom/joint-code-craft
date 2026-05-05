@@ -32,10 +32,10 @@ interface AppModule {
 
 const appModules: AppModule[] = [
   {
-    path: '/declarations',
+    path: '/vouchers?tab=receipt',
     icon: FileText,
-    labelKey: 'declarations',
-    description: 'إدارة الإقرارات والمعاملات',
+    labelKey: 'vouchersHub',
+    description: 'سندات الاستلام والصرف والأرصدة الافتتاحية',
     color: 'text-blue-600 dark:text-blue-400',
     bgColor: 'bg-blue-500/10 dark:bg-blue-500/20',
   },

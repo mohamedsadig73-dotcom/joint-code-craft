@@ -15,7 +15,7 @@ interface NavItem {
 
 const primaryNavItems: NavItem[] = [
   { path: '/', icon: Home, labelKey: 'home' },
-  { path: '/declarations', icon: FileText, labelKey: 'declarations' },
+  { path: '/vouchers?tab=receipt', icon: FileText, labelKey: 'vouchersHub' },
   { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
   { path: '/petty-cash', icon: Wallet, labelKey: 'pettyCashShort' },
 ];

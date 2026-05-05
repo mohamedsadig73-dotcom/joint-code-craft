@@ -158,20 +158,12 @@ export function AnimatedRoutes() {
               )
             }
           />
-          {/* Declarations route */}
-          <Route
-            path="/declarations"
-            element={
-              <ProtectedRoute>
-                <PageTransition>
-                  <Dashboard />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
+          {/* Declarations module merged into Vouchers — redirect for backward compatibility */}
+          <Route path="/declarations" element={<Navigate to="/vouchers?tab=receipt" replace />} />
+          <Route path="/declarations/:id" element={<Navigate to="/vouchers?tab=receipt" replace />} />
           {/* Legacy /landing and /dashboard routes */}
           <Route path="/landing" element={<Navigate to="/" replace />} />
-          <Route path="/dashboard" element={<Navigate to="/declarations" replace />} />
+          <Route path="/dashboard" element={<Navigate to="/vouchers?tab=receipt" replace />} />
           <Route
             path="/reports-analytics"
             element={
