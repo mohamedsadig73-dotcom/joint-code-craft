@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import * as vouchers from '@/services/vouchersService';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
@@ -93,31 +93,11 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
   const loadNextNumber = async () => {
     setLoadingNextNumber(true);
     try {
-      const prefix = type === 'دخول' ? 'IN' : 'OUT';
-      
-      const { data, error } = await supabase
-        .from('declarations')
-        .select('id')
-        .ilike('id', `${prefix}-${selectedYear}-%`)
-        .is('deleted_at', null)
-        .order('id', { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
-
-      let nextNumber = 1;
-      if (data && data.length > 0) {
-        const lastId = data[0].id;
-        const parts = lastId.split('-');
-        const lastNumber = parseInt(parts[2]);
-        nextNumber = lastNumber + 1;
-      }
-
-      const paddedNumber = nextNumber.toString().padStart(4, '0');
-      setDeclarationNumber(paddedNumber);
+      const padded = await vouchers.getNextDeclarationNumber(type, selectedYear);
+      setDeclarationNumber(padded);
       if (mode === 'multiple') {
-        setFromNumber(paddedNumber);
-        setToNumber(paddedNumber);
+        setFromNumber(padded);
+        setToNumber(padded);
       }
     } catch (error) {
       console.error('Error loading next number:', error);
@@ -145,15 +125,17 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('declarations')
-        .insert({ id: fullId, type, status, sender_id: user.id });
-
-      if (error) {
-        if (error.code === '23505') throw new Error('رقم الإقرار موجود مسبقاً');
-        throw error;
+      try {
+        await vouchers.createDeclaration(
+          { number: declarationNumber, type, status, year: selectedYear },
+          user.id,
+        );
+      } catch (err) {
+        if (err instanceof vouchers.ServiceError && err.code === 'conflict') {
+          throw new Error('رقم الإقرار موجود مسبقاً');
+        }
+        throw err;
       }
-
       toast({ title: t('success'), description: `${t('declarationCreated')} ${fullId}` });
       resetForm();
       setOpen(false);
@@ -185,15 +167,9 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
       return;
     }
 
-    const prefix = type === 'دخول' ? 'IN' : 'OUT';
-    const declarations = [];
+    const rows = [];
     for (let i = from; i <= to; i++) {
-      declarations.push({
-        id: `${prefix}-${selectedYear}-${i.toString().padStart(4, '0')}`,
-        type,
-        status,
-        sender_id: user.id,
-      });
+      rows.push({ number: String(i), type, status, year: selectedYear });
     }
 
     setLoading(true);
@@ -201,22 +177,14 @@ export function CreateDeclarationDialog({ onSuccess, open: controlledOpen, onOpe
 
     let successCount = 0;
     let failCount = 0;
-
-    // Insert in chunks of 10
-    const chunkSize = 10;
-    for (let i = 0; i < declarations.length; i += chunkSize) {
-      const chunk = declarations.slice(i, i + chunkSize);
-      try {
-        const { error } = await supabase.from('declarations').insert(chunk);
-        if (error) {
-          failCount += chunk.length;
-        } else {
-          successCount += chunk.length;
-        }
-      } catch {
-        failCount += chunk.length;
-      }
-      setBatchProgress(Math.round(((i + chunk.length) / declarations.length) * 100));
+    try {
+      const { inserted } = await vouchers.createDeclarationBatch(rows, user.id, {
+        chunkSize: 10,
+        onProgress: (done, total) => setBatchProgress(Math.round((done / total) * 100)),
+      });
+      successCount = inserted;
+    } catch {
+      failCount = rows.length - successCount;
     }
 
     if (successCount > 0) {
