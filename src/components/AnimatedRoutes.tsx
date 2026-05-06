@@ -404,6 +404,10 @@ export function AnimatedRoutes() {
           <Route path="/inventory/voucher/opening" element={<Navigate to="/vouchers?tab=opening" replace />} />
           <Route path="/inventory/voucher/receipt" element={<Navigate to="/vouchers?tab=receipt" replace />} />
           <Route path="/inventory/voucher/issue"   element={<Navigate to="/vouchers?tab=issue"   replace />} />
+          {/* S4: pretty deep-link aliases — /vouchers/receipt → /vouchers?tab=receipt */}
+          <Route path="/vouchers/receipt" element={<Navigate to="/vouchers?tab=receipt" replace />} />
+          <Route path="/vouchers/issue"   element={<Navigate to="/vouchers?tab=issue"   replace />} />
+          <Route path="/vouchers/opening" element={<Navigate to="/vouchers?tab=opening" replace />} />
           {/* IA-Refactor v5: Unified Admin & Settings Hub */}
           <Route
             path="/admin/settings"
