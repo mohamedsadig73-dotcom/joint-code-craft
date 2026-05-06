@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { wmsToast } from '@/lib/wmsToast';
+import { toast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Calendar, DollarSign, Eye } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
@@ -20,7 +20,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MaintenanceMobileCard } from './MaintenanceMobileCard';
 import { formatNumber, formatCurrency, formatDateArabic } from '@/utils/numberFormat';
-import { UnifiedFilterBar } from '@/components/ui/UnifiedFilterBar';
 
 const FREQUENCIES = Object.entries(frequencyLabels).map(([value, label]) => ({ value, label }));
 
@@ -101,7 +100,11 @@ export function MaintenanceItems() {
       setAssets(assetsRes.data || []);
       setVendors(vendorsRes.data || []);
     } catch (error: any) {
-      wmsToast.error('خطأ', { description: error.message });
+      toast({
+        title: 'خطأ',
+        description: error.message,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -129,7 +132,7 @@ export function MaintenanceItems() {
           .eq('id', editingItem.id);
         if (error) throw error;
         triggerSuccess('success', 'تم تحديث البند بنجاح');
-        wmsToast.success('تم تحديث البند بنجاح');
+        toast({ title: 'تم تحديث البند بنجاح' });
       } else {
         const { data: newItem, error } = await supabase
           .from('maintenance_items')
@@ -149,14 +152,18 @@ export function MaintenanceItems() {
         
         if (scheduleError) throw scheduleError;
         triggerSuccess('success', 'تم إضافة البند وتوليد الجدول السنوي بنجاح');
-        wmsToast.success('تم إضافة البند وتوليد الجدول السنوي بنجاح');
+        toast({ title: 'تم إضافة البند وتوليد الجدول السنوي بنجاح' });
       }
       
       setDialogOpen(false);
       resetForm();
       loadData();
     } catch (error: any) {
-      wmsToast.error('خطأ', { description: error.message });
+      toast({
+        title: 'خطأ',
+        description: error.message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -171,10 +178,14 @@ export function MaintenanceItems() {
       
       if (error) throw error;
       triggerSuccess('success', 'تم حذف البند بنجاح');
-      wmsToast.success('تم حذف البند بنجاح');
+      toast({ title: 'تم حذف البند بنجاح' });
       loadData();
     } catch (error: any) {
-      wmsToast.error('خطأ', { description: error.message });
+      toast({
+        title: 'خطأ',
+        description: error.message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -214,17 +225,6 @@ export function MaintenanceItems() {
   const getFrequencyLabel = (freq: string) => {
     return FREQUENCIES.find(f => f.value === freq)?.label || freq;
   };
-
-  const [search, setSearch] = useState('');
-  const [freqFilter, setFreqFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-
-  const filtered = useMemo(() => items.filter(it => {
-    const m1 = !search || it.name.toLowerCase().includes(search.toLowerCase()) || (it.description || '').toLowerCase().includes(search.toLowerCase());
-    const m2 = freqFilter === 'all' || it.frequency === freqFilter;
-    const m3 = statusFilter === 'all' || (statusFilter === 'active' ? it.active : !it.active);
-    return m1 && m2 && m3;
-  }), [items, search, freqFilter, statusFilter]);
 
   return (
     <div className="space-y-6">
@@ -398,36 +398,6 @@ export function MaintenanceItems() {
         </Dialog>
       </div>
 
-      <UnifiedFilterBar
-        search={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="بحث بالاسم / الوصف"
-        filters={
-          <>
-            <Select value={freqFilter} onValueChange={setFreqFilter}>
-              <SelectTrigger className="h-9 w-[150px]"><SelectValue placeholder="التكرار" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">كل الفترات</SelectItem>
-                {FREQUENCIES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
-              <SelectTrigger className="h-9 w-[130px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">كل الحالات</SelectItem>
-                <SelectItem value="active">نشط</SelectItem>
-                <SelectItem value="inactive">غير نشط</SelectItem>
-              </SelectContent>
-            </Select>
-          </>
-        }
-        activeChips={[
-          freqFilter !== 'all' && { key: 'freq', label: `التكرار: ${getFrequencyLabel(freqFilter)}`, onRemove: () => setFreqFilter('all') },
-          statusFilter !== 'all' && { key: 'status', label: `الحالة: ${statusFilter === 'active' ? 'نشط' : 'غير نشط'}`, onRemove: () => setStatusFilter('all') },
-        ].filter(Boolean) as any}
-        onReset={() => { setSearch(''); setFreqFilter('all'); setStatusFilter('all'); }}
-      />
-
       {/* Mobile View */}
       {isMobile ? (
         <div className="space-y-4">
@@ -437,7 +407,7 @@ export function MaintenanceItems() {
                 <div key={i} className="h-32 bg-muted/50 rounded-lg animate-pulse" />
               ))}
             </div>
-          ) : filtered.length === 0 ? (
+          ) : items.length === 0 ? (
             <EmptyState
               variant="maintenance"
               title={emptyStateMessages.maintenance.title}
@@ -446,7 +416,7 @@ export function MaintenanceItems() {
               onAction={() => setDialogOpen(true)}
             />
           ) : (
-            filtered.map((item) => (
+            items.map((item) => (
               <MaintenanceMobileCard
                 key={item.id}
                 item={item}
@@ -476,7 +446,7 @@ export function MaintenanceItems() {
             <TableBody>
               {loading ? (
                 <TableSkeleton rows={5} columns={7} />
-              ) : filtered.length === 0 ? (
+              ) : items.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7}>
                     <EmptyState
@@ -489,7 +459,7 @@ export function MaintenanceItems() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map((item) => (
+                items.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>

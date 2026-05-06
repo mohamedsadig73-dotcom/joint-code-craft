@@ -16,7 +16,7 @@
  import { useLanguage } from '@/contexts/LanguageContext';
  import { useAuth } from '@/contexts/AuthContext';
  import { supabase } from '@/integrations/supabase/client';
- import { wmsToast as toast } from '@/lib/wmsToast';
+ import { toast } from 'sonner';
  import { formatNumber } from '@/utils/numberFormat';
  import { 
    ArrowRightLeft, 

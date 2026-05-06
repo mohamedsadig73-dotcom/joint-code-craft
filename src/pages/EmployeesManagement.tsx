@@ -7,15 +7,14 @@ import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Edit, Users, UserPlus } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { wmsToast } from '@/lib/wmsToast';
-import { UnifiedFilterBar } from '@/components/ui/UnifiedFilterBar';
+import { Plus, Trash2, Edit, Search, Users, UserPlus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -36,14 +35,13 @@ interface MasterEmployee {
 export default function EmployeesManagement() {
   const { t, language } = useLanguage();
   const { user } = useAuth();
+  const { toast } = useToast();
   const isRTL = language === 'ar';
   const isAdmin = user?.role === 'admin' || user?.role === 'manager';
 
   const [employees, setEmployees] = useState<MasterEmployee[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [jobFilter, setJobFilter] = useState<string>('all');
   const [showDialog, setShowDialog] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<MasterEmployee | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -61,11 +59,11 @@ export default function EmployeesManagement() {
       if (error) throw error;
       setEmployees(data || []);
     } catch (error: any) {
-      wmsToast.error(t('error'), { description: error.message });
+      toast({ title: t('error'), description: error.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [t, toast]);
 
   useEffect(() => { loadEmployees(); }, [loadEmployees]);
 
@@ -89,7 +87,7 @@ export default function EmployeesManagement() {
 
   const handleSave = async () => {
     if (!form.employee_number || !form.employee_name) {
-      wmsToast.error(t('error'), { description: t('fillRequiredFields') });
+      toast({ title: t('error'), description: t('fillRequiredFields'), variant: 'destructive' });
       return;
     }
     try {
@@ -104,16 +102,16 @@ export default function EmployeesManagement() {
       if (editingEmployee) {
         const { error } = await supabase.from('master_employees').update(payload).eq('id', editingEmployee.id);
         if (error) throw error;
-        wmsToast.success(t('success'), { description: t('employeeUpdated') });
+        toast({ title: t('success'), description: t('employeeUpdated') });
       } else {
         const { error } = await supabase.from('master_employees').insert({ ...payload, created_by: user?.id });
         if (error) throw error;
-        wmsToast.success(t('success'), { description: t('employeeAdded') });
+        toast({ title: t('success'), description: t('employeeAdded') });
       }
       setShowDialog(false);
       loadEmployees();
     } catch (error: any) {
-      wmsToast.error(t('error'), { description: error.message });
+      toast({ title: t('error'), description: error.message, variant: 'destructive' });
     }
   };
 
@@ -123,9 +121,9 @@ export default function EmployeesManagement() {
       const { error } = await supabase.from('master_employees').delete().eq('id', deleteId);
       if (error) throw error;
       setEmployees(prev => prev.filter(e => e.id !== deleteId));
-      wmsToast.success(t('success'), { description: t('employeeDeleted') });
+      toast({ title: t('success'), description: t('employeeDeleted') });
     } catch (error: any) {
-      wmsToast.error(t('error'), { description: error.message });
+      toast({ title: t('error'), description: error.message, variant: 'destructive' });
     } finally {
       setDeleteId(null);
     }
@@ -139,35 +137,15 @@ export default function EmployeesManagement() {
       if (error) throw error;
       setEmployees(prev => prev.map(e => e.id === emp.id ? { ...e, is_active: !e.is_active } : e));
     } catch (error: any) {
-      wmsToast.error(t('error'), { description: error.message });
+      toast({ title: t('error'), description: error.message, variant: 'destructive' });
     }
   };
 
-  const filtered = employees.filter(e => {
-    const matchSearch = !search ||
-      e.employee_name.includes(search) ||
-      e.employee_number.includes(search) ||
-      e.job_title.includes(search);
-    const matchStatus =
-      statusFilter === 'all' ||
-      (statusFilter === 'active' && e.is_active) ||
-      (statusFilter === 'inactive' && !e.is_active);
-    const matchJob = jobFilter === 'all' || e.job_title === jobFilter;
-    return matchSearch && matchStatus && matchJob;
-  });
-
-  const activeChips = [
-    statusFilter !== 'all' && {
-      key: 'status',
-      label: `${t('status')}: ${statusFilter === 'active' ? t('active') : t('inactive')}`,
-      onRemove: () => setStatusFilter('all'),
-    },
-    jobFilter !== 'all' && {
-      key: 'job',
-      label: `${t('jobTitle')}: ${jobFilter}`,
-      onRemove: () => setJobFilter('all'),
-    },
-  ].filter(Boolean) as Array<{ key: string; label: string; onRemove: () => void }>;
+  const filtered = employees.filter(e =>
+    e.employee_name.includes(search) ||
+    e.employee_number.includes(search) ||
+    e.job_title.includes(search)
+  );
 
   const activeCount = employees.filter(e => e.is_active).length;
 
@@ -206,35 +184,18 @@ export default function EmployeesManagement() {
         </div>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="mb-4">
-              <UnifiedFilterBar
-                search={search}
-                onSearchChange={setSearch}
-                searchPlaceholder={t('searchEmployees')}
-                filters={
-                  <>
-                    <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
-                      <SelectTrigger className="h-9 w-[140px]"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t('allStatuses') || t('all')}</SelectItem>
-                        <SelectItem value="active">{t('active')}</SelectItem>
-                        <SelectItem value="inactive">{t('inactive')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select value={jobFilter} onValueChange={setJobFilter}>
-                      <SelectTrigger className="h-9 w-[160px]"><SelectValue placeholder={t('jobTitle')} /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t('all') || 'الكل'}</SelectItem>
-                        {JOB_TITLES.map(j => <SelectItem key={j} value={j}>{j}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </>
-                }
-                activeChips={activeChips}
-                onReset={() => { setSearch(''); setStatusFilter('all'); setJobFilter('all'); }}
+          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
+            <div className="relative flex-1 sm:flex-none w-full sm:w-auto">
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={t('searchEmployees')}
+                className="ps-9 w-full sm:w-72"
               />
             </div>
+          </CardHeader>
+          <CardContent>
             {loading ? (
               <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-12 bg-muted/50 animate-pulse rounded" />)}</div>
             ) : (

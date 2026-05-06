@@ -4,81 +4,42 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PageTransition } from '@/components/PageTransition';
 import { Loader2 } from 'lucide-react';
-import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
-import { isChunkLoadError, trackChunkError } from '@/utils/chunkErrorTracking';
-
-/**
- * Retry dynamic imports up to N times with exponential backoff.
- * On final failure, the error propagates to <RouteErrorBoundary> which
- * presents the user with retry / reload / home options instead of a blank screen.
- */
-function lazyRetry<T extends { default: React.ComponentType<any> }>(
-  factory: () => Promise<T>,
-  retries = 2,
-  baseDelay = 400
-) {
-  return lazy(async () => {
-    let lastErr: unknown;
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      try {
-        return await factory();
-      } catch (err) {
-        lastErr = err;
-        if (!isChunkLoadError(err)) throw err;
-        if (attempt < retries) {
-          await new Promise((r) => setTimeout(r, baseDelay * Math.pow(2, attempt)));
-        }
-      }
-    }
-    // Track and rethrow → ErrorBoundary handles UI
-    trackChunkError(lastErr, true);
-    throw lastErr;
-  });
-}
 
 // Lazy load pages with preload hints for critical pages
-const Login = lazyRetry(() => import('@/pages/Login'));
-const ForgotPassword = lazyRetry(() => import('@/pages/ForgotPassword'));
-const ResetPassword = lazyRetry(() => import('@/pages/ResetPassword'));
-const Home = lazyRetry(() => import('@/pages/Home'));
-const SmartDashboard = lazyRetry(() => import('@/pages/SmartDashboard'));
-const Dashboard = lazyRetry(() => import('@/pages/Dashboard'));
-const AdminDashboard = lazyRetry(() => import('@/pages/AdminDashboard'));
-const ReportsHub = lazyRetry(() => import('@/pages/ReportsHub'));
-const Profile = lazyRetry(() => import('@/pages/Profile'));
-const DeclarationDetails = lazyRetry(() => import('@/pages/DeclarationDetails'));
-const Maintenance = lazyRetry(() => import('@/pages/Maintenance'));
-const MaintenanceItemDetails = lazyRetry(() => import('@/pages/MaintenanceItemDetails'));
-const AuditLogs = lazyRetry(() => import('@/pages/AuditLogs'));
-const ManagerDashboard = lazyRetry(() => import('@/pages/ManagerDashboard'));
-const InstallApp = lazyRetry(() => import('@/pages/InstallApp'));
-const LeaveTracking = lazyRetry(() => import('@/pages/LeaveTracking'));
-const PettyCash = lazyRetry(() => import('@/pages/PettyCash'));
-const HolidayAttendance = lazyRetry(() => import('@/pages/HolidayAttendance'));
-const HolidayAttendanceDetail = lazyRetry(() => import('@/pages/HolidayAttendanceDetail'));
-const EmployeesManagement = lazyRetry(() => import('@/pages/EmployeesManagement'));
-const UpdateLog = lazyRetry(() => import('@/pages/UpdateLog'));
-const UpdateDiagnostics = lazyRetry(() => import('@/pages/UpdateDiagnostics'));
-const BoxesManagement = lazyRetry(() => import('@/pages/BoxesManagement'));
-const BoxCardPrint = lazyRetry(() => import('@/pages/BoxCardPrint'));
-const ContainerDetails = lazyRetry(() => import('@/pages/ContainerDetails'));
-const BoxesDataAdmin = lazyRetry(() => import('@/pages/BoxesDataAdmin'));
-const ItemsHub = lazyRetry(() => import('@/pages/ItemsHub'));
-const ItemNamingSystem = lazyRetry(() => import('@/pages/ItemNamingSystem'));
-const SmartItemEntry = lazyRetry(() => import('@/pages/SmartItemEntry'));
-const VouchersHub = lazyRetry(() => import('@/pages/VouchersHub'));
-const ItemDetails = lazyRetry(() => import('@/pages/ItemDetails'));
-const ItemBarcodePrint = lazyRetry(() => import('@/pages/ItemBarcodePrint'));
-const PrintDiagnostics = lazyRetry(() => import('@/pages/PrintDiagnostics'));
-const Inventory = lazyRetry(() => import('@/pages/Inventory'));
-const WmsDashboard = lazyRetry(() => import('@/pages/WmsDashboard'));
-const DataSetup = lazyRetry(() => import('@/pages/DataSetup'));
-const AppSettingsPage = lazyRetry(() => import('@/pages/AppSettingsPage'));
-const RlsDiagnosticsPage = lazyRetry(() => import('@/pages/admin/RlsDiagnosticsPage'));
-const AdminSettingsHub = lazyRetry(() => import('@/pages/AdminSettingsHub'));
-// StockAlerts & StockCounts merged into Inventory tabs (P2). ItemApprovals/ItemImageHistory/ItemsMasterImport merged into ItemsHub (P3-b).
-const SupplierPriceImport = lazyRetry(() => import('@/pages/SupplierPriceImport'));
-const NotFound = lazyRetry(() => import('@/pages/NotFound'));
+const Login = lazy(() => import('@/pages/Login'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+const Home = lazy(() => import('@/pages/Home'));
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
+const ReportsAnalytics = lazy(() => import('@/pages/ReportsAnalytics'));
+const Profile = lazy(() => import('@/pages/Profile'));
+const DeclarationDetails = lazy(() => import('@/pages/DeclarationDetails'));
+const Maintenance = lazy(() => import('@/pages/Maintenance'));
+const MaintenanceItemDetails = lazy(() => import('@/pages/MaintenanceItemDetails'));
+const AuditLogs = lazy(() => import('@/pages/AuditLogs'));
+const ManagerDashboard = lazy(() => import('@/pages/ManagerDashboard'));
+const InstallApp = lazy(() => import('@/pages/InstallApp'));
+const LeaveTracking = lazy(() => import('@/pages/LeaveTracking'));
+const PettyCash = lazy(() => import('@/pages/PettyCash'));
+const HolidayAttendance = lazy(() => import('@/pages/HolidayAttendance'));
+const HolidayAttendanceDetail = lazy(() => import('@/pages/HolidayAttendanceDetail'));
+const EmployeesManagement = lazy(() => import('@/pages/EmployeesManagement'));
+const UpdateLog = lazy(() => import('@/pages/UpdateLog'));
+const UpdateDiagnostics = lazy(() => import('@/pages/UpdateDiagnostics'));
+const BoxesManagement = lazy(() => import('@/pages/BoxesManagement'));
+const BoxCardPrint = lazy(() => import('@/pages/BoxCardPrint'));
+const ContainerDetails = lazy(() => import('@/pages/ContainerDetails'));
+const BoxesDataAdmin = lazy(() => import('@/pages/BoxesDataAdmin'));
+const ItemsMaster = lazy(() => import('@/pages/ItemsMaster'));
+const ItemsMasterImport = lazy(() => import('@/pages/ItemsMasterImport'));
+const ItemDetails = lazy(() => import('@/pages/ItemDetails'));
+const ItemImageHistory = lazy(() => import('@/pages/ItemImageHistory'));
+const PrintDiagnostics = lazy(() => import('@/pages/PrintDiagnostics'));
+const Inventory = lazy(() => import('@/pages/Inventory'));
+const WmsDashboard = lazy(() => import('@/pages/WmsDashboard'));
+const WmsReports = lazy(() => import('@/pages/WmsReports'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
 const PageLoader = memo(() => {
@@ -100,8 +61,7 @@ export function AnimatedRoutes() {
   const shouldShowAuthenticatedContent = isAuthenticated;
 
   return (
-    <RouteErrorBoundary>
-      <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route
             path="/login"
@@ -141,7 +101,7 @@ export function AnimatedRoutes() {
               </PageTransition>
             }
           />
-          {/* Root route - show role-aware Smart Dashboard (P3) */}
+          {/* Root route - show Home (App Launcher) if authenticated */}
           <Route
             path="/"
             element={
@@ -150,7 +110,7 @@ export function AnimatedRoutes() {
               ) : shouldShowAuthenticatedContent ? (
                 <ProtectedRoute>
                   <PageTransition>
-                    <SmartDashboard />
+                    <Home />
                   </PageTransition>
                 </ProtectedRoute>
               ) : (
@@ -158,24 +118,32 @@ export function AnimatedRoutes() {
               )
             }
           />
-          {/* Declarations module merged into Vouchers — redirect for backward compatibility */}
-          <Route path="/declarations" element={<Navigate to="/vouchers?tab=receipt" replace />} />
-          <Route path="/declarations/:id" element={<Navigate to="/vouchers?tab=receipt" replace />} />
+          {/* Declarations route */}
+          <Route
+            path="/declarations"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <Dashboard />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
           {/* Legacy /landing and /dashboard routes */}
           <Route path="/landing" element={<Navigate to="/" replace />} />
-          <Route path="/dashboard" element={<Navigate to="/vouchers?tab=receipt" replace />} />
+          <Route path="/dashboard" element={<Navigate to="/declarations" replace />} />
           <Route
             path="/reports-analytics"
             element={
               <ProtectedRoute>
                 <PageTransition>
-                  <ReportsHub />
+                  <ReportsAnalytics />
                 </PageTransition>
               </ProtectedRoute>
             }
           />
-          <Route path="/reports"   element={<Navigate to="/reports-analytics?type=declarations" replace />} />
-          <Route path="/analytics" element={<Navigate to="/reports-analytics?type=declarations" replace />} />
+          <Route path="/reports" element={<Navigate to="/reports-analytics" replace />} />
+          <Route path="/analytics" element={<Navigate to="/reports-analytics" replace />} />
           <Route
             path="/profile"
             element={
@@ -363,58 +331,17 @@ export function AnimatedRoutes() {
             element={
               <ProtectedRoute>
                 <PageTransition>
-                  <ItemsHub />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
-          {/* P3-b: import merged into ItemsHub tab */}
-          <Route path="/boxes/items/import" element={<Navigate to="/boxes/items?tab=import" replace />} />
-          <Route
-            path="/boxes/items/smart-new"
-            element={
-              <ProtectedRoute>
-                <PageTransition>
-                  <SmartItemEntry />
+                  <ItemsMaster />
                 </PageTransition>
               </ProtectedRoute>
             }
           />
           <Route
-            path="/admin/naming-system"
-            element={
-              <ProtectedRoute>
-                <PageTransition>
-                  <ItemNamingSystem />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
-          {/* IA-Refactor v5: Unified Vouchers Hub */}
-          <Route
-            path="/vouchers"
-            element={
-              <ProtectedRoute>
-                <PageTransition>
-                  <VouchersHub />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/inventory/voucher/opening" element={<Navigate to="/vouchers?tab=opening" replace />} />
-          <Route path="/inventory/voucher/receipt" element={<Navigate to="/vouchers?tab=receipt" replace />} />
-          <Route path="/inventory/voucher/issue"   element={<Navigate to="/vouchers?tab=issue"   replace />} />
-          {/* S4: pretty deep-link aliases — /vouchers/receipt → /vouchers?tab=receipt */}
-          <Route path="/vouchers/receipt" element={<Navigate to="/vouchers?tab=receipt" replace />} />
-          <Route path="/vouchers/issue"   element={<Navigate to="/vouchers?tab=issue"   replace />} />
-          <Route path="/vouchers/opening" element={<Navigate to="/vouchers?tab=opening" replace />} />
-          {/* IA-Refactor v5: Unified Admin & Settings Hub */}
-          <Route
-            path="/admin/settings"
+            path="/boxes/items/import"
             element={
               <ProtectedRoute allowedRoles={['admin', 'manager']}>
                 <PageTransition>
-                  <AdminSettingsHub />
+                  <ItemsMasterImport />
                 </PageTransition>
               </ProtectedRoute>
             }
@@ -429,14 +356,12 @@ export function AnimatedRoutes() {
               </ProtectedRoute>
             }
           />
-          {/* P3-b: image history merged into ItemsHub tab */}
-          <Route path="/boxes/items-image-history" element={<Navigate to="/boxes/items?tab=images" replace />} />
           <Route
-            path="/boxes/items/barcodes"
+            path="/boxes/items-image-history"
             element={
               <ProtectedRoute>
                 <PageTransition>
-                  <ItemBarcodePrint />
+                  <ItemImageHistory />
                 </PageTransition>
               </ProtectedRoute>
             }
@@ -471,78 +396,12 @@ export function AnimatedRoutes() {
               </ProtectedRoute>
             }
           />
-          {/* P4 — WMS reports merged into unified ReportsHub */}
-          <Route path="/wms/reports" element={<Navigate to="/reports-analytics?type=warehouse" replace />} />
           <Route
-            path="/admin/data-setup"
+            path="/wms/reports"
             element={
-              <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <ProtectedRoute>
                 <PageTransition>
-                  <DataSetup />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/app-settings"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <PageTransition>
-                  <AppSettingsPage />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/rls-diagnostics"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <PageTransition>
-                  <RlsDiagnosticsPage />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
-          {/* Legacy routes — merged into /inventory tabs (P2 unification) */}
-          <Route path="/inventory/alerts" element={<Navigate to="/inventory?tab=alerts" replace />} />
-          <Route path="/inventory/stock-counts" element={<Navigate to="/inventory?tab=counts" replace />} />
-          {/* P8 — Legacy redirects (preserve old bookmarks after IA restructure) */}
-          <Route path="/stock-alerts"          element={<Navigate to="/inventory?tab=alerts" replace />} />
-          <Route path="/stock-counts"          element={<Navigate to="/inventory?tab=counts" replace />} />
-          <Route path="/inventory/transactions" element={<Navigate to="/inventory?tab=transactions" replace />} />
-          <Route path="/inventory/stock"       element={<Navigate to="/inventory?tab=stock" replace />} />
-          <Route path="/inventory/custody"     element={<Navigate to="/inventory?tab=custody" replace />} />
-          <Route path="/inventory/locations"   element={<Navigate to="/inventory?tab=locations" replace />} />
-          <Route path="/custody"               element={<Navigate to="/inventory?tab=custody" replace />} />
-          <Route path="/locations"             element={<Navigate to="/inventory?tab=locations" replace />} />
-          {/* Dashboard / Home aliases */}
-          <Route path="/home"                  element={<Navigate to="/" replace />} />
-          <Route path="/smart-dashboard"       element={<Navigate to="/" replace />} />
-          <Route path="/dashboard/smart"       element={<Navigate to="/" replace />} />
-          {/* WMS legacy paths */}
-          <Route path="/wms-dashboard"         element={<Navigate to="/wms" replace />} />
-          <Route path="/wms/dashboard"         element={<Navigate to="/wms" replace />} />
-          <Route path="/wms-reports"           element={<Navigate to="/reports-analytics?type=warehouse" replace />} />
-          {/* Items / Boxes legacy aliases */}
-          <Route path="/items"                 element={<Navigate to="/boxes/items" replace />} />
-          <Route path="/items-master"          element={<Navigate to="/boxes/items" replace />} />
-          <Route path="/items/import"          element={<Navigate to="/boxes/items/import" replace />} />
-          <Route path="/items/:id"             element={<Navigate to="/boxes/items/:id" replace />} />
-          <Route path="/item-approvals"        element={<Navigate to="/admin/item-approvals" replace />} />
-          <Route path="/supplier-price-import" element={<Navigate to="/admin/supplier-price-import" replace />} />
-          <Route path="/data-setup"            element={<Navigate to="/admin/data-setup" replace />} />
-          <Route path="/app-settings"          element={<Navigate to="/admin/app-settings" replace />} />
-          <Route path="/rls-diagnostics"       element={<Navigate to="/admin/rls-diagnostics" replace />} />
-          {/* Container shorthand */}
-          <Route path="/containers/:id"        element={<Navigate to="/boxes/container/:id" replace />} />
-          {/* P3-b: approvals merged into ItemsHub tab */}
-          <Route path="/admin/item-approvals" element={<Navigate to="/boxes/items?tab=approvals" replace />} />
-          <Route
-            path="/admin/supplier-price-import"
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'manager']}>
-                <PageTransition>
-                  <SupplierPriceImport />
+                  <WmsReports />
                 </PageTransition>
               </ProtectedRoute>
             }
@@ -556,7 +415,6 @@ export function AnimatedRoutes() {
             }
           />
         </Routes>
-      </Suspense>
-    </RouteErrorBoundary>
+    </Suspense>
   );
 }

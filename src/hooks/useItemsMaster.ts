@@ -16,21 +16,6 @@ export interface ItemMaster {
   created_by: string | null;
   created_at: string;
   updated_at: string;
-  name_ar?: string | null;
-  name_en?: string | null;
-  category_id?: string | null;
-  model_no?: string | null;
-  plate_no?: string | null;
-  brand?: string | null;
-  min_qty?: number | null;
-  max_qty?: number | null;
-  has_expiry?: boolean | null;
-  condition?: string | null;
-  item_type?: string | null;
-  barcode?: string | null;
-  supplier_id?: string | null;
-  is_dormant?: boolean | null;
-  classification_id?: string | null;
 }
 
 export type ItemMasterInput = Omit<ItemMaster, 'id' | 'created_at' | 'updated_at' | 'created_by'>;

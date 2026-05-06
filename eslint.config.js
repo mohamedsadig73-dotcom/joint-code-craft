@@ -23,32 +23,4 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
-  // S6/P4 guard: forbid direct `supabase.from(...)` calls outside the
-  // Service Layer. UI code (pages/components/hooks UI) must go through
-  // `src/services/*`. Existing offending files are warnings until they
-  // are migrated; new files are blocked at review time.
-  {
-    files: ["src/components/**/*.{ts,tsx}", "src/pages/**/*.{ts,tsx}", "src/modules/**/*.{ts,tsx}"],
-    rules: {
-      "no-restricted-syntax": [
-        "warn",
-        {
-          selector: "CallExpression[callee.object.name='supabase'][callee.property.name='from']",
-          message:
-            "Do not call supabase.from() from UI layer. Use a service in src/services/* instead (S6/P4 architectural rule).",
-        },
-      ],
-    },
-  },
-  // Services and hooks/data are the only legitimate consumers of supabase.from().
-  {
-    files: [
-      "src/services/**/*.{ts,tsx}",
-      "src/hooks/**/*.{ts,tsx}",
-      "src/integrations/**/*.{ts,tsx}",
-    ],
-    rules: {
-      "no-restricted-syntax": "off",
-    },
-  }
 );

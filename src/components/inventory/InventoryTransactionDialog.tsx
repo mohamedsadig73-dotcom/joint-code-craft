@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -8,8 +10,6 @@ import { useItemsMaster } from '@/hooks/useItemsMaster';
 import { useWarehouses, useInvLocations, useCreateInvTransaction, type InvTxnType, type InvPartyType } from '@/hooks/useInventory';
 import { Plus, Trash2, Loader2, CheckCircle2, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { StandardModal } from '@/components/ui/StandardModal';
-import { FormSection, FormField, FormCode } from '@/components/ui/StandardForm';
 
 interface Props {
   open: boolean;
@@ -131,33 +131,38 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
   const typeColor = type === 'in' ? 'text-green-600' : 'text-orange-600';
 
   return (
-    <StandardModal
-      open={open}
-      onOpenChange={handleClose}
-      title={t(titleKey)}
-      size="lg"
-      hideFooter
-    >
-      {step === 'form' && (
-        <div className="space-y-1">
-          <FormSection title={t('basicInfo') || 'البيانات الأساسية'} columns={2}>
-            <FormField label={t('invDate')} required>
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{t(titleKey)}</DialogTitle>
+        </DialogHeader>
+
+        {step === 'form' && (
+        <div className="space-y-4">
+          {isDeclaration && nextDeclNo && (
+            <div className="flex items-center justify-between p-3 rounded-lg border border-primary/30 bg-primary/5">
+              <span className="text-sm text-muted-foreground">{t('nextDeclarationNo')}</span>
+              <span className="font-mono font-semibold text-primary">{nextDeclNo}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <Label>{t('invDate')}</Label>
               <Input type="date" value={txnDate} onChange={(e) => setTxnDate(e.target.value)} />
-            </FormField>
-            {isDeclaration ? (
-              <FormField label={t('nextDeclarationNo') || 'رقم السند'}>
-                <FormCode value={nextDeclNo} placeholder="…" />
-              </FormField>
-            ) : (
-              <FormField label={t('invReference')} hint={t('optional')}>
+            </div>
+            {!isDeclaration && (
+              <div>
+                <Label>{t('invReference')}</Label>
                 <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t('optional')} />
-              </FormField>
+              </div>
             )}
-          </FormSection>
+          </div>
 
           {needsSource && (
-            <FormSection title={t('source') || 'المصدر'} columns={2}>
-              <FormField label={t('fromWarehouse')} required>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 rounded-lg border border-border/40 bg-muted/20">
+              <div>
+                <Label>{t('fromWarehouse')}</Label>
                 <Select value={fromWarehouseId} onValueChange={setFromWarehouseId}>
                   <SelectTrigger><SelectValue placeholder={t('selectWarehouse')} /></SelectTrigger>
                   <SelectContent>
@@ -166,8 +171,9 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
                     ))}
                   </SelectContent>
                 </Select>
-              </FormField>
-              <FormField label={t('fromLocation')} hint={t('optional')}>
+              </div>
+              <div>
+                <Label>{t('fromLocation')} <span className="text-muted-foreground text-xs">({t('optional')})</span></Label>
                 <Select value={fromLocationId} onValueChange={setFromLocationId} disabled={!fromWarehouseId}>
                   <SelectTrigger><SelectValue placeholder={t('selectLocation')} /></SelectTrigger>
                   <SelectContent>
@@ -176,13 +182,14 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
                     ))}
                   </SelectContent>
                 </Select>
-              </FormField>
-            </FormSection>
+              </div>
+            </div>
           )}
 
           {needsDest && (
-            <FormSection title={t('destination') || 'الوجهة'} columns={2}>
-              <FormField label={t('toWarehouse')} required>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 rounded-lg border border-border/40 bg-muted/20">
+              <div>
+                <Label>{t('toWarehouse')}</Label>
                 <Select value={toWarehouseId} onValueChange={setToWarehouseId}>
                   <SelectTrigger><SelectValue placeholder={t('selectWarehouse')} /></SelectTrigger>
                   <SelectContent>
@@ -191,8 +198,9 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
                     ))}
                   </SelectContent>
                 </Select>
-              </FormField>
-              <FormField label={t('toLocation')} hint={t('optional')}>
+              </div>
+              <div>
+                <Label>{t('toLocation')} <span className="text-muted-foreground text-xs">({t('optional')})</span></Label>
                 <Select value={toLocationId} onValueChange={setToLocationId} disabled={!toWarehouseId}>
                   <SelectTrigger><SelectValue placeholder={t('selectLocation')} /></SelectTrigger>
                   <SelectContent>
@@ -201,13 +209,14 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
                     ))}
                   </SelectContent>
                 </Select>
-              </FormField>
-            </FormSection>
+              </div>
+            </div>
           )}
 
           {needsParty && (
-            <FormSection title={t('party') || 'الطرف الآخر'} columns={3}>
-              <FormField label={t('partyType')} required>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 rounded-lg border border-border/40 bg-muted/20">
+              <div>
+                <Label>{t('partyType')}</Label>
                 <Select value={partyType} onValueChange={(v) => setPartyType(v as InvPartyType)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -217,18 +226,21 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
                     <SelectItem value="external">{t('external')}</SelectItem>
                   </SelectContent>
                 </Select>
-              </FormField>
-              <FormField label={t('partyName')} required>
+              </div>
+              <div>
+                <Label>{t('partyName')}</Label>
                 <Input value={partyName} onChange={(e) => setPartyName(e.target.value)} />
-              </FormField>
-              <FormField label={t('partyRef')} hint={t('optional')}>
+              </div>
+              <div>
+                <Label>{t('partyRef')} <span className="text-muted-foreground text-xs">({t('optional')})</span></Label>
                 <Input value={partyRef} onChange={(e) => setPartyRef(e.target.value)} placeholder={t('idOrCode')} />
-              </FormField>
-            </FormSection>
+              </div>
+            </div>
           )}
 
-          <FormSection title={t('items')} columns={1}>
-            <div className="flex items-center justify-end -mt-2 mb-1">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <Label>{t('items')}</Label>
               <Button type="button" variant="outline" size="sm" onClick={() => setLines([...lines, { item_id: '', qty: 1 }])}>
                 <Plus className="w-4 h-4" /> {t('addLine')}
               </Button>
@@ -261,17 +273,16 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
                 </div>
               ))}
             </div>
-          </FormSection>
+          </div>
 
-          <FormSection columns={1}>
-            <FormField label={t('notes')}>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
-            </FormField>
-          </FormSection>
+          <div>
+            <Label>{t('notes')}</Label>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+          </div>
         </div>
-      )}
+        )}
 
-      {step === 'confirm' && (
+        {step === 'confirm' && (
           <div className="space-y-4 py-2">
             <div className={`flex items-center gap-3 p-4 rounded-lg border-2 border-primary/40 bg-primary/5`}>
               <TypeIcon className={`w-8 h-8 ${typeColor}`} />
@@ -315,28 +326,29 @@ export function InventoryTransactionDialog({ open, onOpenChange, type, onSuccess
           </div>
         )}
 
-      <div className="px-5 py-3 border-t border-[hsl(var(--wms-border))] bg-[hsl(var(--wms-bg2))] flex flex-row gap-2 sticky bottom-0">
-        {step === 'form' && (
-          <>
-            <Button onClick={handleProceed} disabled={!validLines.length}>
-              {isDeclaration ? t('continueAction') : t('postTransaction')}
-            </Button>
-            <Button variant="outline" onClick={() => handleClose(false)}>{t('cancel')}</Button>
-          </>
-        )}
-        {step === 'confirm' && (
-          <>
-            <Button onClick={doSubmit} disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin me-1" />}
-              {t('confirmAndCreate')}
-            </Button>
-            <Button variant="outline" onClick={() => setStep('form')} disabled={submitting}>{t('goBack')}</Button>
-          </>
-        )}
-        {step === 'success' && (
-          <Button onClick={() => handleClose(false)} className="w-full sm:w-auto">{t('done')}</Button>
-        )}
-      </div>
-    </StandardModal>
+        <DialogFooter>
+          {step === 'form' && (
+            <>
+              <Button variant="outline" onClick={() => handleClose(false)}>{t('cancel')}</Button>
+              <Button onClick={handleProceed} disabled={!validLines.length}>
+                {isDeclaration ? t('continueAction') : t('postTransaction')}
+              </Button>
+            </>
+          )}
+          {step === 'confirm' && (
+            <>
+              <Button variant="outline" onClick={() => setStep('form')} disabled={submitting}>{t('goBack')}</Button>
+              <Button onClick={doSubmit} disabled={submitting}>
+                {submitting && <Loader2 className="w-4 h-4 animate-spin me-1" />}
+                {t('confirmAndCreate')}
+              </Button>
+            </>
+          )}
+          {step === 'success' && (
+            <Button onClick={() => handleClose(false)} className="w-full sm:w-auto">{t('done')}</Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

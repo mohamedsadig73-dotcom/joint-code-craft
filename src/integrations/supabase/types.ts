@@ -14,30 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      app_settings: {
-        Row: {
-          description: string | null
-          key: string
-          updated_at: string
-          updated_by: string | null
-          value: Json
-        }
-        Insert: {
-          description?: string | null
-          key: string
-          updated_at?: string
-          updated_by?: string | null
-          value?: Json
-        }
-        Update: {
-          description?: string | null
-          key?: string
-          updated_at?: string
-          updated_by?: string | null
-          value?: Json
-        }
-        Relationships: []
-      }
       archive_files: {
         Row: {
           archive_number: string
@@ -169,8 +145,6 @@ export type Database = {
           dispatch_no: string
           id: string
           notes: string | null
-          project_id: string | null
-          receiving_staff_id: string | null
           serial_no: number
           shipping_company: string | null
           signer_name: string
@@ -192,8 +166,6 @@ export type Database = {
           dispatch_no: string
           id?: string
           notes?: string | null
-          project_id?: string | null
-          receiving_staff_id?: string | null
           serial_no?: number
           shipping_company?: string | null
           signer_name: string
@@ -215,8 +187,6 @@ export type Database = {
           dispatch_no?: string
           id?: string
           notes?: string | null
-          project_id?: string | null
-          receiving_staff_id?: string | null
           serial_no?: number
           shipping_company?: string | null
           signer_name?: string
@@ -230,20 +200,6 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "box_dispatches_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "box_dispatches_receiving_staff_id_fkey"
-            columns: ["receiving_staff_id"]
-            isOneToOne: false
-            referencedRelation: "receiving_staff"
             referencedColumns: ["id"]
           },
         ]
@@ -367,59 +323,7 @@ export type Database = {
             referencedRelation: "items_master"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "box_receipts_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "v_low_stock_alerts"
-            referencedColumns: ["item_id"]
-          },
         ]
-      }
-      branches: {
-        Row: {
-          address: string | null
-          code: string
-          created_at: string
-          created_by: string | null
-          id: string
-          is_active: boolean
-          manager_name: string | null
-          name_ar: string
-          name_en: string | null
-          notes: string | null
-          phone: string | null
-          updated_at: string
-        }
-        Insert: {
-          address?: string | null
-          code: string
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          is_active?: boolean
-          manager_name?: string | null
-          name_ar: string
-          name_en?: string | null
-          notes?: string | null
-          phone?: string | null
-          updated_at?: string
-        }
-        Update: {
-          address?: string | null
-          code?: string
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          is_active?: boolean
-          manager_name?: string | null
-          name_ar?: string
-          name_en?: string | null
-          notes?: string | null
-          phone?: string | null
-          updated_at?: string
-        }
-        Relationships: []
       }
       compliance_logs: {
         Row: {
@@ -1053,13 +957,6 @@ export type Database = {
             referencedRelation: "items_master"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "inv_custody_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "v_low_stock_alerts"
-            referencedColumns: ["item_id"]
-          },
         ]
       }
       inv_locations: {
@@ -1170,13 +1067,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "inv_stock_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "v_low_stock_alerts"
-            referencedColumns: ["item_id"]
-          },
-          {
             foreignKeyName: "inv_stock_location_id_fkey"
             columns: ["location_id"]
             isOneToOne: false
@@ -1244,13 +1134,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "items_master"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "inv_transaction_items_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "v_low_stock_alerts"
-            referencedColumns: ["item_id"]
           },
           {
             foreignKeyName: "inv_transaction_items_transaction_id_fkey"
@@ -1386,11 +1269,9 @@ export type Database = {
           created_by: string | null
           id: string
           is_active: boolean
-          level: number
           name_ar: string
           name_en: string | null
           parent_id: string | null
-          sort_order: number
           updated_at: string
         }
         Insert: {
@@ -1399,11 +1280,9 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_active?: boolean
-          level?: number
           name_ar: string
           name_en?: string | null
           parent_id?: string | null
-          sort_order?: number
           updated_at?: string
         }
         Update: {
@@ -1412,11 +1291,9 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_active?: boolean
-          level?: number
           name_ar?: string
           name_en?: string | null
           parent_id?: string | null
-          sort_order?: number
           updated_at?: string
         }
         Relationships: [
@@ -1533,194 +1410,14 @@ export type Database = {
             referencedRelation: "items_master"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "item_image_history_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "v_low_stock_alerts"
-            referencedColumns: ["item_id"]
-          },
-        ]
-      }
-      item_naming_rules: {
-        Row: {
-          description: string | null
-          id: string
-          rule_key: string
-          rule_value: Json
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          description?: string | null
-          id?: string
-          rule_key: string
-          rule_value: Json
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          description?: string | null
-          id?: string
-          rule_key?: string
-          rule_value?: Json
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
-      item_suppliers: {
-        Row: {
-          created_at: string
-          id: string
-          is_preferred: boolean
-          item_id: string
-          notes: string | null
-          purchase_price: number
-          supplier_id: string
-          supplier_item_code: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_preferred?: boolean
-          item_id: string
-          notes?: string | null
-          purchase_price?: number
-          supplier_id: string
-          supplier_item_code?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_preferred?: boolean
-          item_id?: string
-          notes?: string | null
-          purchase_price?: number
-          supplier_id?: string
-          supplier_item_code?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "item_suppliers_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "inv_low_stock"
-            referencedColumns: ["item_id"]
-          },
-          {
-            foreignKeyName: "item_suppliers_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "inv_stock_summary"
-            referencedColumns: ["item_id"]
-          },
-          {
-            foreignKeyName: "item_suppliers_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "items_master"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "item_suppliers_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "v_low_stock_alerts"
-            referencedColumns: ["item_id"]
-          },
-          {
-            foreignKeyName: "item_suppliers_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "suppliers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      item_warehouses: {
-        Row: {
-          created_at: string
-          id: string
-          is_default: boolean
-          item_id: string
-          max_qty: number | null
-          min_qty: number | null
-          notes: string | null
-          warehouse_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_default?: boolean
-          item_id: string
-          max_qty?: number | null
-          min_qty?: number | null
-          notes?: string | null
-          warehouse_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_default?: boolean
-          item_id?: string
-          max_qty?: number | null
-          min_qty?: number | null
-          notes?: string | null
-          warehouse_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "item_warehouses_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "inv_low_stock"
-            referencedColumns: ["item_id"]
-          },
-          {
-            foreignKeyName: "item_warehouses_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "inv_stock_summary"
-            referencedColumns: ["item_id"]
-          },
-          {
-            foreignKeyName: "item_warehouses_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "items_master"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "item_warehouses_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "v_low_stock_alerts"
-            referencedColumns: ["item_id"]
-          },
-          {
-            foreignKeyName: "item_warehouses_warehouse_id_fkey"
-            columns: ["warehouse_id"]
-            isOneToOne: false
-            referencedRelation: "warehouses"
-            referencedColumns: ["id"]
-          },
         ]
       }
       items_master: {
         Row: {
-          approval_status: Database["public"]["Enums"]["item_approval_status"]
-          approved_at: string | null
-          approved_by: string | null
           avg_cost: number | null
           barcode: string | null
           brand: string | null
           category_id: string | null
-          classification_id: string | null
-          condition: string
           created_at: string
           created_by: string | null
           default_supplier: string | null
@@ -1728,44 +1425,25 @@ export type Database = {
           description: string
           expiry_date: string | null
           group_id: string | null
-          has_expiry: boolean
           id: string
           image_path: string | null
-          internal_ref: string | null
           is_active: boolean
-          is_dormant: boolean
-          item_type: string
           last_cost: number | null
           max_qty: number | null
           min_qty: number | null
           model_no: string | null
-          name_ar: string | null
-          name_en: string | null
-          naming_quality_score: number | null
           notes: string | null
           part_no: string
-          plate_no: string | null
-          qr_payload: string | null
-          rejection_reason: string | null
           reorder_qty: number | null
-          spec: string | null
-          sub_category_id: string | null
           supplier_id: string | null
-          uom_dict_id: string | null
           uom_id: string | null
           updated_at: string
-          variant_code: string | null
         }
         Insert: {
-          approval_status?: Database["public"]["Enums"]["item_approval_status"]
-          approved_at?: string | null
-          approved_by?: string | null
           avg_cost?: number | null
           barcode?: string | null
           brand?: string | null
           category_id?: string | null
-          classification_id?: string | null
-          condition?: string
           created_at?: string
           created_by?: string | null
           default_supplier?: string | null
@@ -1773,44 +1451,25 @@ export type Database = {
           description?: string
           expiry_date?: string | null
           group_id?: string | null
-          has_expiry?: boolean
           id?: string
           image_path?: string | null
-          internal_ref?: string | null
           is_active?: boolean
-          is_dormant?: boolean
-          item_type?: string
           last_cost?: number | null
           max_qty?: number | null
           min_qty?: number | null
           model_no?: string | null
-          name_ar?: string | null
-          name_en?: string | null
-          naming_quality_score?: number | null
           notes?: string | null
           part_no: string
-          plate_no?: string | null
-          qr_payload?: string | null
-          rejection_reason?: string | null
           reorder_qty?: number | null
-          spec?: string | null
-          sub_category_id?: string | null
           supplier_id?: string | null
-          uom_dict_id?: string | null
           uom_id?: string | null
           updated_at?: string
-          variant_code?: string | null
         }
         Update: {
-          approval_status?: Database["public"]["Enums"]["item_approval_status"]
-          approved_at?: string | null
-          approved_by?: string | null
           avg_cost?: number | null
           barcode?: string | null
           brand?: string | null
           category_id?: string | null
-          classification_id?: string | null
-          condition?: string
           created_at?: string
           created_by?: string | null
           default_supplier?: string | null
@@ -1818,52 +1477,24 @@ export type Database = {
           description?: string
           expiry_date?: string | null
           group_id?: string | null
-          has_expiry?: boolean
           id?: string
           image_path?: string | null
-          internal_ref?: string | null
           is_active?: boolean
-          is_dormant?: boolean
-          item_type?: string
           last_cost?: number | null
           max_qty?: number | null
           min_qty?: number | null
           model_no?: string | null
-          name_ar?: string | null
-          name_en?: string | null
-          naming_quality_score?: number | null
           notes?: string | null
           part_no?: string
-          plate_no?: string | null
-          qr_payload?: string | null
-          rejection_reason?: string | null
           reorder_qty?: number | null
-          spec?: string | null
-          sub_category_id?: string | null
           supplier_id?: string | null
-          uom_dict_id?: string | null
           uom_id?: string | null
           updated_at?: string
-          variant_code?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "items_master_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "items_master_category_id_fkey"
             columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "item_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "items_master_classification_id_fkey"
-            columns: ["classification_id"]
             isOneToOne: false
             referencedRelation: "item_categories"
             referencedColumns: ["id"]
@@ -1883,24 +1514,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "items_master_sub_category_id_fkey"
-            columns: ["sub_category_id"]
-            isOneToOne: false
-            referencedRelation: "item_categories"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "items_master_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "items_master_uom_dict_id_fkey"
-            columns: ["uom_dict_id"]
-            isOneToOne: false
-            referencedRelation: "uom_dictionary"
             referencedColumns: ["id"]
           },
           {
@@ -2867,57 +2484,6 @@ export type Database = {
         }
         Relationships: []
       }
-      receiving_staff: {
-        Row: {
-          authorized_by: string | null
-          created_at: string
-          created_by: string | null
-          deleted_at: string | null
-          employee_no: string | null
-          full_name: string
-          id: string
-          is_active: boolean
-          job_title: string | null
-          notes: string | null
-          personal_id: string | null
-          phone: string | null
-          serial: number
-          updated_at: string
-        }
-        Insert: {
-          authorized_by?: string | null
-          created_at?: string
-          created_by?: string | null
-          deleted_at?: string | null
-          employee_no?: string | null
-          full_name: string
-          id?: string
-          is_active?: boolean
-          job_title?: string | null
-          notes?: string | null
-          personal_id?: string | null
-          phone?: string | null
-          serial?: never
-          updated_at?: string
-        }
-        Update: {
-          authorized_by?: string | null
-          created_at?: string
-          created_by?: string | null
-          deleted_at?: string | null
-          employee_no?: string | null
-          full_name?: string
-          id?: string
-          is_active?: boolean
-          job_title?: string | null
-          notes?: string | null
-          personal_id?: string | null
-          phone?: string | null
-          serial?: never
-          updated_at?: string
-        }
-        Relationships: []
-      }
       shipping_containers: {
         Row: {
           container_no: string
@@ -2977,216 +2543,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      stock_count_lines: {
-        Row: {
-          count_id: string
-          counted_at: string | null
-          counted_by: string | null
-          counted_qty: number
-          created_at: string
-          expected_qty: number
-          id: string
-          item_id: string
-          line_no: number
-          location_id: string | null
-          remarks: string | null
-          unit_cost: number
-          variance_qty: number | null
-        }
-        Insert: {
-          count_id: string
-          counted_at?: string | null
-          counted_by?: string | null
-          counted_qty?: number
-          created_at?: string
-          expected_qty?: number
-          id?: string
-          item_id: string
-          line_no?: number
-          location_id?: string | null
-          remarks?: string | null
-          unit_cost?: number
-          variance_qty?: number | null
-        }
-        Update: {
-          count_id?: string
-          counted_at?: string | null
-          counted_by?: string | null
-          counted_qty?: number
-          created_at?: string
-          expected_qty?: number
-          id?: string
-          item_id?: string
-          line_no?: number
-          location_id?: string | null
-          remarks?: string | null
-          unit_cost?: number
-          variance_qty?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "stock_count_lines_count_id_fkey"
-            columns: ["count_id"]
-            isOneToOne: false
-            referencedRelation: "stock_counts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stock_count_lines_counted_by_fkey"
-            columns: ["counted_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stock_count_lines_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "inv_low_stock"
-            referencedColumns: ["item_id"]
-          },
-          {
-            foreignKeyName: "stock_count_lines_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "inv_stock_summary"
-            referencedColumns: ["item_id"]
-          },
-          {
-            foreignKeyName: "stock_count_lines_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "items_master"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stock_count_lines_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "v_low_stock_alerts"
-            referencedColumns: ["item_id"]
-          },
-          {
-            foreignKeyName: "stock_count_lines_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "inv_locations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      stock_counts: {
-        Row: {
-          count_date: string
-          count_no: string | null
-          created_at: string
-          created_by: string | null
-          id: string
-          notes: string | null
-          posted_at: string | null
-          posted_by: string | null
-          status: Database["public"]["Enums"]["stock_count_status"]
-          total_variance_qty: number | null
-          total_variance_value: number | null
-          updated_at: string
-          warehouse_id: string
-        }
-        Insert: {
-          count_date?: string
-          count_no?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          notes?: string | null
-          posted_at?: string | null
-          posted_by?: string | null
-          status?: Database["public"]["Enums"]["stock_count_status"]
-          total_variance_qty?: number | null
-          total_variance_value?: number | null
-          updated_at?: string
-          warehouse_id: string
-        }
-        Update: {
-          count_date?: string
-          count_no?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          notes?: string | null
-          posted_at?: string | null
-          posted_by?: string | null
-          status?: Database["public"]["Enums"]["stock_count_status"]
-          total_variance_qty?: number | null
-          total_variance_value?: number | null
-          updated_at?: string
-          warehouse_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "stock_counts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stock_counts_posted_by_fkey"
-            columns: ["posted_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stock_counts_warehouse_id_fkey"
-            columns: ["warehouse_id"]
-            isOneToOne: false
-            referencedRelation: "warehouses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      supplier_price_imports: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          errors: Json
-          file_name: string | null
-          id: string
-          rows_inserted: number
-          rows_skipped: number
-          rows_total: number
-          rows_updated: number
-          supplier_id: string | null
-          supplier_name: string | null
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          errors?: Json
-          file_name?: string | null
-          id?: string
-          rows_inserted?: number
-          rows_skipped?: number
-          rows_total?: number
-          rows_updated?: number
-          supplier_id?: string | null
-          supplier_name?: string | null
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          errors?: Json
-          file_name?: string | null
-          id?: string
-          rows_inserted?: number
-          rows_skipped?: number
-          rows_total?: number
-          rows_updated?: number
-          supplier_id?: string | null
-          supplier_name?: string | null
-        }
-        Relationships: []
       }
       suppliers: {
         Row: {
@@ -3285,87 +2641,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      uom_conversions: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          factor: number
-          from_uom_id: string
-          id: string
-          is_active: boolean
-          notes: string | null
-          to_uom_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          factor: number
-          from_uom_id: string
-          id?: string
-          is_active?: boolean
-          notes?: string | null
-          to_uom_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          factor?: number
-          from_uom_id?: string
-          id?: string
-          is_active?: boolean
-          notes?: string | null
-          to_uom_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "uom_conversions_from_uom_id_fkey"
-            columns: ["from_uom_id"]
-            isOneToOne: false
-            referencedRelation: "units_of_measure"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "uom_conversions_to_uom_id_fkey"
-            columns: ["to_uom_id"]
-            isOneToOne: false
-            referencedRelation: "units_of_measure"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      uom_dictionary: {
-        Row: {
-          code: string
-          created_at: string
-          id: string
-          is_active: boolean
-          name_ar: string
-          name_en: string
-          sort_order: number
-        }
-        Insert: {
-          code: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name_ar: string
-          name_en: string
-          sort_order?: number
-        }
-        Update: {
-          code?: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name_ar?: string
-          name_en?: string
-          sort_order?: number
-        }
-        Relationships: []
       }
       update_logs: {
         Row: {
@@ -3686,39 +2961,11 @@ export type Database = {
           },
         ]
       }
-      v_low_stock_alerts: {
-        Row: {
-          alert_level: string | null
-          description: string | null
-          item_id: string | null
-          max_qty: number | null
-          min_qty: number | null
-          name_ar: string | null
-          part_no: string | null
-          qty_on_hand: number | null
-          reorder_qty: number | null
-          warehouse_id: string | null
-          warehouse_name: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "inv_stock_warehouse_id_fkey"
-            columns: ["warehouse_id"]
-            isOneToOne: false
-            referencedRelation: "warehouses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Functions: {
       apply_dispatch_quantities: {
         Args: { p_dispatch_id: string }
         Returns: undefined
-      }
-      calculate_item_quality_score: {
-        Args: { _item_id: string }
-        Returns: number
       }
       check_admin_office_notifications: { Args: never; Returns: undefined }
       check_maintenance_notifications: { Args: never; Returns: undefined }
@@ -3738,22 +2985,6 @@ export type Database = {
         Returns: undefined
       }
       deactivate_user: { Args: { target_user_id: string }; Returns: boolean }
-      find_similar_items: {
-        Args: {
-          _category_id?: string
-          _limit?: number
-          _name: string
-          _threshold?: number
-        }
-        Returns: {
-          category_id: string
-          id: string
-          internal_ref: string
-          name_ar: string
-          name_en: string
-          similarity: number
-        }[]
-      }
       generate_archive_number: { Args: never; Returns: string }
       generate_cycle_count_number: { Args: never; Returns: string }
       generate_declaration_id: {
@@ -3765,10 +2996,6 @@ export type Database = {
         Returns: string
       }
       generate_invoice_number: { Args: never; Returns: string }
-      generate_item_internal_ref: {
-        Args: { _category_code: string; _sub_category_code?: string }
-        Returns: string
-      }
       generate_maintenance_schedule: {
         Args: { _item_id: string; _year: number }
         Returns: undefined
@@ -3822,7 +3049,6 @@ export type Database = {
             }
             Returns: string
           }
-      normalize_uom: { Args: { _raw: string }; Returns: string }
       post_stock_count: { Args: { p_count_id: string }; Returns: string }
       reactivate_user: { Args: { target_user_id: string }; Returns: boolean }
       verify_backup_code: {
@@ -3874,7 +3100,6 @@ export type Database = {
       inv_party_type: "employee" | "department" | "supplier" | "external"
       inv_txn_status: "draft" | "posted" | "cancelled"
       inv_txn_type: "in" | "out" | "transfer" | "return"
-      item_approval_status: "draft" | "pending" | "approved" | "rejected"
       maintenance_asset_type:
         | "electrical"
         | "plumbing"
@@ -3892,12 +3117,7 @@ export type Database = {
       maintenance_status: "pending" | "done" | "not_required" | "overdue"
       packing_type: "boxed" | "loose"
       petty_cash_status: "open" | "closed" | "pending_approval" | "rejected"
-      stock_count_status:
-        | "draft"
-        | "in_progress"
-        | "submitted"
-        | "posted"
-        | "cancelled"
+      stock_count_status: "draft" | "in_progress" | "posted" | "cancelled"
       stock_movement_status: "draft" | "posted" | "cancelled"
       stock_movement_type: "receipt" | "issue" | "transfer"
       wms_order_status:
@@ -4085,7 +3305,6 @@ export const Constants = {
       inv_party_type: ["employee", "department", "supplier", "external"],
       inv_txn_status: ["draft", "posted", "cancelled"],
       inv_txn_type: ["in", "out", "transfer", "return"],
-      item_approval_status: ["draft", "pending", "approved", "rejected"],
       maintenance_asset_type: [
         "electrical",
         "plumbing",
@@ -4105,13 +3324,7 @@ export const Constants = {
       maintenance_status: ["pending", "done", "not_required", "overdue"],
       packing_type: ["boxed", "loose"],
       petty_cash_status: ["open", "closed", "pending_approval", "rejected"],
-      stock_count_status: [
-        "draft",
-        "in_progress",
-        "submitted",
-        "posted",
-        "cancelled",
-      ],
+      stock_count_status: ["draft", "in_progress", "posted", "cancelled"],
       stock_movement_status: ["draft", "posted", "cancelled"],
       stock_movement_type: ["receipt", "issue", "transfer"],
       wms_order_status: [

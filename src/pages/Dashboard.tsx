@@ -6,6 +6,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigation } from '@/components/Navigation';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { FAB } from '@/components/FAB';
 import { CreateDeclarationDialog } from '@/components/CreateDeclarationDialog';
 import { ArchiveFilesManagement } from '@/components/ArchiveFilesManagement';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
@@ -19,8 +20,6 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useSmartNudges } from '@/hooks/useSmartNudges';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { Declaration } from '@/types/declarations';
-import { useRegisterFabAction } from '@/hooks/useRegisterFabAction';
-import { Plus } from 'lucide-react';
 
 // Dashboard sub-components
 import {
@@ -79,13 +78,6 @@ export default function Dashboard() {
   useKeyboardShortcuts([
     { key: 'n', ctrl: true, action: () => setCreateDialogOpen(true), description: 'New declaration' },
   ]);
-
-  // P1 — Register page primary action with the global context-aware FAB.
-  useRegisterFabAction({
-    label: t('createDeclaration') || 'إنشاء إقرار',
-    icon: Plus,
-    onClick: () => setCreateDialogOpen(true),
-  });
 
   // Filter logic
   const filteredDeclarations = useMemo(() => declarations.filter(dec => {
@@ -368,12 +360,8 @@ export default function Dashboard() {
         </Tabs>
       </main>
 
-      {/* P1: FAB is now global + context-aware. Local Create dialog stays here. */}
-      <CreateDeclarationDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onSuccess={loadDeclarations}
-      />
+      {/* FAB for mobile */}
+      <FAB onSuccess={loadDeclarations} />
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog

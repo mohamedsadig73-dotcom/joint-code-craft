@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { FileDown, Filter } from 'lucide-react';
 import { formatNumber } from '@/utils/numberFormat';
 import { formatDate } from '@/utils/dateUtils';
-import { wmsToast as toast } from '@/lib/wmsToast';
+import { toast } from 'sonner';
 import { StatusPieChart } from '@/components/charts/StatusPieChart';
 
 interface CostCenter {

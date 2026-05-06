@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { formatNumber } from '@/utils/numberFormat';
 import { formatDate } from '@/utils/dateUtils';
-import { wmsToast as toast } from '@/lib/wmsToast';
+import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OpenPeriodDialog } from './OpenPeriodDialog';
 import { PeriodDetailsDialog } from './PeriodDetailsDialog';

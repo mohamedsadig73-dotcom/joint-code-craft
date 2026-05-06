@@ -9,7 +9,7 @@ import { useBoxSummary } from '@/hooks/useBoxSummary';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { destinationBadgeClass } from '@/components/boxes/destinationStyles';
-import { wmsToast as toast } from '@/lib/wmsToast';
+import { toast } from 'sonner';
 import { printDocument, logPrintEvent, runPrintSelfTest } from '@/utils/printDocument';
 import { PrintPreviewDialog } from '@/components/print/PrintPreviewDialog';
 import {

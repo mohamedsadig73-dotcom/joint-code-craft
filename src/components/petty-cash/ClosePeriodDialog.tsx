@@ -1,13 +1,22 @@
 import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { wmsToast as toast } from '@/lib/wmsToast';
+import { toast } from 'sonner';
 import { formatNumber } from '@/utils/numberFormat';
 import { 
   ArrowRightLeft, 
@@ -17,8 +26,6 @@ import {
   Wallet,
   CheckCircle2
 } from 'lucide-react';
-import { StandardModal } from '@/components/ui/StandardModal';
-import { StandardAlert } from '@/components/ui/StandardForm';
 
 interface PettyCashPeriod {
   id: string;
@@ -171,22 +178,23 @@ export function ClosePeriodDialog({
   ];
 
   return (
-    <StandardModal
-      open={open}
-      onOpenChange={onOpenChange}
-      title={language === 'ar' ? 'إغلاق فترة النثرية' : 'Close Petty Cash Period'}
-      description={language === 'ar' ? `النثرية رقم: ${period.period_number}` : `Period: ${period.period_number}`}
-      size="md"
-      submitLabel={loading
-        ? (language === 'ar' ? 'جاري الإغلاق...' : 'Closing...')
-        : (language === 'ar' ? 'إغلاق النثرية' : 'Close Period')}
-      submitVariant="destructive"
-      submitting={loading}
-      onSubmit={handleClose}
-    >
-      <div dir={isRTL ? 'rtl' : 'ltr'} className="space-y-4">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg" dir={isRTL ? 'rtl' : 'ltr'}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Wallet className="w-5 h-5 text-primary" />
+            {language === 'ar' ? 'إغلاق فترة النثرية' : 'Close Petty Cash Period'}
+          </DialogTitle>
+          <DialogDescription>
+            {language === 'ar' 
+              ? `النثرية رقم: ${period.period_number}`
+              : `Period: ${period.period_number}`}
+          </DialogDescription>
+        </DialogHeader>
+
         {/* Balance Summary */}
-        <div className="rounded-md border border-[hsl(var(--wms-border))] bg-[hsl(var(--wms-bg3))] p-4 space-y-2">
+        <Card className="bg-muted/50">
+          <CardContent className="p-4 space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">
                 {language === 'ar' ? 'الرصيد الافتتاحي' : 'Opening Balance'}
@@ -197,25 +205,29 @@ export function ClosePeriodDialog({
               <span className="text-sm text-muted-foreground">
                 {language === 'ar' ? 'إجمالي المصروفات' : 'Total Expenses'}
               </span>
-              <span className="font-medium text-[hsl(var(--wms-red))]">-{formatNumber(period.total_expenses)} {t('currency')}</span>
+              <span className="font-medium text-red-600">-{formatNumber(period.total_expenses)} {t('currency')}</span>
             </div>
-            <div className="border-t border-[hsl(var(--wms-border))] pt-2 flex justify-between items-center">
+            <div className="border-t pt-2 flex justify-between items-center">
               <span className="font-semibold">
                 {language === 'ar' ? 'الرصيد المتبقي' : 'Remaining Balance'}
               </span>
-              <Badge variant={hasBalance ? "wms-blue" : "wms-gray"} className="text-base px-3 py-1">
+              <Badge variant={hasBalance ? "secondary" : "outline"} className="text-base px-3 py-1">
                 {formatNumber(period.current_balance)} {t('currency')}
               </Badge>
             </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* No Balance - Direct Close */}
         {!hasBalance ? (
-          <StandardAlert tone="success">
-            {language === 'ar'
-              ? 'لا يوجد رصيد متبقي. يمكن إغلاق النثرية مباشرة.'
-              : 'No remaining balance. Period can be closed directly.'}
-          </StandardAlert>
+          <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+            <CheckCircle2 className="w-5 h-5 text-green-600" />
+            <p className="text-sm text-green-700 dark:text-green-400">
+              {language === 'ar' 
+                ? 'لا يوجد رصيد متبقي. يمكن إغلاق النثرية مباشرة.'
+                : 'No remaining balance. Period can be closed directly.'}
+            </p>
+          </div>
         ) : (
           /* Balance Disposition Options */
           <div className="space-y-3">
@@ -298,7 +310,22 @@ export function ClosePeriodDialog({
             </div>
           </div>
         )}
-      </div>
-    </StandardModal>
+
+        <DialogFooter className={`gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            {t('cancel')}
+          </Button>
+          <Button 
+            onClick={handleClose} 
+            disabled={loading}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {loading 
+              ? (language === 'ar' ? 'جاري الإغلاق...' : 'Closing...') 
+              : (language === 'ar' ? 'إغلاق النثرية' : 'Close Period')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

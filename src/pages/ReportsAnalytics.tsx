@@ -16,7 +16,7 @@ import { ReportsPerformanceTab } from '@/components/reports/ReportsPerformanceTa
 import { ReportsExportTab } from '@/components/reports/ReportsExportTab';
 import { useState } from 'react';
 
-export default function ReportsAnalytics({ embedded = false }: { embedded?: boolean } = {}) {
+export default function ReportsAnalytics() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('overview');
@@ -36,31 +36,32 @@ export default function ReportsAnalytics({ embedded = false }: { embedded?: bool
   }, [loadData]);
 
   if (loading && data.totalDeclarations === 0) {
-    const skeleton = (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-80 rounded-xl" />
-          <Skeleton className="h-80 rounded-xl" />
-        </div>
-      </div>
-    );
-    if (embedded) return skeleton;
     return (
       <div className="min-h-screen">
         <Navigation />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{skeleton}</main>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-6">
+            <Skeleton className="h-10 w-64" />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Skeleton className="h-80 rounded-xl" />
+              <Skeleton className="h-80 rounded-xl" />
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
-  const body = (
-    <>
-      {!embedded && <Breadcrumbs />}
-      <ReportsHeader
+  return (
+    <div className="min-h-screen pb-24 md:pb-8">
+      <Navigation />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        <Breadcrumbs />
+
+        <ReportsHeader
           selectedYear={selectedYear}
           onYearChange={handleYearChange}
           availableYears={availableYears}
@@ -102,15 +103,6 @@ export default function ReportsAnalytics({ embedded = false }: { embedded?: bool
             <ReportsExportTab dateFrom={dateFrom} dateTo={dateTo} totalDeclarations={data.totalDeclarations} />
           </TabsContent>
         </Tabs>
-    </>
-  );
-
-  if (embedded) return body;
-  return (
-    <div className="min-h-screen pb-24 md:pb-8">
-      <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        {body}
       </main>
     </div>
   );

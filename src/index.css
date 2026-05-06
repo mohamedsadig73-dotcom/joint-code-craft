@@ -80,37 +80,6 @@
     --chart-1: 210 100% 50%;
     --chart-2: 40 80% 50%;
     --chart-3: 151 55% 42%;
-
-    /* ============================================================
-       WMS Pro Tokens — Layered surfaces & soft accent variants.
-       Use these for StandardModal/StandardForm only. Existing
-       semantic tokens (background/card/primary…) remain untouched.
-       ============================================================ */
-    --wms-bg: 222 40% 10%;
-    --wms-bg2: 222 38% 13%;
-    --wms-bg3: 222 35% 17%;
-    --wms-bg4: 222 30% 22%;
-    --wms-border: 217 33% 25%;
-    --wms-border2: 217 30% 32%;
-    --wms-text: 210 40% 98%;
-    --wms-text2: 215 25% 75%;
-    --wms-text3: 215 18% 55%;
-    --wms-accent: 210 100% 55%;
-    --wms-accent2: 210 100% 42%;
-    --wms-accent-soft: 210 100% 55% / 0.10;
-    --wms-accent-soft2: 210 100% 55% / 0.18;
-    --wms-green: 142 70% 45%;
-    --wms-green-soft: 142 70% 45% / 0.12;
-    --wms-red: 0 75% 58%;
-    --wms-red-soft: 0 75% 58% / 0.12;
-    --wms-yellow: 38 92% 50%;
-    --wms-yellow-soft: 38 92% 50% / 0.12;
-    --wms-purple: 270 80% 60%;
-    --wms-purple-soft: 270 80% 60% / 0.12;
-    --wms-teal: 173 80% 40%;
-    --wms-teal-soft: 173 80% 40% / 0.12;
-    --wms-radius: 10px;
-    --wms-radius-sm: 6px;
   }
 
   /* Light Theme */
@@ -149,21 +118,6 @@
     
     --glass-bg: 0 0% 0% / 0.03;
     --glass-border: 0 0% 0% / 0.1;
-
-    /* WMS Pro — Light mode override */
-    --wms-bg: 0 0% 100%;
-    --wms-bg2: 220 20% 98%;
-    --wms-bg3: 220 15% 95%;
-    --wms-bg4: 220 14% 91%;
-    --wms-border: 220 13% 88%;
-    --wms-border2: 220 13% 80%;
-    --wms-text: 222 47% 11%;
-    --wms-text2: 215 20% 35%;
-    --wms-text3: 215 15% 55%;
-    --wms-accent: 210 100% 45%;
-    --wms-accent2: 210 100% 35%;
-    --wms-accent-soft: 210 100% 45% / 0.10;
-    --wms-accent-soft2: 210 100% 45% / 0.18;
     
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -987,10 +941,10 @@
   /* Button groups - reverse order in RTL */
   [dir="rtl"] .button-group,
   .rtl .button-group,
-  [dir="rtl"] .flex.gap-2:has(> button):not(.ltr-flex):not(.flex-col):not([data-sidebar]):not([data-sidebar] *),
-  .rtl .flex.gap-2:has(> button):not(.ltr-flex):not(.flex-col):not([data-sidebar]):not([data-sidebar] *),
-  [dir="rtl"] .flex.gap-3:has(> button):not(.ltr-flex):not(.flex-col):not([data-sidebar]):not([data-sidebar] *),
-  .rtl .flex.gap-3:has(> button):not(.ltr-flex):not(.flex-col):not([data-sidebar]):not([data-sidebar] *) {
+  [dir="rtl"] .flex.gap-2:has(button):not(.ltr-flex),
+  .rtl .flex.gap-2:has(button):not(.ltr-flex),
+  [dir="rtl"] .flex.gap-3:has(button):not(.ltr-flex),
+  .rtl .flex.gap-3:has(button):not(.ltr-flex) {
     flex-direction: row-reverse;
   }
   
@@ -1215,63 +1169,5 @@
   [dir="rtl"] .rtl-reverse,
   .rtl .rtl-reverse {
     flex-direction: row-reverse !important;
-  }
-}
-
-/* ============================================================
-   MOBILE PRO — Safe Area, Touch, Scroll, Tap Highlights
-   ============================================================ */
-@layer utilities {
-  /* iOS / Android safe-area helpers (notch + home indicator) */
-  .pt-safe   { padding-top: env(safe-area-inset-top, 0px); }
-  .pb-safe   { padding-bottom: env(safe-area-inset-bottom, 0px); }
-  .ps-safe   { padding-inline-start: env(safe-area-inset-left, 0px); }
-  .pe-safe   { padding-inline-end: env(safe-area-inset-right, 0px); }
-  .px-safe   { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
-  .mb-safe   { margin-bottom: env(safe-area-inset-bottom, 0px); }
-  .h-safe-bottom { height: env(safe-area-inset-bottom, 0px); }
-
-  /* Bottom nav height token (nav height + safe-area) */
-  .pb-nav    { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)); }
-  .bottom-safe { bottom: env(safe-area-inset-bottom, 0px); }
-
-  /* Touch ergonomics */
-  .touch-target { min-width: 44px; min-height: 44px; }
-  .tap-highlight-none { -webkit-tap-highlight-color: transparent; }
-
-  /* Smooth momentum scrolling for mobile lists */
-  .scroll-momentum {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-  }
-
-  /* Prevent overscroll bounce on the root app shell */
-  .no-overscroll { overscroll-behavior: none; }
-}
-
-/* Disable text selection on interactive chrome (nav, fab) on touch devices */
-@media (hover: none) and (pointer: coarse) {
-  nav button, .no-select-mobile {
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-touch-callout: none;
-  }
-
-  /* Inputs ≥16px to avoid iOS auto-zoom on focus */
-  input, select, textarea {
-    font-size: max(16px, 1rem);
-  }
-
-  /* Slightly larger primary buttons on touch */
-  button { -webkit-tap-highlight-color: transparent; }
-}
-
-/* Reduce motion respect */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,11 +11,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { wmsToast as toast } from '@/lib/wmsToast';
+import { toast } from 'sonner';
 import { formatNumber } from '@/utils/numberFormat';
 import { Check, ChevronsUpDown, AlertCircle, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { StandardModal } from '@/components/ui/StandardModal';
 
 interface CostCenter {
   id: string;
@@ -325,14 +325,12 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
   const totalAmount = (parseFloat(formData.quantity) || 0) * (parseFloat(formData.unit_price) || 0);
 
   return (
-    <StandardModal
-      open={open}
-      onOpenChange={onOpenChange}
-      title={expense ? t('editExpense') : t('addExpense')}
-      size="lg"
-      hideFooter
-    >
-      <div dir={isRTL ? 'rtl' : 'ltr'} className="space-y-4">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+        <DialogHeader>
+          <DialogTitle>{expense ? t('editExpense') : t('addExpense')}</DialogTitle>
+        </DialogHeader>
+
         {/* Period Info / Warning */}
         {!expense && (
           loadingPeriod ? (
@@ -549,10 +547,11 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
             </div>
           </div>
 
-          <div className="flex gap-2 pt-4 border-t border-[hsl(var(--wms-border))] -mx-5 px-5 -mb-4 pb-4 sticky bottom-0 bg-[hsl(var(--wms-bg2))]">
+          <div className={`flex gap-3 pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Button 
               type="submit" 
               disabled={loading || (!expense && !openPeriod) || !!dateError} 
+              className="flex-1"
             >
               {loading ? t('saving') : (expense ? t('update') : t('addExpense'))}
             </Button>
@@ -561,7 +560,7 @@ export function AddExpenseDialog({ open, onOpenChange, expense, onSuccess }: Add
             </Button>
           </div>
         </form>
-      </div>
-    </StandardModal>
+      </DialogContent>
+    </Dialog>
   );
 }

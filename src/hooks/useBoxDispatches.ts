@@ -17,8 +17,6 @@ export interface BoxDispatch {
   destination: 'morocco' | 'uzbekistan' | 'unspecified';
   notes: string | null;
   status: 'draft' | 'approved' | 'cancelled';
-  project_id: string | null;
-  receiving_staff_id: string | null;
   created_by: string | null;
   approved_by: string | null;
   approved_at: string | null;
@@ -44,8 +42,6 @@ export interface DispatchInput {
   shipping_company: string | null;
   destination: 'morocco' | 'uzbekistan' | 'unspecified';
   notes: string | null;
-  project_id?: string | null;
-  receiving_staff_id?: string | null;
   items: Array<{ receipt_id: string; qty_dispatched: number; notes?: string | null }>;
 }
 
@@ -121,8 +117,6 @@ export function useBoxDispatches() {
             shipping_company: input.shipping_company,
             destination: input.destination,
             notes: input.notes,
-            project_id: input.project_id ?? null,
-            receiving_staff_id: input.receiving_staff_id ?? null,
             status: 'draft',
             created_by: user.id,
           },

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, HashRouter, useLocation } from "react-router-dom";
+import { BrowserRouter, HashRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,9 +14,6 @@ import { Onboarding } from "@/components/Onboarding";
 import { OfflineBanner } from "@/components/OfflineIndicator";
 import { AnimatedRoutes } from '@/components/AnimatedRoutes';
 import { UpdateChecker } from '@/components/UpdateChecker';
-import { AppShell } from '@/components/layout/AppShell';
-import { FabProvider } from '@/contexts/FabContext';
-import { FAB } from '@/components/FAB';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,46 +34,15 @@ const AppRouter =
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
-  const location = useLocation();
-
-  // Routes that should render WITHOUT the unified AppShell chrome.
-  // - Auth pages (no auth yet)
-  // - Home / App Launcher (has its own contextual UI)
-  // - Print/standalone pages
-  const path = location.pathname;
-  const noShellRoutes = [
-    '/login',
-    '/forgot-password',
-    '/reset-password',
-    '/install',
-  ];
-  const noShellPrefixes = [
-    '/boxes/card/',          // BoxCardPrint
-    '/boxes/items/barcodes', // ItemBarcodePrint
-  ];
-  const useShell =
-    isAuthenticated &&
-    !noShellRoutes.includes(path) &&
-    !noShellPrefixes.some((p) => path.startsWith(p));
 
   return (
     <>
       {isAuthenticated && <NotificationListener />}
       {isAuthenticated && <Onboarding />}
-      {/* MobileBottomNav only on routes WITHOUT AppShell (e.g. Home launcher).
-          AppShell provides mobile navigation via Sidebar sheet — avoid duplicates. */}
-      {isAuthenticated && !useShell && <MobileBottomNav />}
+      {isAuthenticated && <MobileBottomNav />}
       {isAuthenticated && <OfflineBanner />}
       <UpdateChecker />
-      {useShell ? (
-        <AppShell>
-          <AnimatedRoutes />
-        </AppShell>
-      ) : (
-        <AnimatedRoutes />
-      )}
-      {/* Context-aware global FAB — only renders when a page registers an action */}
-      {isAuthenticated && <FAB />}
+      <AnimatedRoutes />
     </>
   );
 }
@@ -92,10 +58,8 @@ const App = () => (
         <AppRouter>
           <LanguageProvider>
             <AuthProvider>
-              <FabProvider>
-                <AppRoutes />
-                <PWAInstallPrompt />
-              </FabProvider>
+              <AppRoutes />
+              <PWAInstallPrompt />
             </AuthProvider>
           </LanguageProvider>
         </AppRouter>

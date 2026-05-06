@@ -1,12 +1,23 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Wrench, Wallet, FileText, MoreHorizontal, CalendarDays, Users, Shield, X, Home, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { hapticSelection, hapticLight } from '@/lib/haptics';
-import { mobilePrimaryNav, mobileMoreNav, type NavLeaf, type Role } from '@/config/navigation';
+
+interface NavItem {
+  path: string;
+  icon: typeof LayoutDashboard;
+  labelKey: string;
+}
+
+const primaryNavItems: NavItem[] = [
+  { path: '/', icon: Home, labelKey: 'home' },
+  { path: '/declarations', icon: FileText, labelKey: 'declarations' },
+  { path: '/maintenance', icon: Wrench, labelKey: 'maintenance' },
+  { path: '/petty-cash', icon: Wallet, labelKey: 'pettyCashShort' },
+];
 
 export const MobileBottomNav = memo(function MobileBottomNav() {
   const location = useLocation();
@@ -21,17 +32,26 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
     return location.pathname.startsWith(path);
   };
 
-  // P1: nav definitions come from src/config/navigation.ts (single source of truth).
-  const primaryNavItems: NavLeaf[] = mobilePrimaryNav;
-  const moreNavItems: NavLeaf[] = useMemo(
-    () => mobileMoreNav.filter((it) => !it.roles || (user?.role && it.roles.includes(user.role as Role))),
-    [user?.role]
-  );
+  // Secondary pages shown in "More" menu
+  const moreNavItems: NavItem[] = [
+    { path: '/boxes', icon: Package, labelKey: 'boxesManagement' },
+    { path: '/leave-tracking', icon: CalendarDays, labelKey: 'leaveShort' },
+    { path: '/reports-analytics', icon: BarChart3, labelKey: 'reports' },
+    { path: '/holiday-attendance', icon: CalendarDays, labelKey: 'holidayAttendance' },
+    { path: '/employees', icon: Users, labelKey: 'employeesManagement' },
+  ];
+
+  // Role-based items
+  if (user?.role === 'manager' || user?.role === 'admin') {
+    moreNavItems.push({ path: '/manager-dashboard', icon: BarChart3, labelKey: 'managerDashboard' });
+  }
+  if (user?.role === 'admin') {
+    moreNavItems.push({ path: '/admin', icon: Shield, labelKey: 'adminDashboard' });
+  }
 
   const isMoreActive = moreNavItems.some(item => isActive(item.path));
 
   const handleMoreNavigate = (path: string) => {
-    hapticSelection();
     navigate(path);
     setMoreOpen(false);
   };
@@ -43,7 +63,7 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
     <>
       <nav 
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-50 md:hidden print:hidden no-select-mobile tap-highlight-none",
+          "fixed bottom-0 left-0 right-0 z-50 md:hidden print:hidden",
           "transition-transform duration-300",
           isHomePage && "translate-y-full"
         )}
@@ -53,18 +73,18 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-background/80 backdrop-blur-xl border-t border-border/30" />
         
         {/* Safe area padding for iOS */}
-        <div className="relative flex items-center justify-around px-2 pb-safe ps-safe pe-safe" style={{ height: '4.25rem' }}>
+        <div className="relative flex items-center justify-around h-18 px-2 pb-safe">
           {primaryNavItems.map((item, index) => {
             const active = isActive(item.path);
-            const Icon = item.icon!;
+            const Icon = item.icon;
             
             return (
               <button
                 key={item.path}
-                onClick={() => { hapticSelection(); navigate(item.path); }}
+                onClick={() => navigate(item.path)}
                 className={cn(
                   'relative flex flex-col items-center justify-center flex-1 h-full py-3',
-                  'touch-target',
+                  'min-w-[48px] min-h-[48px]',
                   'transition-all duration-200',
                   'active:scale-95',
                   active ? 'text-primary' : 'text-muted-foreground'
@@ -104,10 +124,10 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
 
           {/* More button */}
           <button
-            onClick={() => { hapticLight(); setMoreOpen(true); }}
+            onClick={() => setMoreOpen(true)}
             className={cn(
               'relative flex flex-col items-center justify-center flex-1 h-full py-3',
-              'touch-target',
+              'min-w-[48px] min-h-[48px]',
               'transition-all duration-200',
               'active:scale-95',
               isMoreActive ? 'text-primary' : 'text-muted-foreground'
@@ -148,7 +168,7 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
           </SheetHeader>
           <div className="grid grid-cols-3 gap-4 pb-6">
             {moreNavItems.map((item) => {
-              const Icon = item.icon!;
+              const Icon = item.icon;
               const active = isActive(item.path);
               return (
                 <button

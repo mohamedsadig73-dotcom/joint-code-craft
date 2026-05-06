@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useBoxReceipts } from '@/hooks/useBoxReceipts';
 import { useBoxDispatches, type DispatchInput } from '@/hooks/useBoxDispatches';
-import { useProjects, useReceivingStaff } from '@/hooks/useDataSetup';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -38,8 +37,6 @@ export function CreateDispatchDialog({ open, onOpenChange, onCreated }: Props) {
   const { toast } = useToast();
   const { receipts } = useBoxReceipts();
   const { createDispatch } = useBoxDispatches();
-  const { rows: projects } = useProjects();
-  const { rows: staff } = useReceivingStaff();
 
   const [departments, setDepartments] = useState<Dept[]>([]);
   const [showAddDept, setShowAddDept] = useState(false);
@@ -48,8 +45,6 @@ export function CreateDispatchDialog({ open, onOpenChange, onCreated }: Props) {
   const [savingDept, setSavingDept] = useState(false);
 
   const [departmentId, setDepartmentId] = useState<string>('');
-  const [projectId, setProjectId] = useState<string>('');
-  const [receivingStaffId, setReceivingStaffId] = useState<string>('');
   const [signerName, setSignerName] = useState('');
   const [signerTitle, setSignerTitle] = useState('');
   const [shippingCompany, setShippingCompany] = useState('');
@@ -72,8 +67,6 @@ export function CreateDispatchDialog({ open, onOpenChange, onCreated }: Props) {
       setNotes('');
       setDestination('unspecified');
       setDepartmentId('');
-      setProjectId('');
-      setReceivingStaffId('');
       setShowAddDept(false);
       setNewDeptAr('');
       setNewDeptEn('');
@@ -182,8 +175,6 @@ export function CreateDispatchDialog({ open, onOpenChange, onCreated }: Props) {
       shipping_company: shippingCompany.trim() || null,
       destination,
       notes: notes.trim() || null,
-      project_id: projectId || null,
-      receiving_staff_id: receivingStaffId || null,
       items,
     };
     setSubmitting(true);
@@ -266,30 +257,6 @@ export function CreateDispatchDialog({ open, onOpenChange, onCreated }: Props) {
             <div className="space-y-1.5">
               <Label>{t('dispatchDate')}</Label>
               <Input type="date" value={dispatchDate} onChange={(e) => setDispatchDate(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>{t('projects')}</Label>
-              <Select value={projectId || 'none'} onValueChange={(v) => setProjectId(v === 'none' ? '' : v)}>
-                <SelectTrigger><SelectValue placeholder={t('selectOption') || '—'} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">—</SelectItem>
-                  {projects.filter(p => p.is_active).map(p => (
-                    <SelectItem key={p.id} value={p.id}>{language === 'ar' ? p.name_ar : (p.name_en || p.name_ar)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>{t('receivingStaff')}</Label>
-              <Select value={receivingStaffId || 'none'} onValueChange={(v) => setReceivingStaffId(v === 'none' ? '' : v)}>
-                <SelectTrigger><SelectValue placeholder={t('selectOption') || '—'} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">—</SelectItem>
-                  {staff.filter(s => s.is_active).map(s => (
-                    <SelectItem key={s.id} value={s.id}>{s.full_name}{s.job_title ? ` — ${s.job_title}` : ''}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             <div className="sm:col-span-2 space-y-1.5">
               <Label>{t('notes')}</Label>

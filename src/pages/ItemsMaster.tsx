@@ -10,212 +10,92 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { useItemsMaster, useItemReceiptsCount, type ItemMaster } from '@/hooks/useItemsMaster';
-import { useCategories } from '@/hooks/useDataSetup';
 import { ItemFormDialog } from '@/components/boxes/items/ItemFormDialog';
-import { Library, Plus, Search, Edit, Trash2, Eye, Loader2, History, Sparkles, Barcode, CheckSquare, X, Power, PowerOff } from 'lucide-react';
+import { Library, Plus, Search, Edit, Trash2, Eye, Loader2, History, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ImageIcon } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { wmsToast } from '@/lib/wmsToast';
-import { UnifiedFilterBar } from '@/components/ui/UnifiedFilterBar';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-export default function ItemsMaster({ embedded = false }: { embedded?: boolean } = {}) {
-  const { t, language } = useLanguage();
-  const isAr = language === 'ar';
+export default function ItemsMaster() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { items, loading, createItem, updateItem, deleteItem } = useItemsMaster();
-  const { rows: categories } = useCategories();
   const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ItemMaster | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ItemMaster | null>(null);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [bulkAction, setBulkAction] = useState<null | 'delete' | 'activate' | 'deactivate'>(null);
-  const [bulkBusy, setBulkBusy] = useState(false);
 
   const itemIds = useMemo(() => items.map((i) => i.id), [items]);
   const counts = useItemReceiptsCount(itemIds);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return items.filter((i) => {
-      if (categoryFilter !== 'all') {
-        // match either primary category_id or secondary classification_id
-        const cat = (i as any).category_id;
-        const cls = (i as any).classification_id;
-        if (cat !== categoryFilter && cls !== categoryFilter) return false;
-      }
-      if (!q) return true;
-      return (
+    if (!q) return items;
+    return items.filter(
+      (i) =>
         i.part_no.toLowerCase().includes(q) ||
         i.description.toLowerCase().includes(q) ||
         (i.default_supplier ?? '').toLowerCase().includes(q)
-      );
-    });
-  }, [items, search, categoryFilter]);
+    );
+  }, [items, search]);
 
   const existingPartNos = useMemo(
     () => items.filter((i) => i.id !== editing?.id).map((i) => i.part_no),
     [items, editing]
   );
 
-  const allSelectedOnPage = filtered.length > 0 && filtered.every((i) => selected.has(i.id));
-  const toggleSelect = (id: string) =>
-    setSelected((s) => {
-      const n = new Set(s);
-      n.has(id) ? n.delete(id) : n.add(id);
-      return n;
-    });
-  const toggleSelectAll = () => {
-    if (allSelectedOnPage) setSelected(new Set());
-    else setSelected(new Set(filtered.map((i) => i.id)));
-  };
-
-  const runBulk = async () => {
-    if (!bulkAction || selected.size === 0) return;
-    setBulkBusy(true);
-    const ids = [...selected];
-    let ok = 0, fail = 0;
-    for (const id of ids) {
-      const item = items.find((x) => x.id === id);
-      if (!item) continue;
-      let res: ItemMaster | null | boolean = null;
-      if (bulkAction === 'delete') {
-        if ((counts[id] ?? 0) > 0) { fail++; continue; }
-        res = await deleteItem(id);
-      } else if (bulkAction === 'activate') {
-        res = await updateItem(id, { is_active: true });
-      } else if (bulkAction === 'deactivate') {
-        res = await updateItem(id, { is_active: false });
-      }
-      res ? ok++ : fail++;
-    }
-    setBulkBusy(false);
-    setBulkAction(null);
-    setSelected(new Set());
-    wmsToast.success(`${t('bulkOperationDone')}: ${ok}${fail ? ` / ${t('failed')}: ${fail}` : ''}`);
-  };
-
-  const runBulkDormant = async (action: 'mark-dormant' | 'unmark-dormant') => {
-    if (selected.size === 0) return;
-    setBulkBusy(true);
-    const ids = [...selected];
-    let ok = 0, fail = 0;
-    for (const id of ids) {
-      const res = await updateItem(id, { is_dormant: action === 'mark-dormant' } as any);
-      res ? ok++ : fail++;
-    }
-    setBulkBusy(false);
-    setSelected(new Set());
-    wmsToast.success(`${t('bulkOperationDone')}: ${ok}${fail ? ` / ${t('failed')}: ${fail}` : ''}`);
-  };
-
   const handleSubmit = async (values: Parameters<typeof createItem>[0]) => {
     if (editing) return updateItem(editing.id, values);
     return createItem(values);
   };
 
-  const body = (
-    <>
-      {!embedded && (
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
         <PageHeader
           title={t('itemsMaster')}
           subtitle={t('itemsMasterDesc')}
           icon={Library}
         />
-      )}
 
-        <div className="mt-4">
-          <UnifiedFilterBar
-            search={search}
-            onSearchChange={setSearch}
-            searchPlaceholder={t('searchPartNoOrDesc')}
-            filters={
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-full sm:w-56 h-9">
-                  <SelectValue placeholder={t('filterByCategory')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('allCategories')}</SelectItem>
-                  {categories.filter((c: any) => c.is_active !== false).map((c: any) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.code} — {isAr ? c.name_ar : (c.name_en || c.name_ar)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            }
-            activeChips={
-              categoryFilter !== 'all'
-                ? [{
-                    key: 'cat',
-                    label: (() => {
-                      const c: any = categories.find((x: any) => x.id === categoryFilter);
-                      return c ? `${c.code} — ${isAr ? c.name_ar : (c.name_en || c.name_ar)}` : t('filterByCategory');
-                    })(),
-                    onRemove: () => setCategoryFilter('all'),
-                  }]
-                : []
-            }
-            onReset={() => { setSearch(''); setCategoryFilter('all'); }}
-            actions={
-              <>
-                <Button variant="outline" size="sm" onClick={() => navigate('/boxes/items-image-history')} className="gap-1.5">
-                  <History className="w-4 h-4" />
-                  <span className="hidden lg:inline">{t('imageHistory')}</span>
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/boxes/items/barcodes')} className="gap-1.5">
-                  <Barcode className="w-4 h-4" />
-                  <span className="hidden lg:inline">{t('barcodePrint')}</span>
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/boxes/items/import')} className="gap-1.5">
-                  <Sparkles className="w-4 h-4" />
-                  <span className="hidden lg:inline">{t('importFromDocx')}</span>
-                </Button>
-                <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-1.5">
-                  <Plus className="w-4 h-4" />
-                  {t('addItem')}
-                </Button>
-              </>
-            }
-          />
-        </div>
-
-        {selected.size > 0 && (
-          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border bg-primary/5 p-3">
-            <span className="text-sm font-medium">
-              {t('selectedCount').replace('{n}', String(selected.size))}
-            </span>
-            <div className="flex-1" />
-            <Button size="sm" variant="outline" onClick={() => setBulkAction('activate')} className="gap-1.5">
-              <Power className="w-4 h-4" />{t('activate')}
+        <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+          <div className="relative max-w-md w-full">
+            <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t('searchPartNoOrDesc')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="ps-9"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/boxes/items-image-history')}
+              className="gap-1.5"
+            >
+              <History className="w-4 h-4" />
+              {t('imageHistory')}
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setBulkAction('deactivate')} className="gap-1.5">
-              <PowerOff className="w-4 h-4" />{t('deactivate')}
+            <Button
+              variant="outline"
+              onClick={() => navigate('/boxes/items/import')}
+              className="gap-1.5"
+            >
+              <Sparkles className="w-4 h-4" />
+              {t('importFromDocx')}
             </Button>
-            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => runBulkDormant('mark-dormant')} className="gap-1.5">
-              {t('markDormant')}
-            </Button>
-            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => runBulkDormant('unmark-dormant')} className="gap-1.5">
-              {t('unmarkDormant')}
-            </Button>
-            <Button size="sm" variant="destructive" onClick={() => setBulkAction('delete')} className="gap-1.5">
-              <Trash2 className="w-4 h-4" />{t('delete')}
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())} className="gap-1.5">
-              <X className="w-4 h-4" />{t('deselectAll')}
+            <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-1.5">
+              <Plus className="w-4 h-4" />
+              {t('addItem')}
             </Button>
           </div>
-        )}
+        </div>
 
         <div className="mt-4 rounded-lg border bg-card">
           {loading ? (
@@ -227,44 +107,9 @@ export default function ItemsMaster({ embedded = false }: { embedded?: boolean }
               {t('noItemsFound')}
             </div>
           ) : (
-            <>
-            {/* Mobile card view */}
-            <div className="md:hidden divide-y">
-              {filtered.map((item) => {
-                const count = counts[item.id] ?? 0;
-                const checked = selected.has(item.id);
-                return (
-                  <div key={item.id} className={`p-3 flex gap-3 items-start ${checked ? 'bg-primary/5' : ''}`}>
-                    <Checkbox checked={checked} onCheckedChange={() => toggleSelect(item.id)} className="mt-1" />
-                    <div className="flex-1 min-w-0" onClick={() => navigate(`/boxes/items/${item.id}`)}>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{item.part_no}</span>
-                        <Badge variant="outline" className="text-[10px]">{item.default_unit}</Badge>
-                        {item.is_active ? <Badge className="text-[10px]">{t('active')}</Badge> : <Badge variant="outline" className="text-[10px]">{t('inactive')}</Badge>}
-                        {item.is_dormant && <Badge variant="destructive" className="text-[10px]">{t('dormant')}</Badge>}
-                      </div>
-                      <p className="text-sm mt-1 truncate">{item.description}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{item.default_supplier || '—'} • {t('movementsCount')}: {count}</p>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditing(item); setFormOpen(true); }}>
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" disabled={count > 0} onClick={(e) => { e.stopPropagation(); setConfirmDelete(item); }}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-10">
-                    <Checkbox checked={allSelectedOnPage} onCheckedChange={toggleSelectAll} aria-label={t('selectAll')} />
-                  </TableHead>
                   <TableHead className="w-14"></TableHead>
                   <TableHead>{t('partNo')}</TableHead>
                   <TableHead>{t('description')}</TableHead>
@@ -281,12 +126,8 @@ export default function ItemsMaster({ embedded = false }: { embedded?: boolean }
                   const thumbUrl = item.image_path
                     ? supabase.storage.from('box-images').getPublicUrl(item.image_path).data.publicUrl
                     : null;
-                  const checked = selected.has(item.id);
                   return (
-                    <TableRow key={item.id} className={checked ? 'bg-primary/5' : ''}>
-                      <TableCell>
-                        <Checkbox checked={checked} onCheckedChange={() => toggleSelect(item.id)} aria-label={item.part_no} />
-                      </TableCell>
+                    <TableRow key={item.id}>
                       <TableCell>
                         {thumbUrl ? (
                           <HoverCard openDelay={120} closeDelay={80}>
@@ -345,7 +186,6 @@ export default function ItemsMaster({ embedded = false }: { embedded?: boolean }
                         ) : (
                           <Badge variant="outline">{t('inactive')}</Badge>
                         )}
-                        {item.is_dormant && <Badge variant="destructive" className="ms-1">{t('dormant')}</Badge>}
                       </TableCell>
                       <TableCell className="text-end">
                         <div className="flex items-center justify-end gap-1">
@@ -384,8 +224,6 @@ export default function ItemsMaster({ embedded = false }: { embedded?: boolean }
                 })}
               </TableBody>
             </Table>
-            </div>
-            </>
           )}
         </div>
 
@@ -395,7 +233,6 @@ export default function ItemsMaster({ embedded = false }: { embedded?: boolean }
           initial={editing}
           onSubmit={handleSubmit}
           existingPartNos={existingPartNos}
-          existingItems={items.map((i) => ({ id: i.id, description: i.description, name_ar: i.name_ar }))}
         />
 
         <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
@@ -418,38 +255,6 @@ export default function ItemsMaster({ embedded = false }: { embedded?: boolean }
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-
-        <AlertDialog open={!!bulkAction} onOpenChange={(o) => !o && setBulkAction(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {bulkAction === 'delete' ? t('bulkDelete') : bulkAction === 'activate' ? t('activate') : t('deactivate')}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {(bulkAction === 'delete' ? t('bulkDeleteConfirm') : t('bulkConfirm')).replace('{count}', String(selected.size))}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={bulkBusy}>{t('cancel')}</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={(e) => { e.preventDefault(); runBulk(); }}
-                className={bulkAction === 'delete' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
-              >
-                {bulkBusy && <Loader2 className="w-4 h-4 me-1.5 animate-spin" />}
-                {t('confirm')}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-    </>
-  );
-
-  if (embedded) return body;
-  return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
-        {body}
       </main>
     </div>
   );

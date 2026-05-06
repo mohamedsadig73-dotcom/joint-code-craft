@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
-import { wmsToast as toast } from '@/lib/wmsToast';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,

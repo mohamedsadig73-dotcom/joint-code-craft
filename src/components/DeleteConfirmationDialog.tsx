@@ -1,9 +1,16 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toGregorianDate } from '@/utils/dateUtils';
-import { StandardModal } from '@/components/ui/StandardModal';
-import { StandardAlert } from '@/components/ui/StandardForm';
-import { Trash2 } from 'lucide-react';
 
 interface Declaration {
   id: string;
@@ -45,49 +52,70 @@ export function DeleteConfirmationDialog({
   if (!declaration) return null;
 
   return (
-    <StandardModal
-      open={open}
-      onOpenChange={onOpenChange}
-      title="تأكيد حذف الإقرار"
-      size="sm"
-      submitLabel="حذف الإقرار"
-      submitVariant="destructive"
-      onSubmit={onConfirm}
-    >
-      <div className="space-y-4">
-        <StandardAlert tone="danger">
-          <span className="font-medium">هل أنت متأكد من حذف هذا الإقرار؟</span>
-        </StandardAlert>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-right">
+            تأكيد حذف الإقرار
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-right space-y-4">
+            <div className="text-base text-foreground">
+              هل أنت متأكد من حذف هذا الإقرار؟
+            </div>
 
-        <div className="rounded-md border border-[hsl(var(--wms-border))] bg-[hsl(var(--wms-bg3))] divide-y divide-[hsl(var(--wms-border))]">
-          <DetailRow label="رقم الإقرار" value={<span className="font-mono text-[hsl(var(--wms-accent))]">{declaration.id}</span>} />
-          <DetailRow label="النوع" value={<Badge variant="outline">{declaration.type}</Badge>} />
-          <DetailRow label="المرسل" value={<span>{declaration.sender?.username || 'غير معروف'}</span>} />
-          {declaration.archive_number && (
-            <DetailRow label="رقم الأرشفة" value={<span className="font-mono">{declaration.archive_number}</span>} />
-          )}
-          <DetailRow label="الحالة" value={
-            <Badge className={statusColors[declaration.status as keyof typeof statusColors]}>
-              {t(declaration.status)}
-            </Badge>
-          } />
-          <DetailRow label="تاريخ الإنشاء" value={<span className="text-sm">{toGregorianDate(declaration.created_at)}</span>} />
-        </div>
+            <div className="bg-muted/50 rounded-lg p-4 space-y-3 text-right">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-foreground">رقم الإقرار:</span>
+                <span className="font-mono text-sm">{declaration.id}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-foreground">النوع:</span>
+                <Badge variant="outline">{declaration.type}</Badge>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-foreground">المرسل:</span>
+                <span>{declaration.sender?.username || 'غير معروف'}</span>
+              </div>
+              
+              {declaration.archive_number && (
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-foreground">رقم الأرشفة:</span>
+                  <span className="font-mono text-sm">{declaration.archive_number}</span>
+                </div>
+              )}
+              
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-foreground">الحالة:</span>
+                <Badge className={statusColors[declaration.status as keyof typeof statusColors]}>
+                  {t(declaration.status)}
+                </Badge>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-foreground">تاريخ الإنشاء:</span>
+                <span className="text-sm">
+                  {toGregorianDate(declaration.created_at)}
+                </span>
+              </div>
+            </div>
 
-        <StandardAlert tone="info">
-          <Trash2 className="inline w-3.5 h-3.5 me-1" />
-          سيتم نقل الإقرار إلى سلة المحذوفات ويمكن استرجاعه خلال 30 يوم
-        </StandardAlert>
-      </div>
-    </StandardModal>
-  );
-}
-
-function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between px-3 py-2.5 text-[13px]">
-      <span className="text-[hsl(var(--wms-text3))] font-medium">{label}</span>
-      <span className="text-[hsl(var(--wms-text))]">{value}</span>
-    </div>
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-sm text-blue-700 dark:text-blue-300">
+              📦 سيتم نقل الإقرار إلى سلة المحذوفات ويمكن استرجاعه خلال 30 يوم
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="flex-row-reverse gap-2">
+          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            حذف الإقرار
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

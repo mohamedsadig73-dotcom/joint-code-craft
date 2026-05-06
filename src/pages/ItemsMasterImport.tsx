@@ -56,7 +56,7 @@ interface ImportResult {
 
 const DEFAULT_SUPPLIER = 'عبد الغني موتورز';
 
-export default function ItemsMasterImport({ embedded = false }: { embedded?: boolean } = {}) {
+export default function ItemsMasterImport() {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -240,9 +240,10 @@ export default function ItemsMasterImport({ embedded = false }: { embedded?: boo
     setStep('upload');
   };
 
-  const body = (
-    <>
-      {!embedded && (
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
         <PageHeader
           icon={Sparkles}
           title={t('importItemsTitle')}
@@ -254,7 +255,6 @@ export default function ItemsMasterImport({ embedded = false }: { embedded?: boo
             </Button>
           }
         />
-      )}
 
         <Tabs value={step} className="mt-6">
           <TabsList className="grid w-full grid-cols-3">
@@ -568,15 +568,6 @@ export default function ItemsMasterImport({ embedded = false }: { embedded?: boo
             {t('importSourceFile')}: {file.name}
           </p>
         )}
-    </>
-  );
-
-  if (embedded) return body;
-  return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
-        {body}
       </main>
     </div>
   );
