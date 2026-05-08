@@ -20,12 +20,20 @@ export interface ParsedDocx {
   skipped: Array<{ reason: string; preview: string }>;
 }
 
-// Part numbers may be pure digits (e.g. 411117110) OR alphanumeric Toyota/Hyundai
-// style codes such as "44270K100", "1107138010C4", "90311T0034".
-// Rule: 8-14 chars, must contain at least one digit, only A-Z and 0-9 allowed,
-// and must start with a digit (so we don't grab DESCRIPTION-style headers).
-const PART_NO_RE = /^(?=[A-Z0-9]*\d)\d[A-Z0-9]{7,13}$/;
 const NUM_RE = /^\d+$/;
+
+function isPartNumber(value: string): boolean {
+  const cleaned = value.replace(/\s+/g, '').toUpperCase();
+  if (!cleaned || cleaned.length < 5 || cleaned.length > 40) return false;
+  if (!/\d/.test(cleaned)) return false;
+  if (!/^[A-Z0-9]+(?:[\/._-][A-Z0-9]+)*$/.test(cleaned)) return false;
+  if (/^\d+$/.test(cleaned)) return cleaned.length >= 5 && cleaned.length <= 20;
+  return /[A-Z]/.test(cleaned);
+}
+
+function mediaNameFromTarget(target: string): string {
+  return target.replace(/^\.\.\//, '').split('/').pop() || target;
+}
 
 function flatText(node: unknown): string {
   if (node == null) return '';
@@ -58,6 +66,11 @@ function findEmbedRefs(node: unknown, out: string[]): void {
     if ((k === 'a:blip' || k === 'blip') && v && typeof v === 'object') {
       const obj = v as Record<string, unknown>;
       const embed = (obj['@_r:embed'] || obj['@_embed']) as string | undefined;
+      if (embed) out.push(embed);
+    }
+    if ((k === 'v:imagedata' || k === 'imagedata') && v && typeof v === 'object') {
+      const obj = v as Record<string, unknown>;
+      const embed = (obj['@_r:id'] || obj['@_id'] || obj['@_r:embed'] || obj['@_embed']) as string | undefined;
       if (embed) out.push(embed);
     }
     findEmbedRefs(v, out);
@@ -191,7 +204,7 @@ export async function parseDocxItems(file: File | Blob): Promise<ParsedDocx> {
       let partIdx = -1;
       for (let i = 0; i < cellTexts.length; i++) {
         const cleaned = cellTexts[i].replace(/\s+/g, '').toUpperCase();
-        if (PART_NO_RE.test(cleaned)) {
+        if (isPartNumber(cleaned)) {
           partNo = cleaned;
           partIdx = i;
           break;
@@ -241,7 +254,7 @@ export async function parseDocxItems(file: File | Blob): Promise<ParsedDocx> {
       for (const rid of refs) {
         const tgt = relMap.get(rid);
         if (!tgt) continue;
-        const name = tgt.split('/').pop()!;
+        const name = mediaNameFromTarget(tgt);
         if (!imageNames.includes(name)) imageNames.push(name);
       }
 

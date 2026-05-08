@@ -105,7 +105,7 @@ export default function ItemsMasterImport() {
             previewUrls,
             existingId,
             existingImageUrl,
-            selected: !existingId, // default: skip existing
+            selected: !existingId || it.imageNames.length > 0,
             primaryImageIdx: 0,
             editedDescription: it.description,
             editedPartNo: it.part_no,
@@ -145,12 +145,12 @@ export default function ItemsMasterImport() {
     const duplicates = rows.filter((r) => r.existingId).length;
     const dupInFile = rows.filter((r) => r.duplicateInFile).length;
     const selected = rows.filter((r) => r.selected).length;
-    const newCount = rows.filter((r) => r.selected && !r.existingId).length;
+    const newCount = rows.filter((r) => r.selected && (!r.existingId || r.imageNames.length > 0)).length;
     return { total, withImage, noDesc, duplicates, dupInFile, selected, newCount };
   }, [rows]);
 
   const toggleAll = (val: boolean) => {
-    setRows((prev) => prev.map((r) => ({ ...r, selected: val && !r.existingId })));
+    setRows((prev) => prev.map((r) => ({ ...r, selected: val && (!r.existingId || r.imageNames.length > 0) })));
   };
 
   const updateRow = (key: string, patch: Partial<PreviewRow>) => {
@@ -162,7 +162,7 @@ export default function ItemsMasterImport() {
       toast({ title: t('error'), description: t('mustBeLoggedIn'), variant: 'destructive' });
       return;
     }
-    const todo = rows.filter((r) => r.selected && !r.existingId);
+    const todo = rows.filter((r) => r.selected && (!r.existingId || r.imageNames.length > 0));
     if (todo.length === 0) {
       toast({ title: t('error'), description: t('importNoItemsSelected'), variant: 'destructive' });
       return;
@@ -199,22 +199,29 @@ export default function ItemsMasterImport() {
         }
       }
 
-      const { error: insErr } = await supabase.from('items_master').insert([
-        {
-          part_no: finalPartNo,
-          description: row.editedDescription.trim() || finalPartNo,
-          default_supplier: supplier.trim() || null,
-          default_unit: 'PCS',
-          image_path: imagePath,
-          notes: null,
-          is_active: true,
-          created_by: user.id,
-        },
-      ]);
+      const { error: insErr } = row.existingId
+        ? imagePath
+          ? await supabase
+              .from('items_master')
+              .update({ image_path: imagePath })
+              .eq('id', row.existingId)
+          : { error: null }
+        : await supabase.from('items_master').insert([
+            {
+              part_no: finalPartNo,
+              description: row.editedDescription.trim() || finalPartNo,
+              default_supplier: supplier.trim() || null,
+              default_unit: 'PCS',
+              image_path: imagePath,
+              notes: null,
+              is_active: true,
+              created_by: user.id,
+            },
+          ]);
       if (insErr) {
         res.failed.push({ part_no: finalPartNo, reason: insErr.message });
       } else {
-        res.inserted += 1;
+        if (!row.existingId) res.inserted += 1;
       }
       setProgress({ done: i + 1, total: todo.length });
     }
@@ -366,7 +373,7 @@ export default function ItemsMasterImport() {
                           <input
                             type="checkbox"
                             checked={r.selected}
-                            disabled={!!r.existingId}
+                            disabled={!!r.existingId && r.imageNames.length === 0}
                             onChange={(e) =>
                               updateRow(r.key, { selected: e.target.checked })
                             }
@@ -416,7 +423,7 @@ export default function ItemsMasterImport() {
                                 editedPartNo: v,
                                 existingId,
                                 existingImageUrl,
-                                selected: r.selected && !existingId,
+                                  selected: r.selected && (!existingId || r.imageNames.length > 0),
                               });
                             }}
                             className="h-8 font-mono text-xs"
@@ -487,13 +494,13 @@ export default function ItemsMasterImport() {
                 <ArrowLeft className="w-4 h-4 me-1.5 rtl:rotate-180" />
                 {t('back')}
               </Button>
-              <Button onClick={runImport} disabled={importing || stats.newCount === 0}>
+              <Button onClick={runImport} disabled={importing || stats.selected === 0}>
                 {importing ? (
                   <Loader2 className="w-4 h-4 me-1.5 animate-spin" />
                 ) : (
                   <ArrowRight className="w-4 h-4 me-1.5 rtl:rotate-180" />
                 )}
-                {t('importConfirmButton').replace('{n}', String(stats.newCount))}
+                {t('importConfirmButton').replace('{n}', String(stats.selected))}
               </Button>
             </div>
           </TabsContent>
