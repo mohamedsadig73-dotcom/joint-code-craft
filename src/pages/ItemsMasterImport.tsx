@@ -105,7 +105,7 @@ export default function ItemsMasterImport() {
             previewUrls,
             existingId,
             existingImageUrl,
-            selected: !existingId, // default: skip existing
+            selected: !existingId || it.imageNames.length > 0,
             primaryImageIdx: 0,
             editedDescription: it.description,
             editedPartNo: it.part_no,
@@ -200,10 +200,12 @@ export default function ItemsMasterImport() {
       }
 
       const { error: insErr } = row.existingId
-        ? await supabase
-            .from('items_master')
-            .update(imagePath ? { image_path: imagePath } : {})
-            .eq('id', row.existingId)
+        ? imagePath
+          ? await supabase
+              .from('items_master')
+              .update({ image_path: imagePath })
+              .eq('id', row.existingId)
+          : { error: null }
         : await supabase.from('items_master').insert([
             {
               part_no: finalPartNo,
@@ -371,7 +373,7 @@ export default function ItemsMasterImport() {
                           <input
                             type="checkbox"
                             checked={r.selected}
-                            disabled={!!r.existingId}
+                            disabled={!!r.existingId && r.imageNames.length === 0}
                             onChange={(e) =>
                               updateRow(r.key, { selected: e.target.checked })
                             }
@@ -421,7 +423,7 @@ export default function ItemsMasterImport() {
                                 editedPartNo: v,
                                 existingId,
                                 existingImageUrl,
-                                selected: r.selected && !existingId,
+                                  selected: r.selected && (!existingId || r.imageNames.length > 0),
                               });
                             }}
                             className="h-8 font-mono text-xs"
