@@ -204,7 +204,7 @@ export async function parseDocxItems(file: File | Blob): Promise<ParsedDocx> {
       let partIdx = -1;
       for (let i = 0; i < cellTexts.length; i++) {
         const cleaned = cellTexts[i].replace(/\s+/g, '').toUpperCase();
-        if (PART_NO_RE.test(cleaned)) {
+        if (isPartNumber(cleaned)) {
           partNo = cleaned;
           partIdx = i;
           break;
@@ -254,7 +254,7 @@ export async function parseDocxItems(file: File | Blob): Promise<ParsedDocx> {
       for (const rid of refs) {
         const tgt = relMap.get(rid);
         if (!tgt) continue;
-        const name = tgt.split('/').pop()!;
+        const name = mediaNameFromTarget(tgt);
         if (!imageNames.includes(name)) imageNames.push(name);
       }
 
