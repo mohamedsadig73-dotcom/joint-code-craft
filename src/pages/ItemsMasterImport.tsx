@@ -494,13 +494,13 @@ export default function ItemsMasterImport() {
                 <ArrowLeft className="w-4 h-4 me-1.5 rtl:rotate-180" />
                 {t('back')}
               </Button>
-              <Button onClick={runImport} disabled={importing || stats.newCount === 0}>
+              <Button onClick={runImport} disabled={importing || stats.selected === 0}>
                 {importing ? (
                   <Loader2 className="w-4 h-4 me-1.5 animate-spin" />
                 ) : (
                   <ArrowRight className="w-4 h-4 me-1.5 rtl:rotate-180" />
                 )}
-                {t('importConfirmButton').replace('{n}', String(stats.newCount))}
+                {t('importConfirmButton').replace('{n}', String(stats.selected))}
               </Button>
             </div>
           </TabsContent>
