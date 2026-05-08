@@ -145,12 +145,12 @@ export default function ItemsMasterImport() {
     const duplicates = rows.filter((r) => r.existingId).length;
     const dupInFile = rows.filter((r) => r.duplicateInFile).length;
     const selected = rows.filter((r) => r.selected).length;
-    const newCount = rows.filter((r) => r.selected && !r.existingId).length;
+    const newCount = rows.filter((r) => r.selected && (!r.existingId || r.imageNames.length > 0)).length;
     return { total, withImage, noDesc, duplicates, dupInFile, selected, newCount };
   }, [rows]);
 
   const toggleAll = (val: boolean) => {
-    setRows((prev) => prev.map((r) => ({ ...r, selected: val && !r.existingId })));
+    setRows((prev) => prev.map((r) => ({ ...r, selected: val && (!r.existingId || r.imageNames.length > 0) })));
   };
 
   const updateRow = (key: string, patch: Partial<PreviewRow>) => {
@@ -162,7 +162,7 @@ export default function ItemsMasterImport() {
       toast({ title: t('error'), description: t('mustBeLoggedIn'), variant: 'destructive' });
       return;
     }
-    const todo = rows.filter((r) => r.selected && !r.existingId);
+    const todo = rows.filter((r) => r.selected && (!r.existingId || r.imageNames.length > 0));
     if (todo.length === 0) {
       toast({ title: t('error'), description: t('importNoItemsSelected'), variant: 'destructive' });
       return;
@@ -199,22 +199,27 @@ export default function ItemsMasterImport() {
         }
       }
 
-      const { error: insErr } = await supabase.from('items_master').insert([
-        {
-          part_no: finalPartNo,
-          description: row.editedDescription.trim() || finalPartNo,
-          default_supplier: supplier.trim() || null,
-          default_unit: 'PCS',
-          image_path: imagePath,
-          notes: null,
-          is_active: true,
-          created_by: user.id,
-        },
-      ]);
+      const { error: insErr } = row.existingId
+        ? await supabase
+            .from('items_master')
+            .update(imagePath ? { image_path: imagePath } : {})
+            .eq('id', row.existingId)
+        : await supabase.from('items_master').insert([
+            {
+              part_no: finalPartNo,
+              description: row.editedDescription.trim() || finalPartNo,
+              default_supplier: supplier.trim() || null,
+              default_unit: 'PCS',
+              image_path: imagePath,
+              notes: null,
+              is_active: true,
+              created_by: user.id,
+            },
+          ]);
       if (insErr) {
         res.failed.push({ part_no: finalPartNo, reason: insErr.message });
       } else {
-        res.inserted += 1;
+        if (!row.existingId) res.inserted += 1;
       }
       setProgress({ done: i + 1, total: todo.length });
     }
