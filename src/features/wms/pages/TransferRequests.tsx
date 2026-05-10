@@ -18,8 +18,8 @@ interface Row extends WmsRowBase {
   from_warehouse_id: string;
   to_warehouse_id: string;
   item_id: string;
-  from_warehouses?: { name_ar: string | null; code: string } | null;
-  to_warehouses?: { name_ar: string | null; code: string } | null;
+  from_warehouses?: WhOpt | null;
+  to_warehouses?: WhOpt | null;
   items_master?: { part_no: string; description: string | null; name_ar: string | null } | null;
 }
 
