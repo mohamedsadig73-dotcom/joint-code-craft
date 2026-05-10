@@ -1,8 +1,8 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { GenericListPage } from './_shared';
-import type { Column } from '../components';
+import type { Column, WmsRowBase } from '../components';
 
-interface Row { id: string; code: string; name_ar: string; name_en: string; is_active: boolean; }
+interface Row extends WmsRowBase { id: string; code: string; name_ar: string; name_en: string; is_active: boolean; }
 export default function Page() {
   const { t, language } = useLanguage();
   const cols: Column<Row>[] = [
