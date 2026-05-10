@@ -1640,7 +1640,6 @@ const en = {
     'wms.form.receipt-time': 'Receipt time',
     'wms.form.delegation': 'On behalf of another person (delegation)',
     'wms.form.confirm-movement': 'Confirm movement',
-    'wms.form.add-line': '+ Add item',
     'wms.form.total-items': 'Total items',
     'wms.form.total-qty': 'Total qty',
     'wms.form.short-note': 'Short note (shown in list)',
