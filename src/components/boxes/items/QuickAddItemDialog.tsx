@@ -172,6 +172,10 @@ export function QuickAddItemDialog({
           </DialogHeader>
 
           <div className="space-y-3">
+            <div className="rounded-md border border-primary/30 bg-primary/5 px-2.5 py-1.5 text-[11px] text-foreground/80 flex items-start gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+              <span>{t('quickAddNotice')}</span>
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="qa-part" className="text-xs">
                 {t('partNo')} <span className="text-destructive">*</span>

@@ -1,9 +1,9 @@
 {
-  "desktop_shell_version": "4.6.1",
+  "desktop_shell_version": "4.6.2",
   "min_shell_version": "4.4.5",
-  "web_version": "4.6.1",
-  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.6.1-dist.zip",
+  "web_version": "4.6.2",
+  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.6.2-dist.zip",
   "full_download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.4.5.zip",
-  "release_notes": "v4.6.1 - تصحيح حلقة تحديث تطبيق الكمبيوتر وتثبيت رقم الإصدار الداخلي",
+  "release_notes": "v4.6.2",
   "mandatory": false
 }
