@@ -270,7 +270,7 @@ function downloadFile(url, destPath, progressCallback) {
 }
 
 // ── Helper: Extract ZIP and replace dist/ ──────────────
-function extractAndReplaceDist(zipPath) {
+function extractAndReplaceDist(zipPath, expectedVersion) {
   // Use Node.js built-in zlib + manual ZIP parsing
   // For simplicity and reliability, use the 'unzip' approach with AdmZip-like logic
   const AdmZip = (() => {
@@ -278,14 +278,14 @@ function extractAndReplaceDist(zipPath) {
   })();
 
   if (AdmZip) {
-    return extractWithAdmZip(AdmZip, zipPath);
+    return extractWithAdmZip(AdmZip, zipPath, expectedVersion);
   }
 
   // Fallback: use PowerShell on Windows to extract
-  return extractWithPowerShell(zipPath);
+  return extractWithPowerShell(zipPath, expectedVersion);
 }
 
-function extractWithAdmZip(AdmZip, zipPath) {
+function extractWithAdmZip(AdmZip, zipPath, expectedVersion) {
   return new Promise((resolve, reject) => {
     try {
       const tempExtract = path.join(UPDATE_DIR, 'extracted');
@@ -305,6 +305,7 @@ function extractWithAdmZip(AdmZip, zipPath) {
         reject(new Error('No dist folder found in update package'));
         return;
       }
+      validateUpdateDist(distSource, expectedVersion);
 
       // Stage update outside the read-only packaged app area, then apply on restart.
       if (fs.existsSync(PENDING_DIST)) {
@@ -324,7 +325,7 @@ function extractWithAdmZip(AdmZip, zipPath) {
   });
 }
 
-function extractWithPowerShell(zipPath) {
+function extractWithPowerShell(zipPath, expectedVersion) {
   const { execSync } = require('child_process');
   return new Promise((resolve, reject) => {
     try {
@@ -344,6 +345,7 @@ function extractWithPowerShell(zipPath) {
         reject(new Error('No dist folder found in update package'));
         return;
       }
+      validateUpdateDist(distSource, expectedVersion);
 
       // Stage update outside the read-only packaged app area, then apply on restart.
       if (fs.existsSync(PENDING_DIST)) {
