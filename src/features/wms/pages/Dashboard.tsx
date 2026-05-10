@@ -10,8 +10,12 @@ interface Stats {
   lowStock: number;
 }
 interface RecentTxn {
-  id: string; txn_no: string; txn_type: string; txn_date: string;
-  status: string; party_name: string | null;
+  id: string;
+  txn_no: string;
+  txn_type: string;
+  txn_date: string;
+  status: string;
+  party_name: string | null;
 }
 
 export default function WmsDashboardPage() {
@@ -28,32 +32,34 @@ export default function WmsDashboardPage() {
       monthStart.setHours(0, 0, 0, 0);
 
       const sb = supabase as unknown as {
-        from: (t: string) => {
-          select: (s: string, o?: { count?: string; head?: boolean }) => {
-            is?: (c: string, v: null) => unknown;
-            gte?: (c: string, v: string) => unknown;
-            order?: (c: string, o: { ascending: boolean }) => unknown;
-            limit?: (n: number) => unknown;
-          };
-        };
+        from: (t: string) => unknown;
       };
+      type AnyChain = {
+        select: (s: string, o?: { count?: 'exact' | 'planned' | 'estimated'; head?: boolean }) => AnyChain;
+        gte: (c: string, v: unknown) => AnyChain;
+        order: (c: string, o: { ascending: boolean }) => AnyChain;
+        limit: (n: number) => Promise<{ data: unknown[] | null; count: number | null; error: unknown }>;
+        then: Promise<{ data: unknown[] | null; count: number | null; error: unknown }>['then'];
+      };
+      const from = (table: string) => sb.from(table) as unknown as AnyChain;
+
+      const itemsP = from('items_master').select('id', { count: 'exact', head: true });
+      const whP = from('warehouses').select('id', { count: 'exact', head: true });
+      const txnP = from('inv_transactions').select('id', { count: 'exact', head: true })
+        .gte('created_at', monthStart.toISOString());
+      const lowP = from('items_master').select('id', { count: 'exact', head: true })
+        .gte('min_qty', 0.01);
+      const recentP = from('inv_transactions')
+        .select('id,txn_no,txn_type,txn_date,status,party_name')
+        .order('created_at', { ascending: false })
+        .limit(8);
 
       const [itemsRes, whRes, txnRes, lowRes, recentRes] = await Promise.all([
-        (sb.from('items_master').select('id', { count: 'exact', head: true }) as unknown as
-          Promise<{ count: number | null }>),
-        (sb.from('warehouses').select('id', { count: 'exact', head: true }) as unknown as
-          Promise<{ count: number | null }>),
-        ((sb.from('inv_transactions').select('id', { count: 'exact', head: true }) as {
-          gte: (c: string, v: string) => Promise<{ count: number | null }>;
-        }).gte('created_at', monthStart.toISOString())),
-        (sb.from('items_master').select('id', { count: 'exact', head: true }) as unknown as {
-          gte: (c: string, v: string) => Promise<{ count: number | null }>;
-        }).gte('min_qty', 0.01),
-        ((sb.from('inv_transactions').select('id,txn_no,txn_type,txn_date,status,party_name') as {
-          order: (c: string, o: { ascending: boolean }) => {
-            limit: (n: number) => Promise<{ data: RecentTxn[] | null }>;
-          };
-        }).order('created_at', { ascending: false }).limit(8)),
+        itemsP as unknown as Promise<{ count: number | null }>,
+        whP as unknown as Promise<{ count: number | null }>,
+        txnP as unknown as Promise<{ count: number | null }>,
+        lowP as unknown as Promise<{ count: number | null }>,
+        recentP as Promise<{ data: RecentTxn[] | null }>,
       ]);
 
       if (cancelled) return;
@@ -92,17 +98,15 @@ export default function WmsDashboardPage() {
   return (
     <div>
       <div className="wms-stats-grid">
-        <WmsKpi label={t('wms.kpi.items')}        value={stats.items}        tone="accent" />
-        <WmsKpi label={t('wms.kpi.warehouses')}   value={stats.warehouses}   tone="teal" />
-        <WmsKpi label={t('wms.kpi.txns-month')}   value={stats.txnsThisMonth} tone="purple" />
-        <WmsKpi label={t('wms.kpi.low-stock')}    value={stats.lowStock}     tone="yellow" />
+        <WmsKpi label={t('wms.kpi.items')} value={stats.items} tone="accent" />
+        <WmsKpi label={t('wms.kpi.warehouses')} value={stats.warehouses} tone="teal" />
+        <WmsKpi label={t('wms.kpi.txns-month')} value={stats.txnsThisMonth} tone="purple" />
+        <WmsKpi label={t('wms.kpi.low-stock')} value={stats.lowStock} tone="yellow" />
       </div>
 
       <WmsCard title={t('wms.dashboard.recent-txns')} subtitle={t('wms.dashboard.recent-txns-sub')}>
         {loading ? (
-          <div className="wms-empty">
-            <div className="wms-empty-text">{t('wms.common.loading')}</div>
-          </div>
+          <div className="wms-empty"><div className="wms-empty-text">{t('wms.common.loading')}</div></div>
         ) : recent.length === 0 ? (
           <div className="wms-empty">
             <div className="wms-empty-icon">≡</div>
