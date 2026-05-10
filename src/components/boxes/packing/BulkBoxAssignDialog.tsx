@@ -11,14 +11,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Package, Wand2 } from 'lucide-react';
 import { normalizeBoxNo } from '@/utils/boxNumberValidation';
 import { destinationBadgeClass } from '../destinationStyles';
-import type { BoxReceipt } from '@/hooks/useBoxReceipts';
+import type { BoxReceipt, BoxReceiptInput } from '@/hooks/useBoxReceipts';
 
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   receipts: BoxReceipt[];
   /** Bulk update — must accept (ids, patch) and return number updated. */
-  bulkUpdateFields: (ids: string[], patch: Partial<BoxReceipt>) => Promise<number>;
+  bulkUpdateFields: (ids: string[], patch: Partial<BoxReceiptInput>) => Promise<number>;
   onCompleted?: () => void;
 }
 
