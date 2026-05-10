@@ -53,11 +53,11 @@ export default function Page() {
   };
 
   const cols: Column<Row>[] = [
-    { key: 'txn_no', label: t('wms.txn.no') },
-    { key: 'txn_type', label: t('wms.txn.type'), render: (r) => <WmsBadge>{t('wms.txn.type.' + (r.txn_type || ''))}</WmsBadge> },
-    { key: 'txn_date', label: t('wms.txn.date'), render: (r) => r.txn_date ? new Date(r.txn_date).toLocaleDateString(language === 'ar' ? 'en-GB' : 'en-GB') : '—' },
-    { key: 'reference', label: t('wms.txn.ref'), render: (r) => r.reference || '—' },
-    { key: 'actions', label: '', render: (r) => (
+    { key: 'txn_no', header: t('wms.txn.no') },
+    { key: 'txn_type', header: t('wms.txn.type'), render: (r) => <WmsBadge>{t('wms.txn.type.' + (r.txn_type || ''))}</WmsBadge> },
+    { key: 'txn_date', header: t('wms.txn.date'), render: (r) => r.txn_date ? new Date(r.txn_date).toLocaleDateString(language === 'ar' ? 'en-GB' : 'en-GB') : '—' },
+    { key: 'reference', header: t('wms.txn.ref'), render: (r) => r.reference || '—' },
+    { key: 'actions', header: '', render: (r) => (
       <div className="flex gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
         <WmsButton variant="primary" onClick={() => r.id && post(r.id)}>{t('wms.approvals.approve')}</WmsButton>
         <WmsButton variant="ghost" onClick={() => r.id && reject(r.id)}>{t('wms.approvals.reject')}</WmsButton>
