@@ -1543,6 +1543,33 @@ const ar = {
     minQty: 'الحد الأدنى',
     min: 'الأدنى',
     showing200OfX: 'يُعرض 200 من أصل {x}',
+    // Receipts pro filter system
+    date: 'التاريخ',
+    shipmentClassification: 'تصنيف الشحنة',
+    companyAndInvoice: 'الشركة والفاتورة',
+    dateAndQuantity: 'التاريخ والكمية',
+    last7Days: 'آخر 7 أيام',
+    qtyMin: 'الكمية الأدنى',
+    qtyMax: 'الكمية الأعلى',
+    withImage: 'بصورة',
+    withoutImage: 'بدون صورة',
+    noPresetsYet: 'لا توجد فلاتر محفوظة بعد',
+    presetName: 'اسم الفلتر',
+    // Supplier invoice printing
+    printSupplierInvoices: 'طباعة فواتير الموردين',
+    supplierInvoicesTitle: 'فواتير الموردين',
+    supplierInvoicesCover: 'فواتير الموردين — صفحة الغلاف',
+    includeImages: 'تضمين الصور',
+    coverPagePerSupplier: 'صفحة غلاف عند تعدد فواتير المورد',
+    invoicesCount: 'الفواتير',
+    noInvoiceNumber: 'بدون رقم فاتورة',
+    mixedPacking: 'مختلط',
+    distinctBoxes: 'صناديق مميزة',
+    receiverSignature: 'توقيع المستلم',
+    supplierSignature: 'توقيع المورد',
+    warehouseSeal: 'ختم المخزن',
+    warehouseSystemTitle: 'نظام إدارة المخازن',
+    noDataToPrint: 'لا توجد بيانات للطباعة',
 };
 
 export default ar;

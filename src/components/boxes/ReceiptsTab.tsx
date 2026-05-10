@@ -4,11 +4,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Plus, Search, Download, Upload, Loader2, Package, PackageOpen, Layers,
-  Columns3, Trash2, X, FileText, Edit3, Undo2, Info, SlidersHorizontal, MoreHorizontal,
+  Columns3, Trash2, X, FileText, Edit3, Undo2, Info, MoreHorizontal, Printer,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent,
@@ -25,6 +24,10 @@ import { ReceiptFormDialog } from './ReceiptFormDialog';
 import { InvoiceFormDialog } from './InvoiceFormDialog';
 import { InvoicePickerDialog } from './InvoicePickerDialog';
 import { ReceiptsPrintPreview } from './ReceiptsPrintPreview';
+import { ReceiptsFiltersPanel } from './filters/ReceiptsFiltersPanel';
+import { ActiveFiltersBar } from './filters/ActiveFiltersBar';
+import { SupplierInvoicesPrintDialog } from './print/SupplierInvoicesPrintDialog';
+import { useReceiptsFilters } from '@/hooks/useReceiptsFilters';
 import { BulkEditReceiptsDialog, type BulkEditPatch } from './BulkEditReceiptsDialog';
 import { EditPreviewDialog, type FieldDiff } from './EditPreviewDialog';
 import { LockPolicyDialog } from './LockPolicyDialog';
@@ -34,7 +37,6 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { exportBoxesToExcel, parseReceiptsFromExcel } from '@/utils/boxesExcelExport';
-import { BOX_DESTINATIONS, BOX_STATUSES, PACKING_TYPES } from '@/utils/boxNumberValidation';
 import { ImportDuplicateDialog, type ImportResolution } from './ImportDuplicateDialog';
 import { findImportDuplicates, type ImportDuplicateMatch } from '@/utils/boxDuplicateAnalysis';
 
@@ -58,14 +60,17 @@ export function ReceiptsTab() {
   } = useBoxReceipts();
   const { summary } = useBoxSummary();
 
-  const [search, setSearch] = useState('');
-  const [destFilter, setDestFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [packingFilter, setPackingFilter] = useState<string>('all');
+  // Professional filter system
+  const {
+    filters, setField, resetAll, resetField, filtered,
+    activeChips, activeCount, suppliers, invoiceNumbers, boxNumbers,
+    presets, savePreset, loadPreset, deletePreset, setDateRange,
+  } = useReceiptsFilters(receipts);
   const [editing, setEditing] = useState<BoxReceipt | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [invoicePickerOpen, setInvoicePickerOpen] = useState(false);
+  const [supplierPrintOpen, setSupplierPrintOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<{
     invoiceNumber: string;
     receipts: BoxReceipt[];
@@ -134,13 +139,7 @@ export function ReceiptsTab() {
   const isManager = user?.role === 'manager';
   const isMobile = useIsMobile();
 
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
-
-  const activeFilterCount =
-    (destFilter !== 'all' ? 1 : 0) +
-    (statusFilter !== 'all' ? 1 : 0) +
-    (packingFilter !== 'all' ? 1 : 0);
 
   const canModify = (r: BoxReceipt) =>
     // Shipped receipts are locked for everyone (except admin) to preserve audit integrity
@@ -166,23 +165,6 @@ export function ReceiptsTab() {
     }
     return { all: receipts.length, boxed, loose };
   }, [receipts]);
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return receipts.filter((r) => {
-      if (destFilter !== 'all' && r.destination !== destFilter) return false;
-      if (statusFilter !== 'all' && r.status !== statusFilter) return false;
-      if (packingFilter !== 'all' && r.packing_type !== packingFilter) return false;
-      if (!q) return true;
-      return (
-        r.supplier.toLowerCase().includes(q) ||
-        r.part_no.toLowerCase().includes(q) ||
-        r.description.toLowerCase().includes(q) ||
-        (r.box_no?.toLowerCase().includes(q) ?? false) ||
-        (r.invoice_number?.toLowerCase().includes(q) ?? false)
-      );
-    });
-  }, [receipts, search, destFilter, statusFilter, packingFilter]);
 
   // Drop selections that no longer match the filter
   useEffect(() => {
@@ -467,8 +449,8 @@ export function ReceiptsTab() {
       {/* Quick packing toggle */}
       <ToggleGroup
         type="single"
-        value={packingFilter}
-        onValueChange={(v) => v && setPackingFilter(v)}
+        value={filters.packing}
+        onValueChange={(v) => v && setField('packing', v as typeof filters.packing)}
         className="justify-start flex-wrap gap-1"
       >
         <ToggleGroupItem value="all" aria-label={t('allItems')} className="gap-1.5 h-9 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
@@ -493,75 +475,23 @@ export function ReceiptsTab() {
         <div className="relative flex-1">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={filters.search}
+            onChange={(e) => setField('search', e.target.value)}
             placeholder={t('searchReceipts')}
             className="ps-10"
           />
         </div>
 
-        {/* Mobile: filters trigger */}
+        {/* Mobile: filters + actions */}
         <div className="flex md:hidden gap-2">
-          <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline" className="flex-1 gap-1.5 relative">
-                <SlidersHorizontal className="w-4 h-4" />
-                <span className="text-xs">{t('filters')}</span>
-                {activeFilterCount > 0 && (
-                  <span className="ms-1 inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold tabular-nums">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-2xl">
-              <SheetHeader>
-                <SheetTitle className="text-start">{t('filters')}</SheetTitle>
-              </SheetHeader>
-              <div className="space-y-3 mt-4 pb-6">
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">{t('destination')}</label>
-                  <Select value={destFilter} onValueChange={setDestFilter}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{t('all')}</SelectItem>
-                      {BOX_DESTINATIONS.map((d) => <SelectItem key={d} value={d}>{t(`dest_${d}`)}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">{t('status')}</label>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{t('all')}</SelectItem>
-                      {BOX_STATUSES.map((s) => <SelectItem key={s} value={s}>{t(`boxStatus_${s}`)}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">{t('packingType')}</label>
-                  <Select value={packingFilter} onValueChange={setPackingFilter}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{t('all')}</SelectItem>
-                      {PACKING_TYPES.map((p) => <SelectItem key={p} value={p}>{t(p)}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {activeFilterCount > 0 && (
-                  <Button
-                    variant="ghost"
-                    className="w-full"
-                    onClick={() => { setDestFilter('all'); setStatusFilter('all'); setPackingFilter('all'); }}
-                  >
-                    <X className="w-4 h-4 me-1.5" />
-                    {t('reset')}
-                  </Button>
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
+          <div className="flex-1">
+            <ReceiptsFiltersPanel
+              filters={filters} setField={setField} resetAll={resetAll} setDateRange={setDateRange}
+              suppliers={suppliers} invoiceNumbers={invoiceNumbers} boxNumbers={boxNumbers}
+              activeCount={activeCount}
+              presets={presets} savePreset={savePreset} loadPreset={loadPreset} deletePreset={deletePreset}
+            />
+          </div>
 
           <Sheet open={mobileActionsOpen} onOpenChange={setMobileActionsOpen}>
             <SheetTrigger asChild>
@@ -590,6 +520,10 @@ export function ReceiptsTab() {
                   {importing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
                   <span className="text-xs">{t('import')}</span>
                 </Button>
+                <Button variant="outline" onClick={() => { setMobileActionsOpen(false); setSupplierPrintOpen(true); }} disabled={receipts.length === 0} className="h-14 flex-col gap-1 col-span-2">
+                  <Printer className="w-5 h-5" />
+                  <span className="text-xs">{t('printSupplierInvoices')}</span>
+                </Button>
                 <Button variant="outline" onClick={() => { setMobileActionsOpen(false); setLockPolicyOpen(true); }} className="h-14 flex-col gap-1 col-span-2">
                   <Info className="w-5 h-5" />
                   <span className="text-xs">{t('lockPolicyOpen')}</span>
@@ -599,29 +533,14 @@ export function ReceiptsTab() {
           </Sheet>
         </div>
 
-        {/* Desktop filters */}
-        <Select value={destFilter} onValueChange={setDestFilter}>
-          <SelectTrigger className="hidden md:flex md:w-44"><SelectValue placeholder={t('destination')} /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('all')}</SelectItem>
-            {BOX_DESTINATIONS.map((d) => <SelectItem key={d} value={d}>{t(`dest_${d}`)}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="hidden md:flex md:w-40"><SelectValue placeholder={t('status')} /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('all')}</SelectItem>
-            {BOX_STATUSES.map((s) => <SelectItem key={s} value={s}>{t(`boxStatus_${s}`)}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={packingFilter} onValueChange={setPackingFilter}>
-          <SelectTrigger className="hidden md:flex md:w-40"><SelectValue placeholder={t('packingType')} /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('all')}</SelectItem>
-            {PACKING_TYPES.map((p) => <SelectItem key={p} value={p}>{t(p)}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <div className="hidden md:flex flex-wrap gap-2">
+        {/* Desktop toolbar */}
+        <div className="hidden md:flex flex-wrap gap-2 items-center">
+          <ReceiptsFiltersPanel
+            filters={filters} setField={setField} resetAll={resetAll} setDateRange={setDateRange}
+            suppliers={suppliers} invoiceNumbers={invoiceNumbers} boxNumbers={boxNumbers}
+            activeCount={activeCount}
+            presets={presets} savePreset={savePreset} loadPreset={loadPreset} deletePreset={deletePreset}
+          />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-1.5">
@@ -670,15 +589,23 @@ export function ReceiptsTab() {
             receipts={filtered}
             filterSummary={
               [
-                destFilter !== 'all' ? `${t('destination')}: ${t(`dest_${destFilter}`)}` : null,
-                statusFilter !== 'all' ? `${t('status')}: ${t(`boxStatus_${statusFilter}`)}` : null,
-                packingFilter !== 'all' ? `${t('packingType')}: ${t(packingFilter)}` : null,
-                search ? `${t('search')}: "${search}"` : null,
+                filters.destination !== 'all' ? `${t('destination')}: ${t(`dest_${filters.destination}`)}` : null,
+                filters.status !== 'all' ? `${t('status')}: ${t(`boxStatus_${filters.status}`)}` : null,
+                filters.packing !== 'all' ? `${t('packingType')}: ${t(filters.packing)}` : null,
+                filters.supplier ? `${t('supplier')}: ${filters.supplier}` : null,
+                filters.invoiceNumber ? `${t('invoiceNumber')}: ${filters.invoiceNumber}` : null,
+                filters.boxNo ? `${t('boxNo')}: ${filters.boxNo}` : null,
+                (filters.dateFrom || filters.dateTo) ? `${t('date')}: ${filters.dateFrom || '…'} → ${filters.dateTo || '…'}` : null,
+                filters.search ? `${t('search')}: "${filters.search}"` : null,
               ]
                 .filter(Boolean)
                 .join(' • ') || undefined
             }
           />
+          <Button variant="outline" onClick={() => setSupplierPrintOpen(true)} disabled={receipts.length === 0} className="gap-1.5">
+            <Printer className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('printSupplierInvoices')}</span>
+          </Button>
           <Button variant="outline" onClick={handleImportClick} disabled={importing}>
             {importing ? <Loader2 className="w-4 h-4 me-1.5 animate-spin" /> : <Upload className="w-4 h-4 me-1.5" />}
             {t('import')}
@@ -711,6 +638,13 @@ export function ReceiptsTab() {
           </Button>
         </div>
       </div>
+
+      {/* Active filters chips */}
+      <ActiveFiltersBar
+        chips={activeChips}
+        onRemove={(key) => resetField(key)}
+        onClearAll={resetAll}
+      />
 
       {/* Hidden file input — shared between desktop toolbar and mobile actions sheet */}
       <input
@@ -978,6 +912,12 @@ export function ReceiptsTab() {
       />
 
       <LockPolicyDialog open={lockPolicyOpen} onOpenChange={setLockPolicyOpen} />
+
+      <SupplierInvoicesPrintDialog
+        open={supplierPrintOpen}
+        onOpenChange={setSupplierPrintOpen}
+        receipts={filtered}
+      />
     </div>
   );
 }
