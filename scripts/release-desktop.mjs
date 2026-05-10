@@ -188,6 +188,17 @@ async function verifyRelease() {
   return data;
 }
 
+async function verifyVersionJson() {
+  const url = `${PUBLIC_BASE}/version.json?_t=${Date.now()}`;
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) throw new Error(`HTTP ${r.status} fetching version.json`);
+  const data = await r.json();
+  if (data.version !== versionArg) {
+    throw new Error(`version.json still reports version=${data.version}, expected ${versionArg}`);
+  }
+  return data;
+}
+
 async function verifyZip() {
   const url = `${PUBLIC_BASE}/${zipName}?_t=${Date.now()}`;
   const r = await fetch(url, { method: 'HEAD', cache: 'no-store' });
@@ -202,6 +213,7 @@ let lastErr = null;
 for (let attempt = 1; attempt <= 5; attempt++) {
   try {
     const release = await verifyRelease();
+    await verifyVersionJson();
     const zipLen = await verifyZip();
     ok(
       `Channel confirmed at v${versionArg} ` +
