@@ -1572,6 +1572,25 @@ const en = {
     warehouseSeal: 'Warehouse Seal',
     warehouseSystemTitle: 'Warehouse Management System',
     noDataToPrint: 'No data to print',
+    // Packing — fast selection & worksheet
+    quickSelect: 'Quick select',
+    selectAllVisible: 'Select all visible',
+    clearSelection: 'Clear selection',
+    packingSelectionHint: 'Click any chip to select/deselect its whole group — Shift+Click for range — Ctrl+A to select all / Esc to clear.',
+    printPackingWorksheet: 'Print packing worksheet',
+    enterBoxNumbers: 'Enter box numbers',
+    bulkBoxAssignTitle: 'Enter box numbers in bulk',
+    bulkBoxAssignHint: 'Type a box number and press Enter to jump to the next row. Or select multiple rows, type a number, and press "Apply to selected" to assign them all to the same box.',
+    applyToSelected: 'Apply to selected',
+    boxNoPlaceholder: 'e.g. B-01',
+    saveAndMarkPacked: 'Save all & mark as packed',
+    packingWorksheetTitle: 'Packing worksheet',
+    responsible: 'Responsible',
+    signature: 'Signature',
+    pack_boxed: 'Boxed',
+    pack_loose: 'Loose',
+    page: 'Page',
+    invoiceNo: 'Invoice No.',
 };
 
 export default en;
