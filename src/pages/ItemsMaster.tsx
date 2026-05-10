@@ -132,11 +132,25 @@ export default function ItemsMaster() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
-          ) : filtered.length === 0 ? (
+          ) : displayed.length === 0 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
-              {t('noItemsFound')}
+              {serverSearching ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{t('searchingServer')}</span>
+                </div>
+              ) : (
+                t('noItemsFound')
+              )}
             </div>
           ) : (
+            <>
+            {usingServerResults && (
+              <div className="px-4 py-2 text-xs text-muted-foreground bg-muted/40 border-b flex items-center gap-2">
+                <Info className="w-3.5 h-3.5" />
+                {t('serverSearchHint')}
+              </div>
+            )}
             <Table>
               <TableHeader>
                 <TableRow>
@@ -151,7 +165,7 @@ export default function ItemsMaster() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((item) => {
+                {displayed.map((item) => {
                   const count = counts[item.id] ?? 0;
                   const thumbUrl = item.image_path
                     ? supabase.storage.from('box-images').getPublicUrl(item.image_path).data.publicUrl
@@ -254,6 +268,7 @@ export default function ItemsMaster() {
                 })}
               </TableBody>
             </Table>
+            </>
           )}
         </div>
 
