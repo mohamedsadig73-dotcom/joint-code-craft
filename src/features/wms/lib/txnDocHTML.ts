@@ -10,6 +10,11 @@ export interface TxnDocHeader {
   notes?: string | null;
   from_warehouse?: string | null;
   to_warehouse?: string | null;
+  recipient_name?: string | null;
+  recipient_title?: string | null;
+  recipient_empno?: string | null;
+  receipt_time?: string | null;
+  is_delegated?: boolean;
 }
 
 export interface TxnDocLine {
@@ -26,6 +31,12 @@ export interface TxnDocLabels {
   reference: string; status: string; from: string; to: string; notes: string;
   line: string; part_no: string; description: string; qty: string; unit: string;
   signature: string; printed_at: string;
+  recipient_info?: string;
+  recipient_name?: string;
+  recipient_title?: string;
+  recipient_empno?: string;
+  receipt_time?: string;
+  delegation?: string;
 }
 
 export function buildTxnDocHTML(
@@ -102,6 +113,17 @@ export function buildTxnDocHTML(
     <tbody>${rows || `<tr><td colspan="6" style="text-align:center;color:#999;padding:8mm">—</td></tr>`}</tbody>
   </table>
   ${h.notes ? `<div class="notes-block"><strong>${esc(labels.notes)}:</strong> ${esc(h.notes)}</div>` : ''}
+  ${(h.recipient_name || h.recipient_title || h.recipient_empno || h.receipt_time || h.is_delegated) ? `
+  <div class="notes-block">
+    <strong>${esc(labels.recipient_info ?? 'Recipient')}:</strong>
+    <div class="meta" style="margin-top:3mm">
+      <div><div class="k">${esc(labels.recipient_name ?? 'Name')}</div><div class="v">${esc(h.recipient_name ?? '—')}</div></div>
+      <div><div class="k">${esc(labels.recipient_title ?? 'Title')}</div><div class="v">${esc(h.recipient_title ?? '—')}</div></div>
+      <div><div class="k">${esc(labels.recipient_empno ?? 'Emp #')}</div><div class="v">${esc(h.recipient_empno ?? '—')}</div></div>
+      <div><div class="k">${esc(labels.receipt_time ?? 'Time')}</div><div class="v">${esc(h.receipt_time ?? '—')}</div></div>
+      ${h.is_delegated ? `<div><div class="k">${esc(labels.delegation ?? 'Delegation')}</div><div class="v">✓</div></div>` : ''}
+    </div>
+  </div>` : ''}
   <div class="sig">
     <div class="box">${esc(labels.signature)} 1</div>
     <div class="box">${esc(labels.signature)} 2</div>
