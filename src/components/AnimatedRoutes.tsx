@@ -61,6 +61,7 @@ const WmsAdjustments = lazy(() => import('@/features/wms/pages/Adjustments'));
 const WmsTransferRequests = lazy(() => import('@/features/wms/pages/TransferRequests'));
 const WmsInquiryItems = lazy(() => import('@/features/wms/pages/InquiryItems'));
 const WmsItemCard = lazy(() => import('@/features/wms/pages/ItemCard'));
+const WmsStocktakeEditor = lazy(() => import('@/features/wms/pages/StocktakeEditor'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -426,6 +427,9 @@ export function AnimatedRoutes() {
             <Route path="issues" element={<WmsIssuesNew />} />
             <Route path="transfers" element={<WmsTransfersNew />} />
             <Route path="stocktake" element={<WmsStocktakeNew />} />
+            <Route path="stocktake/new" element={<WmsStocktakeEditor />} />
+            <Route path="stocktake/:id" element={<WmsStocktakeEditor />} />
+            <Route path="items/:id" element={<WmsItemCard />} />
             <Route path="approvals" element={<WmsApprovalsNew />} />
             <Route path="alerts" element={<WmsAlertsNew />} />
             <Route path="reports" element={<WmsReportsNew />} />
