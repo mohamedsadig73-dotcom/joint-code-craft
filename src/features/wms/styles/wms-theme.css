@@ -299,3 +299,57 @@ html.light .wms-scope,
   .wms-table td{color:#000!important;background:#fff!important}
   @page{size:A4;margin:15mm}
 }
+
+/* ── Form fields ──────────────────────── */
+.wms-form-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:.875rem 1rem;margin-bottom:1rem;
+}
+@media (max-width:900px){.wms-form-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){.wms-form-grid{grid-template-columns:1fr}}
+.wms-field{display:flex;flex-direction:column;gap:.35rem;min-width:0}
+.wms-field-label{
+  font-size:11px;font-weight:600;color:hsl(var(--wms-text3));
+  letter-spacing:.4px;text-transform:uppercase;
+}
+.wms-input,.wms-select,.wms-textarea{
+  background:hsl(var(--wms-bg3));
+  border:1px solid hsl(var(--wms-border));
+  border-radius:var(--wms-radius-sm);
+  padding:.5rem .65rem;font-size:13px;font-family:inherit;
+  color:hsl(var(--wms-text));outline:none;
+  transition:border-color .15s, background .15s;
+  width:100%;
+}
+.wms-input:focus,.wms-select:focus,.wms-textarea:focus{
+  border-color:hsl(var(--wms-accent));
+  background:hsl(var(--wms-bg2));
+}
+.wms-input::placeholder,.wms-textarea::placeholder{color:hsl(var(--wms-text3))}
+.wms-textarea{min-height:72px;resize:vertical}
+.wms-input[readonly]{opacity:.7;cursor:not-allowed}
+
+.wms-lines-actions{
+  display:flex;justify-content:space-between;align-items:center;
+  margin:.75rem 0 .5rem;
+}
+.wms-lines-title{font-size:13px;font-weight:600;color:hsl(var(--wms-text))}
+.wms-icon-btn{
+  background:hsl(var(--wms-red) / 0.10);color:hsl(var(--wms-red));
+  border:1px solid hsl(var(--wms-red) / 0.20);
+  border-radius:var(--wms-radius-sm);
+  width:28px;height:28px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:14px;line-height:1;
+}
+.wms-form-footer{
+  display:flex;gap:.5rem;justify-content:flex-end;
+  margin-top:1rem;padding-top:1rem;
+  border-top:1px solid hsl(var(--wms-border));
+  flex-wrap:wrap;
+}
+
+/* Compact table cells inside line editor */
+.wms-table.is-edit td{padding:.4rem .5rem}
+.wms-table.is-edit .wms-input,
+.wms-table.is-edit .wms-select{padding:.35rem .5rem;font-size:12px}

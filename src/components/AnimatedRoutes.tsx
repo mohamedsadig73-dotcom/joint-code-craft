@@ -53,6 +53,9 @@ const WmsStocktakeNew = lazy(() => import('@/features/wms/pages/Stocktake'));
 const WmsApprovalsNew = lazy(() => import('@/features/wms/pages/Approvals'));
 const WmsAlertsNew = lazy(() => import('@/features/wms/pages/Alerts'));
 const WmsReportsNew = lazy(() => import('@/features/wms/pages/Reports'));
+const WmsTxnEditor = lazy(() => import('@/features/wms/pages/TxnEditor'));
+const WmsItemsReport = lazy(() => import('@/features/wms/pages/ItemsReport'));
+const WmsMovementsReport = lazy(() => import('@/features/wms/pages/MovementsReport'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -421,6 +424,10 @@ export function AnimatedRoutes() {
             <Route path="approvals" element={<WmsApprovalsNew />} />
             <Route path="alerts" element={<WmsAlertsNew />} />
             <Route path="reports" element={<WmsReportsNew />} />
+            <Route path="reports/items" element={<WmsItemsReport />} />
+            <Route path="reports/movements" element={<WmsMovementsReport />} />
+            <Route path="txn/:type/new" element={<WmsTxnEditor />} />
+            <Route path="txn/:type/:id" element={<WmsTxnEditor />} />
             <Route path="reports/legacy" element={<WmsReports />} />
             <Route path="dashboard-legacy" element={<WmsDashboard />} />
           </Route>
