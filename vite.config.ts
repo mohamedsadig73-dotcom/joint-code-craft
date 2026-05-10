@@ -52,6 +52,7 @@ function versionJsonPlugin() {
 
       fs.writeFileSync(path.join(distDir, 'version.json'), versionData);
       fs.writeFileSync(path.join(publicDir, 'version.json'), versionData);
+      fs.writeFileSync(path.join(rootDir, 'version.json'), versionData);
 
       fs.writeFileSync(path.join(distDir, 'desktop-release.json'), releaseData);
       fs.writeFileSync(path.join(publicDir, 'desktop-release.json'), releaseData);

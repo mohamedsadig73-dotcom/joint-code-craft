@@ -27,6 +27,15 @@ function getActiveIndex() {
   return path.join(getActiveDistDir(), 'index.html');
 }
 
+function readDistVersion(distDir) {
+  try {
+    const payload = JSON.parse(fs.readFileSync(path.join(distDir, 'version.json'), 'utf-8'));
+    return typeof payload.version === 'string' ? payload.version : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 // Read shell version from package.json
 function getShellVersion() {
   try {
@@ -261,7 +270,7 @@ function downloadFile(url, destPath, progressCallback) {
 }
 
 // ── Helper: Extract ZIP and replace dist/ ──────────────
-function extractAndReplaceDist(zipPath) {
+function extractAndReplaceDist(zipPath, expectedVersion) {
   // Use Node.js built-in zlib + manual ZIP parsing
   // For simplicity and reliability, use the 'unzip' approach with AdmZip-like logic
   const AdmZip = (() => {
@@ -269,14 +278,14 @@ function extractAndReplaceDist(zipPath) {
   })();
 
   if (AdmZip) {
-    return extractWithAdmZip(AdmZip, zipPath);
+    return extractWithAdmZip(AdmZip, zipPath, expectedVersion);
   }
 
   // Fallback: use PowerShell on Windows to extract
-  return extractWithPowerShell(zipPath);
+  return extractWithPowerShell(zipPath, expectedVersion);
 }
 
-function extractWithAdmZip(AdmZip, zipPath) {
+function extractWithAdmZip(AdmZip, zipPath, expectedVersion) {
   return new Promise((resolve, reject) => {
     try {
       const tempExtract = path.join(UPDATE_DIR, 'extracted');
@@ -296,6 +305,7 @@ function extractWithAdmZip(AdmZip, zipPath) {
         reject(new Error('No dist folder found in update package'));
         return;
       }
+      validateUpdateDist(distSource, expectedVersion);
 
       // Stage update outside the read-only packaged app area, then apply on restart.
       if (fs.existsSync(PENDING_DIST)) {
@@ -315,7 +325,7 @@ function extractWithAdmZip(AdmZip, zipPath) {
   });
 }
 
-function extractWithPowerShell(zipPath) {
+function extractWithPowerShell(zipPath, expectedVersion) {
   const { execSync } = require('child_process');
   return new Promise((resolve, reject) => {
     try {
@@ -335,6 +345,7 @@ function extractWithPowerShell(zipPath) {
         reject(new Error('No dist folder found in update package'));
         return;
       }
+      validateUpdateDist(distSource, expectedVersion);
 
       // Stage update outside the read-only packaged app area, then apply on restart.
       if (fs.existsSync(PENDING_DIST)) {
@@ -393,8 +404,16 @@ function findDistFolder(extractDir) {
   return null;
 }
 
+function validateUpdateDist(distSource, expectedVersion) {
+  if (!expectedVersion) return;
+  const actualVersion = readDistVersion(distSource);
+  if (actualVersion !== expectedVersion) {
+    throw new Error(`Update package version mismatch: expected ${expectedVersion}, got ${actualVersion || 'unknown'}`);
+  }
+}
+
 // ── IPC: Download and apply update (Hot-Swap) ──────────
-ipcMain.handle('download-update', async (_event, downloadUrl) => {
+ipcMain.handle('download-update', async (_event, downloadUrl, expectedVersion) => {
   if (!fs.existsSync(UPDATE_DIR)) {
     fs.mkdirSync(UPDATE_DIR, { recursive: true });
   }
@@ -421,7 +440,7 @@ ipcMain.handle('download-update', async (_event, downloadUrl) => {
     total: 0,
   });
 
-  await extractAndReplaceDist(zipPath);
+  await extractAndReplaceDist(zipPath, expectedVersion);
 
   mainWindow?.webContents?.send('download-progress', {
     phase: 'done',
