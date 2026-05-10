@@ -61,16 +61,21 @@ export function useBoxReceipts() {
       if (itemIds.length === 0) {
         setReceipts(rows);
       } else {
-        const { data: items, error: itemsError } = await supabase
-          .from('items_master')
-          .select('id, image_path')
-          .in('id', itemIds);
-
-        if (itemsError) console.error('[useBoxReceipts:items_master]', itemsError);
-
-        const imageByItemId = new Map(
-          (items ?? []).map((item) => [item.id, item.image_path] as const)
-        );
+        // Batch in chunks to avoid URL length limits with .in() on many UUIDs
+        const CHUNK = 150;
+        const imageByItemId = new Map<string, string | null>();
+        for (let i = 0; i < itemIds.length; i += CHUNK) {
+          const slice = itemIds.slice(i, i + CHUNK);
+          const { data: items, error: itemsError } = await supabase
+            .from('items_master')
+            .select('id, image_path')
+            .in('id', slice);
+          if (itemsError) {
+            console.error('[useBoxReceipts:items_master]', itemsError);
+            continue;
+          }
+          (items ?? []).forEach((item) => imageByItemId.set(item.id, item.image_path));
+        }
         setReceipts(
           rows.map((r) => ({
             ...r,
