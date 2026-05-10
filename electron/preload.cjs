@@ -17,8 +17,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   // Download update ZIP, extract, and replace dist/ (Hot-Swap)
-  downloadUpdate: async (downloadUrl) => {
-    return ipcRenderer.invoke('download-update', downloadUrl);
+  downloadUpdate: async (downloadUrl, expectedVersion) => {
+    return ipcRenderer.invoke('download-update', downloadUrl, expectedVersion);
   },
 
   // Listen for download/install progress

@@ -13,7 +13,7 @@ interface Window {
     getPublishedVersion: <T = { version?: string; build?: string }>(url: string) => Promise<T>;
     openExternal: (url: string) => Promise<void>;
     printHTML: (html: string) => Promise<boolean | { success: boolean; path?: string }>;
-    downloadUpdate: (downloadUrl: string) => Promise<{ success: boolean }>;
+    downloadUpdate: (downloadUrl: string, expectedVersion?: string) => Promise<{ success: boolean }>;
     onDownloadProgress: (callback: (data: DownloadProgressData) => void) => () => void;
     restartApp: () => Promise<void>;
     getShellVersion?: () => Promise<string>;
