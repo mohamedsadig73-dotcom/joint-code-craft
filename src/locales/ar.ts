@@ -1570,6 +1570,25 @@ const ar = {
     warehouseSeal: 'ختم المخزن',
     warehouseSystemTitle: 'نظام إدارة المخازن',
     noDataToPrint: 'لا توجد بيانات للطباعة',
+    // Packing — fast selection & worksheet
+    quickSelect: 'تحديد سريع',
+    selectAllVisible: 'تحديد كل المرئي',
+    clearSelection: 'مسح التحديد',
+    packingSelectionHint: 'اضغط على أي شريحة لتحديد/إلغاء كل أصنافها — أو Shift+النقر لتحديد نطاق — أو Ctrl+A لتحديد الكل / Esc للمسح.',
+    printPackingWorksheet: 'طباعة ورقة التعبئة',
+    enterBoxNumbers: 'إدخال أرقام الصناديق',
+    bulkBoxAssignTitle: 'إدخال أرقام الصناديق دفعة واحدة',
+    bulkBoxAssignHint: 'اكتب رقم الصندوق ثم Enter للانتقال للصف التالي. أو اختر عدة صفوف واكتب رقماً ثم اضغط "تطبيق على المحدد" لتعبئة كل المختارين برقم واحد.',
+    applyToSelected: 'تطبيق على المحدد',
+    boxNoPlaceholder: 'مثال: B-01',
+    saveAndMarkPacked: 'حفظ الكل وتعليمها كمعبأة',
+    packingWorksheetTitle: 'ورقة التعبئة',
+    responsible: 'المسؤول',
+    signature: 'التوقيع',
+    pack_boxed: 'في صندوق',
+    pack_loose: 'سائب',
+    page: 'صفحة',
+    invoiceNo: 'رقم الفاتورة',
 };
 
 export default ar;
