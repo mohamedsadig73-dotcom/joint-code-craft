@@ -60,7 +60,7 @@ export default function Page() {
     return (
       <div>
         <div className="wms-tabs">
-          <button className={`wms-tab ${tab === 'by-wh' ? '' : ''}`} onClick={() => setTab('by-wh')}>{t('wms.locations.by-wh')}</button>
+          <button className="wms-tab" onClick={() => setTab('by-wh')}>{t('wms.locations.by-wh')}</button>
           <button className={`wms-tab is-active`}>{t('wms.locations.full-table')}</button>
         </div>
         <WmsListShell<Loc>
