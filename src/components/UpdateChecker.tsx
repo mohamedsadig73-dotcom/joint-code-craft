@@ -96,7 +96,7 @@ export function UpdateChecker() {
           metadata: { attempt: attempt + 1, max: MAX_RETRIES },
         });
         try {
-          await window.electronAPI?.downloadUpdate(info.downloadUrl);
+          await window.electronAPI?.downloadUpdate(info.downloadUrl, info.version);
           setPhase('done');
           await log({
             phase: 'done',
