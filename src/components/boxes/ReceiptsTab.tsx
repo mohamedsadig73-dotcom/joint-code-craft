@@ -915,6 +915,12 @@ export function ReceiptsTab() {
       />
 
       <LockPolicyDialog open={lockPolicyOpen} onOpenChange={setLockPolicyOpen} />
+
+      <SupplierInvoicesPrintDialog
+        open={supplierPrintOpen}
+        onOpenChange={setSupplierPrintOpen}
+        receipts={filtered}
+      />
     </div>
   );
 }
