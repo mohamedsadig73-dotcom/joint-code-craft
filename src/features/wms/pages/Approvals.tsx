@@ -38,18 +38,52 @@ export default function Page() {
   const post = async (id: string) => {
     const u = await (supabase.auth.getUser() as unknown as Promise<{ data: { user: { id: string } | null } }>);
     const userId = u.data.user?.id;
+    // Capture signer trail (recipient signature)
+    const signerName = window.prompt(t('wms.approvals.prompt-signer-name'), '');
+    if (signerName === null) return; // cancelled
+    const signerTitle = window.prompt(t('wms.approvals.prompt-signer-title'), '') ?? '';
+    const signerEmpNo = window.prompt(t('wms.approvals.prompt-signer-empno'), '') ?? '';
     const { error } = await (supabase as unknown as { from: (t: string) => { update: (v: object) => { eq: (c: string, v: string) => Promise<{ error: { message: string } | null }> } } })
       .from('inv_transactions')
       .update({ status: 'posted', posted_at: new Date().toISOString(), posted_by: userId })
       .eq('id', id);
-    if (error) toast.error(error.message); else { toast.success(t('wms.approvals.posted')); void load(); }
+    if (error) { toast.error(error.message); return; }
+    // Write signature trail (best-effort, non-blocking)
+    await (supabase as unknown as { from: (t: string) => { insert: (v: object) => Promise<{ error: { message: string } | null }> } })
+      .from('wms_approvals')
+      .insert({
+        transaction_id: id,
+        status: 'approved',
+        signer_name: signerName.trim() || null,
+        signer_title: signerTitle.trim() || null,
+        signer_employee_no: signerEmpNo.trim() || null,
+        decided_by: userId,
+        decided_at: new Date().toISOString(),
+      });
+    toast.success(t('wms.approvals.posted'));
+    void load();
   };
   const reject = async (id: string) => {
+    const reason = window.prompt(t('wms.approvals.prompt-reject-reason'), '');
+    if (reason === null) return;
+    const u = await (supabase.auth.getUser() as unknown as Promise<{ data: { user: { id: string } | null } }>);
+    const userId = u.data.user?.id;
     const { error } = await (supabase as unknown as { from: (t: string) => { update: (v: object) => { eq: (c: string, v: string) => Promise<{ error: { message: string } | null }> } } })
       .from('inv_transactions')
       .update({ status: 'cancelled' })
       .eq('id', id);
-    if (error) toast.error(error.message); else { toast.success(t('wms.approvals.rejected')); void load(); }
+    if (error) { toast.error(error.message); return; }
+    await (supabase as unknown as { from: (t: string) => { insert: (v: object) => Promise<{ error: { message: string } | null }> } })
+      .from('wms_approvals')
+      .insert({
+        transaction_id: id,
+        status: 'rejected',
+        notes: reason || null,
+        decided_by: userId,
+        decided_at: new Date().toISOString(),
+      });
+    toast.success(t('wms.approvals.rejected'));
+    void load();
   };
 
   const cols: Column<Row>[] = [
