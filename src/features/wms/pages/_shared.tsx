@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { WmsListShell, type Column } from '../components';
+import { WmsListShell, type Column, type WmsRowBase } from '../components';
 
-export function GenericListPage<T extends { id?: string | number }>(props: {
+export function GenericListPage<T extends WmsRowBase>(props: {
   table: string;
   select?: string;
   titleKey: string;
