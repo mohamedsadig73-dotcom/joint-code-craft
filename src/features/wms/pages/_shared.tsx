@@ -3,7 +3,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { WmsListShell, type Column } from '../components';
 
-export function GenericListPage<T extends Record<string, unknown>>(props: {
+export function GenericListPage<T extends { id?: string | number }>(props: {
   table: string;
   select?: string;
   titleKey: string;

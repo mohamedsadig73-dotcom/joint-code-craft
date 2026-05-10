@@ -25,7 +25,7 @@ interface Props<T> {
   emptyHint?: string;
 }
 
-export function WmsListShell<T extends Record<string, unknown>>({
+export function WmsListShell<T extends { id?: string | number }>({
   title, subtitle, rows, columns, loading, searchKeys, searchPlaceholder,
   rightActions, onRowClick, emptyTitle, emptyHint,
 }: Props<T>) {
