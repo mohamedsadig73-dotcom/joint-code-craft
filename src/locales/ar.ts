@@ -1595,6 +1595,7 @@ const ar = {
     'wms.nav.section-master': 'البيانات الأساسية',
     'wms.nav.section-movements': 'حركات المخزون',
     'wms.nav.section-monitor': 'المتابعة والتقارير',
+    'wms.nav.section-inquiry': 'الاستفسار',
     'wms.nav.dashboard': 'لوحة التحكم',
     'wms.nav.items': 'الأصناف',
     'wms.nav.categories': 'التصنيفات',
