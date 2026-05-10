@@ -403,9 +403,7 @@ export function AnimatedRoutes() {
             path="/inventory"
             element={
               <ProtectedRoute>
-                <PageTransition>
-                  <Inventory />
-                </PageTransition>
+                <Navigate to="/wms" replace />
               </ProtectedRoute>
             }
           />
