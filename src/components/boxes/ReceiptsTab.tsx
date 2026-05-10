@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Plus, Search, Download, Upload, Loader2, Package, PackageOpen, Layers,
-  Columns3, Trash2, X, FileText, Edit3, Undo2, Info, SlidersHorizontal, MoreHorizontal,
+  Columns3, Trash2, X, FileText, Edit3, Undo2, Info, MoreHorizontal, Printer,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent,
@@ -25,6 +25,10 @@ import { ReceiptFormDialog } from './ReceiptFormDialog';
 import { InvoiceFormDialog } from './InvoiceFormDialog';
 import { InvoicePickerDialog } from './InvoicePickerDialog';
 import { ReceiptsPrintPreview } from './ReceiptsPrintPreview';
+import { ReceiptsFiltersPanel } from './filters/ReceiptsFiltersPanel';
+import { ActiveFiltersBar } from './filters/ActiveFiltersBar';
+import { SupplierInvoicesPrintDialog } from './print/SupplierInvoicesPrintDialog';
+import { useReceiptsFilters, DEFAULT_FILTERS } from '@/hooks/useReceiptsFilters';
 import { BulkEditReceiptsDialog, type BulkEditPatch } from './BulkEditReceiptsDialog';
 import { EditPreviewDialog, type FieldDiff } from './EditPreviewDialog';
 import { LockPolicyDialog } from './LockPolicyDialog';
@@ -58,14 +62,17 @@ export function ReceiptsTab() {
   } = useBoxReceipts();
   const { summary } = useBoxSummary();
 
-  const [search, setSearch] = useState('');
-  const [destFilter, setDestFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [packingFilter, setPackingFilter] = useState<string>('all');
+  // Professional filter system
+  const {
+    filters, setField, resetAll, resetField, filtered,
+    activeChips, activeCount, suppliers, invoiceNumbers, boxNumbers,
+    presets, savePreset, loadPreset, deletePreset, setDateRange,
+  } = useReceiptsFilters(receipts);
   const [editing, setEditing] = useState<BoxReceipt | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [invoicePickerOpen, setInvoicePickerOpen] = useState(false);
+  const [supplierPrintOpen, setSupplierPrintOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<{
     invoiceNumber: string;
     receipts: BoxReceipt[];
@@ -137,11 +144,6 @@ export function ReceiptsTab() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
 
-  const activeFilterCount =
-    (destFilter !== 'all' ? 1 : 0) +
-    (statusFilter !== 'all' ? 1 : 0) +
-    (packingFilter !== 'all' ? 1 : 0);
-
   const canModify = (r: BoxReceipt) =>
     // Shipped receipts are locked for everyone (except admin) to preserve audit integrity
     r.status === 'shipped'
@@ -166,23 +168,6 @@ export function ReceiptsTab() {
     }
     return { all: receipts.length, boxed, loose };
   }, [receipts]);
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return receipts.filter((r) => {
-      if (destFilter !== 'all' && r.destination !== destFilter) return false;
-      if (statusFilter !== 'all' && r.status !== statusFilter) return false;
-      if (packingFilter !== 'all' && r.packing_type !== packingFilter) return false;
-      if (!q) return true;
-      return (
-        r.supplier.toLowerCase().includes(q) ||
-        r.part_no.toLowerCase().includes(q) ||
-        r.description.toLowerCase().includes(q) ||
-        (r.box_no?.toLowerCase().includes(q) ?? false) ||
-        (r.invoice_number?.toLowerCase().includes(q) ?? false)
-      );
-    });
-  }, [receipts, search, destFilter, statusFilter, packingFilter]);
 
   // Drop selections that no longer match the filter
   useEffect(() => {
