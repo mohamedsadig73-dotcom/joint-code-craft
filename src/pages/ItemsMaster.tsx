@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Navigation } from '@/components/Navigation';
@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { useItemsMaster, useItemReceiptsCount, type ItemMaster } from '@/hooks/useItemsMaster';
 import { ItemFormDialog } from '@/components/boxes/items/ItemFormDialog';
-import { Library, Plus, Search, Edit, Trash2, Eye, Loader2, History, Sparkles } from 'lucide-react';
+import { Library, Plus, Search, Edit, Trash2, Eye, Loader2, History, Sparkles, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ImageIcon } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -23,13 +23,18 @@ import {
 export default function ItemsMaster() {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { items, loading, createItem, updateItem, deleteItem } = useItemsMaster();
+  const { items, loading, totalCount, createItem, updateItem, deleteItem, searchServer } = useItemsMaster();
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ItemMaster | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ItemMaster | null>(null);
+  const [serverResults, setServerResults] = useState<ItemMaster[]>([]);
+  const [serverSearching, setServerSearching] = useState(false);
 
-  const itemIds = useMemo(() => items.map((i) => i.id), [items]);
+  const itemIds = useMemo(
+    () => Array.from(new Set([...items, ...serverResults].map((i) => i.id))),
+    [items, serverResults]
+  );
   const counts = useItemReceiptsCount(itemIds);
 
   const filtered = useMemo(() => {
@@ -42,6 +47,31 @@ export default function ItemsMaster() {
         (i.default_supplier ?? '').toLowerCase().includes(q)
     );
   }, [items, search]);
+
+  useEffect(() => {
+    const q = search.trim();
+    if (!q || filtered.length > 0) {
+      setServerResults([]);
+      setServerSearching(false);
+      return;
+    }
+    let cancelled = false;
+    setServerSearching(true);
+    const handle = setTimeout(async () => {
+      const rows = await searchServer(q);
+      if (!cancelled) {
+        setServerResults(rows);
+        setServerSearching(false);
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [search, filtered.length, searchServer]);
+
+  const usingServerResults = filtered.length === 0 && serverResults.length > 0;
+  const displayed = usingServerResults ? serverResults : filtered;
 
   const existingPartNos = useMemo(
     () => items.filter((i) => i.id !== editing?.id).map((i) => i.part_no),
