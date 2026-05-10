@@ -27,6 +27,15 @@ function getActiveIndex() {
   return path.join(getActiveDistDir(), 'index.html');
 }
 
+function readDistVersion(distDir) {
+  try {
+    const payload = JSON.parse(fs.readFileSync(path.join(distDir, 'version.json'), 'utf-8'));
+    return typeof payload.version === 'string' ? payload.version : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 // Read shell version from package.json
 function getShellVersion() {
   try {
@@ -393,8 +402,16 @@ function findDistFolder(extractDir) {
   return null;
 }
 
+function validateUpdateDist(distSource, expectedVersion) {
+  if (!expectedVersion) return;
+  const actualVersion = readDistVersion(distSource);
+  if (actualVersion !== expectedVersion) {
+    throw new Error(`Update package version mismatch: expected ${expectedVersion}, got ${actualVersion || 'unknown'}`);
+  }
+}
+
 // ── IPC: Download and apply update (Hot-Swap) ──────────
-ipcMain.handle('download-update', async (_event, downloadUrl) => {
+ipcMain.handle('download-update', async (_event, downloadUrl, expectedVersion) => {
   if (!fs.existsSync(UPDATE_DIR)) {
     fs.mkdirSync(UPDATE_DIR, { recursive: true });
   }
@@ -421,7 +438,7 @@ ipcMain.handle('download-update', async (_event, downloadUrl) => {
     total: 0,
   });
 
-  await extractAndReplaceDist(zipPath);
+  await extractAndReplaceDist(zipPath, expectedVersion);
 
   mainWindow?.webContents?.send('download-progress', {
     phase: 'done',
