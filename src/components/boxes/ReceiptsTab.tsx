@@ -4,7 +4,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Plus, Search, Download, Upload, Loader2, Package, PackageOpen, Layers,
@@ -28,7 +27,7 @@ import { ReceiptsPrintPreview } from './ReceiptsPrintPreview';
 import { ReceiptsFiltersPanel } from './filters/ReceiptsFiltersPanel';
 import { ActiveFiltersBar } from './filters/ActiveFiltersBar';
 import { SupplierInvoicesPrintDialog } from './print/SupplierInvoicesPrintDialog';
-import { useReceiptsFilters, DEFAULT_FILTERS } from '@/hooks/useReceiptsFilters';
+import { useReceiptsFilters } from '@/hooks/useReceiptsFilters';
 import { BulkEditReceiptsDialog, type BulkEditPatch } from './BulkEditReceiptsDialog';
 import { EditPreviewDialog, type FieldDiff } from './EditPreviewDialog';
 import { LockPolicyDialog } from './LockPolicyDialog';
@@ -38,7 +37,6 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { exportBoxesToExcel, parseReceiptsFromExcel } from '@/utils/boxesExcelExport';
-import { BOX_DESTINATIONS, BOX_STATUSES, PACKING_TYPES } from '@/utils/boxNumberValidation';
 import { ImportDuplicateDialog, type ImportResolution } from './ImportDuplicateDialog';
 import { findImportDuplicates, type ImportDuplicateMatch } from '@/utils/boxDuplicateAnalysis';
 
@@ -141,7 +139,6 @@ export function ReceiptsTab() {
   const isManager = user?.role === 'manager';
   const isMobile = useIsMobile();
 
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
 
   const canModify = (r: BoxReceipt) =>
