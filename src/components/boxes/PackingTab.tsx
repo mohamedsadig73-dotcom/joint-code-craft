@@ -9,14 +9,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from '@/components/ui/dialog';
-import { Loader2, Search, Package, Boxes, Filter } from 'lucide-react';
+import { Loader2, Search, Package, Filter, Printer, ClipboardEdit } from 'lucide-react';
 import { destinationBadgeClass } from './destinationStyles';
-import { useToast } from '@/hooks/use-toast';
-import { normalizeBoxNo } from '@/utils/boxNumberValidation';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePackingSelection } from '@/hooks/usePackingSelection';
+import { PackingQuickSelectBar } from './packing/PackingQuickSelectBar';
+import { BulkBoxAssignDialog } from './packing/BulkBoxAssignDialog';
+import { buildPackingWorksheetHTML } from './packing/buildPackingWorksheetHTML';
+import { printHTMLDocument } from './print/buildSupplierInvoiceHTML';
 
 /**
  * PackingTab — workflow screen between "received" and "shipped".
@@ -24,10 +24,9 @@ import { useAuth } from '@/contexts/AuthContext';
  * and lets admins/managers bulk-assign them to a box and mark them "packed".
  */
 export function PackingTab() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { receipts, loading, bulkUpdateFields } = useBoxReceipts();
   const { user } = useAuth();
-  const { toast } = useToast();
 
   const isAdmin = user?.role === 'admin';
   const isManager = user?.role === 'manager';
@@ -35,10 +34,7 @@ export function PackingTab() {
 
   const [search, setSearch] = useState('');
   const [destFilter, setDestFilter] = useState('all');
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [packDialogOpen, setPackDialogOpen] = useState(false);
-  const [boxNoInput, setBoxNoInput] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   /** Items eligible for packing: status=received and not yet 'packed' or 'shipped'. */
   const candidates = useMemo(
@@ -60,56 +56,45 @@ export function PackingTab() {
     });
   }, [candidates, search, destFilter]);
 
-  const toggle = (id: string) => {
-    setSelected((p) => {
-      const n = new Set(p);
-      n.has(id) ? n.delete(id) : n.add(id);
-      return n;
+  const visibleIds = useMemo(() => filtered.map((r) => r.id), [filtered]);
+  const {
+    selected, toggle, selectIds, deselectIds, clear, selectAllVisible,
+  } = usePackingSelection(visibleIds);
+
+  const selectedReceipts = useMemo(
+    () => filtered.filter((r) => selected.has(r.id)),
+    [filtered, selected],
+  );
+
+  const handlePrintWorksheet = async () => {
+    if (selectedReceipts.length === 0) return;
+    const isAr = language === 'ar';
+    const html = buildPackingWorksheetHTML(selectedReceipts, {
+      isAr,
+      groupByDestination: true,
+      labels: {
+        title: t('packingWorksheetTitle'),
+        date: t('date'),
+        totalItems: t('totalItems'),
+        responsible: t('responsible'),
+        signature: t('signature'),
+        page: t('page'),
+        of: t('of'),
+        num: '#',
+        partNo: t('partNo'),
+        description: t('description'),
+        qty: t('qty'),
+        unit: t('unit'),
+        supplier: t('supplier'),
+        destination: t('destination'),
+        boxNo: t('boxNo'),
+        notes: t('notes'),
+        dest_morocco: t('dest_morocco'),
+        dest_uzbekistan: t('dest_uzbekistan'),
+        dest_unspecified: t('dest_unspecified'),
+      },
     });
-  };
-
-  const toggleAll = () => {
-    if (filtered.every((r) => selected.has(r.id))) setSelected(new Set());
-    else setSelected(new Set(filtered.map((r) => r.id)));
-  };
-
-  const handleAssignBox = async () => {
-    const normalized = normalizeBoxNo(boxNoInput);
-    if (!normalized) {
-      toast({ title: t('error'), description: t('boxNoRequired'), variant: 'destructive' });
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const ids = Array.from(selected);
-      const updated = await bulkUpdateFields(ids, {
-        box_no: normalized,
-        packing_type: 'boxed',
-        status: 'packed',
-      });
-      if (updated > 0) {
-        toast({ title: t('success'), description: `${updated} ${t('itemsPacked')}` });
-        setSelected(new Set());
-        setBoxNoInput('');
-        setPackDialogOpen(false);
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleMarkPacked = async () => {
-    setSubmitting(true);
-    try {
-      const ids = Array.from(selected);
-      const updated = await bulkUpdateFields(ids, { status: 'packed' });
-      if (updated > 0) {
-        toast({ title: t('success'), description: `${updated} ${t('itemsPacked')}` });
-        setSelected(new Set());
-      }
-    } finally {
-      setSubmitting(false);
-    }
+    await printHTMLDocument(html, t('packingWorksheetTitle'));
   };
 
   return (
@@ -139,20 +124,32 @@ export function PackingTab() {
         </Select>
       </div>
 
-      {/* Bulk action bar */}
+      {/* Quick selection bar */}
+      {canPack && filtered.length > 0 && (
+        <PackingQuickSelectBar
+          visibleReceipts={filtered}
+          selectedIds={selected}
+          onSelectIds={selectIds}
+          onDeselectIds={deselectIds}
+          onClear={clear}
+          onSelectAllVisible={selectAllVisible}
+        />
+      )}
+
+      {/* Bulk action bar (sticky-feel) */}
       {selected.size > 0 && canPack && (
-        <Card className="p-3 flex flex-wrap items-center gap-2 bg-primary/5 border-primary/30">
+        <Card className="p-2.5 flex flex-wrap items-center gap-2 bg-primary/5 border-primary/30 sticky top-0 z-10">
           <span className="text-sm font-medium">
             {t('selectedCount').replace('{n}', selected.size.toLocaleString('en-US'))}
           </span>
           <div className="flex-1" />
-          <Button size="sm" variant="outline" onClick={() => setPackDialogOpen(true)} className="gap-1.5">
-            <Boxes className="w-4 h-4" />
-            {t('assignToBox')}
+          <Button size="sm" variant="outline" onClick={handlePrintWorksheet} className="gap-1.5">
+            <Printer className="w-4 h-4" />
+            {t('printPackingWorksheet')}
           </Button>
-          <Button size="sm" onClick={handleMarkPacked} disabled={submitting} className="gap-1.5">
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />}
-            {t('markAsPacked')}
+          <Button size="sm" onClick={() => setBulkOpen(true)} className="gap-1.5">
+            <ClipboardEdit className="w-4 h-4" />
+            {t('enterBoxNumbers')}
           </Button>
         </Card>
       )}
@@ -163,7 +160,12 @@ export function PackingTab() {
           {t('readyToPack')}: <span className="font-bold tabular-nums">{filtered.length.toLocaleString('en-US')}</span>
         </span>
         {filtered.length > 0 && (
-          <button onClick={toggleAll} className="text-primary hover:underline">
+          <button
+            onClick={() =>
+              filtered.every((r) => selected.has(r.id)) ? clear() : selectAllVisible()
+            }
+            className="text-primary hover:underline"
+          >
             {filtered.every((r) => selected.has(r.id)) ? t('deselectAll') : t('selectAll')}
           </button>
         )}
@@ -185,10 +187,14 @@ export function PackingTab() {
               <Card
                 key={r.id}
                 className={`p-2.5 flex items-center gap-3 cursor-pointer transition-colors hover:bg-muted/50 ${isChecked ? 'bg-primary/5 border-primary/40' : ''}`}
-                onClick={() => canPack && toggle(r.id)}
+                onClick={(e) => canPack && toggle(r.id, e.shiftKey)}
               >
                 {canPack && (
-                  <Checkbox checked={isChecked} onCheckedChange={() => toggle(r.id)} />
+                  <Checkbox
+                    checked={isChecked}
+                    onCheckedChange={() => toggle(r.id, false)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -216,30 +222,14 @@ export function PackingTab() {
         </div>
       )}
 
-      {/* Assign-to-box dialog */}
-      <Dialog open={packDialogOpen} onOpenChange={setPackDialogOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('assignToBox')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-xs text-muted-foreground">{t('assignToBoxDesc')}</p>
-            <Input
-              value={boxNoInput}
-              onChange={(e) => setBoxNoInput(e.target.value)}
-              placeholder="B-01"
-              className="text-center font-mono text-lg uppercase"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setPackDialogOpen(false)}>{t('cancel')}</Button>
-            <Button onClick={handleAssignBox} disabled={submitting || !boxNoInput.trim()}>
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin me-1.5" /> : null}
-              {t('confirm')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Bulk box number entry dialog */}
+      <BulkBoxAssignDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        receipts={selectedReceipts}
+        bulkUpdateFields={bulkUpdateFields}
+        onCompleted={clear}
+      />
     </div>
   );
 }
