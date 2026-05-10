@@ -47,6 +47,7 @@ export function ReceiptsTab() {
   const {
     receipts,
     loading,
+    imagesLoading,
     createReceipt,
     updateReceipt,
     deleteReceipt,
