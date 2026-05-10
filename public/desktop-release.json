@@ -1,9 +1,9 @@
 {
-  "desktop_shell_version": "4.6.0",
+  "desktop_shell_version": "4.6.1",
   "min_shell_version": "4.4.5",
-  "web_version": "4.6.0",
-  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.6.0-dist.zip",
+  "web_version": "4.6.1",
+  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.6.1-dist.zip",
   "full_download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.4.5.zip",
-  "release_notes": "v4.6.0 - إصلاح عرض صور الأصناف في صفحة الاستلام + تحسين استيراد Word",
+  "release_notes": "v4.6.1 - تصحيح حلقة تحديث تطبيق الكمبيوتر وتثبيت رقم الإصدار الداخلي",
   "mandatory": false
 }
