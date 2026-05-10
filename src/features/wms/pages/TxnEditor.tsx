@@ -24,6 +24,29 @@ interface Header {
   to_warehouse_id: string | null;
 }
 
+interface Recipient {
+  is_delegated: boolean;
+  recipient_name: string;
+  recipient_title: string;
+  recipient_empno: string;
+  receipt_time: string;
+}
+
+const REC_MARK = '[[REC_JSON]]';
+const stripRec = (notes: string) => notes.split(REC_MARK)[0]?.trim() ?? '';
+const extractRec = (notes: string | null | undefined): Recipient => {
+  const blank: Recipient = { is_delegated: false, recipient_name: '', recipient_title: '', recipient_empno: '', receipt_time: '' };
+  if (!notes) return blank;
+  const m = notes.split(REC_MARK)[1];
+  if (!m) return blank;
+  try { return { ...blank, ...JSON.parse(m) }; } catch { return blank; }
+};
+const mergeRec = (notes: string, r: Recipient): string => {
+  const base = stripRec(notes);
+  const hasAny = r.is_delegated || r.recipient_name || r.recipient_title || r.recipient_empno || r.receipt_time;
+  return hasAny ? `${base}${REC_MARK}${JSON.stringify(r)}` : base;
+};
+
 interface Line {
   id?: string;
   line_no: number;
@@ -55,6 +78,10 @@ export default function TxnEditor() {
     txn_no: '', txn_type: txnType, txn_date: new Date().toISOString().slice(0, 10),
     status: 'draft', party_name: '', reference: '', notes: '',
     from_warehouse_id: null, to_warehouse_id: null,
+  });
+  const [rec, setRec] = useState<Recipient>({
+    is_delegated: false, recipient_name: '', recipient_title: '', recipient_empno: '',
+    receipt_time: new Date().toTimeString().slice(0, 5),
   });
   const [lines, setLines] = useState<Line[]>([blankLine(1)]);
   const [warehouses, setWarehouses] = useState<WhRow[]>([]);
@@ -99,7 +126,11 @@ export default function TxnEditor() {
         .eq('transaction_id', id);
       if (off) return;
       const row = (txn.data as Header[] | null)?.[0];
-      if (row) setH({ ...row, party_name: row.party_name ?? '', reference: row.reference ?? '', notes: row.notes ?? '' });
+      if (row) {
+        const recovered = extractRec(row.notes);
+        setH({ ...row, party_name: row.party_name ?? '', reference: row.reference ?? '', notes: stripRec(row.notes ?? '') });
+        setRec(recovered);
+      }
       const ls = ((li.data as Line[] | null) ?? []).sort((a, b) => a.line_no - b.line_no);
       if (ls.length) setLines(ls.map(l => ({ ...l, notes: l.notes ?? '', unit: l.unit ?? 'PCS' })));
     })();
@@ -137,7 +168,7 @@ export default function TxnEditor() {
         txn_no: h.txn_no.trim(), txn_type: txnType, txn_date: h.txn_date,
         status: postNow ? 'posted' : 'draft',
         party_name: h.party_name || null, reference: h.reference || null,
-        notes: h.notes || null,
+        notes: mergeRec(h.notes, rec) || null,
         from_warehouse_id: h.from_warehouse_id, to_warehouse_id: h.to_warehouse_id,
         ...(postNow ? { posted_at: new Date().toISOString() } : {}),
       };
@@ -187,6 +218,11 @@ export default function TxnEditor() {
         notes: h.notes,
         from_warehouse: whName(h.from_warehouse_id),
         to_warehouse: whName(h.to_warehouse_id),
+        recipient_name: rec.recipient_name,
+        recipient_title: rec.recipient_title,
+        recipient_empno: rec.recipient_empno,
+        receipt_time: rec.receipt_time,
+        is_delegated: rec.is_delegated,
       },
       lines.filter(l => l.item_id).map(l => {
         const it = itemMap.get(l.item_id);
@@ -205,6 +241,12 @@ export default function TxnEditor() {
         line: t('wms.col.line'), part_no: t('wms.col.part-no'),
         description: t('wms.col.name'), qty: t('wms.col.qty'), unit: t('wms.col.unit'),
         signature: t('wms.form.signature'), printed_at: t('wms.form.printed-at'),
+        recipient_info: t('wms.form.recipient-info'),
+        recipient_name: t('wms.form.recipient-name'),
+        recipient_title: t('wms.form.recipient-title'),
+        recipient_empno: t('wms.form.recipient-empno'),
+        receipt_time: t('wms.form.receipt-time'),
+        delegation: t('wms.form.delegation'),
       },
       language as 'ar' | 'en',
     );
@@ -249,6 +291,40 @@ export default function TxnEditor() {
           </WmsField>
         )}
       </div>
+
+      {(txnType === 'in' || txnType === 'out') && (
+        <>
+          <div className="wms-section">
+            <div className="wms-section-title">⚑ {t('wms.form.delegation')}</div>
+            <label className="wms-checkbox-row">
+              <input type="checkbox" checked={rec.is_delegated}
+                onChange={e => setRec({ ...rec, is_delegated: e.target.checked })} />
+              {t('wms.form.delegation')}
+            </label>
+          </div>
+          <div className="wms-section">
+            <div className="wms-section-title">▣ {t('wms.form.recipient-info')}</div>
+            <div className="wms-form-grid" style={{ marginBottom: 0 }}>
+              <WmsField label={t('wms.form.recipient-name')}>
+                <WmsInput value={rec.recipient_name}
+                  onChange={e => setRec({ ...rec, recipient_name: e.target.value })} />
+              </WmsField>
+              <WmsField label={t('wms.form.recipient-title')}>
+                <WmsInput value={rec.recipient_title}
+                  onChange={e => setRec({ ...rec, recipient_title: e.target.value })} />
+              </WmsField>
+              <WmsField label={t('wms.form.recipient-empno')}>
+                <WmsInput value={rec.recipient_empno}
+                  onChange={e => setRec({ ...rec, recipient_empno: e.target.value })} />
+              </WmsField>
+              <WmsField label={t('wms.form.receipt-time')}>
+                <WmsInput type="time" value={rec.receipt_time}
+                  onChange={e => setRec({ ...rec, receipt_time: e.target.value })} />
+              </WmsField>
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="wms-lines-actions">
         <span className="wms-lines-title">{t('wms.form.lines')}</span>
