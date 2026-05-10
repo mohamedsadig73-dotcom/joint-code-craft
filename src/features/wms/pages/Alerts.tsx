@@ -34,13 +34,13 @@ export default function Page() {
   }, []);
 
   const cols: Column<Row>[] = [
-    { key: 'part_no', header: t('wms.items.part-no') },
+    { key: 'part_no', header: t('wms.items.part-no'), render: (r) => r.part_no || '—' },
     { key: 'desc', header: t('wms.items.description'), render: (r) => language === 'ar' ? (r.name_ar || r.description) : (r.description || r.name_ar) },
     { key: 'wh', header: t('wms.nav.warehouses'), render: (r) => r.warehouse_name || '—' },
     { key: 'qty', header: t('wms.alerts.on-hand'), render: (r) => String(r.qty_on_hand ?? 0) },
     { key: 'min', header: t('wms.alerts.min'), render: (r) => String(r.min_qty ?? 0) },
     { key: 'lvl', header: t('wms.alerts.level'), render: (r) => {
-      const tone = r.alert_level === 'critical' ? 'danger' : r.alert_level === 'low' ? 'warn' : 'info';
+      const tone: 'red' | 'yellow' | 'blue' = r.alert_level === 'critical' ? 'red' : r.alert_level === 'low' ? 'yellow' : 'blue';
       return <WmsBadge tone={tone}>{t('wms.alerts.lvl.' + (r.alert_level || 'ok'))}</WmsBadge>;
     } },
   ];
