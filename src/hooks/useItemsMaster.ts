@@ -32,7 +32,8 @@ export function useItemsMaster() {
     const { data, error } = await supabase
       .from('items_master')
       .select('*')
-      .order('part_no', { ascending: true });
+      .order('part_no', { ascending: true })
+      .range(0, 49999);
     if (error) {
       console.error('[useItemsMaster]', error);
       toast({ title: t('error'), description: error.message, variant: 'destructive' });
@@ -72,19 +73,38 @@ export function useItemsMaster() {
         toast({ title: t('error'), description: t('itemAlreadyExists'), variant: 'destructive' });
         return existing;
       }
+      // Safety net: re-check on the server in case the local list is stale
+      // or partially loaded (e.g., row count exceeded an earlier page size).
+      const trimmed = input.part_no.trim();
+      const { data: serverDup } = await supabase
+        .from('items_master')
+        .select('*')
+        .ilike('part_no', trimmed)
+        .limit(1)
+        .maybeSingle();
+      if (serverDup) {
+        toast({ title: t('error'), description: t('itemAlreadyExists'), variant: 'destructive' });
+        await fetchItems();
+        return serverDup as ItemMaster;
+      }
       const { data, error } = await supabase
         .from('items_master')
-        .insert([{ ...input, part_no: input.part_no.trim(), created_by: user.id }])
+        .insert([{ ...input, part_no: trimmed, created_by: user.id }])
         .select()
         .single();
       if (error) {
+        if (error.code === '23505' || /duplicate key|unique constraint/i.test(error.message)) {
+          toast({ title: t('error'), description: t('itemAlreadyExists'), variant: 'destructive' });
+          await fetchItems();
+          return null;
+        }
         toast({ title: t('error'), description: error.message, variant: 'destructive' });
         return null;
       }
       toast({ title: t('success'), description: t('itemCreated') });
       return data as ItemMaster;
     },
-    [user?.id, toast, t, findByPartNo]
+    [user?.id, toast, t, findByPartNo, fetchItems]
   );
 
   const updateItem = useCallback(
