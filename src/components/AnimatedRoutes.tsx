@@ -56,6 +56,11 @@ const WmsReportsNew = lazy(() => import('@/features/wms/pages/Reports'));
 const WmsTxnEditor = lazy(() => import('@/features/wms/pages/TxnEditor'));
 const WmsItemsReport = lazy(() => import('@/features/wms/pages/ItemsReport'));
 const WmsMovementsReport = lazy(() => import('@/features/wms/pages/MovementsReport'));
+const WmsDepartments = lazy(() => import('@/features/wms/pages/Departments'));
+const WmsAdjustments = lazy(() => import('@/features/wms/pages/Adjustments'));
+const WmsTransferRequests = lazy(() => import('@/features/wms/pages/TransferRequests'));
+const WmsInquiryItems = lazy(() => import('@/features/wms/pages/InquiryItems'));
+const WmsItemCard = lazy(() => import('@/features/wms/pages/ItemCard'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -424,6 +429,11 @@ export function AnimatedRoutes() {
             <Route path="approvals" element={<WmsApprovalsNew />} />
             <Route path="alerts" element={<WmsAlertsNew />} />
             <Route path="reports" element={<WmsReportsNew />} />
+            <Route path="departments" element={<WmsDepartments />} />
+            <Route path="adjustments" element={<WmsAdjustments />} />
+            <Route path="transfer-requests" element={<WmsTransferRequests />} />
+            <Route path="inquiry/items" element={<WmsInquiryItems />} />
+            <Route path="inquiry/card" element={<WmsItemCard />} />
             <Route path="reports/items" element={<WmsItemsReport />} />
             <Route path="reports/movements" element={<WmsMovementsReport />} />
             <Route path="txn/:type/new" element={<WmsTxnEditor />} />
