@@ -1,8 +1,8 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { GenericListPage } from './_shared';
-import type { Column } from '../components';
+import type { Column, WmsRowBase } from '../components';
 
-interface Item {
+interface Item extends WmsRowBase {
   id: string; part_no: string; name_ar: string | null; name_en: string | null;
   description: string; default_unit: string; is_active: boolean;
 }
