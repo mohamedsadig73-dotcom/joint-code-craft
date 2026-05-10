@@ -8,7 +8,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { SlidersHorizontal, ChevronDown, X, Check, Calendar as CalIcon } from 'lucide-react';
+import { SlidersHorizontal, ChevronDown, X, Check } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BOX_DESTINATIONS, BOX_STATUSES, PACKING_TYPES } from '@/utils/boxNumberValidation';
 import type { ReceiptsFiltersState } from '@/hooks/useReceiptsFilters';
