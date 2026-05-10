@@ -5,4 +5,4 @@ export { WmsToolbar } from './WmsToolbar';
 export { WmsEmpty } from './WmsEmpty';
 export { WmsButton } from './WmsButton';
 export { WmsListShell } from './WmsListShell';
-export type { Column } from './WmsListShell';
+export type { Column, WmsRowBase } from './WmsListShell';
