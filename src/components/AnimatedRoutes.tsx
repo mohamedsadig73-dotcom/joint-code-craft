@@ -39,6 +39,20 @@ const PrintDiagnostics = lazy(() => import('@/pages/PrintDiagnostics'));
 const Inventory = lazy(() => import('@/pages/Inventory'));
 const WmsDashboard = lazy(() => import('@/pages/WmsDashboard'));
 const WmsReports = lazy(() => import('@/pages/WmsReports'));
+const WmsLayout = lazy(() => import('@/features/wms/layout/WmsLayout'));
+const WmsDashboardNew = lazy(() => import('@/features/wms/pages/Dashboard'));
+const WmsItemsNew = lazy(() => import('@/features/wms/pages/Items'));
+const WmsCategories = lazy(() => import('@/features/wms/pages/Categories'));
+const WmsUnits = lazy(() => import('@/features/wms/pages/Units'));
+const WmsWarehouses = lazy(() => import('@/features/wms/pages/Warehouses'));
+const WmsLocationsNew = lazy(() => import('@/features/wms/pages/Locations'));
+const WmsReceiptsNew = lazy(() => import('@/features/wms/pages/Receipts'));
+const WmsIssuesNew = lazy(() => import('@/features/wms/pages/Issues'));
+const WmsTransfersNew = lazy(() => import('@/features/wms/pages/Transfers'));
+const WmsStocktakeNew = lazy(() => import('@/features/wms/pages/Stocktake'));
+const WmsApprovalsNew = lazy(() => import('@/features/wms/pages/Approvals'));
+const WmsAlertsNew = lazy(() => import('@/features/wms/pages/Alerts'));
+const WmsReportsNew = lazy(() => import('@/features/wms/pages/Reports'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -390,22 +404,26 @@ export function AnimatedRoutes() {
             path="/wms"
             element={
               <ProtectedRoute>
-                <PageTransition>
-                  <WmsDashboard />
-                </PageTransition>
+                <WmsLayout />
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/wms/reports"
-            element={
-              <ProtectedRoute>
-                <PageTransition>
-                  <WmsReports />
-                </PageTransition>
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route index element={<WmsDashboardNew />} />
+            <Route path="items" element={<WmsItemsNew />} />
+            <Route path="categories" element={<WmsCategories />} />
+            <Route path="units" element={<WmsUnits />} />
+            <Route path="warehouses" element={<WmsWarehouses />} />
+            <Route path="locations" element={<WmsLocationsNew />} />
+            <Route path="receipts" element={<WmsReceiptsNew />} />
+            <Route path="issues" element={<WmsIssuesNew />} />
+            <Route path="transfers" element={<WmsTransfersNew />} />
+            <Route path="stocktake" element={<WmsStocktakeNew />} />
+            <Route path="approvals" element={<WmsApprovalsNew />} />
+            <Route path="alerts" element={<WmsAlertsNew />} />
+            <Route path="reports" element={<WmsReportsNew />} />
+            <Route path="reports/legacy" element={<WmsReports />} />
+            <Route path="dashboard-legacy" element={<WmsDashboard />} />
+          </Route>
           <Route
             path="*"
             element={
