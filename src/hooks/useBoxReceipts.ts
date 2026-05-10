@@ -40,6 +40,7 @@ export function useBoxReceipts() {
   const { t } = useLanguage();
   const [receipts, setReceipts] = useState<BoxReceipt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [imagesLoading, setImagesLoading] = useState(false);
 
   const fetchReceipts = useCallback(async () => {
     setLoading(true);
@@ -52,6 +53,8 @@ export function useBoxReceipts() {
     if (error) {
       console.error('[useBoxReceipts]', error);
       toast({ title: t('error'), description: error.message, variant: 'destructive' });
+      setLoading(false);
+      return;
     } else {
       const rows = (data ?? []) as BoxReceipt[];
       const itemIds = Array.from(
@@ -60,31 +63,61 @@ export function useBoxReceipts() {
 
       if (itemIds.length === 0) {
         setReceipts(rows);
+        setLoading(false);
       } else {
-        // Batch in chunks to avoid URL length limits with .in() on many UUIDs
+        // Show rows immediately so the list isn't blocked by image enrichment
+        setReceipts(rows);
+        setLoading(false);
+
+        // Enrich with item images in batches (avoid URL length limits with .in())
+        setImagesLoading(true);
         const CHUNK = 150;
         const imageByItemId = new Map<string, string | null>();
-        for (let i = 0; i < itemIds.length; i += CHUNK) {
-          const slice = itemIds.slice(i, i + CHUNK);
-          const { data: items, error: itemsError } = await supabase
-            .from('items_master')
-            .select('id, image_path')
-            .in('id', slice);
-          if (itemsError) {
-            console.error('[useBoxReceipts:items_master]', itemsError);
-            continue;
+        let failures = 0;
+        try {
+          for (let i = 0; i < itemIds.length; i += CHUNK) {
+            const slice = itemIds.slice(i, i + CHUNK);
+            const { data: items, error: itemsError } = await supabase
+              .from('items_master')
+              .select('id, image_path')
+              .in('id', slice);
+            if (itemsError) {
+              failures += slice.length;
+              console.error('[useBoxReceipts:items_master]', itemsError, {
+                batch: i / CHUNK,
+                size: slice.length,
+              });
+              continue;
+            }
+            (items ?? []).forEach((item) => imageByItemId.set(item.id, item.image_path));
           }
-          (items ?? []).forEach((item) => imageByItemId.set(item.id, item.image_path));
+          setReceipts((prev) =>
+            prev.map((r) => ({
+              ...r,
+              image_path:
+                r.image_path ?? (r.item_id ? imageByItemId.get(r.item_id) ?? null : null),
+            }))
+          );
+          if (failures > 0) {
+            toast({
+              title: t('error'),
+              description: `${t('imageFetchPartialFail')} (${failures})`,
+              variant: 'destructive',
+            });
+          }
+        } catch (err: any) {
+          console.error('[useBoxReceipts:imageEnrichment]', err);
+          toast({
+            title: t('error'),
+            description: err?.message ?? t('imageFetchFailed'),
+            variant: 'destructive',
+          });
+        } finally {
+          setImagesLoading(false);
         }
-        setReceipts(
-          rows.map((r) => ({
-            ...r,
-            image_path: r.image_path ?? (r.item_id ? imageByItemId.get(r.item_id) ?? null : null),
-          }))
-        );
+        return;
       }
     }
-    setLoading(false);
   }, [toast, t]);
 
   useEffect(() => {
@@ -294,6 +327,7 @@ export function useBoxReceipts() {
   return {
     receipts,
     loading,
+    imagesLoading,
     refetch: fetchReceipts,
     createReceipt,
     updateReceipt,

@@ -47,6 +47,7 @@ export function ReceiptsTab() {
   const {
     receipts,
     loading,
+    imagesLoading,
     createReceipt,
     updateReceipt,
     deleteReceipt,
@@ -807,6 +808,12 @@ export function ReceiptsTab() {
       )}
 
       {/* Content */}
+      {imagesLoading && !loading && (
+        <div className="flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground bg-muted/30 rounded-md">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          {t('loadingItemImages')}
+        </div>
+      )}
       {loading ? (
         <div className="flex items-center justify-center py-12 text-muted-foreground">
           <Loader2 className="w-5 h-5 animate-spin me-2" />
