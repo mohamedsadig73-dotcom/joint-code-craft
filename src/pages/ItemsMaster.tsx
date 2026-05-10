@@ -127,6 +127,15 @@ export default function ItemsMaster() {
           </div>
         </div>
 
+        {!loading && totalCount > items.length && (
+          <div className="mt-3 px-3 py-2 rounded-md border border-warning/40 bg-warning/10 text-xs text-foreground/80 flex items-center gap-2">
+            <Info className="w-3.5 h-3.5 text-warning" />
+            {t('itemsLoadedNotice')
+              .replace('{loaded}', String(items.length))
+              .replace('{total}', String(totalCount))}
+          </div>
+        )}
+
         <div className="mt-4 rounded-lg border bg-card">
           {loading ? (
             <div className="flex items-center justify-center py-12">
