@@ -36,7 +36,7 @@ export function WmsListShell<T extends { id?: string | number }>({
     const term = q.trim().toLowerCase();
     if (!term || !searchKeys?.length) return rows;
     return rows.filter((row) =>
-      searchKeys.some((k) => String(row[k] ?? '').toLowerCase().includes(term)),
+      searchKeys.some((k) => String((row as Record<string, unknown>)[k as string] ?? '').toLowerCase().includes(term)),
     );
   }, [rows, q, searchKeys]);
 
