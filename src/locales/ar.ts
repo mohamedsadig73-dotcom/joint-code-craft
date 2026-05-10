@@ -1681,7 +1681,6 @@ const ar = {
     'wms.action.enable': 'تفعيل',
     'wms.action.disable': 'إيقاف',
     'wms.action.delete': 'حذف',
-    'wms.col.qty': 'الكمية',
     'wms.col.notes': 'ملاحظات',
     'wms.topbar.toggle-menu': 'القائمة',
     'wms.topbar.back-to-app': 'العودة للنظام',
