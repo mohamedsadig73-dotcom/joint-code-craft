@@ -11,6 +11,15 @@ export interface Column<T> {
   render: (row: T) => ReactNode;
 }
 
+/**
+ * Minimal shape for any row passed into WMS list components.
+ * Keep this as loose as possible — only `id` is consumed internally.
+ * Pages should extend this so Row/Item/Txn never trigger TS2344 again.
+ */
+export interface WmsRowBase {
+  id?: string | number;
+}
+
 interface Props<T> {
   title?: string;
   subtitle?: string;
@@ -25,7 +34,7 @@ interface Props<T> {
   emptyHint?: string;
 }
 
-export function WmsListShell<T extends { id?: string | number }>({
+export function WmsListShell<T extends WmsRowBase>({
   title, subtitle, rows, columns, loading, searchKeys, searchPlaceholder,
   rightActions, onRowClick, emptyTitle, emptyHint,
 }: Props<T>) {

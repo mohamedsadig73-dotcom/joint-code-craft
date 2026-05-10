@@ -1,0 +1,22 @@
+name: TypeScript Check
+
+# Dedicated, fast-failing TS gate. Runs on every push and PR to any branch.
+# Catches generic-constraint regressions (TS2344) like the Row/Item/Txn issue
+# in src/features/wms/pages/* before merge.
+on:
+  push:
+  pull_request:
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install deps
+        run: npm ci
+      - name: tsc --noEmit (strict, fails on any TS error)
+        run: npx tsc --noEmit --pretty false
