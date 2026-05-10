@@ -26,12 +26,13 @@ export function useItemsMaster() {
   const { t } = useLanguage();
   const [items, setItems] = useState<ItemMaster[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState<number>(0);
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from('items_master')
-      .select('*')
+      .select('*', { count: 'exact' })
       .order('part_no', { ascending: true })
       .range(0, 49999);
     if (error) {
@@ -39,6 +40,7 @@ export function useItemsMaster() {
       toast({ title: t('error'), description: error.message, variant: 'destructive' });
     } else {
       setItems((data ?? []) as ItemMaster[]);
+      setTotalCount(count ?? (data?.length ?? 0));
     }
     setLoading(false);
   }, [toast, t]);
@@ -60,6 +62,46 @@ export function useItemsMaster() {
       return items.find((i) => i.part_no.trim().toLowerCase() === norm);
     },
     [items]
+  );
+
+  // Server-side safety-net lookup: used when the local list is large/stale
+  // or when a part number is not found locally. Always queries the DB.
+  const findByPartNoServer = useCallback(
+    async (partNo: string): Promise<ItemMaster | null> => {
+      const trimmed = partNo.trim();
+      if (!trimmed) return null;
+      const { data } = await supabase
+        .from('items_master')
+        .select('*')
+        .ilike('part_no', trimmed)
+        .limit(1)
+        .maybeSingle();
+      return (data as ItemMaster | null) ?? null;
+    },
+    []
+  );
+
+  // Server-side search fallback for the items dictionary page. Returns up to
+  // 50 matches by part_no OR description, even if they're outside the local
+  // window. Use only when the local search yields zero results.
+  const searchServer = useCallback(
+    async (query: string): Promise<ItemMaster[]> => {
+      const q = query.trim();
+      if (!q) return [];
+      const like = `%${q}%`;
+      const { data, error } = await supabase
+        .from('items_master')
+        .select('*')
+        .or(`part_no.ilike.${like},description.ilike.${like}`)
+        .order('part_no', { ascending: true })
+        .limit(50);
+      if (error) {
+        console.error('[useItemsMaster.searchServer]', error);
+        return [];
+      }
+      return (data ?? []) as ItemMaster[];
+    },
+    []
   );
 
   const createItem = useCallback(
@@ -148,8 +190,11 @@ export function useItemsMaster() {
   return {
     items,
     loading,
+    totalCount,
     refetch: fetchItems,
     findByPartNo,
+    findByPartNoServer,
+    searchServer,
     createItem,
     updateItem,
     deleteItem,
