@@ -1,9 +1,9 @@
 {
-  "desktop_shell_version": "4.6.3",
+  "desktop_shell_version": "4.6.4",
   "min_shell_version": "4.4.5",
-  "web_version": "4.6.3",
-  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.6.3-dist.zip",
+  "web_version": "4.6.4",
+  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.6.4-dist.zip",
   "full_download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.4.5.zip",
-  "release_notes": "v4.6.3",
+  "release_notes": "v4.6.4 — تعبئة احترافية: تحديد سريع بـ chips + Shift-Click، طباعة ورقة التعبئة A4، إدخال أرقام الصناديق دفعة واحدة",
   "mandatory": false
 }
