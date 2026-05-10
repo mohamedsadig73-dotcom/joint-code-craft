@@ -353,9 +353,7 @@ export function AnimatedRoutes() {
             path="/boxes/items"
             element={
               <ProtectedRoute>
-                <PageTransition>
-                  <ItemsMaster />
-                </PageTransition>
+                <Navigate to="/wms/items" replace />
               </ProtectedRoute>
             }
           />
@@ -373,9 +371,7 @@ export function AnimatedRoutes() {
             path="/boxes/items/:id"
             element={
               <ProtectedRoute>
-                <PageTransition>
-                  <ItemDetails />
-                </PageTransition>
+                <RedirectItemToWms />
               </ProtectedRoute>
             }
           />
