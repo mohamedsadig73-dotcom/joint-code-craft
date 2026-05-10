@@ -1545,6 +1545,33 @@ const en = {
     minQty: 'Min Qty',
     min: 'Min',
     showing200OfX: 'Showing 200 of {x}',
+    // Receipts pro filter system
+    date: 'Date',
+    shipmentClassification: 'Shipment Classification',
+    companyAndInvoice: 'Company & Invoice',
+    dateAndQuantity: 'Date & Quantity',
+    last7Days: 'Last 7 days',
+    qtyMin: 'Min Quantity',
+    qtyMax: 'Max Quantity',
+    withImage: 'With image',
+    withoutImage: 'Without image',
+    noPresetsYet: 'No saved filters yet',
+    presetName: 'Preset name',
+    // Supplier invoice printing
+    printSupplierInvoices: 'Print Supplier Invoices',
+    supplierInvoicesTitle: 'Supplier Invoices',
+    supplierInvoicesCover: 'Supplier Invoices — Cover',
+    includeImages: 'Include images',
+    coverPagePerSupplier: 'Cover page when supplier has multiple invoices',
+    invoicesCount: 'Invoices',
+    noInvoiceNumber: 'No invoice number',
+    mixedPacking: 'Mixed',
+    distinctBoxes: 'Distinct boxes',
+    receiverSignature: 'Receiver Signature',
+    supplierSignature: 'Supplier Signature',
+    warehouseSeal: 'Warehouse Seal',
+    warehouseSystemTitle: 'Warehouse Management System',
+    noDataToPrint: 'No data to print',
 };
 
 export default en;
