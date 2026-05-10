@@ -1,9 +1,14 @@
 import { Suspense, lazy, memo } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PageTransition } from '@/components/PageTransition';
 import { Loader2 } from 'lucide-react';
+
+const RedirectItemToWms = () => {
+  const { id } = useParams();
+  return <Navigate to={`/wms/items/${id ?? ''}`} replace />;
+};
 
 // Lazy load pages with preload hints for critical pages
 const Login = lazy(() => import('@/pages/Login'));
@@ -353,9 +358,7 @@ export function AnimatedRoutes() {
             path="/boxes/items"
             element={
               <ProtectedRoute>
-                <PageTransition>
-                  <ItemsMaster />
-                </PageTransition>
+                <Navigate to="/wms/items" replace />
               </ProtectedRoute>
             }
           />
@@ -373,9 +376,7 @@ export function AnimatedRoutes() {
             path="/boxes/items/:id"
             element={
               <ProtectedRoute>
-                <PageTransition>
-                  <ItemDetails />
-                </PageTransition>
+                <RedirectItemToWms />
               </ProtectedRoute>
             }
           />
