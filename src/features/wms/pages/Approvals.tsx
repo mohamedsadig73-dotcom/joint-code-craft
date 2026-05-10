@@ -53,7 +53,7 @@ export default function Page() {
   };
 
   const cols: Column<Row>[] = [
-    { key: 'txn_no', header: t('wms.txn.no') },
+    { key: 'txn_no', header: t('wms.txn.no'), render: (r) => r.txn_no || '—' },
     { key: 'txn_type', header: t('wms.txn.type'), render: (r) => <WmsBadge>{t('wms.txn.type.' + (r.txn_type || ''))}</WmsBadge> },
     { key: 'txn_date', header: t('wms.txn.date'), render: (r) => r.txn_date ? new Date(r.txn_date).toLocaleDateString(language === 'ar' ? 'en-GB' : 'en-GB') : '—' },
     { key: 'reference', header: t('wms.txn.ref'), render: (r) => r.reference || '—' },
