@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { WmsListShell, WmsBadge, type Column } from '../components';
+import { WmsListShell, WmsBadge, WmsButton, type Column, type WmsRowBase } from '../components';
 
-interface Txn {
+interface Txn extends WmsRowBase {
   id: string; txn_no: string; txn_type: string; txn_date: string;
   status: string; party_name: string | null; reference: string | null;
 }
 
-export function TxnListPage({ txnTypes, titleKey, subtitleKey }: {
+export function TxnListPage({ txnTypes, titleKey, subtitleKey, newType }: {
   txnTypes: string[]; titleKey: string; subtitleKey?: string;
+  /** Used to build the editor route /wms/txn/:newType/new — defaults to first txnType. */
+  newType?: 'in' | 'out' | 'transfer' | 'adjustment';
 }) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
+  const nav = useNavigate();
   const [rows, setRows] = useState<Txn[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,5 +60,11 @@ export function TxnListPage({ txnTypes, titleKey, subtitleKey }: {
     rows={rows} columns={cols} loading={loading}
     searchKeys={['txn_no', 'party_name', 'reference']}
     searchPlaceholder={t('wms.common.search-placeholder')}
+    onRowClick={(r) => nav(`/wms/txn/${r.txn_type === 'receipt' ? 'in' : r.txn_type}/${r.id}`)}
+    rightActions={
+      <WmsButton size="sm" variant="primary"
+        onClick={() => nav(`/wms/txn/${newType ?? (txnTypes[0] === 'receipt' ? 'in' : txnTypes[0])}/new`)}
+      >+ {t('wms.form.new')}</WmsButton>
+    }
   />;
 }
