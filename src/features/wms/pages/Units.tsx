@@ -19,18 +19,18 @@ export default function Page() {
     (async () => {
       const sb = supabase as unknown as { from: (t: string) => unknown };
       type C = { select: (s: string) => C; order: (c: string, o: { ascending: boolean }) => Promise<{ data: unknown[] | null }> };
-      const uP = (sb.from('units_of_measure') as unknown as C)
+      const uP = (sb.from('uom_dictionary') as unknown as C)
         .select('id,code,name_ar,name_en,is_active').order('code', { ascending: true });
-      const linksP = (sb.from('items_master') as unknown as C).select('uom_id').order('uom_id', { ascending: true });
+      const linksP = (sb.from('items_master') as unknown as C).select('uom_dict_id').order('uom_dict_id', { ascending: true });
       const [uRes, linksRes] = await Promise.all([
         uP as unknown as Promise<{ data: Row[] | null }>,
-        linksP as unknown as Promise<{ data: { uom_id: string | null }[] | null }>,
+        linksP as unknown as Promise<{ data: { uom_dict_id: string | null }[] | null }>,
       ]);
       if (off) return;
       const m = new Map<string, number>();
       (linksRes.data ?? []).forEach(r => {
-        if (!r.uom_id) return;
-        m.set(r.uom_id, (m.get(r.uom_id) ?? 0) + 1);
+        if (!r.uom_dict_id) return;
+        m.set(r.uom_dict_id, (m.get(r.uom_dict_id) ?? 0) + 1);
       });
       setLinkMap(m);
       setRows(uRes.data ?? []);
