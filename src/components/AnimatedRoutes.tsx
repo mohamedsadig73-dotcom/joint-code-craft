@@ -1,14 +1,9 @@
 import { Suspense, lazy, memo } from 'react';
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PageTransition } from '@/components/PageTransition';
 import { Loader2 } from 'lucide-react';
-
-const RedirectItemToWms = () => {
-  const { id } = useParams();
-  return <Navigate to={`/wms/items/${id ?? ''}`} replace />;
-};
 
 // Lazy load pages with preload hints for critical pages
 const Login = lazy(() => import('@/pages/Login'));
@@ -44,29 +39,6 @@ const PrintDiagnostics = lazy(() => import('@/pages/PrintDiagnostics'));
 const Inventory = lazy(() => import('@/pages/Inventory'));
 const WmsDashboard = lazy(() => import('@/pages/WmsDashboard'));
 const WmsReports = lazy(() => import('@/pages/WmsReports'));
-const WmsLayout = lazy(() => import('@/features/wms/layout/WmsLayout'));
-const WmsDashboardNew = lazy(() => import('@/features/wms/pages/Dashboard'));
-const WmsItemsNew = lazy(() => import('@/features/wms/pages/Items'));
-const WmsCategories = lazy(() => import('@/features/wms/pages/Categories'));
-const WmsUnits = lazy(() => import('@/features/wms/pages/Units'));
-const WmsWarehouses = lazy(() => import('@/features/wms/pages/Warehouses'));
-const WmsLocationsNew = lazy(() => import('@/features/wms/pages/Locations'));
-const WmsReceiptsNew = lazy(() => import('@/features/wms/pages/Receipts'));
-const WmsIssuesNew = lazy(() => import('@/features/wms/pages/Issues'));
-const WmsTransfersNew = lazy(() => import('@/features/wms/pages/Transfers'));
-const WmsStocktakeNew = lazy(() => import('@/features/wms/pages/Stocktake'));
-const WmsApprovalsNew = lazy(() => import('@/features/wms/pages/Approvals'));
-const WmsAlertsNew = lazy(() => import('@/features/wms/pages/Alerts'));
-const WmsReportsNew = lazy(() => import('@/features/wms/pages/Reports'));
-const WmsTxnEditor = lazy(() => import('@/features/wms/pages/TxnEditor'));
-const WmsItemsReport = lazy(() => import('@/features/wms/pages/ItemsReport'));
-const WmsMovementsReport = lazy(() => import('@/features/wms/pages/MovementsReport'));
-const WmsDepartments = lazy(() => import('@/features/wms/pages/Departments'));
-const WmsAdjustments = lazy(() => import('@/features/wms/pages/Adjustments'));
-const WmsTransferRequests = lazy(() => import('@/features/wms/pages/TransferRequests'));
-const WmsInquiryItems = lazy(() => import('@/features/wms/pages/InquiryItems'));
-const WmsItemCard = lazy(() => import('@/features/wms/pages/ItemCard'));
-const WmsStocktakeEditor = lazy(() => import('@/features/wms/pages/StocktakeEditor'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Lightweight Loading component
@@ -358,7 +330,9 @@ export function AnimatedRoutes() {
             path="/boxes/items"
             element={
               <ProtectedRoute>
-                <Navigate to="/wms/items" replace />
+                <PageTransition>
+                  <ItemsMaster />
+                </PageTransition>
               </ProtectedRoute>
             }
           />
@@ -376,7 +350,9 @@ export function AnimatedRoutes() {
             path="/boxes/items/:id"
             element={
               <ProtectedRoute>
-                <RedirectItemToWms />
+                <PageTransition>
+                  <ItemDetails />
+                </PageTransition>
               </ProtectedRoute>
             }
           />
@@ -404,7 +380,9 @@ export function AnimatedRoutes() {
             path="/inventory"
             element={
               <ProtectedRoute>
-                <Navigate to="/wms" replace />
+                <PageTransition>
+                  <Inventory />
+                </PageTransition>
               </ProtectedRoute>
             }
           />
@@ -412,38 +390,22 @@ export function AnimatedRoutes() {
             path="/wms"
             element={
               <ProtectedRoute>
-                <WmsLayout />
+                <PageTransition>
+                  <WmsDashboard />
+                </PageTransition>
               </ProtectedRoute>
             }
-          >
-            <Route index element={<WmsDashboardNew />} />
-            <Route path="items" element={<WmsItemsNew />} />
-            <Route path="categories" element={<WmsCategories />} />
-            <Route path="units" element={<WmsUnits />} />
-            <Route path="warehouses" element={<WmsWarehouses />} />
-            <Route path="locations" element={<WmsLocationsNew />} />
-            <Route path="receipts" element={<WmsReceiptsNew />} />
-            <Route path="issues" element={<WmsIssuesNew />} />
-            <Route path="transfers" element={<WmsTransfersNew />} />
-            <Route path="stocktake" element={<WmsStocktakeNew />} />
-            <Route path="stocktake/new" element={<WmsStocktakeEditor />} />
-            <Route path="stocktake/:id" element={<WmsStocktakeEditor />} />
-            <Route path="items/:id" element={<WmsItemCard />} />
-            <Route path="approvals" element={<WmsApprovalsNew />} />
-            <Route path="alerts" element={<WmsAlertsNew />} />
-            <Route path="reports" element={<WmsReportsNew />} />
-            <Route path="departments" element={<WmsDepartments />} />
-            <Route path="adjustments" element={<WmsAdjustments />} />
-            <Route path="transfer-requests" element={<WmsTransferRequests />} />
-            <Route path="inquiry/items" element={<WmsInquiryItems />} />
-            <Route path="inquiry/card" element={<WmsItemCard />} />
-            <Route path="reports/items" element={<WmsItemsReport />} />
-            <Route path="reports/movements" element={<WmsMovementsReport />} />
-            <Route path="txn/:type/new" element={<WmsTxnEditor />} />
-            <Route path="txn/:type/:id" element={<WmsTxnEditor />} />
-            <Route path="reports/legacy" element={<WmsReports />} />
-            <Route path="dashboard-legacy" element={<WmsDashboard />} />
-          </Route>
+          />
+          <Route
+            path="/wms/reports"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <WmsReports />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="*"
             element={

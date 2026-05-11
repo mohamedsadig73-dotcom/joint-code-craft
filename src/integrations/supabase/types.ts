@@ -3576,156 +3576,6 @@ export type Database = {
         }
         Relationships: []
       }
-      wms_alert_rules: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          expiry_days_ahead: number | null
-          id: string
-          is_active: boolean
-          kind: Database["public"]["Enums"]["wms_alert_rule_kind"]
-          notes: string | null
-          scope_category_id: string | null
-          scope_item_id: string | null
-          scope_warehouse_id: string | null
-          threshold_qty: number | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          expiry_days_ahead?: number | null
-          id?: string
-          is_active?: boolean
-          kind: Database["public"]["Enums"]["wms_alert_rule_kind"]
-          notes?: string | null
-          scope_category_id?: string | null
-          scope_item_id?: string | null
-          scope_warehouse_id?: string | null
-          threshold_qty?: number | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          expiry_days_ahead?: number | null
-          id?: string
-          is_active?: boolean
-          kind?: Database["public"]["Enums"]["wms_alert_rule_kind"]
-          notes?: string | null
-          scope_category_id?: string | null
-          scope_item_id?: string | null
-          scope_warehouse_id?: string | null
-          threshold_qty?: number | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      wms_approvals: {
-        Row: {
-          created_at: string
-          decided_at: string | null
-          decided_by: string | null
-          id: string
-          notes: string | null
-          signature_data: string | null
-          signer_employee_no: string | null
-          signer_name: string | null
-          signer_title: string | null
-          status: Database["public"]["Enums"]["wms_approval_status"]
-          transaction_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          decided_at?: string | null
-          decided_by?: string | null
-          id?: string
-          notes?: string | null
-          signature_data?: string | null
-          signer_employee_no?: string | null
-          signer_name?: string | null
-          signer_title?: string | null
-          status?: Database["public"]["Enums"]["wms_approval_status"]
-          transaction_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          decided_at?: string | null
-          decided_by?: string | null
-          id?: string
-          notes?: string | null
-          signature_data?: string | null
-          signer_employee_no?: string | null
-          signer_name?: string | null
-          signer_title?: string | null
-          status?: Database["public"]["Enums"]["wms_approval_status"]
-          transaction_id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      wms_transfer_requests: {
-        Row: {
-          approved_at: string | null
-          approved_by: string | null
-          created_at: string
-          deleted_at: string | null
-          executed_txn_id: string | null
-          from_warehouse_id: string
-          id: string
-          item_id: string
-          notes: string | null
-          qty: number
-          reason: string | null
-          request_date: string
-          request_no: string
-          requested_by: string
-          status: Database["public"]["Enums"]["wms_request_status"]
-          to_warehouse_id: string
-          updated_at: string
-        }
-        Insert: {
-          approved_at?: string | null
-          approved_by?: string | null
-          created_at?: string
-          deleted_at?: string | null
-          executed_txn_id?: string | null
-          from_warehouse_id: string
-          id?: string
-          item_id: string
-          notes?: string | null
-          qty: number
-          reason?: string | null
-          request_date?: string
-          request_no: string
-          requested_by: string
-          status?: Database["public"]["Enums"]["wms_request_status"]
-          to_warehouse_id: string
-          updated_at?: string
-        }
-        Update: {
-          approved_at?: string | null
-          approved_by?: string | null
-          created_at?: string
-          deleted_at?: string | null
-          executed_txn_id?: string | null
-          from_warehouse_id?: string
-          id?: string
-          item_id?: string
-          notes?: string | null
-          qty?: number
-          reason?: string | null
-          request_date?: string
-          request_no?: string
-          requested_by?: string
-          status?: Database["public"]["Enums"]["wms_request_status"]
-          to_warehouse_id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       box_summary: {
@@ -4050,19 +3900,11 @@ export type Database = {
         | "cancelled"
       stock_movement_status: "draft" | "posted" | "cancelled"
       stock_movement_type: "receipt" | "issue" | "transfer"
-      wms_alert_rule_kind: "min_stock" | "max_stock" | "expiry"
-      wms_approval_status: "pending" | "approved" | "rejected"
       wms_order_status:
         | "draft"
         | "pending"
         | "in_progress"
         | "completed"
-        | "cancelled"
-      wms_request_status:
-        | "pending"
-        | "approved"
-        | "rejected"
-        | "executed"
         | "cancelled"
       wms_transaction_type:
         | "receive"
@@ -4272,20 +4114,11 @@ export const Constants = {
       ],
       stock_movement_status: ["draft", "posted", "cancelled"],
       stock_movement_type: ["receipt", "issue", "transfer"],
-      wms_alert_rule_kind: ["min_stock", "max_stock", "expiry"],
-      wms_approval_status: ["pending", "approved", "rejected"],
       wms_order_status: [
         "draft",
         "pending",
         "in_progress",
         "completed",
-        "cancelled",
-      ],
-      wms_request_status: [
-        "pending",
-        "approved",
-        "rejected",
-        "executed",
         "cancelled",
       ],
       wms_transaction_type: [
