@@ -8,6 +8,7 @@ import {
 } from '../components';
 import { wmsPrintHTML } from '../lib/print';
 import { buildTxnDocHTML } from '../lib/txnDocHTML';
+import { buildTransferNoteHTML } from '../lib/transferNoteHTML';
 
 type TxnType = 'in' | 'out' | 'transfer' | 'adjustment';
 
@@ -209,6 +210,47 @@ export default function TxnEditor() {
       return w ? ((language === 'ar' ? w.name_ar : (w.name_en || w.name_ar))) : null;
     };
     const itemMap = new Map(items.map(i => [i.id, i]));
+    const linesOut = lines.filter(l => l.item_id).map(l => {
+      const it = itemMap.get(l.item_id);
+      return {
+        line_no: l.line_no, part_no: it?.part_no, qty: l.qty, unit: l.unit, notes: l.notes,
+        description: it ? ((language === 'ar' ? it.name_ar : it.name_en) || it.description) : '—',
+      };
+    });
+    if (txnType === 'transfer') {
+      const html = buildTransferNoteHTML(
+        {
+          title: t('wms.nav.transfers'),
+          txn_no: h.txn_no, txn_date: h.txn_date,
+          reference: h.reference,
+          status: t(`wms.status.${h.status}`),
+          notes: h.notes,
+          from_warehouse: whName(h.from_warehouse_id),
+          to_warehouse: whName(h.to_warehouse_id),
+          delivered_by: rec.recipient_name || null,
+          received_by: null,
+        },
+        linesOut,
+        {
+          brand: t('wms.brand.name'),
+          doc_no: t('wms.col.txn-no'), date: t('wms.col.date'),
+          reference: t('wms.col.reference'), status: t('wms.col.status'),
+          from: t('wms.form.from-wh'), to: t('wms.form.to-wh'),
+          notes: t('wms.form.notes'),
+          line: t('wms.col.line'), part_no: t('wms.col.part-no'),
+          description: t('wms.col.name'), qty: t('wms.col.qty'), unit: t('wms.col.unit'),
+          signature_sender: t('wms.transfer.sig-sender'),
+          signature_receiver: t('wms.transfer.sig-receiver'),
+          printed_at: t('wms.form.printed-at'),
+          delivered_by_label: t('wms.transfer.delivered-by'),
+          received_by_label: t('wms.transfer.received-by'),
+          date_label: t('wms.col.date'),
+        },
+        language as 'ar' | 'en',
+      );
+      wmsPrintHTML(html, `${t('wms.nav.transfers')} — ${h.txn_no}`);
+      return;
+    }
     const html = buildTxnDocHTML(
       {
         title: t(titleKey(txnType)),
@@ -224,13 +266,7 @@ export default function TxnEditor() {
         receipt_time: rec.receipt_time,
         is_delegated: rec.is_delegated,
       },
-      lines.filter(l => l.item_id).map(l => {
-        const it = itemMap.get(l.item_id);
-        return {
-          line_no: l.line_no, part_no: it?.part_no, qty: l.qty, unit: l.unit, notes: l.notes,
-          description: it ? ((language === 'ar' ? it.name_ar : it.name_en) || it.description) : '—',
-        };
-      }),
+      linesOut,
       {
         brand: t('wms.brand.name'),
         doc_no: t('wms.col.txn-no'), date: t('wms.col.date'),
