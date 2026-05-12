@@ -135,11 +135,26 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
       setErrors(errs);
       return;
     }
+    // Duplicate guard
+    const conflict = findReceiptConflict(parsed.data, allReceipts, dupRules, initial?.id ?? null);
+    if (conflict && dupRules.block_on_save && !overrideConflict) {
+      setErrors((e) => ({ ...e, _conflict: t('duplicateBlocked') }));
+      return;
+    }
     setSubmitting(true);
     const result = await onSubmit(parsed.data as BoxReceiptInput);
     setSubmitting(false);
     if (result) onOpenChange(false);
   };
+
+  const liveConflict = (() => {
+    if (!values.part_no) return null;
+    const candidate = {
+      ...values,
+      box_no: values.packing_type === 'loose' ? null : normalizeBoxNo(values.box_no ?? ''),
+    };
+    return findReceiptConflict(candidate, allReceipts, dupRules, initial?.id ?? null);
+  })();
 
   return (
     <>
