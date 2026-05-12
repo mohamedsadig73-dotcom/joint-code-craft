@@ -346,11 +346,47 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
           </div>
         </div>
 
+        {liveConflict && (
+          <div className={`mt-4 p-3 rounded-md border text-xs flex items-start gap-2 ${
+            dupRules.block_on_save && !overrideConflict
+              ? 'border-destructive/50 bg-destructive/10 text-destructive'
+              : 'border-warning/50 bg-warning/10'
+          }`}>
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold">{t('duplicateConflictDetected')}</div>
+              <div className="opacity-90 mt-0.5">
+                {t('duplicateConflictMatches')
+                  .replace('{serial}', `#${liveConflict.serial_no}`)
+                  .replace('{box}', liveConflict.box_no ?? '—')
+                  .replace('{supplier}', liveConflict.supplier)
+                  .replace('{invoice}', liveConflict.invoice_number ?? '—')}
+              </div>
+              <div className="opacity-75 mt-1">
+                {t('duplicateRulesActive')}: {dupRules.fields.join(' + ')}
+              </div>
+              {dupRules.block_on_save && (
+                <label className="mt-2 inline-flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={overrideConflict}
+                    onChange={(e) => setOverrideConflict(e.target.checked)}
+                  />
+                  <span>{t('overrideAndSave')}</span>
+                </label>
+              )}
+            </div>
+          </div>
+        )}
+
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
             {t('cancel')}
           </Button>
-          <Button onClick={handleSubmit} disabled={submitting}>
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting || (!!liveConflict && dupRules.block_on_save && !overrideConflict)}
+          >
             {submitting && <Loader2 className="w-4 h-4 me-1.5 animate-spin" />}
             {t('save')}
           </Button>
