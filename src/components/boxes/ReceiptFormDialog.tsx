@@ -242,6 +242,15 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
           </div>
 
           <div className="space-y-1.5">
+            <Label>{t('invoiceNumber')}</Label>
+            <Input
+              value={values.invoice_number ?? ''}
+              onChange={(e) => setField('invoice_number', e.target.value || null)}
+              placeholder={t('invoiceNumberOptional')}
+            />
+          </div>
+
+          <div className="space-y-1.5">
             <Label>{t('description')} *</Label>
             <Input value={values.description} onChange={(e) => setField('description', e.target.value)} />
             {errors.description && <p className="text-xs text-destructive">{errors.description}</p>}
