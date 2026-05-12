@@ -136,7 +136,7 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
       return;
     }
     // Duplicate guard
-    const conflict = findReceiptConflict(parsed.data, allReceipts, dupRules, initial?.id ?? null);
+    const conflict = findReceiptConflict(parsed.data as BoxReceiptInput, allReceipts, dupRules, initial?.id ?? null);
     if (conflict && dupRules.block_on_save && !overrideConflict) {
       setErrors((e) => ({ ...e, _conflict: t('duplicateBlocked') }));
       return;
