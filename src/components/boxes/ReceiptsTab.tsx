@@ -135,6 +135,7 @@ export function ReceiptsTab() {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [pendingDuplicates, setPendingDuplicates] = useState<ImportDuplicateMatch<BoxReceiptInput>[]>([]);
   const [pendingUniques, setPendingUniques] = useState<BoxReceiptInput[]>([]);
+  const { rules: dupRules } = useDuplicateRules();
 
   const isAdmin = user?.role === 'admin';
   const isManager = user?.role === 'manager';
@@ -358,7 +359,7 @@ export function ReceiptsTab() {
         toast({ title: t('error'), description: t('noValidRows'), variant: 'destructive' });
       } else {
         // Validate against existing receipts for duplicates
-        const { duplicates, uniques } = findImportDuplicates(inputs, receipts);
+        const { duplicates, uniques } = findImportDuplicates(inputs, receipts, dupRules);
         if (duplicates.length === 0) {
           await bulkInsertReceipts(inputs);
         } else {
