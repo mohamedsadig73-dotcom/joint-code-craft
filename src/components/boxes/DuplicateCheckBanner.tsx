@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
 import { findDuplicateGroups, countMergedRecords } from '@/utils/boxDuplicateAnalysis';
+import { useDuplicateRules } from '@/hooks/useDuplicateRules';
 
 /**
  * Compact banner shown at the top of /boxes that surfaces:
@@ -16,14 +17,15 @@ import { findDuplicateGroups, countMergedRecords } from '@/utils/boxDuplicateAna
 export function DuplicateCheckBanner() {
   const { t } = useLanguage();
   const { receipts, loading } = useBoxReceipts();
+  const { rules } = useDuplicateRules();
 
   const { duplicateCount, mergedCount } = useMemo(() => {
-    const groups = findDuplicateGroups(receipts);
+    const groups = findDuplicateGroups(receipts, rules);
     return {
       duplicateCount: groups.length,
       mergedCount: countMergedRecords(receipts),
     };
-  }, [receipts]);
+  }, [receipts, rules]);
 
   if (loading) return null;
 
@@ -56,7 +58,7 @@ export function DuplicateCheckBanner() {
           </div>
         </div>
         <Button asChild variant={ok ? 'outline' : 'default'} size="sm" className="gap-1.5">
-          <Link to="/boxes/data-admin">
+          <Link to="/boxes/duplicates-report">
             {t('review')}
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>

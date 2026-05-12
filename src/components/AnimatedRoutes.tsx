@@ -31,6 +31,8 @@ const BoxesManagement = lazy(() => import('@/pages/BoxesManagement'));
 const BoxCardPrint = lazy(() => import('@/pages/BoxCardPrint'));
 const ContainerDetails = lazy(() => import('@/pages/ContainerDetails'));
 const BoxesDataAdmin = lazy(() => import('@/pages/BoxesDataAdmin'));
+const BoxesDuplicatesReport = lazy(() => import('@/pages/BoxesDuplicatesReport'));
+const BoxesDuplicateRules = lazy(() => import('@/pages/BoxesDuplicateRules'));
 const ItemsMaster = lazy(() => import('@/pages/ItemsMaster'));
 const ItemsMasterImport = lazy(() => import('@/pages/ItemsMasterImport'));
 const ItemDetails = lazy(() => import('@/pages/ItemDetails'));
@@ -322,6 +324,26 @@ export function AnimatedRoutes() {
               <ProtectedRoute allowedRoles={['admin', 'manager']}>
                 <PageTransition>
                   <BoxesDataAdmin />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/boxes/duplicates-report"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                <PageTransition>
+                  <BoxesDuplicatesReport />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/boxes/duplicate-rules"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <PageTransition>
+                  <BoxesDuplicateRules />
                 </PageTransition>
               </ProtectedRoute>
             }

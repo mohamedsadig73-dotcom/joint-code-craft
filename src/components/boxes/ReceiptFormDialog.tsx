@@ -14,6 +14,10 @@ import { Loader2, Package, PackageOpen, Info } from 'lucide-react';
 import { ItemPickerCombobox } from './items/ItemPickerCombobox';
 import { ItemFormDialog } from './items/ItemFormDialog';
 import { useItemsMaster } from '@/hooks/useItemsMaster';
+import { useBoxReceipts } from '@/hooks/useBoxReceipts';
+import { useDuplicateRules } from '@/hooks/useDuplicateRules';
+import { findReceiptConflict } from '@/utils/boxDuplicateAnalysis';
+import { AlertTriangle } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -45,15 +49,19 @@ const DEFAULT: BoxReceiptInput = {
 export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, existingSuppliers, existingBoxes }: Props) {
   const { t } = useLanguage();
   const { items, createItem } = useItemsMaster();
+  const { receipts: allReceipts } = useBoxReceipts();
+  const { rules: dupRules } = useDuplicateRules();
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
   const [pendingNewPartNo, setPendingNewPartNo] = useState('');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [values, setValues] = useState<BoxReceiptInput>(DEFAULT);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [overrideConflict, setOverrideConflict] = useState(false);
 
   useEffect(() => {
     if (open) {
+      setOverrideConflict(false);
       if (initial) {
         setValues({
           supplier: initial.supplier,
@@ -127,11 +135,26 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
       setErrors(errs);
       return;
     }
+    // Duplicate guard
+    const conflict = findReceiptConflict(parsed.data as BoxReceiptInput, allReceipts, dupRules, initial?.id ?? null);
+    if (conflict && dupRules.block_on_save && !overrideConflict) {
+      setErrors((e) => ({ ...e, _conflict: t('duplicateBlocked') }));
+      return;
+    }
     setSubmitting(true);
     const result = await onSubmit(parsed.data as BoxReceiptInput);
     setSubmitting(false);
     if (result) onOpenChange(false);
   };
+
+  const liveConflict = (() => {
+    if (!values.part_no) return null;
+    const candidate = {
+      ...values,
+      box_no: values.packing_type === 'loose' ? null : normalizeBoxNo(values.box_no ?? ''),
+    };
+    return findReceiptConflict(candidate, allReceipts, dupRules, initial?.id ?? null);
+  })();
 
   return (
     <>
@@ -216,6 +239,15 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
               {existingSuppliers.map((s) => <option key={s} value={s} />)}
             </datalist>
             {errors.supplier && <p className="text-xs text-destructive">{errors.supplier}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>{t('invoiceNumber')}</Label>
+            <Input
+              value={values.invoice_number ?? ''}
+              onChange={(e) => setField('invoice_number', e.target.value || null)}
+              placeholder={t('invoiceNumberOptional')}
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -314,11 +346,47 @@ export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, exist
           </div>
         </div>
 
+        {liveConflict && (
+          <div className={`mt-4 p-3 rounded-md border text-xs flex items-start gap-2 ${
+            dupRules.block_on_save && !overrideConflict
+              ? 'border-destructive/50 bg-destructive/10 text-destructive'
+              : 'border-warning/50 bg-warning/10'
+          }`}>
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold">{t('duplicateConflictDetected')}</div>
+              <div className="opacity-90 mt-0.5">
+                {t('duplicateConflictMatches')
+                  .replace('{serial}', `#${liveConflict.serial_no}`)
+                  .replace('{box}', liveConflict.box_no ?? '—')
+                  .replace('{supplier}', liveConflict.supplier)
+                  .replace('{invoice}', liveConflict.invoice_number ?? '—')}
+              </div>
+              <div className="opacity-75 mt-1">
+                {t('duplicateRulesActive')}: {dupRules.fields.join(' + ')}
+              </div>
+              {dupRules.block_on_save && (
+                <label className="mt-2 inline-flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={overrideConflict}
+                    onChange={(e) => setOverrideConflict(e.target.checked)}
+                  />
+                  <span>{t('overrideAndSave')}</span>
+                </label>
+              )}
+            </div>
+          </div>
+        )}
+
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
             {t('cancel')}
           </Button>
-          <Button onClick={handleSubmit} disabled={submitting}>
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting || (!!liveConflict && dupRules.block_on_save && !overrideConflict)}
+          >
             {submitting && <Loader2 className="w-4 h-4 me-1.5 animate-spin" />}
             {t('save')}
           </Button>
