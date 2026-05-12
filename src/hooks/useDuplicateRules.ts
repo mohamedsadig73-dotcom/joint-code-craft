@@ -60,7 +60,7 @@ export function useDuplicateRules() {
     const { error } = await supabase
       .from('app_settings')
       .upsert(
-        { key: SETTINGS_KEY, value: sanitized as unknown as Record<string, unknown>, description: 'Box receipt duplicate detection rules' },
+        [{ key: SETTINGS_KEY, value: sanitized as unknown as Record<string, unknown>, description: 'Box receipt duplicate detection rules' }],
         { onConflict: 'key' }
       );
     if (!error) setRules(sanitized);
