@@ -14,6 +14,10 @@ import { Loader2, Package, PackageOpen, Info } from 'lucide-react';
 import { ItemPickerCombobox } from './items/ItemPickerCombobox';
 import { ItemFormDialog } from './items/ItemFormDialog';
 import { useItemsMaster } from '@/hooks/useItemsMaster';
+import { useBoxReceipts } from '@/hooks/useBoxReceipts';
+import { useDuplicateRules } from '@/hooks/useDuplicateRules';
+import { findReceiptConflict } from '@/utils/boxDuplicateAnalysis';
+import { AlertTriangle } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -45,15 +49,19 @@ const DEFAULT: BoxReceiptInput = {
 export function ReceiptFormDialog({ open, onOpenChange, initial, onSubmit, existingSuppliers, existingBoxes }: Props) {
   const { t } = useLanguage();
   const { items, createItem } = useItemsMaster();
+  const { receipts: allReceipts } = useBoxReceipts();
+  const { rules: dupRules } = useDuplicateRules();
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
   const [pendingNewPartNo, setPendingNewPartNo] = useState('');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [values, setValues] = useState<BoxReceiptInput>(DEFAULT);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [overrideConflict, setOverrideConflict] = useState(false);
 
   useEffect(() => {
     if (open) {
+      setOverrideConflict(false);
       if (initial) {
         setValues({
           supplier: initial.supplier,
