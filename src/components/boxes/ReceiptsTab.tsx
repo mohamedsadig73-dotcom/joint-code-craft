@@ -39,6 +39,7 @@ import {
 import { exportBoxesToExcel, parseReceiptsFromExcel } from '@/utils/boxesExcelExport';
 import { ImportDuplicateDialog, type ImportResolution } from './ImportDuplicateDialog';
 import { findImportDuplicates, type ImportDuplicateMatch } from '@/utils/boxDuplicateAnalysis';
+import { useDuplicateRules } from '@/hooks/useDuplicateRules';
 
 const COLUMN_PREFS_KEY = 'receipts.visibleColumns.v1';
 
