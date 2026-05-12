@@ -58,7 +58,7 @@ export function DuplicateCheckBanner() {
           </div>
         </div>
         <Button asChild variant={ok ? 'outline' : 'default'} size="sm" className="gap-1.5">
-          <Link to="/boxes/data-admin">
+          <Link to="/boxes/duplicates-report">
             {t('review')}
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
