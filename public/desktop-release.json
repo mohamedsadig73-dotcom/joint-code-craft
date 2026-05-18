@@ -1,9 +1,9 @@
 {
-  "desktop_shell_version": "4.6.7",
+  "desktop_shell_version": "4.6.8",
   "min_shell_version": "4.4.5",
-  "web_version": "4.6.7",
-  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.6.7-dist.zip",
+  "web_version": "4.6.8",
+  "download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-v4.6.8-dist.zip",
   "full_download_url": "https://eplguuqpxuhgdagacypn.supabase.co/storage/v1/object/public/desktop-releases/DTS-Store-win32-x64-v4.4.5.zip",
-  "release_notes": "v4.6.7",
+  "release_notes": "v4.6.8 - إصلاح عرض وتمرير نافذة طباعة فواتير الموردين",
   "mandatory": false
 }

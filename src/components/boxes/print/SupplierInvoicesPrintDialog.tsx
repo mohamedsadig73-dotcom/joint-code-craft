@@ -120,23 +120,23 @@ export function SupplierInvoicesPrintDialog({ open, onOpenChange, receipts }: Pr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl h-[90vh] max-h-[90vh] flex flex-col gap-3 overflow-hidden">
+      <DialogContent className="max-w-3xl h-[90vh] max-h-[90vh] flex flex-col gap-0 gap-y-3 overflow-hidden" dir={isAr ? 'rtl' : 'ltr'}>
         <DialogHeader className="shrink-0">
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-x-2 ltr-flex">
             <Printer className="w-5 h-5" />
             {t('printSupplierInvoices')}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex items-center gap-2 text-xs shrink-0">
+        <div className="flex items-center gap-x-2 text-xs shrink-0 ltr-flex">
           <Button size="sm" variant="outline" onClick={selectAll} className="h-7 text-xs">{t('selectAll')}</Button>
           <Button size="sm" variant="outline" onClick={clearAll} className="h-7 text-xs">{t('clear')}</Button>
-          <span className="ms-auto text-muted-foreground">
-            {t('selected')}: <strong className="text-foreground">{selectedCount}</strong> / {groups.length}
+          <span className="ms-auto text-muted-foreground whitespace-nowrap">
+            {t('selected')}: <strong className="inline-block text-foreground tabular-nums" dir="ltr">{selectedCount} / {groups.length}</strong>
           </span>
         </div>
 
-        <ScrollArea className="flex-1 min-h-0 border rounded-md">
+        <ScrollArea type="always" className="flex-1 min-h-0 border rounded-md">
           <div className="p-2 space-y-2">
             {Array.from(supplierMap.entries()).map(([supplier, supGroups]) => {
               const keys = supGroups.map(groupKey);
@@ -144,7 +144,7 @@ export function SupplierInvoicesPrintDialog({ open, onOpenChange, receipts }: Pr
               const someChecked = keys.some((k) => selected.has(k));
               return (
                 <div key={supplier} className="rounded-md border border-border/50 overflow-hidden">
-                  <div className="flex items-center gap-3 px-3 py-2 bg-accent/30">
+                  <div className="flex items-center gap-x-3 px-3 py-2 bg-accent/30 ltr-flex">
                     <Checkbox
                       className="shrink-0"
                       checked={allChecked ? true : someChecked ? 'indeterminate' : false}
@@ -163,7 +163,7 @@ export function SupplierInvoicesPrintDialog({ open, onOpenChange, receipts }: Pr
                       return (
                         <label
                           key={k}
-                          className="flex items-center gap-3 px-3 py-2 ps-10 text-xs hover:bg-accent/20 cursor-pointer"
+                          className="flex items-center gap-x-3 px-3 py-2 ps-10 text-xs hover:bg-accent/20 cursor-pointer ltr-flex"
                         >
                           <Checkbox
                             className="shrink-0"
