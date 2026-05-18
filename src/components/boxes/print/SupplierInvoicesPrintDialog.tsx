@@ -120,15 +120,15 @@ export function SupplierInvoicesPrintDialog({ open, onOpenChange, receipts }: Pr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl h-[90vh] max-h-[90vh] flex flex-col gap-0 gap-y-3 overflow-hidden">
+      <DialogContent className="max-w-2xl h-[90vh] max-h-[90vh] flex flex-col gap-0 gap-y-3 overflow-hidden" dir={isAr ? 'rtl' : 'ltr'}>
         <DialogHeader className="shrink-0">
-          <DialogTitle className="flex items-center gap-x-2">
+          <DialogTitle className="flex items-center gap-x-2 ltr-flex">
             <Printer className="w-5 h-5" />
             {t('printSupplierInvoices')}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex items-center gap-x-2 text-xs shrink-0">
+        <div className="flex items-center gap-x-2 text-xs shrink-0 ltr-flex">
           <Button size="sm" variant="outline" onClick={selectAll} className="h-7 text-xs">{t('selectAll')}</Button>
           <Button size="sm" variant="outline" onClick={clearAll} className="h-7 text-xs">{t('clear')}</Button>
           <span className="ms-auto text-muted-foreground">
@@ -144,7 +144,7 @@ export function SupplierInvoicesPrintDialog({ open, onOpenChange, receipts }: Pr
               const someChecked = keys.some((k) => selected.has(k));
               return (
                 <div key={supplier} className="rounded-md border border-border/50 overflow-hidden">
-                  <div className="flex items-center gap-x-3 px-3 py-2 bg-accent/30">
+                  <div className="flex items-center gap-x-3 px-3 py-2 bg-accent/30 ltr-flex">
                     <Checkbox
                       className="shrink-0"
                       checked={allChecked ? true : someChecked ? 'indeterminate' : false}
@@ -163,7 +163,7 @@ export function SupplierInvoicesPrintDialog({ open, onOpenChange, receipts }: Pr
                       return (
                         <label
                           key={k}
-                          className="flex items-center gap-x-3 px-3 py-2 ps-10 text-xs hover:bg-accent/20 cursor-pointer"
+                          className="flex items-center gap-x-3 px-3 py-2 ps-10 text-xs hover:bg-accent/20 cursor-pointer ltr-flex"
                         >
                           <Checkbox
                             className="shrink-0"
