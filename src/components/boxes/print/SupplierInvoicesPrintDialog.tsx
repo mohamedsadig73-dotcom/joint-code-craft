@@ -143,16 +143,17 @@ export function SupplierInvoicesPrintDialog({ open, onOpenChange, receipts }: Pr
               const allChecked = keys.every((k) => selected.has(k));
               const someChecked = keys.some((k) => selected.has(k));
               return (
-                <div key={supplier} className="rounded-md border border-border/50">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-accent/30 rounded-t-md">
+                <div key={supplier} className="rounded-md border border-border/50 overflow-hidden">
+                  <div className="flex items-center gap-3 px-3 py-2 bg-accent/30">
                     <Checkbox
+                      className="shrink-0"
                       checked={allChecked ? true : someChecked ? 'indeterminate' : false}
                       onCheckedChange={() => toggleSupplier(supplier)}
                     />
-                    <Building2 className="w-4 h-4 text-primary" />
-                    <span className="font-semibold text-sm flex-1 truncate">{supplier}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {supGroups.length} {t('invoice')}
+                    <Building2 className="w-4 h-4 text-primary shrink-0" />
+                    <span className="font-semibold text-sm flex-1 min-w-0 truncate">{supplier}</span>
+                    <span className="text-xs text-muted-foreground shrink-0 whitespace-nowrap rounded-full bg-background/60 px-2 py-0.5 border border-border/40">
+                      {supGroups.length}&nbsp;{t('invoice')}
                     </span>
                   </div>
                   <div className="divide-y divide-border/40">
@@ -162,15 +163,21 @@ export function SupplierInvoicesPrintDialog({ open, onOpenChange, receipts }: Pr
                       return (
                         <label
                           key={k}
-                          className="flex items-center gap-2 px-3 py-1.5 ps-9 text-xs hover:bg-accent/20 cursor-pointer"
+                          className="flex items-center gap-3 px-3 py-2 ps-10 text-xs hover:bg-accent/20 cursor-pointer"
                         >
                           <Checkbox
+                            className="shrink-0"
                             checked={selected.has(k)}
                             onCheckedChange={() => toggleGroup(k)}
                           />
-                          <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span className="flex-1 truncate">{g.invoiceNumber || t('noInvoiceNumber')}</span>
-                          <span className="text-muted-foreground tabular-nums">
+                          <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          <span className="flex-1 min-w-0 truncate" dir="ltr" style={{ textAlign: isAr ? 'right' : 'left' }}>
+                            {g.invoiceNumber || t('noInvoiceNumber')}
+                          </span>
+                          <span
+                            className="text-muted-foreground tabular-nums shrink-0 whitespace-nowrap rounded-md bg-background/60 px-2 py-0.5 border border-border/40"
+                            dir="ltr"
+                          >
                             {g.receipts.length} × {totalQty.toLocaleString('en-US')}
                           </span>
                         </label>
