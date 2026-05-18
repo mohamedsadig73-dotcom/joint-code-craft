@@ -120,15 +120,15 @@ export function SupplierInvoicesPrintDialog({ open, onOpenChange, receipts }: Pr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl h-[90vh] max-h-[90vh] flex flex-col gap-3 overflow-hidden">
+        <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Printer className="w-5 h-5" />
             {t('printSupplierInvoices')}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex items-center gap-2 text-xs shrink-0">
           <Button size="sm" variant="outline" onClick={selectAll} className="h-7 text-xs">{t('selectAll')}</Button>
           <Button size="sm" variant="outline" onClick={clearAll} className="h-7 text-xs">{t('clear')}</Button>
           <span className="ms-auto text-muted-foreground">
@@ -136,7 +136,7 @@ export function SupplierInvoicesPrintDialog({ open, onOpenChange, receipts }: Pr
           </span>
         </div>
 
-        <ScrollArea className="flex-1 border rounded-md">
+        <ScrollArea className="flex-1 min-h-0 border rounded-md">
           <div className="p-2 space-y-2">
             {Array.from(supplierMap.entries()).map(([supplier, supGroups]) => {
               const keys = supGroups.map(groupKey);
@@ -193,7 +193,7 @@ export function SupplierInvoicesPrintDialog({ open, onOpenChange, receipts }: Pr
           </div>
         </ScrollArea>
 
-        <div className="space-y-2 rounded-md border border-border/50 p-3">
+        <div className="space-y-2 rounded-md border border-border/50 p-3 shrink-0">
           <div className="flex items-center justify-between">
             <Label htmlFor="incl-img" className="text-xs cursor-pointer">{t('includeImages')}</Label>
             <Switch id="incl-img" checked={includeImages} onCheckedChange={setIncludeImages} />
@@ -204,7 +204,7 @@ export function SupplierInvoicesPrintDialog({ open, onOpenChange, receipts }: Pr
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>{t('cancel')}</Button>
           <Button onClick={handlePrint} disabled={selectedCount === 0}>
             <Printer className="w-4 h-4 me-1.5" />
