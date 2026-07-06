@@ -44,6 +44,16 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "📦 Building DTS-Store v$VERSION"
 
+      - name: Verify lockfile integrity
+        shell: bash
+        run: |
+          SIZE=$(wc -c < package-lock.json)
+          echo "package-lock.json size: ${SIZE} bytes"
+          if [ "$SIZE" -lt 1000 ]; then
+            echo "❌ package-lock.json is empty/corrupted (${SIZE} bytes)."
+            exit 1
+          fi
+
       - name: Install dependencies
         run: npm ci
 
