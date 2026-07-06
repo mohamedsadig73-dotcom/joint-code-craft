@@ -113,13 +113,13 @@ export default function ManagerDashboard() {
       if (actError) throw actError;
 
       // Get user profiles for activities
-      const userIds = [...new Set(activities?.map(a => a.user_id))];
+      const userIds = [...new Set(activities?.map(a => a.user_id) || [])];
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, username')
         .in('id', userIds);
 
-      const profilesMap = new Map(profiles?.map(p => [p.id, p]));
+      const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
       
       const activitiesWithProfiles = activities?.map(activity => ({
         ...activity,
@@ -128,10 +128,11 @@ export default function ManagerDashboard() {
 
       setRecentActivities(activitiesWithProfiles as RecentActivity[]);
 
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف';
       toast({
         title: 'خطأ',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -245,8 +246,8 @@ export default function ManagerDashboard() {
               <div className="space-y-3">
                 {Object.entries(statusBreakdown).map(([status, count]) => (
                   <div key={status} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                    <Badge className={statusColors[status] || 'bg-gray-500/20'}>
-                      {statusLabels[status] || status}
+                    <Badge className={statusColors[status as keyof typeof statusColors] || 'bg-gray-500/20'}>
+                      {statusLabels[status as keyof typeof statusLabels] || status}
                     </Badge>
                     <span className="font-semibold">{count}</span>
                   </div>
@@ -288,7 +289,7 @@ export default function ManagerDashboard() {
                         {activity.profiles?.username || 'مستخدم'}
                         <span className="text-muted-foreground mx-2">•</span>
                         <span className="text-muted-foreground">
-                          {auditActionLabels[activity.action] || activity.action}
+                          {auditActionLabels[activity.action as keyof typeof auditActionLabels] || activity.action}
                         </span>
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">

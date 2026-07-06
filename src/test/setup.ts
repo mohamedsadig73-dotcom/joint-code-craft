@@ -15,12 +15,14 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 class ResizeObserverStub {
-  observe() {} unobserve() {} disconnect() {}
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
 }
-(global as any).ResizeObserver = ResizeObserverStub;
+(global as Record<string, unknown>).ResizeObserver = ResizeObserverStub;
 
 if (typeof Element !== 'undefined') {
-  Element.prototype.scrollIntoView = () => {};
-  (Element.prototype as any).hasPointerCapture = () => false;
-  (Element.prototype as any).releasePointerCapture = () => {};
+  (Element.prototype as Record<string, unknown>).scrollIntoView = () => {};
+  (Element.prototype as Record<string, unknown>).hasPointerCapture = () => false;
+  (Element.prototype as Record<string, unknown>).releasePointerCapture = () => {};
 }

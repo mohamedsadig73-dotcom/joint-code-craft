@@ -60,11 +60,12 @@ export default function Profile() {
 
     try {
       profileSchema.parse({ username, email });
-    } catch (error: any) {
+    } catch (error) {
+      const zodError = error as z.ZodError;
       toast({
         variant: 'destructive',
         title: t('dataValidationError'),
-        description: error.errors?.[0]?.message || t('invalidData'),
+        description: zodError.errors?.[0]?.message || t('invalidData'),
       });
       return;
     }
@@ -116,8 +117,9 @@ export default function Profile() {
 
       toast({ title: t('success'), description: t('profileUpdated') });
       window.location.reload();
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: t('error'), description: error.message || t('profileUpdateFailed') });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : t('profileUpdateFailed');
+      toast({ variant: 'destructive', title: t('error'), description: errorMessage });
     } finally {
       setProfileLoading(false);
     }
@@ -128,8 +130,9 @@ export default function Profile() {
 
     try {
       passwordSchema.parse({ newPassword, confirmPassword });
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: t('error'), description: error.errors?.[0]?.message || t('invalidData') });
+    } catch (error) {
+      const zodError = error as z.ZodError;
+      toast({ variant: 'destructive', title: t('error'), description: zodError.errors?.[0]?.message || t('invalidData') });
       return;
     }
 
@@ -141,8 +144,9 @@ export default function Profile() {
       toast({ title: t('success'), description: t('passwordChangeSuccess') });
       setNewPassword('');
       setConfirmPassword('');
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: t('error'), description: error.message || t('passwordChangeFailed') });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : t('passwordChangeFailed');
+      toast({ variant: 'destructive', title: t('error'), description: errorMessage });
     } finally {
       setLoading(false);
     }

@@ -77,7 +77,7 @@ const PROBES_BY_ROLE: Record<'admin' | 'manager' | 'user', Array<{ table: string
   ],
 };
 
-function buildPayload(table: string): Record<string, any> {
+function buildPayload(table: string): Record<string, unknown> {
   const stamp = `RLS-PROBE-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   switch (table) {
     case 'app_settings':
@@ -97,18 +97,18 @@ function buildPayload(table: string): Record<string, any> {
 async function runProbe(table: string, op: Op): Promise<{ ok: boolean; message?: string }> {
   try {
     if (op === 'SELECT') {
-      const { error } = await (supabase as any).from(table).select('*').limit(1);
-      return error ? { ok: false, message: error.message } : { ok: true };
+      const { error } = await (supabase as Record<string, unknown>).from(table).select('*').limit(1);
+      return error ? { ok: false, message: (error as Record<string, unknown>).message as string } : { ok: true };
     }
     if (op === 'INSERT') {
       const payload = buildPayload(table);
-      const { data, error } = await (supabase as any).from(table).insert(payload).select('*').limit(1);
-      if (error) return { ok: false, message: error.message };
+      const { data, error } = await (supabase as Record<string, unknown>).from(table).insert(payload).select('*').limit(1);
+      if (error) return { ok: false, message: (error as Record<string, unknown>).message as string };
       // Cleanup
-      const inserted = Array.isArray(data) ? data[0] : data;
+      const inserted = Array.isArray(data) ? (data as unknown[])[0] : data;
       const idKey = table === 'app_settings' ? 'key' : 'id';
-      if (inserted?.[idKey]) {
-        await (supabase as any).from(table).delete().eq(idKey, inserted[idKey]);
+      if ((inserted as Record<string, unknown>)?.[idKey]) {
+        await (supabase as Record<string, unknown>).from(table).delete().eq(idKey, (inserted as Record<string, unknown>)[idKey]);
       }
       return { ok: true };
     }
@@ -119,20 +119,21 @@ async function runProbe(table: string, op: Op): Promise<{ ok: boolean; message?:
         ? `__rls_probe_${Date.now()}__`
         : '00000000-0000-0000-0000-000000000000';
       const updatePayload = table === 'app_settings' ? { value: { probe: true } } : { name_ar: 'rls-probe' };
-      const { error } = await (supabase as any).from(table).update(updatePayload).eq(idKey, fakeId);
-      return error ? { ok: false, message: error.message } : { ok: true };
+      const { error } = await (supabase as Record<string, unknown>).from(table).update(updatePayload).eq(idKey, fakeId);
+      return error ? { ok: false, message: (error as Record<string, unknown>).message as string } : { ok: true };
     }
     if (op === 'DELETE') {
       const idKey = table === 'app_settings' ? 'key' : 'id';
       const fakeId = table === 'app_settings'
         ? `__rls_probe_${Date.now()}__`
         : '00000000-0000-0000-0000-000000000000';
-      const { error } = await (supabase as any).from(table).delete().eq(idKey, fakeId);
-      return error ? { ok: false, message: error.message } : { ok: true };
+      const { error } = await (supabase as Record<string, unknown>).from(table).delete().eq(idKey, fakeId);
+      return error ? { ok: false, message: (error as Record<string, unknown>).message as string } : { ok: true };
     }
     return { ok: false, message: 'unknown op' };
-  } catch (e: any) {
-    return { ok: false, message: e?.message || String(e) };
+  } catch (e) {
+    const err = e as Record<string, unknown>;
+    return { ok: false, message: (err?.message as string) || String(e) };
   }
 }
 
@@ -254,7 +255,7 @@ export default function RlsDiagnosticsPage() {
 
           <p className="text-xs text-muted-foreground">
             {isAr
-              ? 'ملاحظة: عمليات الإدراج تنشئ سجلات مؤقتة بالعلامة RLS-PROBE-... وتُحذف فور النجاح. عمليات UPDATE/DELETE تستهدف معرّفًا غير موجود لقياس استجابة السياسة فقط.'
+              ? 'ملاحظة: عمليات الإدراج تنشئ سجلات مؤقتة بالعلامة RLS-PROBE-... وتُحذف فور النجاح. عمليات UPDATE/DELETE تستهدف [...]
               : 'Note: INSERTs create temporary rows tagged RLS-PROBE-... and clean up on success. UPDATE/DELETE target a non-existent id to measure policy response only.'}
           </p>
         </CardContent>

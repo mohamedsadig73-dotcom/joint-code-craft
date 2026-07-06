@@ -42,7 +42,7 @@ export default function SmartItemEntry() {
   const { data: uoms } = useUomDictionary();
   const { mainCategories, subCategories } = useItemCategories();
   const findSimilar = useFindSimilarItems();
-  const { user } = useAuth() as any;
+  const { user } = useAuth() as { user: Record<string, unknown> | null };
   const isPrivileged = user?.role === 'admin' || user?.role === 'manager';
 
   const [categoryId, setCategoryId] = useState<string>('');
@@ -130,7 +130,7 @@ export default function SmartItemEntry() {
         if (!raw) return '';
         let v = raw.trim();
         // Cut at first sentence-breaking punctuation
-        v = v.split(/[،,:.;\(\)\[\]]/)[0].trim();
+        v = v.split(/[،,:.;()[\]]/)[0].trim();
         // Drop trailing digits/part numbers tokens
         const words = v.split(/\s+/).filter(w => !/^\d+$/.test(w));
         // Hard cap at 4 words
@@ -152,13 +152,14 @@ export default function SmartItemEntry() {
         if (matched) setCategoryId(matched.id);
       }
       toast({ title: isAr ? 'تم الاقتراح' : 'Suggested', description: isAr ? 'تم تعبئة الحقول' : 'Fields populated' });
-    } catch (e: any) {
-      const status = e?.context?.status;
+    } catch (e) {
+      const err = e as Record<string, unknown>;
+      const status = (err?.context as Record<string, unknown>)?.status;
       const msg = status === 429
         ? (isAr ? 'تجاوز حد الاستخدام' : 'Rate limit exceeded')
         : status === 402
         ? (isAr ? 'يلزم شحن رصيد الذكاء الاصطناعي' : 'AI credits required')
-        : (e?.message || 'Failed');
+        : ((err?.message as string) || 'Failed');
       toast({ title: isAr ? 'فشل الاقتراح' : 'Suggest failed', description: msg, variant: 'destructive' });
     } finally {
       setAiBusy(false);
@@ -207,7 +208,7 @@ export default function SmartItemEntry() {
     const ref = internalRef ?? (cat ? await generateInternalRef(cat.code, sub?.code ?? null) : null);
     const uom = uoms.find((u) => u.id === uomDictId);
 
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       part_no: partNo.trim(),
       name_ar: nameAr.trim() || null,
       name_en: nameEn.trim() || null,
@@ -217,7 +218,7 @@ export default function SmartItemEntry() {
       category_id: categoryId,
       sub_category_id: subCategoryId || null,
       uom_dict_id: uomDictId,
-      default_unit: (uom?.code || 'PCS') as any,
+      default_unit: (uom?.code || 'PCS'),
       internal_ref: ref,
       naming_quality_score: qualityScore,
       approval_status: isPrivileged ? 'approved' : 'pending',
