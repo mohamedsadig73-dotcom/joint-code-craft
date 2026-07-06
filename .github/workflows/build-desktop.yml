@@ -23,15 +23,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Clean workspace
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force bun.lockb -ErrorAction SilentlyContinue
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
 
       - name: Read app version
         id: version
@@ -42,31 +45,40 @@ jobs:
           echo "📦 Building DTS-Store v$VERSION"
 
       - name: Install dependencies
-        run: bun install
+        run: npm ci
 
-      - name: Build Vite (production)
-        run: bun run build
-
-      - name: Install Electron + Packager
+      - name: Debug: verify packager resolves
+        shell: pwsh
         run: |
-          npm install --no-save electron@33 @electron/packager@18
+          node -e "console.log('resolve packager:', require.resolve('@electron/packager'))"
+          node -e "console.log('electron version:', require('electron/package.json').version)"
+          pwsh -Command "Get-ChildItem -Path 'node_modules\\@electron\\packager' -Recurse -Force | Select-Object -First 20 Name"
+
+      - name: Build (production)
+        run: npm run build
+
+      - name: Rebuild native modules (safety net)
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          npx @electron/rebuild --force
 
       - name: Package Electron (Windows x64)
-        shell: bash
+        shell: pwsh
         run: |
-          npx @electron/packager . "DTS-Store" \
-            --platform=win32 \
-            --arch=x64 \
-            --out=electron-release \
-            --overwrite \
-            --app-version="${{ steps.version.outputs.version }}" \
-            --ignore="^/src" \
-            --ignore="^/public" \
-            --ignore="^/electron-release" \
-            --ignore="^/.github" \
-            --ignore="^/supabase" \
-            --ignore="^/scripts" \
-            --ignore="^/.lovable" \
+          npx @electron/packager . "DTS-Store" `
+            --platform=win32 `
+            --arch=x64 `
+            --out=electron-release `
+            --overwrite `
+            --app-version="${{ steps.version.outputs.version }}" `
+            --ignore="^/src" `
+            --ignore="^/public" `
+            --ignore="^/electron-release" `
+            --ignore="^/.github" `
+            --ignore="^/supabase" `
+            --ignore="^/scripts" `
+            --ignore="^/.lovable" `
             --ignore="^/node_modules/(?!(electron|@electron|adm-zip)/)"
 
       - name: Create ZIP archive (full installer)
