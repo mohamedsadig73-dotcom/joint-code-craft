@@ -287,8 +287,8 @@ export default function Login() {
                     {/[0-9]/.test(password) ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                     {t('passwordNumber')}
                   </li>
-                  <li className={`flex items-center gap-1 ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? 'text-green-500' : 'text-muted-foreground'}`}>
-                    {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                  <li className={`flex items-center gap-1 ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password) ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password) ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                     {t('passwordSpecialChar')}
                   </li>
                 </ul>

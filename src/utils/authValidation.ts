@@ -7,7 +7,7 @@ export const passwordSchema = z
   .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
   .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
   .regex(/[0-9]/, 'Password must contain at least one number')
-  .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must contain at least one special character');
+  .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/, 'Password must contain at least one special character');
 
 export const emailSchema = z
   .string()
@@ -52,7 +52,7 @@ export function validatePassword(password: string, t: (key: string) => string): 
   if (!/[0-9]/.test(password)) {
     errors.push(t('passwordNumber'));
   }
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password)) {
     errors.push(t('passwordSpecialChar'));
   }
   
@@ -67,7 +67,7 @@ export function getPasswordStrength(password: string): { score: number; label: s
   if (/[A-Z]/.test(password)) score++;
   if (/[a-z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
-  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score++;
+  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password)) score++;
   
   if (score <= 2) return { score, label: 'weak' };
   if (score <= 4) return { score, label: 'medium' };

@@ -87,10 +87,11 @@ export default function MaintenanceItemDetails() {
 
       setItem(itemData);
       setHistory(historyData || []);
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       toast({
         title: 'خطأ',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

@@ -22,9 +22,9 @@ declare const __BUILD_VERSION__: string;
 function safeVersion(): { app: string; build: string } {
   try {
     return {
-      // @ts-ignore — injected by Vite define
+      // @ts-expect-error — injected by Vite define
       app: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'unknown',
-      // @ts-ignore
+      // @ts-expect-error — injected by Vite define
       build: typeof __BUILD_VERSION__ !== 'undefined' ? __BUILD_VERSION__ : 'unknown',
     };
   } catch {
@@ -33,7 +33,7 @@ function safeVersion(): { app: string; build: string } {
 }
 
 export function isChunkLoadError(err: unknown): boolean {
-  const msg = String((err as any)?.message || err || '');
+  const msg = String((err as Record<string, unknown>)?.message || err || '');
   return /Failed to fetch dynamically imported module|Importing a module script failed|Loading chunk \d+ failed|ChunkLoadError/i.test(
     msg
   );
@@ -43,8 +43,8 @@ export function trackChunkError(err: unknown, retried: boolean): ChunkErrorRecor
   const v = safeVersion();
   const record: ChunkErrorRecord = {
     timestamp: Date.now(),
-    message: String((err as any)?.message || err || 'unknown'),
-    url: (err as any)?.url || (typeof window !== 'undefined' ? window.location.href : undefined),
+    message: String((err as Record<string, unknown>)?.message || err || 'unknown'),
+    url: (err as Record<string, unknown>)?.url || (typeof window !== 'undefined' ? window.location.href : undefined),
     appVersion: v.app,
     buildVersion: v.build,
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'n/a',
