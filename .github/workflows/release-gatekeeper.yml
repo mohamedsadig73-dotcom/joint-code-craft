@@ -38,7 +38,8 @@ jobs:
       - name: 🚫 Block Store Publishing
         run: |
           echo "🔒 Checking for publishing attempts..."
-          if grep -rE "(app-store|play-store|fastlane deploy|upload.*store)" --include="*.yml" --include="*.yaml" .github/ 2>/dev/null; then
+          if grep -rE "(app-store|play-store|fastlane deploy|upload.*store)" --include="*.yml" --include="*.yaml" .github/ --exclude-dir=workflows 2>/dev/null || \
+             find .github/workflows -name "*.yml" -o -name "*.yaml" | grep -v release-gatekeeper | xargs grep -l -E "(app-store|play-store|fastlane deploy|upload.*store)" 2>/dev/null; then
             echo "❌ Store publishing is blocked for private app"
             exit 1
           fi
